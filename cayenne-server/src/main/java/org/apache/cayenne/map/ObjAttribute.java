@@ -24,7 +24,6 @@ import java.util.Iterator;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.util.CayenneMapEntry;
 import org.apache.cayenne.util.Util;
@@ -232,7 +231,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
     @SuppressWarnings("unchecked")
     public Iterator<CayenneMapEntry> getDbPathIterator(ObjEntity entity) {
         if(hasExpression()) {
-            return IteratorUtils.singletonIterator(new ObjAttributeExpressionEntry());
+            return IteratorUtils.singletonIterator(new ExpressionEntry());
         }
 
         if (dbAttributePath == null) {
@@ -405,7 +404,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
         return "ObjAttr: " + type + " " + name + "; DbPath[" + dbAttributePath + "]";
     }
 
-    public class ObjAttributeExpressionEntry implements CayenneMapEntry {
+    public class ExpressionEntry implements CayenneMapEntry {
 
         public Expression getExpression() {
             return ObjAttribute.this.getExpression();

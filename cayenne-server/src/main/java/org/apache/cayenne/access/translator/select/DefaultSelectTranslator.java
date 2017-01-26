@@ -464,9 +464,9 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 					} else if (pathPart instanceof DbAttribute) {
 						DbAttribute dbAttr = (DbAttribute) pathPart;
 						appendColumn(columns, oa, dbAttr, attributes, null);
-					} else if (pathPart instanceof ObjAttribute.ObjAttributeExpressionEntry) {
+					} else if (pathPart instanceof ObjAttribute.ExpressionEntry) {
 						// attribute overridden with Expression
-						appendColumnWithExpression(columns, ((ObjAttribute.ObjAttributeExpressionEntry) pathPart).getExpression(),
+						appendColumnWithExpression(columns, ((ObjAttribute.ExpressionEntry) pathPart).getExpression(),
 								TypesMapping.getSqlTypeByJava(oa.getType()), oa.getDbAttributeName());
 					}
 				}
