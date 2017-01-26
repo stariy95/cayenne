@@ -25,6 +25,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.dba.TypesMapping;
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.util.CayenneMapEntry;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.util.XMLEncoder;
@@ -38,6 +39,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
     protected String type;
     protected boolean usedForLocking;
     protected String dbAttributePath;
+    protected Expression expression;
 
     public ObjAttribute() {
     }
@@ -89,8 +91,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
         try {
             return Util.getJavaClass(getType());
         } catch (ClassNotFoundException e) {
-            throw new CayenneRuntimeException("Failed to load class for name '" + this.getType() + "': "
-                    + e.getMessage(), e);
+            throw new CayenneRuntimeException("Failed to load class for name '" + this.getType() + "': " + e.getMessage(), e);
         }
     }
 
@@ -174,13 +175,13 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
      * Returns a DbAttribute mapped by this ObjAttribute.
      */
     public DbAttribute getDbAttribute() {
-        Iterator<CayenneMapEntry> pathIterator = getDbPathIterator((ObjEntity) getEntity());
+        Iterator<CayenneMapEntry> pathIterator = getDbPathIterator(getEntity());
         CayenneMapEntry o = null;
         while (pathIterator.hasNext()) {
             o = pathIterator.next();
         }
-        if (o == null) {
-            return getParentDbAttribute((ObjEntity) getEntity());
+        if (o == null || !(o instanceof DbAttribute)) {
+            return getParentDbAttribute(getEntity());
         }
         return (DbAttribute) o;
     }
@@ -210,7 +211,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
      * @since 3.0
      */
     public boolean isInherited() {
-        ObjEntity owningEntity = (ObjEntity) getEntity();
+        ObjEntity owningEntity = getEntity();
         if (owningEntity == null) {
             return false;
         }
@@ -225,10 +226,15 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
     }
 
     public Iterator<CayenneMapEntry> getDbPathIterator() {
-        return getDbPathIterator((ObjEntity) getEntity());
+        return getDbPathIterator(getEntity());
     }
 
+    @SuppressWarnings("unchecked")
     public Iterator<CayenneMapEntry> getDbPathIterator(ObjEntity entity) {
+        if(hasExpression()) {
+            return IteratorUtils.singletonIterator(new ObjAttributeExpressionEntry());
+        }
+
         if (dbAttributePath == null) {
             return IteratorUtils.EMPTY_ITERATOR;
         }
@@ -256,7 +262,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
 
     /**
      * Returns the the name of the mapped DbAttribute. This value is the same as
-     * "dbAttributePath" for regular attributes mapped to columns. It is equql
+     * "dbAttributePath" for regular attributes mapped to columns. It is equal
      * to the last path component for the flattened attributes.
      */
     public String getDbAttributeName() {
@@ -290,6 +296,28 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
     }
 
     /**
+     * @param expression that overwrite db attribute path and will be used in queries
+     * @since 4.0
+     */
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
+    /**
+     * @since 4.0
+     */
+    public boolean hasExpression() {
+        return expression != null;
+    }
+
+    /**
+     * @since 4.0
+     */
+    public Expression getExpression() {
+        return expression.deepCopy();
+    }
+
+    /**
      * Returns whether this attribute is "flattened", meaning that it points to
      * a column from an entity other than the DbEntity mapped to the parent
      * ObjEntity.
@@ -307,7 +335,7 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
      */
     public boolean isMandatory() {
         DbAttribute dbAttribute = getDbAttribute();
-        return dbAttribute == null ? false : dbAttribute.isMandatory();
+        return dbAttribute != null && dbAttribute.isMandatory();
     }
 
     /**
@@ -375,5 +403,26 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
     @Override
     public String toString() {
         return "ObjAttr: " + type + " " + name + "; DbPath[" + dbAttributePath + "]";
+    }
+
+    public class ObjAttributeExpressionEntry implements CayenneMapEntry {
+
+        public Expression getExpression() {
+            return ObjAttribute.this.getExpression();
+        }
+
+        @Override
+        public String getName() {
+            return getDbAttributeName();
+        }
+
+        @Override
+        public Object getParent() {
+            return getEntity();
+        }
+
+        @Override
+        public void setParent(Object parent) {
+        }
     }
 }

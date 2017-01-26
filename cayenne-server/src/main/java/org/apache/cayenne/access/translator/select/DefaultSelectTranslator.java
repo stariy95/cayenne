@@ -371,37 +371,27 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	/**
 	 * If query contains explicit column list, use only them
 	 */
-	<T> List<ColumnDescriptor> appendOverriddenColumns(List<ColumnDescriptor> columns, SelectQuery<T> query) {
+	<T> List<ColumnDescriptor> appendOverriddenColumns(final List<ColumnDescriptor> columns, final SelectQuery<T> query) {
 		groupByColumns = new HashMap<>();
 
-		QualifierTranslator qualifierTranslator = adapter.getQualifierTranslator(this);
 		AccumulatingBindingListener bindingListener = new AccumulatingBindingListener();
 		setAddBindingListener(bindingListener);
 
-		for(Property<?> property : query.getColumns()) {
-			qualifierTranslator.setQualifier(property.getExpression());
-			StringBuilder builder = qualifierTranslator.appendPart(new StringBuilder());
-
-			int type = TypesMapping.getSqlTypeByJava(property.getType());
-
-			String alias = property.getAlias();
-			if(alias != null) {
-				builder.append(" AS ").append(alias);
+		try {
+			for (Property<?> property : query.getColumns()) {
+				int type = TypesMapping.getSqlTypeByJava(property.getType());
+				String alias = property.getAlias();
+				ColumnDescriptor descriptor = appendColumnWithExpression(columns, property.getExpression(), type, alias);
+				if (isAggregate(property)) {
+					haveAggregate = true;
+				} else {
+					groupByColumns.put(descriptor, bindingListener.getBindings());
+				}
+				bindingListener.reset();
 			}
-			ColumnDescriptor descriptor = new ColumnDescriptor(builder.toString(), type);
-			descriptor.setDataRowKey(alias);
-			descriptor.setIsExpression(true);
-			columns.add(descriptor);
-
-			if(isAggregate(property)) {
-				haveAggregate = true;
-			} else {
-				groupByColumns.put(descriptor, bindingListener.getBindings());
-			}
-			bindingListener.reset();
+		} finally {
+			setAddBindingListener(null);
 		}
-
-		setAddBindingListener(null);
 
 		if(!haveAggregate) {
 			// if no expression with aggregation function found, we don't need this information
@@ -473,8 +463,11 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 						dbRelationshipAdded(rel, JoinType.LEFT_OUTER, null);
 					} else if (pathPart instanceof DbAttribute) {
 						DbAttribute dbAttr = (DbAttribute) pathPart;
-
 						appendColumn(columns, oa, dbAttr, attributes, null);
+					} else if (pathPart instanceof ObjAttribute.ObjAttributeExpressionEntry) {
+						// attribute overridden with Expression
+						appendColumnWithExpression(columns, ((ObjAttribute.ObjAttributeExpressionEntry) pathPart).getExpression(),
+								TypesMapping.getSqlTypeByJava(oa.getType()), oa.getDbAttributeName());
 					}
 				}
 				return true;
@@ -616,7 +609,6 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 							dbRelationshipAdded(rel, JoinType.INNER, null);
 						} else if (pathPart instanceof DbAttribute) {
 							DbAttribute attribute = (DbAttribute) pathPart;
-
 							appendColumn(columns, oa, attribute, attributes, labelPrefix + '.' + attribute.getName());
 						}
 					}
@@ -692,6 +684,26 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 				}
 			}
 		}
+	}
+
+	/**
+	 * @since 4.0
+	 */
+	protected ColumnDescriptor appendColumnWithExpression(List<ColumnDescriptor> columns, Expression exp, int type, String label) {
+		QualifierTranslator qualifierTranslator = adapter.getQualifierTranslator(this);
+		qualifierTranslator.setQualifier(exp);
+		StringBuilder builder = qualifierTranslator.appendPart(new StringBuilder());
+
+		if(label != null) {
+			builder.append(" AS ").append(label);
+		}
+
+		ColumnDescriptor descriptor = new ColumnDescriptor(builder.toString(), type);
+		descriptor.setDataRowKey(label);
+		descriptor.setIsExpression(true);
+		columns.add(descriptor);
+
+		return descriptor;
 	}
 
 	/**

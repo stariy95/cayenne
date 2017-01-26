@@ -35,9 +35,13 @@ import org.apache.cayenne.ResultIteratorCallback;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.FunctionExpressionFactory;
 import org.apache.cayenne.exp.Property;
+import org.apache.cayenne.exp.parser.ASTFunctionCall;
 import org.apache.cayenne.exp.parser.ASTScalar;
+import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
@@ -289,5 +293,21 @@ public class ObjectSelect_RunIT extends ServerCase {
 				.selectFirst(context);
 		assertNotNull(a);
 		assertEquals("ng1 artist1", a);
+	}
+
+	@Test
+	public void testObjAttributeWithExpression() throws Exception {
+		ObjAttribute artistNameAttribute = context.getParentDataDomain()
+				.getDataMap("testmap").getObjEntity(Artist.class).getAttribute("artistName");
+		try {
+			Expression exp = ExpressionFactory.exp("SUBSTRING(db:ARTIST_NAME, 1, 3)");
+			artistNameAttribute.setExpression(exp);
+
+			Artist a = ObjectSelect.query(Artist.class).selectFirst(context);
+			assertNotNull(a);
+			assertEquals("art", a.getArtistName());
+		} finally {
+			artistNameAttribute.setExpression(null);
+		}
 	}
 }
