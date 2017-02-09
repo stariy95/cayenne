@@ -19,141 +19,67 @@
 
 package org.apache.cayenne.dba.mysql;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Collections;
-
-import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.dba.JdbcAdapter;
-import org.apache.cayenne.dba.JdbcPkGenerator;
-import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.dba.sybase.SybasePkGenerator;
 
 /**
  */
-public class MySQLPkGenerator extends JdbcPkGenerator {
+public class MySQLPkGenerator extends SybasePkGenerator {
 
 	MySQLPkGenerator(JdbcAdapter adapter) {
 		super(adapter);
 	}
 
-	/**
-	 * Overrides superclass's implementation to perform locking of the primary
-	 * key lookup table.
-	 * 
-	 * @since 3.0
-	 */
-	@Override
-	protected long longPkFromDatabase(DataNode node, DbEntity entity) throws Exception {
-
-		// must work directly with JDBC connection, since we
-		// must unlock the AUTO_PK_SUPPORT table in case of
-		// failures.... ah..JDBC is fun...
-
-		// chained SQL exception
-		SQLException exception = null;
-		long pk = -1L;
-
-		try (Connection con = node.getDataSource().getConnection()) {
-
-			if (con.getAutoCommit()) {
-				con.setAutoCommit(false);
-			}
-
-			try(Statement st = con.createStatement()) {
-				try {
-					pk = getLongPrimaryKey(st, entity.getName());
-					con.commit();
-				} catch (SQLException pkEx) {
-					try {
-						con.rollback();
-					} catch (SQLException ignored) {
-					}
-
-					exception = processSQLException(pkEx, null);
-				} finally {
-					// UNLOCK!
-					// THIS MUST BE EXECUTED NO MATTER WHAT, OR WE WILL LOCK THE PRIMARY KEY TABLE!!
-					try {
-						String unlockString = "UNLOCK TABLES";
-						adapter.getJdbcEventLogger().logQuery(unlockString, Collections.EMPTY_LIST);
-						st.execute(unlockString);
-					} catch (SQLException unlockEx) {
-						exception = processSQLException(unlockEx, exception);
-					}
-				}
-			}
-		} catch (SQLException otherEx) {
-			exception = processSQLException(otherEx, null);
-		}
-
-		// check errors
-		if (exception != null) {
-			throw exception;
-		}
-
-		return pk;
-
-	}
-
-	/**
-	 * Appends a new SQLException to the chain. If parent is null, uses the
-	 * exception as the chain root.
-	 */
-	protected SQLException processSQLException(SQLException exception, SQLException parent) {
-		if (parent == null) {
-			return exception;
-		}
-
-		parent.setNextException(exception);
-		return parent;
-	}
+    @Override
+    protected String pkTableCreateString() {
+        return "CREATE TABLE IF NOT EXISTS AUTO_PK_SUPPORT " +
+                "(TABLE_NAME CHAR(100) NOT NULL, NEXT_ID BIGINT NOT NULL, PRIMARY KEY (TABLE_NAME)) ENGINE=InnoDB";
+    }
 
 	@Override
-	protected String dropAutoPkString() {
+	protected String safePkTableDrop() {
 		return "DROP TABLE IF EXISTS AUTO_PK_SUPPORT";
 	}
 
-	@Override
-	protected String pkTableCreateString() {
-		return "CREATE TABLE IF NOT EXISTS AUTO_PK_SUPPORT " +
-				"(TABLE_NAME CHAR(100) NOT NULL, NEXT_ID BIGINT NOT NULL, UNIQUE (TABLE_NAME))";
+    @Override
+    protected String getCallProcedureSQL() {
+        return "{call auto_pk_for_table(?, ?)}";
+    }
+
+    /**
+     * CREATE PROCEDURE auto_pk_for_table (IN tname VARCHAR(255), IN pkbatchsize INT)
+     * BEGIN
+     *     DECLARE exit HANDLER FOR sqlexception
+     *     BEGIN
+     *          ROLLBACK;
+     *     END;
+     *
+     *     DECLARE exit HANDLER FOR sqlwarning
+     *     BEGIN
+     *          ROLLBACK;
+     *     END;
+     *
+     *     START TRANSACTION;
+	 *     	   -- UPDATE will lock TABLE_NAME record utill transaction end
+     *         UPDATE AUTO_PK_SUPPORT SET NEXT_ID = NEXT_ID + pkbatchsize WHERE TABLE_NAME = tname;
+     *         SELECT NEXT_ID FROM AUTO_PK_SUPPORT WHERE TABLE_NAME = tname;
+     *     COMMIT;
+     * END
+     *
+     */
+	protected String unsafePkProcCreate() {
+		return  "CREATE PROCEDURE auto_pk_for_table (IN tname VARCHAR(100), IN pkbatchsize INT) BEGIN " +
+                " DECLARE exit HANDLER FOR sqlexception BEGIN ROLLBACK; END; " +
+                " DECLARE exit HANDLER FOR sqlwarning BEGIN ROLLBACK; END; " +
+                " START TRANSACTION; " +
+                "   UPDATE AUTO_PK_SUPPORT SET NEXT_ID = NEXT_ID + pkbatchsize WHERE TABLE_NAME = tname; " +
+                "   SELECT NEXT_ID FROM AUTO_PK_SUPPORT WHERE TABLE_NAME = tname; " +
+                " COMMIT; " +
+                "END";
 	}
 
-	/**
-	 * @since 3.0
-	 */
-	protected long getLongPrimaryKey(Statement statement, String entityName) throws SQLException {
-		// lock
-		String lockString = "LOCK TABLES AUTO_PK_SUPPORT WRITE";
-		adapter.getJdbcEventLogger().logQuery(lockString, Collections.EMPTY_LIST);
-		statement.execute(lockString);
-
-		// select
-		String selectString = super.pkSelectString(entityName);
-		adapter.getJdbcEventLogger().logQuery(selectString, Collections.EMPTY_LIST);
-		long pk;
-		try(ResultSet rs = statement.executeQuery(selectString)) {
-			if (!rs.next()) {
-				throw new SQLException("No rows for '" + entityName + "'");
-			}
-
-			pk = rs.getLong(1);
-			if (rs.next()) {
-				throw new SQLException("More than one row for '" + entityName + "'");
-			}
-		}
-
-		// update
-		String updateString = super.pkUpdateString(entityName) + " AND NEXT_ID = " + pk;
-		adapter.getJdbcEventLogger().logQuery(updateString, Collections.EMPTY_LIST);
-		int updated = statement.executeUpdate(updateString);
-		// optimistic lock failure...
-		if (updated != 1) {
-			throw new SQLException("Error updating PK count '" + entityName + "': " + updated);
-		}
-
-		return pk;
+	@Override
+	protected String safePkProcDrop() {
+		return "DROP PROCEDURE IF EXISTS auto_pk_for_table";
 	}
 }

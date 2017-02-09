@@ -31,6 +31,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -160,23 +161,20 @@ public class SybasePkGenerator extends JdbcPkGenerator {
 		BaseTransaction.bindThreadTransaction(null);
 
 		try (Connection connection = node.getDataSource().getConnection()) {
-			try (CallableStatement statement = connection.prepareCall("{call auto_pk_for_table(?, ?)}")) {
+			String sql = getCallProcedureSQL();
+			adapter.getJdbcEventLogger().logQuery(sql, Collections.EMPTY_LIST);
+			try (CallableStatement statement = connection.prepareCall(sql)) {
 				statement.setString(1, entity.getName());
-				statement.setInt(2, super.getPkCacheSize());
+				statement.setInt(2, getPkCacheSize());
 
 				// can't use "executeQuery" per http://jtds.sourceforge.net/faq.html#expectingResultSet
 				statement.execute();
-				if (statement.getMoreResults()) {
-					try (ResultSet rs = statement.getResultSet()) {
-						if (rs.next()) {
-							return rs.getLong(1);
-						} else {
-							throw new CayenneRuntimeException("Error generating pk for DbEntity " + entity.getName());
-						}
+				try (ResultSet rs = statement.getResultSet()) {
+					if (rs.next()) {
+						return rs.getLong(1);
+					} else {
+						throw new CayenneRuntimeException("Error generating pk for DbEntity " + entity.getName());
 					}
-				} else {
-					throw new CayenneRuntimeException("Error generating pk for DbEntity " + entity.getName()
-							+ ", no result set from stored procedure.");
 				}
 			}
 		} finally {
@@ -184,18 +182,25 @@ public class SybasePkGenerator extends JdbcPkGenerator {
 		}
 	}
 
-	private String safePkTableDrop() {
+	protected String getCallProcedureSQL() {
+		return " SET NOCOUNT ON " +
+				"{call auto_pk_for_table(?, ?)}";
+	}
+
+	protected String safePkTableDrop() {
 		return "if exists (SELECT * FROM sysobjects WHERE name = 'AUTO_PK_SUPPORT') BEGIN " +
 				" DROP TABLE AUTO_PK_SUPPORT END";
 	}
 
-	private String unsafePkProcCreate() {
-		return " CREATE PROCEDURE auto_pk_for_table @tname VARCHAR(32), @pkbatchsize INT AS BEGIN BEGIN TRANSACTION"
+	protected String unsafePkProcCreate() {
+		return " CREATE PROCEDURE auto_pk_for_table @tname VARCHAR(100), @pkbatchsize INT AS BEGIN " +
+				"BEGIN TRANSACTION"
 				+ " UPDATE AUTO_PK_SUPPORT set NEXT_ID = NEXT_ID + @pkbatchsize WHERE TABLE_NAME = @tname"
-				+ " SELECT NEXT_ID FROM AUTO_PK_SUPPORT WHERE TABLE_NAME = @tname COMMIT END";
+				+ " SELECT NEXT_ID FROM AUTO_PK_SUPPORT WHERE TABLE_NAME = @tname " +
+				"COMMIT END";
 	}
 
-	private String safePkProcDrop() {
+	protected String safePkProcDrop() {
 		return "if exists (SELECT * FROM sysobjects WHERE name = 'auto_pk_for_table') BEGIN DROP PROCEDURE auto_pk_for_table END";
 	}
 
