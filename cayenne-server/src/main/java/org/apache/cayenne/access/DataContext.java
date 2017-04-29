@@ -698,6 +698,11 @@ public class DataContext extends BaseContext {
 
         try {
             if (childContext) {
+                // we need to validate changes here as this flush won't go through DataDomain's filters
+                if(changes instanceof ObjectStoreGraphDiff
+                        && ((ObjectStoreGraphDiff)changes).validateAndCheckNoop()) {
+                    return new CompoundDiff();
+                }
                 getObjectStore().childContextSyncStarted();
                 changes.apply(new ChildDiffLoader(this));
                 fireDataChannelChanged(originatingContext, changes);
@@ -731,41 +736,27 @@ public class DataContext extends BaseContext {
         synchronized (objectStore) {
 
             ObjectStoreGraphDiff changes = objectStore.getChanges();
-            boolean noop = isValidatingObjectsOnCommit() ? changes.validateAndCheckNoop() : changes.isNoop();
-
-            if (noop) {
+            if (changes.isNoop()) {
                 // need to clear phantom changes
                 objectStore.postprocessAfterPhantomCommit();
             } else {
-
                 try {
                     parentChanges = getChannel().onSync(this, changes, syncType);
 
-                    // note that this is a hack resulting from a fix to
-                    // CAY-766... To
-                    // support
-                    // valid object state in PostPersist callback,
-                    // 'postprocessAfterCommit' is
-                    // invoked by DataDomain.onSync(..). Unless the parent is
-                    // DataContext,
-                    // and
-                    // this method is not invoked!! As a result, PostPersist
-                    // will contain
-                    // temp
-                    // ObjectIds in nested contexts and perm ones in flat
-                    // contexts.
+                    // note that this is a hack resulting from a fix to CAY-766...
+                    // To support valid object state in PostPersist callback,
+                    // 'postprocessAfterCommit' is invoked by DataDomain.onSync(..). Unless the parent is
+                    // DataContext, and this method is not invoked!! As a result, PostPersist
+                    // will contain temp ObjectIds in nested contexts and perm ones in flat contexts.
                     // Pending better callback design .....
                     if (objectStore.hasChanges()) {
                         objectStore.postprocessAfterCommit(parentChanges);
                     }
 
-                    // this event is caught by peer nested DataContexts to
-                    // synchronize the
-                    // state
+                    // this event is caught by peer nested DataContexts to synchronize the state
                     fireDataChannelCommitted(this, changes);
-                }
-                // "catch" is needed to unwrap OptimisticLockExceptions
-                catch (CayenneRuntimeException ex) {
+                } catch (CayenneRuntimeException ex) {
+                    // "catch" is needed to unwrap OptimisticLockExceptions
                     Throwable unwound = Util.unwindException(ex);
 
                     if (unwound instanceof CayenneRuntimeException) {
@@ -777,9 +768,7 @@ public class DataContext extends BaseContext {
             }
 
             // merge changes from parent as well as changes caused by lifecycle
-            // event
-            // callbacks/listeners...
-
+            // event callbacks/listeners...
             CompoundDiff diff = new CompoundDiff();
 
             diff.addAll(objectStore.getLifecycleEventInducedChanges());

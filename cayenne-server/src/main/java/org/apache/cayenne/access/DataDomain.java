@@ -745,8 +745,9 @@ public class DataDomain implements QueryEngine, DataChannel {
 		public QueryResponse onQuery(ObjectContext originatingContext, Query query) {
 
 			DataChannelFilter filter = nextFilter();
-			return (filter != null) ? filter.onQuery(originatingContext, query, this) : onQueryNoFilters(
-					originatingContext, query);
+			return (filter != null)
+					? filter.onQuery(originatingContext, query, this)
+					: onQueryNoFilters(originatingContext, query);
 		}
 
 		@Override
@@ -761,8 +762,9 @@ public class DataDomain implements QueryEngine, DataChannel {
 		public GraphDiff onSync(final ObjectContext originatingContext, final GraphDiff changes, int syncType) {
 
 			DataChannelFilter filter = nextFilter();
-			return (filter != null) ? filter.onSync(originatingContext, changes, syncType, this) : onSyncNoFilters(
-					originatingContext, changes, syncType);
+			return (filter != null)
+					? filter.onSync(originatingContext, changes, syncType, this)
+					: onSyncNoFilters(originatingContext, changes, syncType);
 		}
 
 		@Override

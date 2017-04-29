@@ -49,14 +49,13 @@ public class NestedDataContextValidationIT extends ServerCase {
         ObjectContext childContext = runtime.newContext(context);
         assertTrue(
                 "Child context must have inherited the validation flag from parent",
-                ((DataContext) childContext).isValidatingObjectsOnCommit());
+                childContext.isValidatingObjectsOnCommit());
 
         Artist a1 = childContext.newObject(Artist.class);
         try {
             childContext.commitChangesToParent();
             fail("No validation was performed");
-        }
-        catch (ValidationException e) {
+        } catch (ValidationException e) {
             // expected
         }
 

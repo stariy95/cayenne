@@ -304,4 +304,11 @@ public interface ObjectContext extends DataChannel, Serializable {
      * @since 3.0
      */
     void setUserProperty(String key, Object value);
+
+    /**
+     * @return is this context should validate objects on commit
+     *
+     * @since 4.0
+     */
+    boolean isValidatingObjectsOnCommit();
 }

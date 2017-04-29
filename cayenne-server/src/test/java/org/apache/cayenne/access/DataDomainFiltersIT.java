@@ -54,9 +54,9 @@ public class DataDomainFiltersIT extends ServerCase {
     @Test
     public void testDefaultFilters() {
 
-        // There is a default TransactionFilter
+        // There is a 4 default filters
         DataDomain domain = runtime.getDataDomain();
-        assertEquals(1, domain.filters.size());
+        assertEquals(4, domain.filters.size());
     }
 
     @Test

@@ -24,7 +24,10 @@ import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.DataRowStoreFactory;
 import org.apache.cayenne.access.DefaultDataRowStoreFactory;
 import org.apache.cayenne.access.DefaultObjectMapRetainStrategy;
+import org.apache.cayenne.access.DiffValidationFilter;
 import org.apache.cayenne.access.ObjectMapRetainStrategy;
+import org.apache.cayenne.access.PostCallbackFilter;
+import org.apache.cayenne.access.PreCallbackFilter;
 import org.apache.cayenne.access.dbsync.DefaultSchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.dbsync.SchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.jdbc.SQLTemplateProcessor;
@@ -306,8 +309,12 @@ public class ServerModule implements Module {
                 .add(SQLServerSniffer.class).add(OracleSniffer.class).add(PostgresSniffer.class)
                 .add(MySQLSniffer.class);
 
-        // configure a filter chain with only one TransactionFilter as default
-        contributeDomainFilters(binder).add(TransactionFilter.class);
+        // NOTE: order of filters defines logic, so it must be maintained.
+        contributeDomainFilters(binder)
+                .add(PostCallbackFilter.class)
+                .add(TransactionFilter.class)
+                .add(DiffValidationFilter.class)
+                .add(PreCallbackFilter.class);
 
         // init listener list
         contributeDomainListeners(binder);
