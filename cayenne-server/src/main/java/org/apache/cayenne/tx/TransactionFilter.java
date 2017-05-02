@@ -23,7 +23,6 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.DataChannel;
 import org.apache.cayenne.DataChannelFilter;
 import org.apache.cayenne.DataChannelFilterChain;
-import org.apache.cayenne.DataChannelSyncCallbackAction;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.QueryResponse;
 import org.apache.cayenne.di.Inject;
@@ -51,13 +50,6 @@ public class TransactionFilter implements DataChannelFilter {
 
     @Override
     public GraphDiff onSync(final ObjectContext originatingContext, final GraphDiff changes, final int syncType, final DataChannelFilterChain filterChain) {
-        DataChannelSyncCallbackAction callbackAction = DataChannelSyncCallbackAction.getCallbackAction(
-                originatingContext.getChannel().getEntityResolver().getCallbackRegistry(),
-                originatingContext.getGraphManager(),
-                changes, syncType);
-
-        callbackAction.applyPreCommit();
-
         GraphDiff result;
         switch (syncType) {
             case DataChannel.ROLLBACK_CASCADE_SYNC:
@@ -79,7 +71,6 @@ public class TransactionFilter implements DataChannelFilter {
                 throw new CayenneRuntimeException("Invalid synchronization type: %d", syncType);
         }
 
-        callbackAction.applyPostCommit();
         return result;
     }
 

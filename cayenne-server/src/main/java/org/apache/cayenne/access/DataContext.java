@@ -32,6 +32,7 @@ import java.util.Map;
 import org.apache.cayenne.BaseContext;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.DataChannel;
+import org.apache.cayenne.DataChannelSyncCallbackAction;
 import org.apache.cayenne.DataObject;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.Fault;
@@ -559,8 +560,7 @@ public class DataContext extends BaseContext {
         injectInitialValue(object);
 
         // now we need to find all arc changes, inject missing value holders and
-        // pull in
-        // all transient connected objects
+        // pull in all transient connected objects
 
         descriptor.visitProperties(new PropertyVisitor() {
 
@@ -570,13 +570,11 @@ public class DataContext extends BaseContext {
                 if (!property.isFault(persistent)) {
 
                     Object value = property.readProperty(persistent);
-                    Collection<Map.Entry> collection = (value instanceof Map) ? ((Map) value).entrySet()
+                    Collection<Map.Entry> collection = (value instanceof Map)
+                            ? ((Map) value).entrySet()
                             : (Collection) value;
 
-                    Iterator<Map.Entry> it = collection.iterator();
-                    while (it.hasNext()) {
-                        Object target = it.next();
-
+                    for (Map.Entry target : collection) {
                         if (target instanceof Persistent) {
                             Persistent targetDO = (Persistent) target;
 
@@ -648,12 +646,22 @@ public class DataContext extends BaseContext {
         if (objectStore.hasChanges()) {
             GraphDiff diff = getObjectStore().getChanges();
 
+            DataChannelSyncCallbackAction callbackAction = DataChannelSyncCallbackAction.getCallbackAction(
+                    getChannel().getEntityResolver().getCallbackRegistry(), objectStore, diff, DataChannel.ROLLBACK_CASCADE_SYNC);
+
             // call channel with changes BEFORE reverting them, so that any
-            // interceptors
-            // could record them
+            // interceptors could record them
+
+            if(isPerformingCallbacksOnCommit()) {
+                callbackAction.applyPreCommit();
+            }
 
             if (channel != null) {
                 channel.onSync(this, diff, DataChannel.ROLLBACK_CASCADE_SYNC);
+            }
+
+            if(isPerformingCallbacksOnCommit()) {
+                callbackAction.applyPostCommit();
             }
 
             getObjectStore().objectsRolledBack();
@@ -663,7 +671,6 @@ public class DataContext extends BaseContext {
                 channel.onSync(this, new CompoundDiff(), DataChannel.ROLLBACK_CASCADE_SYNC);
             }
         }
-
     }
 
     /**
@@ -731,43 +738,47 @@ public class DataContext extends BaseContext {
         synchronized (objectStore) {
 
             ObjectStoreGraphDiff changes = objectStore.getChanges();
-            boolean noop = isValidatingObjectsOnCommit() ? changes.validateAndCheckNoop() : changes.isNoop();
 
-            if (noop) {
+            if (changes.isNoop()) {
                 // need to clear phantom changes
                 objectStore.postprocessAfterPhantomCommit();
             } else {
+                DataChannelSyncCallbackAction callbackAction = DataChannelSyncCallbackAction.getCallbackAction(
+                        getChannel().getEntityResolver().getCallbackRegistry(), objectStore, changes, syncType);
+
+                if(isPerformingCallbacksOnCommit()) {
+                    callbackAction.applyPreCommit();
+                }
+
+                if(isValidatingObjectsOnCommit()) {
+                    changes.validateAndCheckNoop();
+                }
 
                 try {
                     parentChanges = getChannel().onSync(this, changes, syncType);
 
-                    // note that this is a hack resulting from a fix to
-                    // CAY-766... To
-                    // support
-                    // valid object state in PostPersist callback,
-                    // 'postprocessAfterCommit' is
-                    // invoked by DataDomain.onSync(..). Unless the parent is
-                    // DataContext,
-                    // and
-                    // this method is not invoked!! As a result, PostPersist
-                    // will contain
-                    // temp
-                    // ObjectIds in nested contexts and perm ones in flat
-                    // contexts.
+                    // NOTE this is a hack resulting from a fix to CAY-766...
+                    // To support valid object state in PostPersist callback,
+                    // 'postprocessAfterCommit' is invoked by DataDomain.onSync(..).
+                    // Unless the parent is DataContext, and this method is not invoked!!
+                    // As a result, PostPersist will contain temp ObjectIds in nested
+                    // contexts and perm ones in flat contexts.
                     // Pending better callback design .....
                     if (objectStore.hasChanges()) {
                         objectStore.postprocessAfterCommit(parentChanges);
+                    }
+
+                    if(isPerformingCallbacksOnCommit()) {
+                        callbackAction.applyPostCommit();
                     }
 
                     // this event is caught by peer nested DataContexts to
                     // synchronize the
                     // state
                     fireDataChannelCommitted(this, changes);
-                }
-                // "catch" is needed to unwrap OptimisticLockExceptions
-                catch (CayenneRuntimeException ex) {
+                } catch (CayenneRuntimeException ex) {
+                    // "catch" is needed to unwrap OptimisticLockExceptions
                     Throwable unwound = Util.unwindException(ex);
-
                     if (unwound instanceof CayenneRuntimeException) {
                         throw (CayenneRuntimeException) unwound;
                     } else {
@@ -795,6 +806,9 @@ public class DataContext extends BaseContext {
 
             return diff;
         }
+    }
+
+    private void channelOnSync(GraphDiff diff, int syncType) {
 
     }
 

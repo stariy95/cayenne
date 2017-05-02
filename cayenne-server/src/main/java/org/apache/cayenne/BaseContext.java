@@ -94,13 +94,19 @@ public abstract class BaseContext implements ObjectContext {
 	}
 
 	// transient variables that should be reinitialized on deserialization from
-	// the
-	// registry
+	// the registry
 	protected transient DataChannel channel;
 	protected transient QueryCache queryCache;
 	protected transient EntityResolver entityResolver;
 
 	protected boolean validatingObjectsOnCommit = true;
+
+	/**
+	 * Should this context perform callbacks on commit
+	 *
+	 * @since 4.0
+	 */
+	protected boolean performingCallbacksOnCommit = true;
 
 	/**
 	 * Graph action that handles property changes
@@ -237,6 +243,24 @@ public abstract class BaseContext implements ObjectContext {
 	 */
 	public void setValidatingObjectsOnCommit(boolean flag) {
 		this.validatingObjectsOnCommit = flag;
+	}
+
+	/**
+	 * @return should this context perform callbacks on commit
+	 *
+	 * @since 4.0
+	 */
+	public boolean isPerformingCallbacksOnCommit() {
+		return performingCallbacksOnCommit;
+	}
+
+	/**
+	 * @param performingCallbacksOnCommit should this context perform callbacks on commit
+	 *
+	 * @since 4.0
+	 */
+	public void setPerformingCallbacksOnCommit(boolean performingCallbacksOnCommit) {
+		this.performingCallbacksOnCommit = performingCallbacksOnCommit;
 	}
 
 	/**

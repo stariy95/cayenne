@@ -51,11 +51,11 @@ public class LifecycleCallbackOrderIT extends ServerCase {
 
         Lifecycle lifecycle = context.newObject(Lifecycle.class);
         context.commitChanges();
-        assertEquals("validateForInsert;PrePersist;PostPersist;", lifecycle.getCallbackBufferValueAndReset());
+        assertEquals("PrePersist;validateForInsert;PostPersist;", lifecycle.getCallbackBufferValueAndReset());
 
         lifecycle.setName("CallbackOrderTest");
         context.commitChanges();
-        assertEquals("validateForUpdate;PreUpdate;PostUpdate;", lifecycle.getCallbackBufferValueAndReset());
+        assertEquals("PreUpdate;validateForUpdate;PostUpdate;", lifecycle.getCallbackBufferValueAndReset());
 
         context.deleteObject(lifecycle);
         assertEquals("PreRemove;", lifecycle.getCallbackBuffer().toString());

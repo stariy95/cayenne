@@ -192,7 +192,7 @@ public class VerticalInheritanceIT extends ServerCase {
 	/**
 	 * @link https://issues.apache.org/jira/browse/CAY-2146
 	 */
-    @Test(expected = org.apache.cayenne.validation.ValidationException.class)
+    @Test(expected = org.apache.cayenne.CayenneRuntimeException.class)
     public void testValidationOnInsert_Sub3_Exception() throws Exception {
 
         TableHelper ivRootTable = new TableHelper(dbHelper, "IV_ROOT");

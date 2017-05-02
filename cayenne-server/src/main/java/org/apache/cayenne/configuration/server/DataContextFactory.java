@@ -87,6 +87,7 @@ public class DataContextFactory implements ObjectContextFactory {
         DataContext context = newInstance(
                 parent, objectStoreFactory.createObjectStore(snapshotCache));
         context.setValidatingObjectsOnCommit(dataDomain.isValidatingObjectsOnCommit());
+        context.setPerformingCallbacksOnCommit(true);
         context.setQueryCache(new NestedQueryCache(queryCache));
         return context;
     }
@@ -99,6 +100,8 @@ public class DataContextFactory implements ObjectContextFactory {
         DataContext context = newInstance(parent, objectStore);
 
         context.setValidatingObjectsOnCommit(parent.isValidatingObjectsOnCommit());
+        // not performing callbacks for nested contexts to keep v3.1 behaviour
+        context.setPerformingCallbacksOnCommit(false);
         context.setUsingSharedSnapshotCache(parent.isUsingSharedSnapshotCache());
         context.setQueryCache(new NestedQueryCache(queryCache));
         context.setTransactionFactory(transactionFactory);
@@ -117,6 +120,7 @@ public class DataContextFactory implements ObjectContextFactory {
         DataContext context = newInstance(
                 parent, objectStoreFactory.createObjectStore(snapshotCache));
         context.setValidatingObjectsOnCommit(parent.isValidatingObjectsOnCommit());
+        context.setPerformingCallbacksOnCommit(true);
         context.setQueryCache(new NestedQueryCache(queryCache));
         context.setTransactionFactory(transactionFactory);
         return context;
