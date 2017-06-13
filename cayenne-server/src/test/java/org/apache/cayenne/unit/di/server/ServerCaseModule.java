@@ -52,7 +52,7 @@ import org.apache.cayenne.configuration.DefaultObjectStoreFactory;
 import org.apache.cayenne.configuration.DefaultRuntimeProperties;
 import org.apache.cayenne.configuration.ObjectStoreFactory;
 import org.apache.cayenne.configuration.RuntimeProperties;
-import org.apache.cayenne.configuration.XMLDataMapLoader;
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.configuration.server.DataSourceFactory;
 import org.apache.cayenne.configuration.server.ServerModule;
 import org.apache.cayenne.configuration.server.ServerRuntime;

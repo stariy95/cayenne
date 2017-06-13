@@ -21,7 +21,7 @@ package org.apache.cayenne.project.upgrade.v7;
 import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
-import org.apache.cayenne.configuration.XMLDataMapLoader;
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.configuration.server.JNDIDataSourceFactory;
 import org.apache.cayenne.configuration.server.XMLPoolingDataSourceFactory;
 import org.apache.cayenne.di.*;

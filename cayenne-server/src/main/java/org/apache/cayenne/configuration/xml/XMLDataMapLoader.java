@@ -16,9 +16,10 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
-package org.apache.cayenne.configuration;
+package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.MapLoader;
 import org.apache.cayenne.resource.Resource;
@@ -31,6 +32,7 @@ import java.net.URL;
 
 /**
  * @since 3.1
+ * @since 4.1 moved to org.apache.cayenne.configuration.xml package
  */
 public class XMLDataMapLoader implements DataMapLoader {
 

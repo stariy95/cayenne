@@ -19,6 +19,8 @@
 package org.apache.cayenne.configuration;
 
 import org.apache.cayenne.ConfigurationException;
+import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.AdhocObjectFactory;
 import org.apache.cayenne.di.Binder;
 import org.apache.cayenne.di.ClassLoaderManager;

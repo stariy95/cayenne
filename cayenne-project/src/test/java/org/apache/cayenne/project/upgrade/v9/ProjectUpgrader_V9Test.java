@@ -22,7 +22,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
-import org.apache.cayenne.configuration.XMLDataMapLoader;
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.*;
 import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;

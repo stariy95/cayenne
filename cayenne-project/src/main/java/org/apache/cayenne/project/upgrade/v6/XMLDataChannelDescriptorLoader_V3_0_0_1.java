@@ -21,7 +21,7 @@ package org.apache.cayenne.project.upgrade.v6;
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataNodeDescriptor;
-import org.apache.cayenne.configuration.SAXNestedTagHandler;
+import org.apache.cayenne.configuration.xml.SAXNestedTagHandler;
 import org.apache.cayenne.configuration.server.JNDIDataSourceFactory;
 import org.apache.cayenne.configuration.server.XMLPoolingDataSourceFactory;
 import org.apache.cayenne.conn.DataSourceInfo;
@@ -150,7 +150,7 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 		private Resource configurationSource;
 
 		DomainsHandler(Resource configurationSource, Collection<DataChannelDescriptor> domains, XMLReader parser) {
-			super(parser, null);
+			super(parser);
 			this.domains = domains;
 			this.configurationSource = configurationSource;
 		}
@@ -160,7 +160,7 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 				Attributes attributes) {
 
 			if (localName.equals(DOMAINS_TAG)) {
-				return new DomainsChildrenHandler(parser, this);
+				return new DomainsChildrenHandler(this);
 			}
 
 			return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
@@ -172,10 +172,10 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 		private Collection<DataChannelDescriptor> domains;
 		private Resource configurationSource;
 
-		DomainsChildrenHandler(XMLReader parser, DomainsHandler parent) {
-			super(parser, parent);
-			this.domains = parent.domains;
-			this.configurationSource = parent.configurationSource;
+		DomainsChildrenHandler(DomainsHandler parentHandler) {
+			super(parentHandler);
+			this.domains = parentHandler.domains;
+			this.configurationSource = parentHandler.configurationSource;
 		}
 
 		@Override
@@ -190,7 +190,7 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 				descriptor.setConfigurationSource(configurationSource);
 
 				domains.add(descriptor);
-				return new DataChannelChildrenHandler(descriptor, parser, this);
+				return new DataChannelChildrenHandler(this, descriptor);
 			}
 
 			logger.info(unexpectedTagMessage(localName, DOMAIN_TAG));
@@ -202,9 +202,8 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 
 		private DataChannelDescriptor descriptor;
 
-		DataChannelChildrenHandler(DataChannelDescriptor descriptor, XMLReader parser,
-				DomainsChildrenHandler parentHandler) {
-			super(parser, parentHandler);
+		DataChannelChildrenHandler(DomainsChildrenHandler parentHandler, DataChannelDescriptor descriptor) {
+			super(parentHandler);
 			this.descriptor = descriptor;
 		}
 
@@ -267,7 +266,7 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 				nodeDescriptor.setAdapterType(attributes.getValue("", "adapter"));
 				nodeDescriptor.setSchemaUpdateStrategyType(attributes.getValue("", "schema-update-strategy"));
 
-				return new DataNodeChildrenHandler(parser, this, nodeDescriptor);
+				return new DataNodeChildrenHandler(this, nodeDescriptor);
 			}
 
 			return super.createChildTagHandler(namespaceURI, localName, name, attributes);
@@ -278,8 +277,8 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 
 		private DataNodeDescriptor nodeDescriptor;
 
-		DataNodeChildrenHandler(XMLReader parser, SAXNestedTagHandler parentHandler, DataNodeDescriptor nodeDescriptor) {
-			super(parser, parentHandler);
+		DataNodeChildrenHandler(SAXNestedTagHandler parentHandler, DataNodeDescriptor nodeDescriptor) {
+			super(parentHandler);
 			this.nodeDescriptor = nodeDescriptor;
 		}
 

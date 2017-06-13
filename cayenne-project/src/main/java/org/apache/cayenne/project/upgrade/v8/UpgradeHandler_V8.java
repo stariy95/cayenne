@@ -22,7 +22,7 @@ package org.apache.cayenne.project.upgrade.v8;
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.configuration.ConfigurationTree;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
-import org.apache.cayenne.configuration.XMLDataChannelDescriptorLoader;
+import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Injector;
 import org.apache.cayenne.map.QueryDescriptor;
