@@ -21,9 +21,11 @@ package org.apache.cayenne.tools;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.MapLoader;
+import org.apache.cayenne.resource.URLResource;
 import org.xml.sax.InputSource;
 
 /**
@@ -39,9 +41,9 @@ class CayenneGeneratorMapLoaderAction {
 
     DataMap getMainDataMap() throws MalformedURLException {
         if (mainDataMap == null) {
-            MapLoader mapLoader = new MapLoader();
+            XMLDataMapLoader loader = new XMLDataMapLoader();
 
-            DataMap mainDataMap = loadDataMap(mapLoader, mainDataMapFile);
+            DataMap mainDataMap = loadDataMap(loader, mainDataMapFile);
 
             if (additionalDataMapFiles != null) {
 
@@ -51,7 +53,7 @@ class CayenneGeneratorMapLoaderAction {
 
                 for (File additionalDataMapFile : additionalDataMapFiles) {
 
-                    DataMap dataMap = loadDataMap(mapLoader, additionalDataMapFile);
+                    DataMap dataMap = loadDataMap(loader, additionalDataMapFile);
                     entityResolver.addDataMap(dataMap);
                     dataMap.setNamespace(entityResolver);
                 }
@@ -63,9 +65,8 @@ class CayenneGeneratorMapLoaderAction {
         return mainDataMap;
     }
 
-    protected DataMap loadDataMap(MapLoader mapLoader, File dataMapFile) throws MalformedURLException {
-        InputSource in = new InputSource(dataMapFile.toURI().toURL().toString());
-        return mapLoader.loadDataMap(in);
+    protected DataMap loadDataMap(XMLDataMapLoader mapLoader, File dataMapFile) throws MalformedURLException {
+        return mapLoader.load(new URLResource(dataMapFile.toURI().toURL()));
     }
 
     void setMainDataMapFile(File mainDataMapFile) {

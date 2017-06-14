@@ -16,9 +16,17 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
-package org.apache.cayenne.configuration;
+package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.ConfigurationException;
+import org.apache.cayenne.configuration.ConfigurationNameMapper;
+import org.apache.cayenne.configuration.ConfigurationTree;
+import org.apache.cayenne.configuration.DataChannelDescriptor;
+import org.apache.cayenne.configuration.DataMapLoader;
+import org.apache.cayenne.configuration.DataNodeDescriptor;
+import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
+import org.apache.cayenne.configuration.xml.HandlerFactory;
+import org.apache.cayenne.configuration.xml.NamespaceHandlerFactory;
 import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.AdhocObjectFactory;
@@ -31,6 +39,7 @@ import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.resource.URLResource;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,6 +65,7 @@ public class XMLDataChannelDescriptorLoaderTest {
                 binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
                 binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
+                binder.bind(HandlerFactory.class).to(NamespaceHandlerFactory.class);
             }
         };
 
@@ -76,7 +86,7 @@ public class XMLDataChannelDescriptorLoaderTest {
 
         assertNotNull(tree);
         assertNotNull(tree.getRootNode());
-        assertEquals(testConfigName, tree.getRootNode().getName());
+        Assert.assertEquals(testConfigName, tree.getRootNode().getName());
     }
 
     @Test

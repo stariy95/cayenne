@@ -71,6 +71,8 @@ import org.apache.cayenne.configuration.DefaultRuntimeProperties;
 import org.apache.cayenne.configuration.ObjectContextFactory;
 import org.apache.cayenne.configuration.ObjectStoreFactory;
 import org.apache.cayenne.configuration.RuntimeProperties;
+import org.apache.cayenne.configuration.xml.HandlerFactory;
+import org.apache.cayenne.configuration.xml.NamespaceHandlerFactory;
 import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dba.db2.DB2Sniffer;
@@ -403,5 +405,7 @@ public class ServerModule implements Module {
         binder.bind(RowReaderFactory.class).to(DefaultRowReaderFactory.class);
 
         binder.bind(SQLTemplateProcessor.class).to(VelocitySQLTemplateProcessor.class);
+
+        binder.bind(HandlerFactory.class).to(NamespaceHandlerFactory.class);
     }
 }

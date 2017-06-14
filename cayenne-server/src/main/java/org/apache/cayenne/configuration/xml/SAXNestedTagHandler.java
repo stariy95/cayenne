@@ -135,6 +135,7 @@ public class SAXNestedTagHandler extends DefaultHandler {
     }
 
     protected void stop() {
+        beforeScopeEnd();
         // pop self from the handler stack
         parser.setContentHandler(parentHandler);
     }

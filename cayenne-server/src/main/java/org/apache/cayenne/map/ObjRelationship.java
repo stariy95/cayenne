@@ -563,8 +563,9 @@ public class ObjRelationship extends Relationship implements ConfigurationNode {
     /**
      * Sets relationship path, but does not trigger its conversion to
      * List<DbRelationship> For internal purposes, primarily datamap loading
+     * @since 4.1 this method is public as it is used by new XML loaders
      */
-    void setDeferredDbRelationshipPath(String relationshipPath) {
+    public void setDeferredDbRelationshipPath(String relationshipPath) {
         if (!Util.nullSafeEquals(getDbRelationshipPath(), relationshipPath)) {
             deferredPath = relationshipPath;
         }

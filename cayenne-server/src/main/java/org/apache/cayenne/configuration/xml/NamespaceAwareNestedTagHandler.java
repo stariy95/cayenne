@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 /**
  * Base class for handlers that can delegate execution of unknown tags to
@@ -32,14 +33,20 @@ import org.xml.sax.SAXException;
  */
 abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler {
 
-    String targetNamespace;
+    protected String targetNamespace;
 
-    HandlerFactory factory;
+    protected HandlerFactory factory;
+
+    public NamespaceAwareNestedTagHandler(XMLReader parser, String targetNamespace, HandlerFactory factory) {
+        super(parser);
+        this.targetNamespace = targetNamespace;
+        this.factory = factory;
+    }
 
     public NamespaceAwareNestedTagHandler(SAXNestedTagHandler parentHandler, String targetNamespace, HandlerFactory factory) {
         super(parentHandler);
-        this.factory = factory;
         this.targetNamespace = targetNamespace;
+        this.factory = factory;
     }
 
     public NamespaceAwareNestedTagHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace) {

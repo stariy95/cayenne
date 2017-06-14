@@ -81,22 +81,22 @@ final class DataChannelChildrenHandler extends SAXNestedTagHandler {
         }
 
         if(DATA_MAP_TAG.equals(localName)) {
-            return new DataMapHandler(this, xmlDataChannelDescriptorLoader.handlerFactory);
+            return new DataMapHandler(this, xmlDataChannelDescriptorLoader.handlerFactory, descriptor);
         }
 
         return super.createChildTagHandler(namespaceURI, localName, name, attributes);
     }
 
     private void addProperty(Attributes attributes) {
-        String key = attributes.getValue("", "name");
-        String value = attributes.getValue("", "value");
+        String key = attributes.getValue("name");
+        String value = attributes.getValue("value");
         if (key != null && value != null) {
             descriptor.getProperties().put(key, value);
         }
     }
 
     private void addMap(Attributes attributes) {
-        String dataMapName = attributes.getValue("", "name");
+        String dataMapName = attributes.getValue("name");
         Resource baseResource = descriptor.getConfigurationSource();
 
         String dataMapLocation = xmlDataChannelDescriptorLoader.nameMapper.configurationLocation(DataMap.class, dataMapName);
@@ -115,23 +115,19 @@ final class DataChannelChildrenHandler extends SAXNestedTagHandler {
     }
 
     private void addNode(Attributes attributes) {
-        String nodeName = attributes.getValue("", "name");
+        String nodeName = attributes.getValue("name");
         if (nodeName == null) {
             throw new ConfigurationException("Error: <node> without 'name'.");
         }
 
         nodeDescriptor.setConfigurationSource(descriptor.getConfigurationSource());
-        descriptor.getNodeDescriptors().add(nodeDescriptor);
-
         nodeDescriptor.setName(nodeName);
-        nodeDescriptor.setAdapterType(attributes.getValue("", "adapter"));
-
-        String parameters = attributes.getValue("", "parameters");
-        nodeDescriptor.setParameters(parameters);
-
-        String dataSourceFactory = attributes.getValue("", "factory");
-        nodeDescriptor.setDataSourceFactoryType(dataSourceFactory);
-        nodeDescriptor.setSchemaUpdateStrategyType(attributes.getValue("", "schema-update-strategy"));
+        nodeDescriptor.setAdapterType(attributes.getValue("adapter"));
+        nodeDescriptor.setParameters(attributes.getValue("parameters"));
+        nodeDescriptor.setDataSourceFactoryType(attributes.getValue("factory"));
+        nodeDescriptor.setSchemaUpdateStrategyType(attributes.getValue("schema-update-strategy"));
         nodeDescriptor.setDataChannelDescriptor(descriptor);
+
+        descriptor.getNodeDescriptors().add(nodeDescriptor);
     }
 }

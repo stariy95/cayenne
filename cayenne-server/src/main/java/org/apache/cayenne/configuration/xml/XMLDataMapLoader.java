@@ -20,15 +20,14 @@ package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.configuration.DataMapLoader;
+import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DataMap;
-import org.apache.cayenne.map.MapLoader;
 import org.apache.cayenne.resource.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.cayenne.util.Util;
 import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 import java.io.InputStream;
-import java.net.URL;
 
 /**
  * @since 3.1
@@ -36,24 +35,24 @@ import java.net.URL;
  */
 public class XMLDataMapLoader implements DataMapLoader {
 
-    private static Logger logger = LoggerFactory.getLogger(XMLDataMapLoader.class);
+    @Inject
+    protected HandlerFactory handlerFactory;
 
     public DataMap load(Resource configurationResource) throws CayenneRuntimeException {
 
-        // TODO: andrus 11.27.2009 - deprecate MapLoader and implement a loader
-        // here. MapLoader is in the wrong place, exposes ContentHandler methods and
-        // implements if/else contextless matching of tags... should use something like
-        // SAXNestedTagHandler instead.
-        MapLoader mapLoader = new MapLoader();
-        URL url = configurationResource.getURL();
+        final RootDataMapHandler rootHandler;
 
-        try (InputStream in = url.openStream()) {
-            return mapLoader.loadDataMap(new InputSource(in));
+        try(InputStream in = configurationResource.getURL().openStream()) {
+            XMLReader parser = Util.createXmlReader();
+            rootHandler = new RootDataMapHandler(parser, handlerFactory);
+
+            parser.setContentHandler(rootHandler);
+            parser.setErrorHandler(rootHandler);
+            parser.parse(new InputSource(in));
         } catch (Exception e) {
-            throw new CayenneRuntimeException(
-                    "Error loading configuration from %s",
-                    e,
-                    url);
+            throw new CayenneRuntimeException("Error loading configuration from %s", e, configurationResource.getURL());
         }
+
+        return rootHandler.getDataMap();
     }
 }

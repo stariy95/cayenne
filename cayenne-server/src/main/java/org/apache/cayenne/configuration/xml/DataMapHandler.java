@@ -22,9 +22,8 @@ package org.apache.cayenne.configuration.xml;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.map.DataMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -45,24 +44,34 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
     private static final String PROCEDURE_TAG        = "procedure";
     private static final String QUERY_TAG            = "query";
 
-    DataMap map;
+    public static final String TRUE = "true";
 
-    Map<String, String> mapProperties;
+    private DataChannelDescriptor descriptor;
 
-    public DataMapHandler(SAXNestedTagHandler parentHandler, HandlerFactory factory) {
-        // TODO: do we need to define current namespace somewhere else to have better control over it
+    private DataMap map;
+
+    private Map<String, Object> mapProperties;
+
+    public DataMapHandler(NamespaceAwareNestedTagHandler parentHandler) {
+        super(parentHandler);
+    }
+
+    public DataMapHandler(SAXNestedTagHandler parentHandler, HandlerFactory factory, DataChannelDescriptor descriptor) {
+        // TODO: do we need to define current namespace somewhere else to have better control over it?
         super(parentHandler, "http://cayenne.apache.org/schema/10/modelMap", factory);
+        this.descriptor = descriptor;
     }
 
     @Override
-    protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
+    protected boolean processElement(String namespaceURI, String localName,
+                                     Attributes attributes) throws SAXException {
         switch (localName) {
             case PROPERTY_TAG:
                 addProperty(attributes);
                 return true;
 
             case DATA_MAP_TAG:
-                map = new DataMap();
+                this.map = new DataMap();
                 return true;
         }
 
@@ -79,26 +88,34 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
                     return new DbEntityHandler(this, map);
 
                 case OBJ_ENTITY_TAG:
-                    return null;
+                    return new ObjEntityHandler(this, map);
 
                 case DB_RELATIONSHIP_TAG:
-                    return null;
+                    return new DbRelationshipHandler(this, map);
 
                 case OBJ_RELATIONSHIP_TAG:
-                    return null;
+                    return new ObjRelationshipHandler(this, map);
 
                 case PROCEDURE_TAG:
-                    return null;
+                    //return null;
 
                 case QUERY_TAG:
-                    return null;
+                    //return null;
 
                 case EMBEDDABLE_TAG:
-                    return null;
+                    //return null;
             }
         }
 
         return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
+    }
+
+    @Override
+    protected void beforeScopeEnd() {
+        map.initWithProperties(mapProperties);
+        if(descriptor != null) {
+            descriptor.getDataMaps().add(map);
+        }
     }
 
     private void addProperty(Attributes attributes) throws SAXException {
@@ -112,10 +129,20 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
             throw new SAXException("MapLoader::processStartDataMapProperty(), no property value.");
         }
 
+        // special meaning for <property name="name" .../>
+        if("name".equals(name)) {
+            map.setName(value);
+            return;
+        }
+
         if (mapProperties == null) {
             mapProperties = new TreeMap<>();
         }
 
         mapProperties.put(name, value);
+    }
+
+    public DataMap getMap() {
+        return map;
     }
 }

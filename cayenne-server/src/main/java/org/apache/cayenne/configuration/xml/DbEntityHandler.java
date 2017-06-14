@@ -33,12 +33,10 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
 
     private static final String DB_ENTITY_TAG = "db-entity";
     private static final String DB_ATTRIBUTE_TAG = "db-attribute";
-    public static final String TRUE = "true";
-    public static final String FALSE = "false";
 
-    DbEntity entity;
+    private DbEntity entity;
 
-    DataMap map;
+    private DataMap map;
 
     public DbEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap map) {
         super(parentHandler);
@@ -61,45 +59,44 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
     }
 
     private void createDbEntity(Attributes attributes) {
-        String name = attributes.getValue("", "name");
+        String name = attributes.getValue("name");
         entity = new DbEntity(name);
-        entity.setSchema(attributes.getValue("", "schema"));
-        entity.setCatalog(attributes.getValue("", "catalog"));
+        entity.setSchema(attributes.getValue("schema"));
+        entity.setCatalog(attributes.getValue("catalog"));
         map.addDbEntity(entity);
     }
 
     private void createDbAttribute(Attributes attributes) {
-        String name = attributes.getValue("", "name");
-        String type = attributes.getValue("", "type");
+        String name = attributes.getValue("name");
+        String type = attributes.getValue("type");
 
         DbAttribute attrib = new DbAttribute(name);
         attrib.setType(TypesMapping.getSqlTypeByName(type));
         entity.addAttribute(attrib);
 
-        String length = attributes.getValue("", "length");
+        String length = attributes.getValue("length");
         if (length != null) {
             attrib.setMaxLength(Integer.parseInt(length));
         }
 
-        // this is an obsolete 1.2 'precision' attribute that really meant
-        // 'scale'
-        String pseudoPrecision = attributes.getValue("", "precision");
-        if (pseudoPrecision != null) {
-            attrib.setScale(Integer.parseInt(pseudoPrecision));
-        }
-
-        String precision = attributes.getValue("", "attributePrecision");
+        String precision = attributes.getValue("attributePrecision");
         if (precision != null) {
             attrib.setAttributePrecision(Integer.parseInt(precision));
         }
 
-        String scale = attributes.getValue("", "scale");
+        // this is an obsolete 1.2 'precision' attribute that really meant 'scale'
+        String pseudoPrecision = attributes.getValue("precision");
+        if (pseudoPrecision != null) {
+            attrib.setScale(Integer.parseInt(pseudoPrecision));
+        }
+
+        String scale = attributes.getValue("scale");
         if (scale != null) {
             attrib.setScale(Integer.parseInt(scale));
         }
 
-        attrib.setPrimaryKey(TRUE.equalsIgnoreCase(attributes.getValue("", "isPrimaryKey")));
-        attrib.setMandatory(TRUE.equalsIgnoreCase(attributes.getValue("", "isMandatory")));
-        attrib.setGenerated(TRUE.equalsIgnoreCase(attributes.getValue("", "isGenerated")));
+        attrib.setPrimaryKey(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isPrimaryKey")));
+        attrib.setMandatory(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isMandatory")));
+        attrib.setGenerated(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isGenerated")));
     }
 }
