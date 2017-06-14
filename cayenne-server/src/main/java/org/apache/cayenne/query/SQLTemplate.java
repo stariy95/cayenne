@@ -23,9 +23,9 @@ import org.apache.cayenne.access.QueryEngine;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.map.MapLoader;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.Procedure;
+import org.apache.cayenne.map.QueryDescriptor;
 import org.apache.cayenne.map.SQLResult;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
@@ -213,22 +213,22 @@ public class SQLTemplate extends AbstractQuery implements ParameterizedQuery, XM
 		String rootType = null;
 
 		if (root instanceof String) {
-			rootType = MapLoader.OBJ_ENTITY_ROOT;
+			rootType = QueryDescriptor.OBJ_ENTITY_ROOT;
 			rootString = root.toString();
 		} else if (root instanceof ObjEntity) {
-			rootType = MapLoader.OBJ_ENTITY_ROOT;
+			rootType = QueryDescriptor.OBJ_ENTITY_ROOT;
 			rootString = ((ObjEntity) root).getName();
 		} else if (root instanceof DbEntity) {
-			rootType = MapLoader.DB_ENTITY_ROOT;
+			rootType = QueryDescriptor.DB_ENTITY_ROOT;
 			rootString = ((DbEntity) root).getName();
 		} else if (root instanceof Procedure) {
-			rootType = MapLoader.PROCEDURE_ROOT;
+			rootType = QueryDescriptor.PROCEDURE_ROOT;
 			rootString = ((Procedure) root).getName();
 		} else if (root instanceof Class<?>) {
-			rootType = MapLoader.JAVA_CLASS_ROOT;
+			rootType = QueryDescriptor.JAVA_CLASS_ROOT;
 			rootString = ((Class<?>) root).getName();
 		} else if (root instanceof DataMap) {
-			rootType = MapLoader.DATA_MAP_ROOT;
+			rootType = QueryDescriptor.DATA_MAP_ROOT;
 			rootString = ((DataMap) root).getName();
 		}
 

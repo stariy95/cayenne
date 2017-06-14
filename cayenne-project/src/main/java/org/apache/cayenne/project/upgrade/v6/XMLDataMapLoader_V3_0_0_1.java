@@ -40,7 +40,6 @@ class XMLDataMapLoader_V3_0_0_1 {
 		DataMap map;
 
 		try (InputStream in = url.openStream();) {
-
 			map = mapLoader.loadDataMap(new InputSource(in));
 		} catch (Exception e) {
 			throw new CayenneRuntimeException("Error loading configuration from %s", e, url);

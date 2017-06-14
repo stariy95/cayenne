@@ -24,9 +24,7 @@ import java.net.MalformedURLException;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.map.MapLoader;
 import org.apache.cayenne.resource.URLResource;
-import org.xml.sax.InputSource;
 
 /**
  * Loads a DataMap and a shared entity namespace.

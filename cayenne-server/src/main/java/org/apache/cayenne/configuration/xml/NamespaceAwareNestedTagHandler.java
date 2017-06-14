@@ -37,6 +37,8 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
 
     protected HandlerFactory factory;
 
+    protected StringBuilder charactersBuffer = new StringBuilder();
+
     public NamespaceAwareNestedTagHandler(XMLReader parser, String targetNamespace, HandlerFactory factory) {
         super(parser);
         this.targetNamespace = targetNamespace;
@@ -59,6 +61,14 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
 
     abstract protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException;
 
+    protected void processCharData(String localName, String data) {
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        charactersBuffer.append(ch, start, length);
+    }
+
     @Override
     public final void startElement(String namespaceURI, String localName,
                                    String qName, Attributes attributes) throws SAXException {
@@ -72,6 +82,15 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
         }
 
         parser.setContentHandler(childHandler);
+        charactersBuffer.delete(0, charactersBuffer.length());
+    }
+
+    @Override
+    public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
+        super.endElement(namespaceURI, localName, qName);
+        if(namespaceURI.equals(targetNamespace) && parentHandler instanceof NamespaceAwareNestedTagHandler) {
+            ((NamespaceAwareNestedTagHandler)parentHandler).processCharData(localName, charactersBuffer.toString());
+        }
     }
 
     @Override

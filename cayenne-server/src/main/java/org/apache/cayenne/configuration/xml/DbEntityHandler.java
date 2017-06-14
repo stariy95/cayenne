@@ -20,9 +20,11 @@
 package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.dba.TypesMapping;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.DbKeyGenerator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -33,6 +35,11 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
 
     private static final String DB_ENTITY_TAG = "db-entity";
     private static final String DB_ATTRIBUTE_TAG = "db-attribute";
+    private static final String DB_KEY_GENERATOR_TAG = "db-key-generator";
+    private static final String DB_GENERATOR_TYPE_TAG = "db-generator-type";
+    private static final String DB_GENERATOR_NAME_TAG = "db-generator-name";
+    private static final String DB_KEY_CACHE_SIZE_TAG = "db-key-cache-size";
+    private static final String QUALIFIER_TAG = "qualifier";
 
     private DbEntity entity;
 
@@ -46,16 +53,47 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
         switch (localName) {
+            case DB_ENTITY_TAG:
+                createDbEntity(attributes);
+                return true;
+
             case DB_ATTRIBUTE_TAG:
                 createDbAttribute(attributes);
                 return true;
 
-            case DB_ENTITY_TAG:
-                createDbEntity(attributes);
+            case DB_KEY_GENERATOR_TAG:
+                createDbKeyGenerator();
+                return true;
+
+            case DB_GENERATOR_NAME_TAG:
+            case DB_GENERATOR_TYPE_TAG:
+            case DB_KEY_CACHE_SIZE_TAG:
+            case QUALIFIER_TAG:
                 return true;
         }
 
         return false;
+    }
+
+    @Override
+    protected void processCharData(String localName, String data) {
+        switch (localName) {
+            case DB_GENERATOR_TYPE_TAG:
+                setDbGeneratorType(data);
+                break;
+
+            case DB_GENERATOR_NAME_TAG:
+                setDbGeneratorName(data);
+                break;
+
+            case DB_KEY_CACHE_SIZE_TAG:
+                setDbKeyCacheSize(data);
+                break;
+
+            case QUALIFIER_TAG:
+                createQualifier(data);
+                break;
+        }
     }
 
     private void createDbEntity(Attributes attributes) {
@@ -98,5 +136,57 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
         attrib.setPrimaryKey(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isPrimaryKey")));
         attrib.setMandatory(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isMandatory")));
         attrib.setGenerated(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isGenerated")));
+    }
+
+    private void createDbKeyGenerator() {
+        entity.setPrimaryKeyGenerator(new DbKeyGenerator());
+    }
+
+    private void setDbGeneratorType(String type) {
+        if (entity == null) {
+            return;
+        }
+        DbKeyGenerator pkGenerator = entity.getPrimaryKeyGenerator();
+        pkGenerator.setGeneratorType(type);
+        if (pkGenerator.getGeneratorType() == null) {
+            entity.setPrimaryKeyGenerator(null);
+        }
+    }
+
+    private void setDbGeneratorName(String name) {
+        if (entity == null) {
+            return;
+        }
+        DbKeyGenerator pkGenerator = entity.getPrimaryKeyGenerator();
+        if (pkGenerator == null) {
+            return;
+        }
+        pkGenerator.setGeneratorName(name);
+    }
+
+    private void setDbKeyCacheSize(String size) {
+        if (entity == null) {
+            return;
+        }
+        DbKeyGenerator pkGenerator = entity.getPrimaryKeyGenerator();
+        if (pkGenerator == null) {
+            return;
+        }
+        try {
+            pkGenerator.setKeyCacheSize(new Integer(size.trim()));
+        } catch (Exception ex) {
+            pkGenerator.setKeyCacheSize(null);
+        }
+    }
+
+    private void createQualifier(String qualifier) {
+        if (qualifier.trim().length() == 0) {
+            return;
+        }
+
+        // qualifier can belong to ObjEntity, DbEntity or a query
+        if (entity != null) {
+            entity.setQualifier(ExpressionFactory.exp(qualifier));
+        }
     }
 }

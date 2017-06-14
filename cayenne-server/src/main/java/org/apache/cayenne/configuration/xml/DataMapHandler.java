@@ -97,13 +97,13 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
                     return new ObjRelationshipHandler(this, map);
 
                 case PROCEDURE_TAG:
-                    //return null;
+                    return new ProcedureHandler(this, map);
 
                 case QUERY_TAG:
-                    //return null;
+                    return new QueryDescriptorHandler(this, map);
 
                 case EMBEDDABLE_TAG:
-                    //return null;
+                    return new EmbeddableHandler(this, map);
             }
         }
 

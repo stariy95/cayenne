@@ -72,7 +72,7 @@ public class ProcedureQueryDescriptor extends QueryDescriptor {
         encoder.print(type);
 
         encoder.print("\" root=\"");
-        encoder.print(MapLoader.PROCEDURE_ROOT);
+        encoder.print(QueryDescriptor.PROCEDURE_ROOT);
 
         String rootString = null;
 

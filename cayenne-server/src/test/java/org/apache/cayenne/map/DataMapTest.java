@@ -19,16 +19,17 @@
 
 package org.apache.cayenne.map;
 
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.util.XMLEncoder;
 import org.junit.Test;
-import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +41,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * DataMap unit tests.
@@ -187,7 +190,7 @@ public class DataMapTest {
         try {
             map.addObjEntity(e2);
             fail("Should not be able to add more than one entity with the same name");
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -403,10 +406,10 @@ public class DataMapTest {
         assertNotNull(proceduresCollection);
         assertEquals(len, proceduresCollection.size());
 
-        for (int i = 0; i < len; i++) {
-            Procedure proc = map.getProcedure(expectedNames[i]);
+        for (String expectedName : expectedNames) {
+            Procedure proc = map.getProcedure(expectedName);
             assertNotNull(proc);
-            assertEquals(expectedNames[i], proc.getName());
+            assertEquals(expectedName, proc.getName());
         }
     }
 
@@ -420,13 +423,16 @@ public class DataMapTest {
 
         assertTrue(map.quotingSQLIdentifiers);
 
-        MapLoader loader = new MapLoader();
+        XMLDataMapLoader loader = new XMLDataMapLoader();
         try {
+            URL url = mock(URL.class);
             InputStream is = new ByteArrayInputStream(w.getBuffer().toString().getBytes("UTF-8"));
-            DataMap newMap = loader.loadDataMap(new InputSource(is));
+            when(url.openStream()).thenReturn(is);
+
+            DataMap newMap = loader.load(new URLResource(url));
             assertTrue(newMap.quotingSQLIdentifiers);
 
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -437,11 +443,14 @@ public class DataMapTest {
 
         assertFalse(map.quotingSQLIdentifiers);
         try {
-            InputStream is = new ByteArrayInputStream(w2.getBuffer().toString().getBytes("UTF-8"));
-            DataMap newMap = loader.loadDataMap(new InputSource(is));
+            URL url = mock(URL.class);
+            InputStream is = new ByteArrayInputStream(w.getBuffer().toString().getBytes("UTF-8"));
+            when(url.openStream()).thenReturn(is);
+
+            DataMap newMap = loader.load(new URLResource(url));
             assertFalse(newMap.quotingSQLIdentifiers);
 
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

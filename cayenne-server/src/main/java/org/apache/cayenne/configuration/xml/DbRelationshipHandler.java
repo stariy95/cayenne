@@ -48,26 +48,26 @@ public class DbRelationshipHandler extends NamespaceAwareNestedTagHandler {
 
         switch (localName) {
             case DB_RELATIONSHIP_TAG:
-                addRelationship(attributes);
+                createRelationship(attributes);
                 return true;
 
             case DB_ATTRIBUTE_PAIR_TAG:
-                addDbAttributePair(attributes);
+                createDbAttributePair(attributes);
                 return true;
         }
 
         return false;
     }
 
-    private void addRelationship(Attributes attributes) throws SAXException {
+    private void createRelationship(Attributes attributes) throws SAXException {
         String name = attributes.getValue("name");
         if (name == null) {
-            throw new SAXException("DbRelationshipHandler::addRelationship() - missing \"name\" attribute.");
+            throw new SAXException("DbRelationshipHandler::createRelationship() - missing \"name\" attribute.");
         }
 
         String sourceName = attributes.getValue("source");
         if (sourceName == null) {
-            throw new SAXException("DbRelationshipHandler::addRelationship() - null source entity");
+            throw new SAXException("DbRelationshipHandler::createRelationship() - null source entity");
         }
 
         DbEntity source = map.getDbEntity(sourceName);
@@ -84,7 +84,7 @@ public class DbRelationshipHandler extends NamespaceAwareNestedTagHandler {
         source.addRelationship(dbRelationship);
     }
 
-    private void addDbAttributePair(Attributes attributes) {
+    private void createDbAttributePair(Attributes attributes) {
         DbJoin join = new DbJoin(dbRelationship);
         join.setSourceName(attributes.getValue("source"));
         join.setTargetName(attributes.getValue("target"));

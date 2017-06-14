@@ -35,6 +35,8 @@ import java.io.InputStream;
  */
 public class XMLDataMapLoader implements DataMapLoader {
 
+    private static final String DATA_MAP_LOCATION_SUFFIX = ".map.xml";
+
     @Inject
     protected HandlerFactory handlerFactory;
 
@@ -53,6 +55,39 @@ public class XMLDataMapLoader implements DataMapLoader {
             throw new CayenneRuntimeException("Error loading configuration from %s", e, configurationResource.getURL());
         }
 
-        return rootHandler.getDataMap();
+        DataMap map = rootHandler.getDataMap();
+        if(map.getName() == null) {
+            // set name based on location if no name provided by map itself
+            map.setName(mapNameFromLocation(configurationResource.getURL().getFile()));
+        }
+        return map;
+    }
+
+    /**
+     * Helper method to guess the map name from its location.
+     */
+    protected String mapNameFromLocation(String location) {
+        if (location == null) {
+            return "Untitled";
+        }
+
+        int lastSlash = location.lastIndexOf('/');
+        if (lastSlash < 0) {
+            lastSlash = location.lastIndexOf('\\');
+        }
+
+        if (lastSlash >= 0 && lastSlash + 1 < location.length()) {
+            location = location.substring(lastSlash + 1);
+        }
+
+        if (location.endsWith(DATA_MAP_LOCATION_SUFFIX)) {
+            location = location.substring(0, location.length() - DATA_MAP_LOCATION_SUFFIX.length());
+        }
+
+        return location;
+    }
+
+    public void setHandlerFactory(HandlerFactory handlerFactory) {
+        this.handlerFactory = handlerFactory;
     }
 }

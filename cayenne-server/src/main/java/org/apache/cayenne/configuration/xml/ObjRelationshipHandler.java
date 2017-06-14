@@ -32,6 +32,8 @@ import org.xml.sax.SAXException;
 public class ObjRelationshipHandler extends NamespaceAwareNestedTagHandler {
 
     public static final String OBJ_RELATIONSHIP_TAG = "obj-relationship";
+
+    @Deprecated
     public static final String DB_RELATIONSHIP_REF_TAG = "db-relationship-ref";
 
     private DataMap map;
@@ -43,6 +45,7 @@ public class ObjRelationshipHandler extends NamespaceAwareNestedTagHandler {
         this.map = map;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
         switch (localName) {

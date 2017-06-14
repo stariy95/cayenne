@@ -19,10 +19,14 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.map.CallbackDescriptor;
 import org.apache.cayenne.map.DataMap;
+import org.apache.cayenne.map.EmbeddedAttribute;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
@@ -32,11 +36,26 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
 
     private static final String OBJ_ENTITY_TAG = "obj-entity";
     private static final String OBJ_ATTRIBUTE_TAG = "obj-attribute";
-    public static final String TRUE = "true";
+    private static final String OBJ_ATTRIBUTE_OVERRIDE_TAG = "attribute-override";
+    private static final String EMBEDDED_ATTRIBUTE_TAG = "embedded-attribute";
+    private static final String EMBEDDABLE_ATTRIBUTE_OVERRIDE_TAG = "embeddable-attribute-override";
+    private static final String QUALIFIER_TAG = "qualifier";
+
+    // lifecycle listeners and callbacks related
+    private static final String POST_ADD_TAG = "post-add";
+    private static final String PRE_PERSIST_TAG = "pre-persist";
+    private static final String POST_PERSIST_TAG = "post-persist";
+    private static final String PRE_UPDATE_TAG = "pre-update";
+    private static final String POST_UPDATE_TAG = "post-update";
+    private static final String PRE_REMOVE_TAG = "pre-remove";
+    private static final String POST_REMOVE_TAG = "post-remove";
+    private static final String POST_LOAD_TAG = "post-load";
 
     private DataMap map;
 
     private ObjEntity entity;
+
+    private EmbeddedAttribute embeddedAttribute;
 
     public ObjEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap map) {
         super(parentHandler);
@@ -46,16 +65,89 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
         switch (localName) {
+            case OBJ_ENTITY_TAG:
+                createObjEntity(attributes);
+                return true;
+
             case OBJ_ATTRIBUTE_TAG:
                 createObjAttribute(attributes);
                 return true;
 
-            case OBJ_ENTITY_TAG:
-                createObjEntity(attributes);
+            case OBJ_ATTRIBUTE_OVERRIDE_TAG:
+                processStartAttributeOverride(attributes);
+                return true;
+
+            case EMBEDDED_ATTRIBUTE_TAG:
+                createEmbeddableAttribute(attributes);
+                return true;
+
+            case EMBEDDABLE_ATTRIBUTE_OVERRIDE_TAG:
+                // new EmbeddableAttributeHandler
+                createEmbeddableAttributeOverride(attributes);
+                return true;
+
+            case QUALIFIER_TAG:
+                return true;
+
+            case POST_ADD_TAG:
+            case PRE_PERSIST_TAG:
+            case POST_PERSIST_TAG:
+            case PRE_UPDATE_TAG:
+            case POST_UPDATE_TAG:
+            case PRE_REMOVE_TAG:
+            case POST_REMOVE_TAG:
+            case POST_LOAD_TAG:
+                createCallback(localName, attributes);
                 return true;
         }
 
         return false;
+    }
+
+    @Override
+    protected ContentHandler createChildTagHandler(String namespaceURI, String localName, String qName, Attributes attributes) {
+        if(namespaceURI.equals(targetNamespace) &&
+                (EMBEDDED_ATTRIBUTE_TAG.equals(localName))) {
+            return this;
+        }
+
+        return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
+    }
+
+    @Override
+    protected void processCharData(String localName, String data) {
+        switch (localName) {
+            case QUALIFIER_TAG:
+                createQualifier(data);
+                break;
+        }
+    }
+
+    private void createObjEntity(Attributes attributes) {
+        entity = new ObjEntity(attributes.getValue("name"));
+        entity.setClassName(attributes.getValue("className"));
+        entity.setClientClassName(attributes.getValue("clientClassName"));
+        entity.setAbstract(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("abstract")));
+        entity.setReadOnly(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("readOnly")));
+        entity.setServerOnly(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("serverOnly")));
+        entity.setExcludingSuperclassListeners(
+                DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("exclude-superclass-listeners")));
+        entity.setExcludingDefaultListeners(
+                DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("exclude-default-listeners")));
+        if ("optimistic".equals(attributes.getValue("", "lock-type"))) {
+            entity.setDeclaredLockType(ObjEntity.LOCK_TYPE_OPTIMISTIC);
+        }
+
+        String superEntityName = attributes.getValue("superEntityName");
+        if (superEntityName != null) {
+            entity.setSuperEntityName(superEntityName);
+        } else {
+            entity.setSuperClassName(attributes.getValue("superClassName"));
+            entity.setClientSuperClassName(attributes.getValue("clientSuperClassName"));
+        }
+        entity.setDbEntityName(attributes.getValue("dbEntityName"));
+
+        map.addObjEntity(entity);
     }
 
     private void createObjAttribute(Attributes attributes) {
@@ -66,33 +158,70 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
 
         ObjAttribute oa = new ObjAttribute(attributes.getValue("name"));
         oa.setType(attributes.getValue("type"));
-        oa.setUsedForLocking(TRUE.equalsIgnoreCase(attributes.getValue("lock")));
+        oa.setUsedForLocking(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("lock")));
         oa.setDbAttributePath(dbPath);
         entity.addAttribute(oa);
     }
 
-    private void createObjEntity(Attributes attributes) {
-        entity = new ObjEntity(attributes.getValue("name"));
-        entity.setClassName(attributes.getValue("className"));
-        entity.setClientClassName(attributes.getValue("clientClassName"));
-        entity.setAbstract(TRUE.equalsIgnoreCase(attributes.getValue("abstract")));
-        entity.setReadOnly(TRUE.equalsIgnoreCase(attributes.getValue("readOnly")));
-        entity.setServerOnly(TRUE.equalsIgnoreCase(attributes.getValue("serverOnly")));
-        entity.setExcludingSuperclassListeners(TRUE.equalsIgnoreCase(attributes.getValue("exclude-superclass-listeners")));
-        entity.setExcludingDefaultListeners(TRUE.equalsIgnoreCase(attributes.getValue("exclude-default-listeners")));
-        if ("optimistic".equals(attributes.getValue("", "lock-type"))) {
-            entity.setDeclaredLockType(ObjEntity.LOCK_TYPE_OPTIMISTIC);
+    private void processStartAttributeOverride(Attributes attributes) {
+        entity.addAttributeOverride(attributes.getValue("name"),
+                attributes.getValue("db-attribute-path"));
+    }
+
+    private void createEmbeddableAttribute(Attributes attributes) {
+        embeddedAttribute = new EmbeddedAttribute(attributes.getValue("name"));
+        embeddedAttribute.setType(attributes.getValue("type"));
+        entity.addAttribute(embeddedAttribute);
+    }
+
+    private void createEmbeddableAttributeOverride(Attributes attributes) {
+        embeddedAttribute.addAttributeOverride(attributes.getValue("name"),
+                attributes.getValue("db-attribute-path"));
+    }
+
+
+    private CallbackDescriptor getCallbackDescriptor(String type) {
+        if (entity == null) {
+            return null;
         }
 
-        String superEntityName = attributes.getValue("", "superEntityName");
-        if (superEntityName != null) {
-            entity.setSuperEntityName(superEntityName);
-        } else {
-            entity.setSuperClassName(attributes.getValue("", "superClassName"));
-            entity.setClientSuperClassName(attributes.getValue("", "clientSuperClassName"));
+        switch (type) {
+            case POST_ADD_TAG:
+                return entity.getCallbackMap().getPostAdd();
+            case PRE_PERSIST_TAG:
+                return entity.getCallbackMap().getPrePersist();
+            case POST_PERSIST_TAG:
+                return entity.getCallbackMap().getPostPersist();
+            case PRE_UPDATE_TAG:
+                return entity.getCallbackMap().getPreUpdate();
+            case POST_UPDATE_TAG:
+                return entity.getCallbackMap().getPostUpdate();
+            case PRE_REMOVE_TAG:
+                return entity.getCallbackMap().getPreRemove();
+            case POST_REMOVE_TAG:
+                return entity.getCallbackMap().getPostRemove();
+            case POST_LOAD_TAG:
+                return entity.getCallbackMap().getPostLoad();
         }
-        entity.setDbEntityName(attributes.getValue("", "dbEntityName"));
 
-        map.addObjEntity(entity);
+        return null;
+    }
+
+    private void createCallback(String type, Attributes attributes) {
+        String methodName = attributes.getValue("method-name");
+        CallbackDescriptor descriptor = getCallbackDescriptor(type);
+        if(descriptor != null) {
+            descriptor.addCallbackMethod(methodName);
+        }
+    }
+
+    private void createQualifier(String qualifier) {
+        if (qualifier.trim().length() == 0) {
+            return;
+        }
+
+        if (entity != null) {
+            entity.setDeclaredQualifier(ExpressionFactory.exp(qualifier));
+        }
     }
 }

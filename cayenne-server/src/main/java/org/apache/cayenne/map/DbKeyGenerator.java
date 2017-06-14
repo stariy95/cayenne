@@ -117,8 +117,8 @@ public class DbKeyGenerator implements CayenneMapEntry, XMLSerializable, Seriali
         this.generatorType = generatorType;
         if (this.generatorType != null) {
             this.generatorType = this.generatorType.trim().toUpperCase();
-            if (!(ORACLE_TYPE.equals(this.generatorType) || NAMED_SEQUENCE_TABLE_TYPE
-                    .equals(this.generatorType)))
+            if (!(ORACLE_TYPE.equals(this.generatorType)
+                    || NAMED_SEQUENCE_TABLE_TYPE.equals(this.generatorType)))
                 this.generatorType = null;
         }
     }
