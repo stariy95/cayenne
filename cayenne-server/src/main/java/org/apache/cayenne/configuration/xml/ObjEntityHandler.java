@@ -38,7 +38,6 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
     private static final String OBJ_ATTRIBUTE_TAG = "obj-attribute";
     private static final String OBJ_ATTRIBUTE_OVERRIDE_TAG = "attribute-override";
     private static final String EMBEDDED_ATTRIBUTE_TAG = "embedded-attribute";
-    private static final String EMBEDDABLE_ATTRIBUTE_OVERRIDE_TAG = "embeddable-attribute-override";
     private static final String QUALIFIER_TAG = "qualifier";
 
     // lifecycle listeners and callbacks related
@@ -54,8 +53,6 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
     private DataMap map;
 
     private ObjEntity entity;
-
-    private EmbeddedAttribute embeddedAttribute;
 
     public ObjEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap map) {
         super(parentHandler);
@@ -75,15 +72,6 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
 
             case OBJ_ATTRIBUTE_OVERRIDE_TAG:
                 processStartAttributeOverride(attributes);
-                return true;
-
-            case EMBEDDED_ATTRIBUTE_TAG:
-                createEmbeddableAttribute(attributes);
-                return true;
-
-            case EMBEDDABLE_ATTRIBUTE_OVERRIDE_TAG:
-                // new EmbeddableAttributeHandler
-                createEmbeddableAttributeOverride(attributes);
                 return true;
 
             case QUALIFIER_TAG:
@@ -106,9 +94,11 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
 
     @Override
     protected ContentHandler createChildTagHandler(String namespaceURI, String localName, String qName, Attributes attributes) {
-        if(namespaceURI.equals(targetNamespace) &&
-                (EMBEDDED_ATTRIBUTE_TAG.equals(localName))) {
-            return this;
+        if(namespaceURI.equals(targetNamespace)) {
+            switch (localName) {
+                case EMBEDDED_ATTRIBUTE_TAG:
+                    return new EmbeddableAttributeHandler(this, entity);
+            }
         }
 
         return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
@@ -167,18 +157,6 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
         entity.addAttributeOverride(attributes.getValue("name"),
                 attributes.getValue("db-attribute-path"));
     }
-
-    private void createEmbeddableAttribute(Attributes attributes) {
-        embeddedAttribute = new EmbeddedAttribute(attributes.getValue("name"));
-        embeddedAttribute.setType(attributes.getValue("type"));
-        entity.addAttribute(embeddedAttribute);
-    }
-
-    private void createEmbeddableAttributeOverride(Attributes attributes) {
-        embeddedAttribute.addAttributeOverride(attributes.getValue("name"),
-                attributes.getValue("db-attribute-path"));
-    }
-
 
     private CallbackDescriptor getCallbackDescriptor(String type) {
         if (entity == null) {

@@ -19,7 +19,7 @@
 package org.apache.cayenne.modeler.init;
 
 import org.apache.cayenne.configuration.xml.HandlerFactory;
-import org.apache.cayenne.configuration.xml.NamespaceHandlerFactory;
+import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.di.Binder;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.modeler.Application;
@@ -41,6 +41,6 @@ public class CayenneModelerModule implements Module {
         binder.bind(Application.class).to(Application.class);
         binder.bind(PlatformInitializer.class).to(GenericPlatformInitializer.class);
         binder.bind(WidgetFactory.class).to(DefaultWidgetFactory.class);
-        binder.bind(HandlerFactory.class).to(NamespaceHandlerFactory.class);
+        binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
     }
 }

@@ -100,4 +100,7 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
         return factory.createHandler(namespaceURI, localName, this);
     }
 
+    public void setTargetNamespace(String targetNamespace) {
+        this.targetNamespace = targetNamespace;
+    }
 }

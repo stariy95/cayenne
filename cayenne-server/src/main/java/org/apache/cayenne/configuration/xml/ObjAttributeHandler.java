@@ -19,10 +19,27 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjEntity;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+
 /**
  * @since 4.1
  */
-public interface HandlerFactory {
+public class ObjAttributeHandler extends NamespaceAwareNestedTagHandler {
 
-    NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent);
+    private ObjEntity entity;
+
+    private ObjAttribute attribute;
+
+    public ObjAttributeHandler(NamespaceAwareNestedTagHandler parentHandler, ObjEntity entity) {
+        super(parentHandler);
+        this.entity = entity;
+    }
+
+    @Override
+    protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
+        return false;
+    }
 }

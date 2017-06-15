@@ -17,12 +17,17 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.configuration.xml;
+package org.apache.cayenne.project.extension;
+
+import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 
 /**
  * @since 4.1
  */
-public interface HandlerFactory {
+public interface LoaderDelegate {
 
-    NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent);
+    String getTargetNamespace();
+
+    NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag);
+
 }

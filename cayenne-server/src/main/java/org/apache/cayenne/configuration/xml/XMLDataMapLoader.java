@@ -56,6 +56,10 @@ public class XMLDataMapLoader implements DataMapLoader {
         }
 
         DataMap map = rootHandler.getDataMap();
+        if(map == null) {
+            throw new CayenneRuntimeException("Unable to load data map from %s", configurationResource.getURL());
+        }
+
         if(map.getName() == null) {
             // set name based on location if no name provided by map itself
             map.setName(mapNameFromLocation(configurationResource.getURL().getFile()));

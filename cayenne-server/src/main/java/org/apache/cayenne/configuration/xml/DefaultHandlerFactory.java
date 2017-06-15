@@ -19,10 +19,26 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.Attributes;
+
 /**
  * @since 4.1
  */
-public interface HandlerFactory {
+public class DefaultHandlerFactory implements HandlerFactory {
 
-    NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent);
+    private static Logger logger = LoggerFactory.getLogger(XMLDataChannelDescriptorLoader.class);
+
+    @Override
+    public NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent) {
+        return new NamespaceAwareNestedTagHandler(parent, namespace, this) {
+            @Override
+            protected boolean processElement(String namespaceURI, String localName, Attributes attributes) {
+                logger.debug("Skipping unknown tag <{}:{}>", namespaceURI, localName);
+                return true;
+            }
+        };
+    }
+
 }

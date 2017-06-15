@@ -241,7 +241,7 @@ public class DefaultDbImportAction implements DbImportAction {
 
         File file = configuration.getTargetDataMap();
         if (file != null && file.exists() && file.canRead()) {
-            DataMap dataMap = mapLoader.load(new URLResource(new URL(file.getCanonicalPath())));
+            DataMap dataMap = mapLoader.load(new URLResource(file.toURI().toURL()));
             dataMap.setNamespace(new EntityResolver(Collections.singleton(dataMap)));
             dataMap.setConfigurationSource(new URLResource(file.toURI().toURL()));
 

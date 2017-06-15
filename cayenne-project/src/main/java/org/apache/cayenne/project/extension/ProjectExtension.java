@@ -17,12 +17,15 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.configuration.xml;
+package org.apache.cayenne.project.extension;
 
 /**
  * @since 4.1
  */
-public interface HandlerFactory {
+public interface ProjectExtension {
 
-    NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent);
+    LoaderDelegate createLoaderDelegate();
+
+    SaverDelegate createSaverDelegate();
+
 }

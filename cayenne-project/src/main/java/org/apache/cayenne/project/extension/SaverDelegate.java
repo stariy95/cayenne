@@ -17,33 +17,10 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.configuration.xml;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.Attributes;
+package org.apache.cayenne.project.extension;
 
 /**
  * @since 4.1
  */
-public class NamespaceHandlerFactory implements HandlerFactory {
-
-    private static Logger logger = LoggerFactory.getLogger(XMLDataChannelDescriptorLoader.class);
-
-    Map<String, NamespaceAwareNestedTagHandler> namespaceToRootHandler = new ConcurrentHashMap<>();
-
-    @Override
-    public SAXNestedTagHandler createHandler(String namespace, String localName, SAXNestedTagHandler parent) {
-        return new NamespaceAwareNestedTagHandler(parent, namespace, this) {
-            @Override
-            protected boolean processElement(String namespaceURI, String localName, Attributes attributes) {
-                logger.info("Unknown tag: {} {}", namespaceURI, localName);
-                return true;
-            }
-        };
-    }
-
+public class SaverDelegate {
 }

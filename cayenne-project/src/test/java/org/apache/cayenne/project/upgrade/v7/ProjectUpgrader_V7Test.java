@@ -21,10 +21,17 @@ package org.apache.cayenne.project.upgrade.v7;
 import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
+import org.apache.cayenne.configuration.xml.HandlerFactory;
+import org.apache.cayenne.configuration.xml.LegacyXMLDataMapLoader;
 import org.apache.cayenne.configuration.server.JNDIDataSourceFactory;
 import org.apache.cayenne.configuration.server.XMLPoolingDataSourceFactory;
-import org.apache.cayenne.di.*;
+import org.apache.cayenne.di.AdhocObjectFactory;
+import org.apache.cayenne.di.Binder;
+import org.apache.cayenne.di.ClassLoaderManager;
+import org.apache.cayenne.di.DIBootstrap;
+import org.apache.cayenne.di.Injector;
+import org.apache.cayenne.di.Module;
 import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;
 import org.apache.cayenne.project.FileProjectSaver;
@@ -215,7 +222,8 @@ public class ProjectUpgrader_V7Test extends Project2Case {
 				binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
 				binder.bind(ProjectSaver.class).to(FileProjectSaver.class);
 				binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
-				binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
+				binder.bind(DataMapLoader.class).to(LegacyXMLDataMapLoader.class);
+				binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
 			}
 		};
 
@@ -359,12 +367,13 @@ public class ProjectUpgrader_V7Test extends Project2Case {
 
 				binder.bind(ProjectSaver.class).to(FileProjectSaver.class);
 				binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
-				binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
+				binder.bind(DataMapLoader.class).to(LegacyXMLDataMapLoader.class);
+				binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
 			}
 		};
 
 		String[] resources = { "cayenne-PROJECT1.xml", "testProjectMap1_1.map.xml", "testProjectMap1_2.map.xml" };
-		List<File> files = new ArrayList<File>();
+		List<File> files = new ArrayList<>();
 
 		for (String name : resources) {
 			URL xmlUrl = getClass().getClassLoader().getResource(sourceUrl + name);
@@ -429,8 +438,9 @@ public class ProjectUpgrader_V7Test extends Project2Case {
 				binder.bind(ProjectSaver.class).to(FileProjectSaver.class);
 				binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
 				binder.bind(ClassLoaderManager.class).to(DefaultClassLoaderManager.class);
-				binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
+				binder.bind(DataMapLoader.class).to(LegacyXMLDataMapLoader.class);
 				binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
+				binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
 			}
 		};
 

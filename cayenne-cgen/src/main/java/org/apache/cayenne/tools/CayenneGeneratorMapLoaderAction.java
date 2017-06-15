@@ -21,6 +21,7 @@ package org.apache.cayenne.tools;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.EntityResolver;
@@ -40,6 +41,7 @@ class CayenneGeneratorMapLoaderAction {
     DataMap getMainDataMap() throws MalformedURLException {
         if (mainDataMap == null) {
             XMLDataMapLoader loader = new XMLDataMapLoader();
+            loader.setHandlerFactory(new DefaultHandlerFactory());
 
             DataMap mainDataMap = loadDataMap(loader, mainDataMapFile);
 

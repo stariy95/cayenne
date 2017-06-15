@@ -25,10 +25,6 @@ import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DataNodeDescriptor;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
-import org.apache.cayenne.configuration.xml.HandlerFactory;
-import org.apache.cayenne.configuration.xml.NamespaceHandlerFactory;
-import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.AdhocObjectFactory;
 import org.apache.cayenne.di.Binder;
 import org.apache.cayenne.di.ClassLoaderManager;
@@ -65,7 +61,7 @@ public class XMLDataChannelDescriptorLoaderTest {
                 binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
                 binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
-                binder.bind(HandlerFactory.class).to(NamespaceHandlerFactory.class);
+                binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
             }
         };
 

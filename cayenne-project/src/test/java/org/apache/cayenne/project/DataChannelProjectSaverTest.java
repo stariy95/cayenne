@@ -23,6 +23,8 @@ import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.DataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
+import org.apache.cayenne.configuration.xml.HandlerFactory;
+import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.AdhocObjectFactory;
@@ -61,11 +63,10 @@ public class DataChannelProjectSaverTest extends Project2Case {
                 binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
 
                 binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
-                binder.bind(DataChannelDescriptorLoader.class).to(
-                        XMLDataChannelDescriptorLoader.class);
+                binder.bind(DataChannelDescriptorLoader.class).to(XMLDataChannelDescriptorLoader.class);
                 binder.bind(ProjectLoader.class).to(DataChannelProjectLoader.class);
-                binder.bind(ConfigurationNameMapper.class).to(
-                        DefaultConfigurationNameMapper.class);
+                binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
+                binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
             }
         };
 
@@ -115,11 +116,10 @@ public class DataChannelProjectSaverTest extends Project2Case {
                 binder.bind(ClassLoaderManager.class).to(DefaultClassLoaderManager.class);
                 binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
                 binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
-                binder.bind(DataChannelDescriptorLoader.class).to(
-                        XMLDataChannelDescriptorLoader.class);
+                binder.bind(DataChannelDescriptorLoader.class).to(XMLDataChannelDescriptorLoader.class);
                 binder.bind(ProjectLoader.class).to(DataChannelProjectLoader.class);
-                binder.bind(ConfigurationNameMapper.class).to(
-                        DefaultConfigurationNameMapper.class);
+                binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
+                binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
             }
         };
 

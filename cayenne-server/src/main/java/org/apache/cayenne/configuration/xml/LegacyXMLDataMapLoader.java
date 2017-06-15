@@ -19,10 +19,33 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import java.io.InputStream;
+import java.net.URL;
+
+import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.configuration.DataMapLoader;
+import org.apache.cayenne.map.DataMap;
+import org.apache.cayenne.map.MapLoader;
+import org.apache.cayenne.resource.Resource;
+import org.xml.sax.InputSource;
+
 /**
  * @since 4.1
  */
-public interface HandlerFactory {
+public class LegacyXMLDataMapLoader implements DataMapLoader {
 
-    NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent);
+    public DataMap load(Resource configurationResource) throws CayenneRuntimeException {
+
+        MapLoader mapLoader = new MapLoader();
+        URL url = configurationResource.getURL();
+
+        try (InputStream in = url.openStream()) {
+            return mapLoader.loadDataMap(new InputSource(in));
+        } catch (Exception e) {
+            throw new CayenneRuntimeException(
+                    "Error loading configuration from %s",
+                    e,
+                    url);
+        }
+    }
 }
