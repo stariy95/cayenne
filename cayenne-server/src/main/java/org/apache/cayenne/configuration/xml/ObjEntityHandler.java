@@ -22,7 +22,6 @@ package org.apache.cayenne.configuration.xml;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.map.CallbackDescriptor;
 import org.apache.cayenne.map.DataMap;
-import org.apache.cayenne.map.EmbeddedAttribute;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.xml.sax.Attributes;
@@ -201,5 +200,9 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
         if (entity != null) {
             entity.setDeclaredQualifier(ExpressionFactory.exp(qualifier));
         }
+    }
+
+    public ObjEntity getEntity() {
+        return entity;
     }
 }

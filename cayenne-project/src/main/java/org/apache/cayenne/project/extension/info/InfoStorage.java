@@ -17,13 +17,13 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.project.extension;
-
-import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+package org.apache.cayenne.project.extension.info;
 
 /**
  * @since 4.1
  */
-public interface SaverDelegate extends ConfigurationNodeVisitor<Void> {
+public interface InfoStorage {
+    String putInfo(Object object, String infoType, String info);
 
+    String getInfo(Object object, String infoType);
 }

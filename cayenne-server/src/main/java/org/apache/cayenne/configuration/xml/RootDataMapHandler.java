@@ -59,6 +59,6 @@ public class RootDataMapHandler extends NamespaceAwareNestedTagHandler {
             logger.warn("No <data-map> tag found or it is in a wrong namespace");
             return null;
         }
-        return handler.getMap();
+        return handler.getDataMap();
     }
 }

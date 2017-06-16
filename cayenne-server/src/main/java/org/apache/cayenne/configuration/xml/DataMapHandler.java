@@ -48,7 +48,7 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
 
     private DataChannelDescriptor descriptor;
 
-    private DataMap map;
+    private DataMap dataMap;
 
     private Map<String, Object> mapProperties;
 
@@ -71,7 +71,7 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
                 return true;
 
             case DATA_MAP_TAG:
-                this.map = new DataMap();
+                this.dataMap = new DataMap();
                 return true;
         }
 
@@ -85,25 +85,25 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
         if(namespaceURI.equals(targetNamespace)) {
             switch (localName) {
                 case DB_ENTITY_TAG:
-                    return new DbEntityHandler(this, map);
+                    return new DbEntityHandler(this, dataMap);
 
                 case OBJ_ENTITY_TAG:
-                    return new ObjEntityHandler(this, map);
+                    return new ObjEntityHandler(this, dataMap);
 
                 case DB_RELATIONSHIP_TAG:
-                    return new DbRelationshipHandler(this, map);
+                    return new DbRelationshipHandler(this, dataMap);
 
                 case OBJ_RELATIONSHIP_TAG:
-                    return new ObjRelationshipHandler(this, map);
+                    return new ObjRelationshipHandler(this, dataMap);
 
                 case PROCEDURE_TAG:
-                    return new ProcedureHandler(this, map);
+                    return new ProcedureHandler(this, dataMap);
 
                 case QUERY_TAG:
-                    return new QueryDescriptorHandler(this, map);
+                    return new QueryDescriptorHandler(this, dataMap);
 
                 case EMBEDDABLE_TAG:
-                    return new EmbeddableHandler(this, map);
+                    return new EmbeddableHandler(this, dataMap);
             }
         }
 
@@ -112,9 +112,9 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
 
     @Override
     protected void beforeScopeEnd() {
-        map.initWithProperties(mapProperties);
+        dataMap.initWithProperties(mapProperties);
         if(descriptor != null) {
-            descriptor.getDataMaps().add(map);
+            descriptor.getDataMaps().add(dataMap);
         }
     }
 
@@ -131,7 +131,7 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
 
         // special meaning for <property name="name" .../>
         if("name".equals(name)) {
-            map.setName(value);
+            dataMap.setName(value);
             return;
         }
 
@@ -142,7 +142,7 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
         mapProperties.put(name, value);
     }
 
-    public DataMap getMap() {
-        return map;
+    public DataMap getDataMap() {
+        return dataMap;
     }
 }

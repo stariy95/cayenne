@@ -31,6 +31,7 @@ import org.apache.cayenne.modeler.util.WidgetFactory;
 import org.apache.cayenne.pref.CayennePreference;
 import org.apache.cayenne.pref.CayenneProjectPreferences;
 import org.apache.cayenne.project.Project;
+import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.apache.cayenne.swing.BindingFactory;
 import org.apache.cayenne.util.IDUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -79,6 +80,9 @@ public class Application {
 
     @Inject
     protected Injector injector;
+
+    @Inject
+    protected InfoStorage storage;
 
     private String newProjectTemporaryName;
 

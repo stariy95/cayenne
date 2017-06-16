@@ -17,13 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.project.extension;
+package org.apache.cayenne.project.extension.info;
 
-import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
+import org.apache.cayenne.project.Project;
+import org.apache.cayenne.project.extension.LoaderDelegate;
 
 /**
  * @since 4.1
  */
-public interface SaverDelegate extends ConfigurationNodeVisitor<Void> {
+public class InfoLoaderDelegate implements LoaderDelegate {
 
+    InfoStorage storage;
+
+    InfoLoaderDelegate(InfoStorage storage) {
+        this.storage = storage;
+    }
+
+    @Override
+    public String getTargetNamespace() {
+        return "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
+    }
+
+    @Override
+    public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
+        if(PropertyHandler.PROPERTY_TAG.equals(tag)) {
+            return new PropertyHandler(parent, getTargetNamespace(), storage);
+        }
+        return null;
+    }
 }
