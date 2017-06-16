@@ -43,11 +43,11 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
 
     private DbEntity entity;
 
-    private DataMap map;
+    private DataMap dataMap;
 
-    public DbEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap map) {
+    public DbEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap dataMap) {
         super(parentHandler);
-        this.map = map;
+        this.dataMap = dataMap;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
         entity = new DbEntity(name);
         entity.setSchema(attributes.getValue("schema"));
         entity.setCatalog(attributes.getValue("catalog"));
-        map.addDbEntity(entity);
+        dataMap.addDbEntity(entity);
     }
 
     private void createDbAttribute(Attributes attributes) {
@@ -188,5 +188,9 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
         if (entity != null) {
             entity.setQualifier(ExpressionFactory.exp(qualifier));
         }
+    }
+
+    public DbEntity getEntity() {
+        return entity;
     }
 }

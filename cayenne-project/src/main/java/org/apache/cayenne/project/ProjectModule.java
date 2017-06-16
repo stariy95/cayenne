@@ -19,7 +19,11 @@
 package org.apache.cayenne.project;
 
 import org.apache.cayenne.di.Binder;
+import org.apache.cayenne.di.ListBuilder;
 import org.apache.cayenne.di.Module;
+import org.apache.cayenne.project.extension.ProjectExtension;
+import org.apache.cayenne.project.extension.info.DefaultInfoStorage;
+import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.apache.cayenne.project.upgrade.ProjectUpgrader;
 import org.apache.cayenne.project.upgrade.v9.ProjectUpgrader_V9;
 import org.apache.cayenne.project.validation.DefaultProjectValidator;
@@ -33,12 +37,16 @@ import org.apache.cayenne.project.validation.ProjectValidator;
  */
 public class ProjectModule implements Module {
 
+    public static ListBuilder<ProjectExtension> contributeExtension(Binder binder) {
+        return binder.bindList(ProjectExtension.class);
+    }
+
     public void configure(Binder binder) {
         binder.bind(ProjectLoader.class).to(DataChannelProjectLoader.class);
         binder.bind(ProjectSaver.class).to(FileProjectSaver.class);
         binder.bind(ProjectUpgrader.class).to(ProjectUpgrader_V9.class);
         binder.bind(ProjectValidator.class).to(DefaultProjectValidator.class);
-        binder.bind(ConfigurationNodeParentGetter.class).to(
-                DefaultConfigurationNodeParentGetter.class);
+        binder.bind(ConfigurationNodeParentGetter.class).to(DefaultConfigurationNodeParentGetter.class);
+        binder.bind(InfoStorage.class).to(DefaultInfoStorage.class);
     }
 }
