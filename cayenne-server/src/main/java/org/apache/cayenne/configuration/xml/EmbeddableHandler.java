@@ -68,4 +68,8 @@ public class EmbeddableHandler extends NamespaceAwareNestedTagHandler {
         ea.setDbAttributeName(attributes.getValue("db-attribute-name"));
         embeddable.addAttribute(ea);
     }
+
+    public Embeddable getEmbeddable() {
+        return embeddable;
+    }
 }

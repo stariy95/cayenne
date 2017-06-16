@@ -23,6 +23,8 @@ import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.project.extension.ProjectExtension;
+import org.apache.cayenne.project.extension.SaverDelegate;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.util.Util;
@@ -38,6 +40,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A ProjectSaver saving project configuration to the file system.
@@ -49,6 +52,9 @@ public class FileProjectSaver implements ProjectSaver {
 	@Inject
 	protected ConfigurationNameMapper nameMapper;
 
+	@Inject
+	protected List<ProjectExtension> extensions;
+
 	protected ConfigurationNodeVisitor<Resource> resourceGetter;
 	protected ConfigurationNodeVisitor<Collection<ConfigurationNode>> saveableNodesGetter;
 	protected String fileEncoding;
@@ -59,6 +65,10 @@ public class FileProjectSaver implements ProjectSaver {
 
 		// this is not configurable yet... probably doesn't have to be
 		fileEncoding = "UTF-8";
+
+		for(ProjectExtension extension : extensions) {
+			SaverDelegate delegate = extension.createSaverDelegate();
+		}
 	}
 
 	public String getSupportedVersion() {

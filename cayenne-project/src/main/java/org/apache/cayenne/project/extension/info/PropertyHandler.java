@@ -26,6 +26,7 @@ import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.configuration.xml.ObjEntityHandler;
 import org.apache.cayenne.configuration.xml.ProcedureHandler;
 import org.apache.cayenne.configuration.xml.QueryDescriptorHandler;
+import org.apache.cayenne.map.ObjEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -53,10 +54,14 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
         switch (localName) {
             case PROPERTY_TAG:
                 Object parentObject = getParentObject();
+                String name = attributes.getValue("name");
                 if(parentObject != null) {
-                    storage.putInfo(parentObject, attributes.getValue("name"), attributes.getValue("value"));
+                    String oldValue = storage.putInfo(parentObject, name, attributes.getValue("value"));
+                    if(oldValue != null) {
+                        logger.warn("Property {} defined more than one for object", name);
+                    }
                 }
-                logger.info("Loaded property for {}: {} = {}", parentObject, attributes.getValue("name"), attributes.getValue("value"));
+                logger.info("Loaded property for {}: {} = {}", parentObject, name, attributes.getValue("value"));
                 return true;
         }
 
@@ -76,13 +81,25 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
         } else if(parentHandler instanceof ObjEntityHandler) {
             return ((ObjEntityHandler) parentHandler).getEntity();
         } else if(parentHandler instanceof EmbeddableHandler) {
-            return "embeddable";
+            return ((EmbeddableHandler) parentHandler).getEmbeddable();
         } else if(parentHandler instanceof QueryDescriptorHandler) {
-            return "query";
+            return "query"; // TODO: how to get query descriptor?
         } else if(parentHandler instanceof ProcedureHandler) {
-            return "procedure";
+            return ((ProcedureHandler) parentHandler).getProcedure();
         }
 
+        if(parentHandler instanceof NamespaceAwareNestedTagHandler) {
+            ContentHandler parentParentHandler = ((NamespaceAwareNestedTagHandler) parentHandler).getParentHandler();
+            if(parentParentHandler instanceof DbEntityHandler) {
+                return ((DbEntityHandler) parentParentHandler).getLastAttribute();
+            } else if(parentParentHandler instanceof ObjEntityHandler) {
+                return null;
+            } else {
+                logger.info("Parent class unknown: {} -> {}", parentParentHandler.getClass().getName(), parentHandler.getClass().getName());
+            }
+        } else {
+            logger.info("Parent class unknown: {}", parentHandler.getClass().getName());
+        }
         return null;
     }
 }

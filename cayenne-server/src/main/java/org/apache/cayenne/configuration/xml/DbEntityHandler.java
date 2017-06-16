@@ -41,9 +41,9 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
     private static final String DB_KEY_CACHE_SIZE_TAG = "db-key-cache-size";
     private static final String QUALIFIER_TAG = "qualifier";
 
-    private DbEntity entity;
-
     private DataMap dataMap;
+    private DbEntity entity;
+    private DbAttribute lastAttribute;
 
     public DbEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap dataMap) {
         super(parentHandler);
@@ -108,34 +108,34 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
         String name = attributes.getValue("name");
         String type = attributes.getValue("type");
 
-        DbAttribute attrib = new DbAttribute(name);
-        attrib.setType(TypesMapping.getSqlTypeByName(type));
-        entity.addAttribute(attrib);
+        lastAttribute = new DbAttribute(name);
+        lastAttribute.setType(TypesMapping.getSqlTypeByName(type));
+        entity.addAttribute(lastAttribute);
 
         String length = attributes.getValue("length");
         if (length != null) {
-            attrib.setMaxLength(Integer.parseInt(length));
+            lastAttribute.setMaxLength(Integer.parseInt(length));
         }
 
         String precision = attributes.getValue("attributePrecision");
         if (precision != null) {
-            attrib.setAttributePrecision(Integer.parseInt(precision));
+            lastAttribute.setAttributePrecision(Integer.parseInt(precision));
         }
 
         // this is an obsolete 1.2 'precision' attribute that really meant 'scale'
         String pseudoPrecision = attributes.getValue("precision");
         if (pseudoPrecision != null) {
-            attrib.setScale(Integer.parseInt(pseudoPrecision));
+            lastAttribute.setScale(Integer.parseInt(pseudoPrecision));
         }
 
         String scale = attributes.getValue("scale");
         if (scale != null) {
-            attrib.setScale(Integer.parseInt(scale));
+            lastAttribute.setScale(Integer.parseInt(scale));
         }
 
-        attrib.setPrimaryKey(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isPrimaryKey")));
-        attrib.setMandatory(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isMandatory")));
-        attrib.setGenerated(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isGenerated")));
+        lastAttribute.setPrimaryKey(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isPrimaryKey")));
+        lastAttribute.setMandatory(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isMandatory")));
+        lastAttribute.setGenerated(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isGenerated")));
     }
 
     private void createDbKeyGenerator() {
@@ -192,5 +192,9 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
 
     public DbEntity getEntity() {
         return entity;
+    }
+
+    public DbAttribute getLastAttribute() {
+        return lastAttribute;
     }
 }

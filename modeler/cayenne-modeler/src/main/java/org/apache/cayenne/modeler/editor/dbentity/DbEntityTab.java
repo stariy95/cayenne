@@ -74,6 +74,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
     protected TextAdapter catalog;
     protected TextAdapter schema;
     protected TextAdapter qualifier;
+    protected TextAdapter comment;
 
     protected JLabel catalogLabel;
     protected JLabel schemaLabel;
@@ -137,6 +138,17 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
             }
         };
 
+        comment = new TextAdapter(new JTextField()) {
+            @Override
+            protected void updateModel(String text) throws ValidationException {
+                if(mediator.getCurrentDbEntity() == null) {
+                    return;
+                }
+                mediator.getApplication().getInfoStorage()
+                        .putInfo(mediator.getCurrentDbEntity(), "comment", text);
+            }
+        };
+
         pkGeneratorType = new JComboBox<>();
         pkGeneratorType.setEditable(false);
         pkGeneratorType.setModel(new DefaultComboBoxModel<>(PK_GENERATOR_TYPES));
@@ -157,6 +169,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         builder.append(catalogLabel, catalog.getComponent());
         builder.append(schemaLabel, schema.getComponent());
         builder.append("Qualifier", qualifier.getComponent());
+        builder.append("Comment", comment.getComponent());
 
         builder.appendSeparator("Primary Key");
         builder.append("PK Generation Strategy:", pkGeneratorType);
@@ -218,6 +231,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         catalog.setText(entity.getCatalog());
         schema.setText(entity.getSchema());
         qualifier.setText(new ExpressionConvertor().valueAsString(entity.getQualifier()));
+        comment.setText(mediator.getApplication().getInfoStorage().getInfo(entity, "comment"));
 
         String type = PK_DEFAULT_GENERATOR;
 

@@ -23,6 +23,7 @@ package org.apache.cayenne.project.extension.info;
  * @since 4.1
  */
 public interface InfoStorage {
+
     String putInfo(Object object, String infoType, String info);
 
     String getInfo(Object object, String infoType);
