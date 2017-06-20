@@ -43,6 +43,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -53,7 +54,7 @@ public class DataChannelProjectSaverTest extends Project2Case {
     @Test
     public void testSaveAs() throws Exception {
 
-        FileProjectSaver saver = new FileProjectSaver();
+        FileProjectSaver saver = new FileProjectSaver(Collections.emptyList());
 
         Module testModule = new Module() {
 
@@ -101,7 +102,7 @@ public class DataChannelProjectSaverTest extends Project2Case {
     @Test
     public void testSaveAs_RecoverFromSaveError() throws Exception {
 
-        FileProjectSaver saver = new FileProjectSaver() {
+        FileProjectSaver saver = new FileProjectSaver(Collections.emptyList()) {
 
             @Override
             void saveToTempFile(SaveUnit unit, PrintWriter printWriter) {

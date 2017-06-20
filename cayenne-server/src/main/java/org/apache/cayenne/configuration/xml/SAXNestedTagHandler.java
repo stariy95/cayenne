@@ -168,4 +168,8 @@ public class SAXNestedTagHandler extends DefaultHandler {
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
     }
+
+    public ContentHandler getParentHandler() {
+        return parentHandler;
+    }
 }

@@ -214,11 +214,8 @@ public class QueryDescriptor implements Serializable, ConfigurationNode, XMLSeri
     }
 
     @Override
-    public void encodeAsXML(XMLEncoder encoder) {
-        encoder.print("<query name=\"");
-        encoder.print(getName());
-        encoder.print("\" type=\"");
-        encoder.print(type);
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("query").attribute("name", getName()).attribute("type", type);
 
         String rootString = null;
         String rootType = null;
@@ -241,20 +238,12 @@ public class QueryDescriptor implements Serializable, ConfigurationNode, XMLSeri
         }
 
         if (rootType != null) {
-            encoder.print("\" root=\"");
-            encoder.print(rootType);
-            encoder.print("\" root-name=\"");
-            encoder.print(rootString);
+            encoder.attribute("root", rootType).attribute("root-name", rootString);
         }
-
-        encoder.println("\">");
-
-        encoder.indent(1);
-
         encodeProperties(encoder);
 
-        encoder.indent(-1);
-        encoder.println("</query>");
+        delegate.visitQuery(this);
+        encoder.end();
     }
 
     void encodeProperties(XMLEncoder encoder) {
@@ -263,7 +252,7 @@ public class QueryDescriptor implements Serializable, ConfigurationNode, XMLSeri
             if(value == null || value.isEmpty()) {
                 continue;
             }
-            encoder.printProperty(property.getKey(), value);
+            encoder.property(property.getKey(), value);
         }
     }
 }

@@ -19,6 +19,10 @@
 
 package org.apache.cayenne.map;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.configuration.DataChannelDescriptor;
+import org.apache.cayenne.configuration.DataNodeDescriptor;
+import org.apache.cayenne.configuration.EmptyConfigurationNodeVisitor;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.util.Util;
@@ -419,7 +423,7 @@ public class DataMapTest {
         map.setQuotingSQLIdentifiers(true);
         StringWriter w = new StringWriter();
         XMLEncoder encoder = new XMLEncoder(new PrintWriter(w));
-        map.encodeAsXML(encoder);
+        map.encodeAsXML(encoder, new EmptyConfigurationNodeVisitor());
 
         assertTrue(map.quotingSQLIdentifiers);
 
@@ -439,7 +443,7 @@ public class DataMapTest {
         map.setQuotingSQLIdentifiers(false);
         StringWriter w2 = new StringWriter();
         XMLEncoder encoder2 = new XMLEncoder(new PrintWriter(w2));
-        map.encodeAsXML(encoder2);
+        map.encodeAsXML(encoder2, new EmptyConfigurationNodeVisitor());
 
         assertFalse(map.quotingSQLIdentifiers);
         try {

@@ -48,9 +48,11 @@ import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.project.FileProjectSaver;
 import org.apache.cayenne.project.Project;
+import org.apache.cayenne.project.extension.ProjectExtension;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.util.Util;
+import org.hsqldb.lib.Collection;
 import org.slf4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,6 +62,7 @@ import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -129,7 +132,7 @@ public class DefaultDbImportActionTest {
         };
 
         final boolean[] haveWeTriedToSave = {false};
-        DefaultDbImportAction action = buildDbImportAction(new FileProjectSaver() {
+        DefaultDbImportAction action = buildDbImportAction(new FileProjectSaver(Collections.<ProjectExtension>emptyList()) {
             @Override
             public void save(Project project) {
                 haveWeTriedToSave[0] = true;
@@ -175,7 +178,7 @@ public class DefaultDbImportActionTest {
 
         final boolean[] haveWeTriedToSave = {false};
         DefaultDbImportAction action = buildDbImportAction(
-            new FileProjectSaver() {
+            new FileProjectSaver(Collections.<ProjectExtension>emptyList()) {
                 @Override
                 public void save(Project project) {
                     haveWeTriedToSave[0] = true;

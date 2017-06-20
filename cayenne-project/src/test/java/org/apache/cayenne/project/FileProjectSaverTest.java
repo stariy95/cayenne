@@ -41,6 +41,7 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +60,7 @@ public class FileProjectSaverTest extends Project2Case {
             }
         };
 
-        saver = new FileProjectSaver();
+        saver = new FileProjectSaver(Collections.emptyList());
         Injector injector = DIBootstrap.createInjector(testModule);
         injector.injectMembers(saver);
     }

@@ -284,6 +284,10 @@ public class Application {
         }
     }
 
+    public InfoStorage getInfoStorage() {
+        return storage;
+    }
+
     protected void initPreferences() {
         this.cayenneProjectPreferences = new CayenneProjectPreferences();
     }

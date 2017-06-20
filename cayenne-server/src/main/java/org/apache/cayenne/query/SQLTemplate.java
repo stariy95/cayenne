@@ -20,6 +20,7 @@
 package org.apache.cayenne.query;
 
 import org.apache.cayenne.access.QueryEngine;
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
@@ -203,7 +204,7 @@ public class SQLTemplate extends AbstractQuery implements ParameterizedQuery, XM
 	 * @since 1.1
 	 */
 	@Override
-	public void encodeAsXML(XMLEncoder encoder) {
+	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
 		encoder.print("<query name=\"");
 		encoder.print(getName());
 		encoder.print("\" factory=\"");
@@ -243,10 +244,10 @@ public class SQLTemplate extends AbstractQuery implements ParameterizedQuery, XM
 
 		encoder.indent(1);
 
-		metaData.encodeAsXML(encoder);
+		metaData.encodeAsXML(encoder, delegate);
 
 		if (getColumnNamesCapitalization() != CapsStrategy.DEFAULT) {
-			encoder.printProperty(COLUMN_NAME_CAPITALIZATION_PROPERTY, getColumnNamesCapitalization().name());
+			encoder.property(COLUMN_NAME_CAPITALIZATION_PROPERTY, getColumnNamesCapitalization().name());
 		}
 
 		// encode default SQL

@@ -16,30 +16,28 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
+package org.apache.cayenne.project.upgrade.v10;
 
-package org.apache.cayenne.configuration.xml;
-
-import org.apache.cayenne.map.ObjAttribute;
-import org.apache.cayenne.map.ObjEntity;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.di.Injector;
+import org.apache.cayenne.project.upgrade.ProjectUpgrader;
+import org.apache.cayenne.project.upgrade.UpgradeHandler;
+import org.apache.cayenne.resource.Resource;
 
 /**
- * @since 4.1
+ * A ProjectUpgrader that handles project upgrades from version 4.0 to 4.1.M1 and 9
+ * to version 10.
  */
-public class ObjAttributeHandler extends NamespaceAwareNestedTagHandler {
+public class ProjectUpgrader_V10 implements ProjectUpgrader {
 
-    private ObjEntity entity;
-
-    private ObjAttribute attribute;
-
-    public ObjAttributeHandler(NamespaceAwareNestedTagHandler parentHandler, ObjEntity entity) {
-        super(parentHandler);
-        this.entity = entity;
-    }
+    @Inject
+    protected Injector injector;
 
     @Override
-    protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
-        return false;
+    public UpgradeHandler getUpgradeHandler(Resource projectSource) {
+        UpgradeHandler_V10 handler = new UpgradeHandler_V10(projectSource);
+        injector.injectMembers(handler);
+        return handler;
     }
+
 }

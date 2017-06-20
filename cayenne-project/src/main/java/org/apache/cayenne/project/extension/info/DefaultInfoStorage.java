@@ -36,7 +36,7 @@ public class DefaultInfoStorage implements InfoStorage {
 
     @Override
     public String putInfo(Object object, String infoType, String info) {
-        return objectInfoMap.computeIfAbsent(object, o -> new ObjectInfo()).put(infoType, info);
+        return objectInfoMap.computeIfAbsent(Objects.requireNonNull(object), o -> new ObjectInfo()).put(infoType, info);
     }
 
     @Override

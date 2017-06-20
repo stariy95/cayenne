@@ -39,6 +39,6 @@ public class InfoExtension implements ProjectExtension {
 
     @Override
     public SaverDelegate createSaverDelegate() {
-        return null;
+        return new InfoSaverDelegate(storage);
     }
 }

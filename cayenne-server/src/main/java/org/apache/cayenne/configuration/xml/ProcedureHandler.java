@@ -107,4 +107,8 @@ public class ProcedureHandler extends NamespaceAwareNestedTagHandler {
 
         procedure.addCallParameter(parameter);
     }
+
+    public Procedure getProcedure() {
+        return procedure;
+    }
 }

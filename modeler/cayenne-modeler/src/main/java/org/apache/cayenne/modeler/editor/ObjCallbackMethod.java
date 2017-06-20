@@ -20,6 +20,7 @@ package org.apache.cayenne.modeler.editor;
 
 import java.io.Serializable;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
 
@@ -35,12 +36,8 @@ public class ObjCallbackMethod implements XMLSerializable,
 	}
 
 	@Override
-	public void encodeAsXML(XMLEncoder encoder) {
-
-        encoder.print("<" + encodeCallbackTypeForXML(callbackType));
-        encoder.print(" name=\"" + getName());
-
-        encoder.println("\"/>");
+	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+		encoder.start(encodeCallbackTypeForXML(callbackType)).attribute(name, getName()).end();
 	}
 
 	private String encodeCallbackTypeForXML(CallbackType type) {
