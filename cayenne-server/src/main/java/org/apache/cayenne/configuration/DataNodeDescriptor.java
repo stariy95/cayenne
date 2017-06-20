@@ -100,38 +100,32 @@ public class DataNodeDescriptor implements ConfigurationNode, XMLSerializable,
         return visitor.visitDataNodeDescriptor(this);
     }
 
-    public void encodeAsXML(XMLEncoder encoder) {
-        encoder.print("<node");
-        encoder.printlnAttribute("name", name);
-        encoder.indent(1);
-
-        encoder.printlnAttribute("adapter", adapterType);
-        encoder.printlnAttribute("factory", dataSourceFactoryType);
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("node")
+                .attribute("name", name, false)
+                .attribute("adapter", adapterType, true)
+                .attribute("factory", dataSourceFactoryType, true);
         
         if (!XMLPoolingDataSourceFactory.class.getName().equals(dataSourceFactoryType)) {
-            encoder.printlnAttribute("parameters", parameters);
+            encoder.attribute("parameters", parameters);
         }
-        encoder.printlnAttribute("schema-update-strategy", schemaUpdateStrategyType);
-        encoder.println(">");
+        encoder.attribute("schema-update-strategy", schemaUpdateStrategyType, true);
 
         if (!dataMapNames.isEmpty()) {
-
             List<String> names = new ArrayList<>(dataMapNames);
             Collections.sort(names);
-
             for (String mapName : names) {
-                encoder.print("<map-ref");
-                encoder.printAttribute("name", mapName);
-                encoder.println("/>");
+                encoder.start("map-ref").attribute("name", mapName).end();
             }
         }
 
         if (dataSourceDescriptor != null && XMLPoolingDataSourceFactory.class.getName().equals(dataSourceFactoryType)) {
-            dataSourceDescriptor.encodeAsXML(encoder);
+            dataSourceDescriptor.encodeAsXML(encoder, delegate);
         }
 
-        encoder.indent(-1);
-        encoder.println("</node>");
+        delegate.visitDataNodeDescriptor(this);
+        encoder.end();
     }
 
     public String getName() {

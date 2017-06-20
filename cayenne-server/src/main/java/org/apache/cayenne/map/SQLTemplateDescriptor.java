@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.cayenne.map;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.query.SQLTemplate;
 import org.apache.cayenne.util.XMLEncoder;
 
@@ -97,11 +98,10 @@ public class SQLTemplateDescriptor extends QueryDescriptor {
     }
 
     @Override
-    public void encodeAsXML(XMLEncoder encoder) {
-        encoder.print("<query name=\"");
-        encoder.print(getName());
-        encoder.print("\" type=\"");
-        encoder.print(type);
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("query")
+                .attribute("name", getName())
+                .attribute("type", type);
 
         String rootString = null;
         String rootType = null;
@@ -127,48 +127,35 @@ public class SQLTemplateDescriptor extends QueryDescriptor {
         }
 
         if (rootType != null) {
-            encoder.print("\" root=\"");
-            encoder.print(rootType);
-            encoder.print("\" root-name=\"");
-            encoder.print(rootString);
+            encoder.attribute("root", rootType).attribute("root-name", rootString);
         }
-
-        encoder.println("\">");
-
-        encoder.indent(1);
 
         // print properties
         encodeProperties(encoder);
-
         // encode default SQL
         if (sql != null) {
-            encoder.print("<sql><![CDATA[");
-            encoder.print(sql);
-            encoder.println("]]></sql>");
+            encoder.start("sql").cdata(sql, true).end();
         }
 
         // encode adapter SQL
         if (adapterSql != null && !adapterSql.isEmpty()) {
-
             // sorting entries by adapter name
-            TreeSet<String> keys = new TreeSet<String>(adapterSql.keySet());
+            TreeSet<String> keys = new TreeSet<>(adapterSql.keySet());
             for (String key : keys) {
                 String value = adapterSql.get(key);
-
                 if (key != null && value != null) {
                     String sql = value.trim();
                     if (sql.length() > 0) {
-                        encoder.print("<sql adapter-class=\"");
-                        encoder.print(key);
-                        encoder.print("\"><![CDATA[");
-                        encoder.print(sql);
-                        encoder.println("]]></sql>");
+                        encoder.start("sql")
+                                .attribute("adapter-class", key)
+                                .cdata(sql, true)
+                                .end();
                     }
                 }
             }
         }
 
-        encoder.indent(-1);
-        encoder.println("</query>");
+        delegate.visitQuery(this);
+        encoder.end();
     }
 }

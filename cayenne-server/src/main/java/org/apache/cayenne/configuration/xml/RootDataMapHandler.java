@@ -37,7 +37,7 @@ public class RootDataMapHandler extends NamespaceAwareNestedTagHandler {
     private DataMapHandler handler;
 
     public RootDataMapHandler(XMLReader parser, HandlerFactory factory) {
-        super(parser, "http://cayenne.apache.org/schema/9/modelMap", factory);
+        super(parser, "http://cayenne.apache.org/schema/10/modelMap", factory);
     }
 
     @Override

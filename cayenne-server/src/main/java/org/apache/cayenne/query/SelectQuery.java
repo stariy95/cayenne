@@ -24,6 +24,7 @@ import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.ResultIteratorCallback;
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
@@ -438,7 +439,8 @@ public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery,
 	 * 
 	 * @since 1.1
 	 */
-	public void encodeAsXML(XMLEncoder encoder) {
+	@Override
+	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
 		encoder.print("<query name=\"");
 		encoder.print(getName());
 		encoder.print("\" factory=\"");
@@ -477,22 +479,22 @@ public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery,
 
 		// print properties
 		if (distinct != DISTINCT_DEFAULT) {
-			encoder.printProperty(DISTINCT_PROPERTY, distinct);
+			encoder.property(DISTINCT_PROPERTY, distinct);
 		}
 
-		metaData.encodeAsXML(encoder);
+		metaData.encodeAsXML(encoder, delegate);
 
 		// encode qualifier
 		if (qualifier != null) {
 			encoder.print("<qualifier>");
-			qualifier.encodeAsXML(encoder);
+			qualifier.encodeAsXML(encoder, delegate);
 			encoder.println("</qualifier>");
 		}
 
 		// encode orderings
 		if (orderings != null && !orderings.isEmpty()) {
 			for (Ordering ordering : orderings) {
-				ordering.encodeAsXML(encoder);
+				ordering.encodeAsXML(encoder, delegate);
 			}
 		}
 

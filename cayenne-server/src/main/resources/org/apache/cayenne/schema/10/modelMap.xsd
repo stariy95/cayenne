@@ -152,7 +152,7 @@
 			<xs:attribute name="source" use="required" type="xs:string"/>
 			<xs:attribute name="target" use="required" type="xs:string"/>
 			<xs:attribute name="toDependentPK" type="xs:boolean"/>
-			<xs:attribute name="toMany" use="required" type="xs:boolean"/>
+			<xs:attribute name="toMany" type="xs:boolean"/>
 		</xs:complexType>
 	</xs:element>
 	<xs:element name="db-attribute-pair">

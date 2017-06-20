@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.map;
 
+import org.apache.cayenne.configuration.EmptyConfigurationNodeVisitor;
 import org.apache.cayenne.query.*;
 import org.apache.cayenne.test.file.FileUtil;
 import org.apache.cayenne.testdo.embeddable.Embeddable1;
@@ -108,10 +109,10 @@ public class MapLoaderLoadTest {
         ObjEntity ent = map.getObjEntity("Painting");
         assertNotNull(ent.getSuperClassName());
 
-        //text exclude... parameters
+        // exclude parameters are completely ignored since 4.1
         ObjEntity artistCallbackTestEntity = map.getObjEntity("ArtistCallback");
-        assertTrue(artistCallbackTestEntity.isExcludingDefaultListeners());
-        assertTrue(artistCallbackTestEntity.isExcludingSuperclassListeners());
+        assertFalse(artistCallbackTestEntity.isExcludingDefaultListeners());
+        assertFalse(artistCallbackTestEntity.isExcludingSuperclassListeners());
 
         checkLoadedQueries(map);
     }
@@ -126,7 +127,7 @@ public class MapLoaderLoadTest {
         // encode map
         File file = new File(FileUtil.baseTestDirectory(), "testmap_generated.map.xml");
         PrintWriter pw = new PrintWriter(new FileOutputStream(file));
-        map.encodeAsXML(new XMLEncoder(pw));
+        map.encodeAsXML(new XMLEncoder(pw), new EmptyConfigurationNodeVisitor());
         pw.close();
     }
 

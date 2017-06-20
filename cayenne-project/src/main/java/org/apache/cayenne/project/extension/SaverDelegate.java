@@ -20,10 +20,13 @@
 package org.apache.cayenne.project.extension;
 
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.util.XMLEncoder;
 
 /**
  * @since 4.1
  */
 public interface SaverDelegate extends ConfigurationNodeVisitor<Void> {
+
+    void setXMLEncoder(XMLEncoder encoder);
 
 }

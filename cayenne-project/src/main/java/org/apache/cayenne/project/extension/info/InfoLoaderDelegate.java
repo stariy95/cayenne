@@ -28,6 +28,8 @@ import org.apache.cayenne.project.extension.LoaderDelegate;
  */
 public class InfoLoaderDelegate implements LoaderDelegate {
 
+    static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
+
     InfoStorage storage;
 
     InfoLoaderDelegate(InfoStorage storage) {
@@ -36,7 +38,7 @@ public class InfoLoaderDelegate implements LoaderDelegate {
 
     @Override
     public String getTargetNamespace() {
-        return "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
+        return NAMESPACE;
     }
 
     @Override

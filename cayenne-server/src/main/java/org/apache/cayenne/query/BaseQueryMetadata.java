@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
@@ -195,38 +196,19 @@ class BaseQueryMetadata implements QueryMetadata, XMLSerializable, Serializable 
 		}
 	}
 
-	public void encodeAsXML(XMLEncoder encoder) {
-
-		if (fetchingDataRows != QueryMetadata.FETCHING_DATA_ROWS_DEFAULT) {
-			encoder.printProperty(QueryMetadata.FETCHING_DATA_ROWS_PROPERTY, fetchingDataRows);
-		}
-
-		if (fetchOffset != QueryMetadata.FETCH_OFFSET_DEFAULT) {
-			encoder.printProperty(QueryMetadata.FETCH_OFFSET_PROPERTY, fetchOffset);
-		}
-
-		if (fetchLimit != QueryMetadata.FETCH_LIMIT_DEFAULT) {
-			encoder.printProperty(QueryMetadata.FETCH_LIMIT_PROPERTY, fetchLimit);
-		}
-
-		if (pageSize != QueryMetadata.PAGE_SIZE_DEFAULT) {
-			encoder.printProperty(QueryMetadata.PAGE_SIZE_PROPERTY, pageSize);
-		}
+	@Override
+	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+		encoder
+				.property(QueryMetadata.FETCHING_DATA_ROWS_PROPERTY, fetchingDataRows)
+				.property(QueryMetadata.FETCH_OFFSET_PROPERTY, fetchOffset)
+				.property(QueryMetadata.FETCH_LIMIT_PROPERTY, fetchLimit)
+				.property(QueryMetadata.PAGE_SIZE_PROPERTY, pageSize)
+				.property(QueryMetadata.STATEMENT_FETCH_SIZE_PROPERTY, statementFetchSize)
+				.property(QueryMetadata.CACHE_GROUPS_PROPERTY, cacheGroup)
+				.nested(prefetchTree, delegate);
 
 		if (cacheStrategy != null && QueryCacheStrategy.getDefaultStrategy() != cacheStrategy) {
-			encoder.printProperty(QueryMetadata.CACHE_STRATEGY_PROPERTY, cacheStrategy.name());
-		}
-
-		if (statementFetchSize != QueryMetadata.STATEMENT_FETCH_SIZE_DEFAULT) {
-			encoder.printProperty(QueryMetadata.STATEMENT_FETCH_SIZE_PROPERTY, statementFetchSize);
-		}
-
-		if (prefetchTree != null) {
-			prefetchTree.encodeAsXML(encoder);
-		}
-
-		if (cacheGroup != null) {
-			encoder.printProperty(QueryMetadata.CACHE_GROUPS_PROPERTY, cacheGroup);
+			encoder.property(QueryMetadata.CACHE_STRATEGY_PROPERTY, cacheStrategy.name());
 		}
 	}
 

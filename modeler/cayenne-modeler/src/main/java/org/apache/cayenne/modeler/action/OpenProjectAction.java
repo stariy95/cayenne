@@ -134,8 +134,7 @@ public class OpenProjectAction extends ProjectAction {
                                 "Can't open project - it was created using a newer version of the Modeler",
                                 "Can't Open Project",
                                 JOptionPane.OK_OPTION);
-//                closeProject(false);
-openProjectResourse(rootSource, controller); // TODO: remove this!!!
+                closeProject(false);
             } else if (UpgradeType.INTERMEDIATE_UPGRADE_NEEDED == md.getUpgradeType()) {
                 JOptionPane
                         .showMessageDialog(Application.getFrame(),

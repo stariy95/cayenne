@@ -52,22 +52,23 @@ public class FileProjectSaver implements ProjectSaver {
 	@Inject
 	protected ConfigurationNameMapper nameMapper;
 
-	@Inject
-	protected List<ProjectExtension> extensions;
-
 	protected ConfigurationNodeVisitor<Resource> resourceGetter;
 	protected ConfigurationNodeVisitor<Collection<ConfigurationNode>> saveableNodesGetter;
 	protected String fileEncoding;
 
-	public FileProjectSaver() {
+	protected Collection<SaverDelegate> saverDelegates;
+
+	public FileProjectSaver(@Inject List<ProjectExtension> extensions) {
 		resourceGetter = new ConfigurationSourceGetter();
 		saveableNodesGetter = new SaveableNodesGetter();
 
 		// this is not configurable yet... probably doesn't have to be
 		fileEncoding = "UTF-8";
 
+		saverDelegates = new ArrayList<>(extensions.size());
 		for(ProjectExtension extension : extensions) {
 			SaverDelegate delegate = extension.createSaverDelegate();
+			saverDelegates.add(delegate);
 		}
 	}
 
@@ -179,7 +180,7 @@ public class FileProjectSaver implements ProjectSaver {
 		for (SaveUnit unit : units) {
 
 			String name = unit.targetFile.getName();
-			if (name == null || name.length() < 3) {
+			if (name.length() < 3) {
 				name = "cayenne-project";
 			}
 
@@ -195,8 +196,8 @@ public class FileProjectSaver implements ProjectSaver {
 				unit.targetTempFile.delete();
 			}
 
-			try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(
-					unit.targetTempFile), fileEncoding));) {
+			try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(
+					new FileOutputStream(unit.targetTempFile), fileEncoding))) {
 				saveToTempFile(unit, printWriter);
 			} catch (UnsupportedEncodingException e) {
 				throw new CayenneRuntimeException("Unsupported encoding '%s' (%s)", e, fileEncoding, e.getMessage());
@@ -208,7 +209,9 @@ public class FileProjectSaver implements ProjectSaver {
 	}
 
 	void saveToTempFile(SaveUnit unit, PrintWriter printWriter) {
-		unit.node.acceptVisitor(new ConfigurationSaver(printWriter, getSupportedVersion()));
+		unit.node.acceptVisitor(
+				new ConfigurationSaver(printWriter, getSupportedVersion(), new CompoundSaverDelegate(saverDelegates))
+		);
 	}
 
 	void saveCommit(Collection<SaveUnit> units) {

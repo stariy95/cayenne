@@ -28,7 +28,7 @@
                 <xs:extension base="dbi:container">
                     <xs:sequence>
                         <xs:element name="catalog" minOccurs="0" maxOccurs="unbounded" type="dbi:catalog"/>
-                        <xs:element name="schema" minOccurs="0" maxOccurs="unbounded" type="dbi:catalog"/>
+                        <xs:element name="schema" minOccurs="0" maxOccurs="unbounded" type="dbi:schema"/>
                         <xs:element name="tableType" minOccurs="0" maxOccurs="unbounded" type="dbi:db-type"/>
 
                         <xs:element name="defaultPackage" minOccurs="0" type="xs:string"/>

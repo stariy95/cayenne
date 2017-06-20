@@ -27,6 +27,7 @@ import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.ResultIteratorCallback;
 import org.apache.cayenne.access.IncrementalFaultList;
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.Ordering;
@@ -127,8 +128,8 @@ class IncrementalSelectQuery<T> extends SelectQuery<T> {
 	}
 
 	@Override
-	public void encodeAsXML(XMLEncoder encoder) {
-		query.encodeAsXML(encoder);
+	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+		query.encodeAsXML(encoder, delegate);
 	}
 
 	@Override

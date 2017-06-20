@@ -20,6 +20,7 @@
 package org.apache.cayenne.query;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.Procedure;
 import org.apache.cayenne.map.QueryDescriptor;
@@ -230,7 +231,8 @@ public class ProcedureQuery extends AbstractQuery implements ParameterizedQuery,
      * 
      * @since 1.1
      */
-    public void encodeAsXML(XMLEncoder encoder) {
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.print("<query name=\"");
         encoder.print(getName());
         encoder.print("\" factory=\"");
@@ -261,9 +263,9 @@ public class ProcedureQuery extends AbstractQuery implements ParameterizedQuery,
         encoder.println("\">");
         encoder.indent(1);
 
-        metaData.encodeAsXML(encoder);
+        metaData.encodeAsXML(encoder, delegate);
         if (getColumnNamesCapitalization() != CapsStrategy.DEFAULT) {
-            encoder.printProperty(
+            encoder.property(
                     COLUMN_NAME_CAPITALIZATION_PROPERTY,
                     getColumnNamesCapitalization().name());
         }

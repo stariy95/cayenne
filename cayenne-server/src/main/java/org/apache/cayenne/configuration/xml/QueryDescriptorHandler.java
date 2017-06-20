@@ -21,6 +21,7 @@ package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.map.DataMap;
+import org.apache.cayenne.map.QueryDescriptor;
 import org.apache.cayenne.map.QueryDescriptorLoader;
 import org.apache.cayenne.util.Util;
 import org.xml.sax.Attributes;
@@ -106,7 +107,8 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
 
     @Override
     protected void beforeScopeEnd() {
-        map.addQueryDescriptor(queryBuilder.buildQueryDescriptor());
+        QueryDescriptor descriptor = queryBuilder.buildQueryDescriptor();
+        map.addQueryDescriptor(descriptor);
     }
 
     private void addQueryDescriptor(Attributes attributes) throws SAXException {

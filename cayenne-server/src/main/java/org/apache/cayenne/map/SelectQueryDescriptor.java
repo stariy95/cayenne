@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.cayenne.map;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.query.Ordering;
 import org.apache.cayenne.query.PrefetchTreeNode;
@@ -152,11 +153,10 @@ public class SelectQueryDescriptor extends QueryDescriptor {
     }
 
     @Override
-    public void encodeAsXML(XMLEncoder encoder) {
-        encoder.print("<query name=\"");
-        encoder.print(getName());
-        encoder.print("\" type=\"");
-        encoder.print(type);
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("query")
+                .attribute("name", getName())
+                .attribute("type", type);
 
         String rootString = null;
         String rootType = null;
@@ -179,32 +179,19 @@ public class SelectQueryDescriptor extends QueryDescriptor {
         }
 
         if (rootType != null) {
-            encoder.print("\" root=\"");
-            encoder.print(rootType);
-            encoder.print("\" root-name=\"");
-            encoder.print(rootString);
+            encoder.attribute("root", rootType).attribute("root-name", rootString);
         }
-
-        encoder.println("\">");
-
-        encoder.indent(1);
 
         // print properties
         encodeProperties(encoder);
 
         // encode qualifier
         if (qualifier != null) {
-            encoder.print("<qualifier>");
-            qualifier.encodeAsXML(encoder);
-            encoder.println("</qualifier>");
+            encoder.start("qualifier").nested(qualifier, delegate).end();
         }
 
         // encode orderings
-        if (orderings != null && !orderings.isEmpty()) {
-            for (Ordering ordering : orderings) {
-                ordering.encodeAsXML(encoder);
-            }
-        }
+        encoder.nested(orderings, delegate);
 
         PrefetchTreeNode prefetchTree = new PrefetchTreeNode();
 
@@ -214,9 +201,9 @@ public class SelectQueryDescriptor extends QueryDescriptor {
             node.setPhantom(false);
         }
 
-        prefetchTree.encodeAsXML(encoder);
+        encoder.nested(prefetchTree, delegate);
 
-        encoder.indent(-1);
-        encoder.println("</query>");
+        delegate.visitQuery(this);
+        encoder.end();
     }
 }

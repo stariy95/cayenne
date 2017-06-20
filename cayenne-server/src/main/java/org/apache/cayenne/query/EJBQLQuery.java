@@ -19,6 +19,7 @@
 package org.apache.cayenne.query;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.ejbql.EJBQLCompiledExpression;
 import org.apache.cayenne.ejbql.EJBQLException;
 import org.apache.cayenne.ejbql.EJBQLParserFactory;
@@ -224,7 +225,8 @@ public class EJBQLQuery extends CacheableQuery implements XMLSerializable {
         metadata.setFetchOffset(fetchOffset);
     }
 
-    public void encodeAsXML(XMLEncoder encoder) {
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.print("<query name=\"");
         encoder.print(getName());
         encoder.print("\" factory=\"");
@@ -234,7 +236,7 @@ public class EJBQLQuery extends CacheableQuery implements XMLSerializable {
 
         encoder.indent(1);
 
-        metadata.encodeAsXML(encoder);
+        metadata.encodeAsXML(encoder, delegate);
 
         if (ejbqlStatement != null) {
             encoder.print("<ejbql><![CDATA[");

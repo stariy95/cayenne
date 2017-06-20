@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.project.extension;
 
+import java.io.PrintWriter;
+
 import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataNodeDescriptor;
 import org.apache.cayenne.map.DataMap;
@@ -33,11 +35,14 @@ import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.map.Procedure;
 import org.apache.cayenne.map.ProcedureParameter;
 import org.apache.cayenne.map.QueryDescriptor;
+import org.apache.cayenne.util.XMLEncoder;
 
 /**
  * @since 4.1
  */
 public class BaseSaverDelegate implements SaverDelegate {
+
+    protected XMLEncoder encoder;
 
     @Override
     public Void visitDataChannelDescriptor(DataChannelDescriptor channelDescriptor) {
@@ -107,5 +112,10 @@ public class BaseSaverDelegate implements SaverDelegate {
     @Override
     public Void visitQuery(QueryDescriptor query) {
         return null;
+    }
+
+    @Override
+    public void setXMLEncoder(XMLEncoder encoder) {
+        this.encoder = encoder;
     }
 }
