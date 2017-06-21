@@ -30,18 +30,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DefaultInfoStorage implements InfoStorage {
 
-    private static final ObjectInfo EMPTY_INFO = new ObjectInfo();
-
     private Map<Object, ObjectInfo> objectInfoMap = new ConcurrentHashMap<>();
 
     @Override
     public String putInfo(Object object, String infoType, String info) {
-        return objectInfoMap.computeIfAbsent(Objects.requireNonNull(object), o -> new ObjectInfo()).put(infoType, info);
+        ObjectInfo infoData = objectInfoMap.get(Objects.requireNonNull(object));
+        if(infoData == null) {
+            infoData = new ObjectInfo();
+            objectInfoMap.put(object, infoData);
+        }
+
+        return infoData.put(infoType, info);
     }
 
     @Override
     public String getInfo(Object object, String infoType) {
-        return objectInfoMap.getOrDefault(Objects.requireNonNull(object), EMPTY_INFO).get(infoType);
+        ObjectInfo info = objectInfoMap.get(object);
+        if(info == null) {
+            return "";
+        }
+        return info.get(infoType);
     }
 
     private static class ObjectInfo {
@@ -52,7 +60,11 @@ public class DefaultInfoStorage implements InfoStorage {
         }
 
         String get(String type) {
-            return infoByType.getOrDefault(type, "");
+            String value = infoByType.get(type);
+            if(value == null) {
+                return "";
+            }
+            return value;
         }
     }
 }

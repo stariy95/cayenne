@@ -26,7 +26,6 @@ import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.configuration.xml.ObjEntityHandler;
 import org.apache.cayenne.configuration.xml.ProcedureHandler;
 import org.apache.cayenne.configuration.xml.QueryDescriptorHandler;
-import org.apache.cayenne.map.ObjEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;

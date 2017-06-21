@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Default MapLoader. 
- * Its responsibilities include reading DataMaps from XML files.
+ * Default MapLoader. Its responsibilities include reading DataMaps from XML
+ * files and saving DataMap objects back to XML.
  */
 public class MapLoader extends DefaultHandler {
 
@@ -162,56 +162,260 @@ public class MapLoader extends DefaultHandler {
 		startTagOpMap = new HashMap<>(40);
 		endTagOpMap = new HashMap<>(40);
 
-		startTagOpMap.put(DATA_MAP_TAG, this::processStartDataMap);
-		startTagOpMap.put(DB_ENTITY_TAG, this::processStartDbEntity);
-		startTagOpMap.put(DB_ATTRIBUTE_TAG, this::processStartDbAttribute);
-		startTagOpMap.put(OBJ_ENTITY_TAG, this::processStartObjEntity);
-		startTagOpMap.put(OBJ_ATTRIBUTE_TAG, this::processStartObjAttribute);
-		startTagOpMap.put(OBJ_ATTRIBUTE_OVERRIDE_TAG, this::processStartAttributeOverride);
-		startTagOpMap.put(EMBEDDABLE_TAG, this::processStartEmbeddable);
-		startTagOpMap.put(EMBEDDABLE_ATTRIBUTE_TAG, this::processStartEmbeddableAttribute);
-		startTagOpMap.put(EMBEDDABLE_ATTRIBUTE_OVERRIDE_TAG, this::processStartEmbeddableAttributeOverride);
-		startTagOpMap.put(EMBEDDED_ATTRIBUTE_TAG, this::processStartEmbeddedAttribute);
-		startTagOpMap.put(DB_RELATIONSHIP_TAG, this::processStartDbRelationship);
-		startTagOpMap.put(DB_ATTRIBUTE_PAIR_TAG, this::processStartDbAttributePair);
-		startTagOpMap.put(OBJ_RELATIONSHIP_TAG, this::processStartObjRelationship);
-		startTagOpMap.put(DB_RELATIONSHIP_REF_TAG, this::processStartDbRelationshipRef);
-		startTagOpMap.put(PROCEDURE_PARAMETER_TAG, this::processStartProcedureParameter);
-		startTagOpMap.put(PROCEDURE_TAG, this::processStartProcedure);
-		startTagOpMap.put(QUERY_EJBQL_TAG, attributes -> charactersBuffer = new StringBuilder());
-		startTagOpMap.put(QUERY_TAG, this::processStartQuery);
+		startTagOpMap.put(DATA_MAP_TAG, new StartClosure() {
 
-		startTagOpMap.put(QUERY_SQL_TAG, attributes -> {
-            charactersBuffer = new StringBuilder();
-            processStartQuerySQL(attributes);
-        });
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDataMap(attributes);
+			}
+		});
 
-		startTagOpMap.put(QUERY_ORDERING_TAG, attributes -> {
-            charactersBuffer = new StringBuilder();
-            processStartQueryOrdering(attributes);
-        });
+		startTagOpMap.put(DB_ENTITY_TAG, new StartClosure() {
 
-		startTagOpMap.put(DB_KEY_GENERATOR_TAG, this::processStartDbKeyGenerator);
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDbEntity(attributes);
+			}
+		});
 
-		startTagOpMap.put(PROPERTY_TAG, attributes -> {
-            // properties can belong to query or DataMap
-            if (queryBuilder != null) {
-                processStartQueryProperty(attributes);
-            } else {
-                processStartDataMapProperty(attributes);
-            }
-        });
+		startTagOpMap.put(DB_ATTRIBUTE_TAG, new StartClosure() {
 
-		startTagOpMap.put(POST_ADD_TAG, this::processStartPostAdd);
-		startTagOpMap.put(PRE_PERSIST_TAG, this::processStartPrePersist);
-		startTagOpMap.put(POST_PERSIST_TAG, this::processStartPostPersist);
-		startTagOpMap.put(PRE_UPDATE_TAG, this::processStartPreUpdate);
-		startTagOpMap.put(POST_UPDATE_TAG, this::processStartPostUpdate);
-		startTagOpMap.put(PRE_REMOVE_TAG, this::processStartPreRemove);
-		startTagOpMap.put(POST_REMOVE_TAG, this::processStartPostRemove);
-		startTagOpMap.put(POST_LOAD_TAG, this::processStartPostLoad);
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDbAttribute(attributes);
+			}
+		});
 
-		StartClosure resetBuffer = attributes -> charactersBuffer = new StringBuilder();
+		startTagOpMap.put(OBJ_ENTITY_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartObjEntity(attributes);
+			}
+		});
+
+		startTagOpMap.put(OBJ_ATTRIBUTE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartObjAttribute(attributes);
+			}
+		});
+
+		startTagOpMap.put(OBJ_ATTRIBUTE_OVERRIDE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartAttributeOverride(attributes);
+			}
+		});
+
+		startTagOpMap.put(EMBEDDABLE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartEmbeddable(attributes);
+			}
+		});
+
+		startTagOpMap.put(EMBEDDABLE_ATTRIBUTE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartEmbeddableAttribute(attributes);
+			}
+		});
+
+		startTagOpMap.put(EMBEDDABLE_ATTRIBUTE_OVERRIDE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartEmbeddableAttributeOverride(attributes);
+			}
+		});
+
+		startTagOpMap.put(EMBEDDED_ATTRIBUTE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartEmbeddedAttribute(attributes);
+			}
+		});
+
+		startTagOpMap.put(DB_RELATIONSHIP_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDbRelationship(attributes);
+			}
+		});
+
+		startTagOpMap.put(DB_ATTRIBUTE_PAIR_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDbAttributePair(attributes);
+			}
+		});
+
+		startTagOpMap.put(OBJ_RELATIONSHIP_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartObjRelationship(attributes);
+			}
+		});
+
+		startTagOpMap.put(DB_RELATIONSHIP_REF_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDbRelationshipRef(attributes);
+			}
+		});
+
+		startTagOpMap.put(PROCEDURE_PARAMETER_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartProcedureParameter(attributes);
+			}
+		});
+
+		startTagOpMap.put(PROCEDURE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartProcedure(attributes);
+			}
+		});
+
+		startTagOpMap.put(QUERY_EJBQL_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				charactersBuffer = new StringBuilder();
+			}
+		});
+
+		startTagOpMap.put(QUERY_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartQuery(attributes);
+			}
+		});
+
+		startTagOpMap.put(QUERY_SQL_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				charactersBuffer = new StringBuilder();
+				processStartQuerySQL(attributes);
+			}
+		});
+
+		startTagOpMap.put(QUERY_ORDERING_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				charactersBuffer = new StringBuilder();
+				processStartQueryOrdering(attributes);
+			}
+		});
+
+		startTagOpMap.put(DB_KEY_GENERATOR_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartDbKeyGenerator(attributes);
+			}
+		});
+
+		startTagOpMap.put(PROPERTY_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				// properties can belong to query or DataMap
+				if (queryBuilder != null) {
+					processStartQueryProperty(attributes);
+				} else {
+					processStartDataMapProperty(attributes);
+				}
+			}
+		});
+
+		startTagOpMap.put(POST_ADD_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPostAdd(attributes);
+			}
+		});
+
+		startTagOpMap.put(PRE_PERSIST_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPrePersist(attributes);
+			}
+		});
+
+		startTagOpMap.put(POST_PERSIST_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPostPersist(attributes);
+			}
+		});
+
+		startTagOpMap.put(PRE_UPDATE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPreUpdate(attributes);
+			}
+		});
+
+		startTagOpMap.put(POST_UPDATE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPostUpdate(attributes);
+			}
+		});
+
+		startTagOpMap.put(PRE_REMOVE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPreRemove(attributes);
+			}
+		});
+
+		startTagOpMap.put(POST_REMOVE_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPostRemove(attributes);
+			}
+		});
+
+		startTagOpMap.put(POST_LOAD_TAG, new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				processStartPostLoad(attributes);
+			}
+		});
+
+		StartClosure resetBuffer = new StartClosure() {
+
+			@Override
+			void execute(Attributes attributes) throws SAXException {
+				charactersBuffer = new StringBuilder();
+			}
+		};
 
 		startTagOpMap.put(QUERY_PREFETCH_TAG, resetBuffer);
 		startTagOpMap.put(QUERY_QUALIFIER_TAG, resetBuffer);
@@ -219,27 +423,145 @@ public class MapLoader extends DefaultHandler {
 		startTagOpMap.put(DB_GENERATOR_NAME_TAG, resetBuffer);
 		startTagOpMap.put(DB_KEY_CACHE_SIZE_TAG, resetBuffer);
 
-		endTagOpMap.put(DATA_MAP_TAG, this::processEndDataMap);
-		endTagOpMap.put(DB_ENTITY_TAG, this::processEndDbEntity);
-		endTagOpMap.put(OBJ_ENTITY_TAG, this::processEndObjEntity);
-		endTagOpMap.put(EMBEDDABLE_TAG, this::processEndEmbeddable);
-		endTagOpMap.put(EMBEDDABLE_ATTRIBUTE_TAG, this::processEndEmbeddedAttribute);
-		endTagOpMap.put(DB_ATTRIBUTE_TAG, this::processEndDbAttribute);
-		endTagOpMap.put(DB_RELATIONSHIP_TAG, this::processEndDbRelationship);
-		endTagOpMap.put(OBJ_RELATIONSHIP_TAG, this::processEndObjRelationship);
-		endTagOpMap.put(DB_GENERATOR_TYPE_TAG, this::processEndDbGeneratorType);
-		endTagOpMap.put(DB_GENERATOR_NAME_TAG, this::processEndDbGeneratorName);
-		endTagOpMap.put(DB_KEY_CACHE_SIZE_TAG, this::processEndDbKeyCacheSize);
-		endTagOpMap.put(PROCEDURE_PARAMETER_TAG, this::processEndProcedureParameter);
-		endTagOpMap.put(PROCEDURE_TAG, this::processEndProcedure);
-		endTagOpMap.put(QUERY_TAG, this::processEndQuery);
-		endTagOpMap.put(QUERY_SQL_TAG, this::processEndQuerySQL);
-		endTagOpMap.put(QUERY_EJBQL_TAG, this::processEndEjbqlQuery);
-		endTagOpMap.put(QUERY_QUALIFIER_TAG, this::processEndQualifier);
-		endTagOpMap.put(QUERY_ORDERING_TAG, this::processEndQueryOrdering);
-		endTagOpMap.put(QUERY_PREFETCH_TAG, this::processEndQueryPrefetch);
+		endTagOpMap.put(DATA_MAP_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDataMap();
+			}
+		});
+		endTagOpMap.put(DB_ENTITY_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDbEntity();
+			}
+		});
+		endTagOpMap.put(OBJ_ENTITY_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndObjEntity();
+			}
+		});
+		endTagOpMap.put(EMBEDDABLE_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndEmbeddable();
+			}
+		});
+		endTagOpMap.put(EMBEDDABLE_ATTRIBUTE_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndEmbeddedAttribute();
+			}
+		});
+
+		endTagOpMap.put(DB_ATTRIBUTE_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDbAttribute();
+			}
+		});
+
+		endTagOpMap.put(DB_RELATIONSHIP_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDbRelationship();
+			}
+		});
+		endTagOpMap.put(OBJ_RELATIONSHIP_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndObjRelationship();
+			}
+		});
+		endTagOpMap.put(DB_GENERATOR_TYPE_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDbGeneratorType();
+			}
+		});
+		endTagOpMap.put(DB_GENERATOR_NAME_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDbGeneratorName();
+			}
+		});
+		endTagOpMap.put(DB_KEY_CACHE_SIZE_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndDbKeyCacheSize();
+			}
+		});
+		endTagOpMap.put(PROCEDURE_PARAMETER_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndProcedureParameter();
+			}
+		});
+		endTagOpMap.put(PROCEDURE_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndProcedure();
+			}
+		});
+		endTagOpMap.put(QUERY_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndQuery();
+			}
+		});
+		endTagOpMap.put(QUERY_SQL_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndQuerySQL();
+			}
+		});
+
+		endTagOpMap.put(QUERY_EJBQL_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndEjbqlQuery();
+			}
+		});
+
+		endTagOpMap.put(QUERY_QUALIFIER_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndQualifier();
+			}
+		});
+		endTagOpMap.put(QUERY_ORDERING_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndQueryOrdering();
+			}
+		});
+		endTagOpMap.put(QUERY_PREFETCH_TAG, new EndClosure() {
+
+			@Override
+			void execute() throws SAXException {
+				processEndQueryPrefetch();
+			}
+		});
 	}
-	
+
 	private void processStartDataMap(Attributes attributes) {
 		this.mapVersion = attributes.getValue("", "project-version");
 	}
@@ -927,11 +1249,13 @@ public class MapLoader extends DefaultHandler {
 		return name;
 	}
 
-	interface StartClosure {
-		void execute(Attributes attributes) throws SAXException;
+	abstract class StartClosure {
+
+		abstract void execute(Attributes attributes) throws SAXException;
 	}
 
-	interface EndClosure {
-		void execute() throws SAXException;
+	abstract class EndClosure {
+
+		abstract void execute() throws SAXException;
 	}
 }

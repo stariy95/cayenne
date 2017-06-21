@@ -171,7 +171,7 @@ public class Embeddable implements ConfigurationNode, XMLSerializable, Serializa
 	@Override
 	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
 		encoder.start("embeddable")
-				.attribute("classname", getClassName())
+				.attribute("className", getClassName())
 				.nested(attributes, delegate);
 		delegate.visitEmbeddable(this);
 		encoder.end();

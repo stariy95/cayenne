@@ -19,8 +19,6 @@
 
 package org.apache.cayenne.project.extension;
 
-import java.io.PrintWriter;
-
 import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataNodeDescriptor;
 import org.apache.cayenne.map.DataMap;

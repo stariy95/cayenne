@@ -48,5 +48,6 @@ public class ProjectModule implements Module {
         binder.bind(ProjectValidator.class).to(DefaultProjectValidator.class);
         binder.bind(ConfigurationNodeParentGetter.class).to(DefaultConfigurationNodeParentGetter.class);
         binder.bind(InfoStorage.class).to(DefaultInfoStorage.class);
+        contributeExtension(binder);
     }
 }
