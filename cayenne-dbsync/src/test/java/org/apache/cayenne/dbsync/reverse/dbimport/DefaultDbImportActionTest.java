@@ -52,7 +52,6 @@ import org.apache.cayenne.project.extension.ProjectExtension;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.util.Util;
-import org.hsqldb.lib.Collection;
 import org.slf4j.Logger;
 import org.junit.Before;
 import org.junit.Test;

@@ -35,6 +35,7 @@ import org.apache.cayenne.di.Injector;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;
+import org.apache.cayenne.project.extension.ProjectExtension;
 import org.apache.cayenne.project.unit.Project2Case;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.resource.URLResource;
@@ -54,7 +55,7 @@ public class DataChannelProjectSaverTest extends Project2Case {
     @Test
     public void testSaveAs() throws Exception {
 
-        FileProjectSaver saver = new FileProjectSaver(Collections.emptyList());
+        FileProjectSaver saver = new FileProjectSaver(Collections.<ProjectExtension>emptyList());
 
         Module testModule = new Module() {
 
@@ -102,7 +103,7 @@ public class DataChannelProjectSaverTest extends Project2Case {
     @Test
     public void testSaveAs_RecoverFromSaveError() throws Exception {
 
-        FileProjectSaver saver = new FileProjectSaver(Collections.emptyList()) {
+        FileProjectSaver saver = new FileProjectSaver(Collections.<ProjectExtension>emptyList()) {
 
             @Override
             void saveToTempFile(SaveUnit unit, PrintWriter printWriter) {
