@@ -485,6 +485,17 @@ public class XMLEncoder {
     }
 
     /**
+     * Prints common XML element - tag with name and value. If value is empty, nothing will be printed
+     * @since 4.1
+     */
+    public XMLEncoder simpleTag(String tag, String value) {
+        if (!Util.isEmptyString(value)) {
+            this.start(tag).cdata(value).end();
+        }
+        return this;
+    }
+
+    /**
      * Inserts an optional project version attribute in the output. If the project version
      * is not initialized for encoder, will do nothing.
      *

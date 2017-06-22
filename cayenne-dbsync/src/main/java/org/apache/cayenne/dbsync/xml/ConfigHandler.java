@@ -19,8 +19,15 @@
 
 package org.apache.cayenne.dbsync.xml;
 
+import org.apache.cayenne.configuration.xml.DataMapLinker;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
-import org.apache.cayenne.dbsync.reverse.dbimport.*;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeColumn;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeProcedure;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
+import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeColumn;
+import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportExtension;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -30,33 +37,37 @@ import org.xml.sax.SAXException;
  */
 public class ConfigHandler extends NamespaceAwareNestedTagHandler {
 
-    private static final String CONFIG_TAG = "config";
+    public static final String CONFIG_TAG = "config";
+
     private static final String CATALOG_TAG = "catalog";
     private static final String SCHEMA_TAG = "schema";
-    private static final String TABLE_TYPE_TAG = "table-type";
-    private static final String DEFAULT_PACKAGE_TAG = "default-package";
-    private static final String FORCE_DATAMAP_CATALOG_TAG = "force-datamap-catalog";
-    private static final String FORCE_DATAMAP_SCHEMA_TAG = "force-datamap-schema";
-    private static final String MEANINGFUL_PK_TABLES_TAG = "meaningful-pk-tables";
-    private static final String NAMING_STRATEGY_TAG = "naming-strategy";
-    private static final String SKIP_PK_LOADING_TAG = "skip-pk-loading";
-    private static final String SKIP_RELATIONSHIPS_LOADING_TAG = "skip-relationships-loading";
-    private static final String STRIP_FROM_TABLE_NAMES_TAG = "strip-from-table-names";
-    private static final String USE_JAVA7_TYPES_TAG = "use-java7-types";
-    private static final String USE_PRIMITIVES_TAG = "use-primitives";
-    private static final String INCLUDE_TABLE_TAG = "include-table";
-    private static final String EXCLUDE_TABLE_TAG = "exclude-table";
-    private static final String INCLUDE_COLUMN_TAG = "include-column";
-    private static final String EXCLUDE_COLUMN_TAG = "exclude-column";
-    private static final String INCLUDE_PROCEDURE_TAG = "include-procedure";
-    private static final String EXCLUDE_PROCEDURE_TAG = "exclude-procedure";
+    private static final String TABLE_TYPE_TAG = "tableType";
+    private static final String DEFAULT_PACKAGE_TAG = "defaultPackage";
+    private static final String FORCE_DATAMAP_CATALOG_TAG = "forceDataMapCatalog";
+    private static final String FORCE_DATAMAP_SCHEMA_TAG = "forceDataMapSchema";
+    private static final String MEANINGFUL_PK_TABLES_TAG = "meaningfulPkTables";
+    private static final String NAMING_STRATEGY_TAG = "namingStrategy";
+    private static final String SKIP_PK_LOADING_TAG = "skipPrimaryKeyLoading";
+    private static final String SKIP_RELATIONSHIPS_LOADING_TAG = "skipRelationshipsLoading";
+    private static final String STRIP_FROM_TABLE_NAMES_TAG = "stripFromTableNames";
+    private static final String USE_JAVA7_TYPES_TAG = "useJava7Types";
+    private static final String USE_PRIMITIVES_TAG = "usePrimitives";
+    private static final String INCLUDE_TABLE_TAG = "includeTable";
+    private static final String EXCLUDE_TABLE_TAG = "excludeTable";
+    private static final String INCLUDE_COLUMN_TAG = "includeColumn";
+    private static final String EXCLUDE_COLUMN_TAG = "excludeColumn";
+    private static final String INCLUDE_PROCEDURE_TAG = "includeProcedure";
+    private static final String EXCLUDE_PROCEDURE_TAG = "excludeProcedure";
 
     private static final String TRUE = "true";
 
     private ReverseEngineering configuration;
+    private DataMapLinker linker;
 
-    public ConfigHandler(NamespaceAwareNestedTagHandler parentHandler) {
+    public ConfigHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace, DataMapLinker linker) {
         super(parentHandler);
+        this.linker = linker;
+        this.targetNamespace = targetNamespace;
     }
 
     @Override
@@ -140,6 +151,13 @@ public class ConfigHandler extends NamespaceAwareNestedTagHandler {
                 createExcludeProcedure(data);
                 break;
         }
+    }
+
+    @Override
+    protected void beforeScopeEnd() {
+        linker.addAdditionalContent("dbimport", configuration);
+        DbImportExtension.setConfiguration(this.configuration);
+        System.out.println(this.configuration);
     }
 
     private void createExcludeProcedure(String excludeProcedure) {

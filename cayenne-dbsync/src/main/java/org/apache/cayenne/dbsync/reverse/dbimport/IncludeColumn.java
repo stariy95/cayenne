@@ -19,14 +19,23 @@
 
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.util.XMLEncoder;
+import org.apache.cayenne.util.XMLSerializable;
+
 /**
  * @since 4.0.
  */
-public class IncludeColumn extends PatternParam {
+public class IncludeColumn extends PatternParam implements XMLSerializable {
     public IncludeColumn() {
     }
 
     public IncludeColumn(String pattern) {
         super(pattern);
+    }
+
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.simpleTag("dbi:includeColumn", this.getPattern());
     }
 }

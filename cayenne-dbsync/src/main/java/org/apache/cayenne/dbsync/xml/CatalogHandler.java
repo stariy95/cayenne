@@ -21,6 +21,7 @@ package org.apache.cayenne.dbsync.xml;
 
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.dbsync.reverse.dbimport.*;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -33,12 +34,12 @@ public class CatalogHandler extends NamespaceAwareNestedTagHandler {
     private static final String CATALOG_TAG = "catalog";
     private static final String CATALOG_NAME_TAG = "name";
     private static final String SCHEMA_TAG = "schema";
-    private static final String INCLUDE_TABLE_TAG = "include-table";
-    private static final String EXCLUDE_TABLE_TAG = "exclude-table";
-    private static final String INCLUDE_COLUMN_TAG = "include-column";
-    private static final String EXCLUDE_COLUMN_TAG = "exclude-column";
-    private static final String INCLUDE_PROCEDURE_TAG = "include-procedure";
-    private static final String EXCLUDE_PROCEDURE_TAG = "exclude-procedure";
+    private static final String INCLUDE_TABLE_TAG = "includeTable";
+    private static final String EXCLUDE_TABLE_TAG = "excludeTable";
+    private static final String INCLUDE_COLUMN_TAG = "includeColumn";
+    private static final String EXCLUDE_COLUMN_TAG = "excludeColumn";
+    private static final String INCLUDE_PROCEDURE_TAG = "includeProcedure";
+    private static final String EXCLUDE_PROCEDURE_TAG = "excludeProcedure";
 
     private ReverseEngineering configuration;
 
@@ -79,6 +80,9 @@ public class CatalogHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected void processCharData(String localName, String data) {
         switch (localName) {
+            case INCLUDE_TABLE_TAG:
+                createIncludeTable(data);
+                break;
             case CATALOG_NAME_TAG:
                 createCatalogName(data);
                 break;
@@ -97,6 +101,18 @@ public class CatalogHandler extends NamespaceAwareNestedTagHandler {
             case EXCLUDE_PROCEDURE_TAG:
                 createExcludeProcedure(data);
                 break;
+        }
+    }
+
+    private void createIncludeTable(String includeTableData) {
+        if (includeTableData.trim().length() == 0) {
+            return;
+        }
+
+        if (catalog != null) {
+            IncludeTable includeTable = new IncludeTable();
+            includeTable.setName(includeTableData);
+            catalog.addIncludeTable(includeTable);
         }
     }
 

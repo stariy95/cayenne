@@ -25,6 +25,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.cayenne.configuration.ConfigurationNode;
+import org.apache.cayenne.configuration.xml.DataMapAdditionalContent;
+import org.apache.cayenne.configuration.xml.DataMapLinker;
 import org.apache.cayenne.dbsync.naming.NameBuilder;
 import org.apache.cayenne.dbsync.reverse.dbimport.Catalog;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportConfiguration;
@@ -35,6 +37,8 @@ import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
 import org.apache.cayenne.dbsync.reverse.dbload.DbLoaderDelegate;
 import org.apache.cayenne.dbsync.reverse.filters.FiltersConfigBuilder;
+import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportExtension;
+import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.ProjectController;
@@ -59,7 +63,10 @@ public class DbLoaderContext {
     private boolean stopping;
     private String loadStatusNote;
 
-    public DbLoaderContext() {
+    private DataMapLinker linker;
+
+    public DbLoaderContext(DataMapLinker linker) {
+        this.linker = linker;
     }
 
     DataMap getDataMap() {
@@ -116,7 +123,7 @@ public class DbLoaderContext {
         }
 
         // Build filters
-        ReverseEngineering reverseEngineering = new ReverseEngineering();
+        /*ReverseEngineering reverseEngineering = new ReverseEngineering();
         reverseEngineering.addCatalog(new Catalog(dialog.getSelectedCatalog()));
         reverseEngineering.addSchema(new Schema(dialog.getSelectedSchema()));
         reverseEngineering.addIncludeTable(new IncludeTable(dialog.getTableIncludePattern()));
@@ -125,7 +132,11 @@ public class DbLoaderContext {
         }
         // Add here auto_pk_support table
         reverseEngineering.addExcludeTable(new ExcludeTable("auto_pk_support|AUTO_PK_SUPPORT"));
-        reverseEngineering.addIncludeProcedure(new IncludeProcedure(dialog.getProcedureNamePattern()));
+        reverseEngineering.addIncludeProcedure(new IncludeProcedure(dialog.getProcedureNamePattern()));*/
+        System.out.println(linker.toString());
+
+        DataMapAdditionalContent content = linker.getAdditionalContent(getProjectController().getCurrentDataMap());
+        ReverseEngineering reverseEngineering = (ReverseEngineering) content.getContent("dbimport");
         FiltersConfigBuilder filtersConfigBuilder = new FiltersConfigBuilder(reverseEngineering);
 
         DbImportConfiguration config = new DbImportConfiguration() {

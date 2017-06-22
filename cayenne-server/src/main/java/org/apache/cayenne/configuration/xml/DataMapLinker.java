@@ -17,25 +17,16 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.reverse.dbimport;
+package org.apache.cayenne.configuration.xml;
 
-import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.util.XMLEncoder;
-import org.apache.cayenne.util.XMLSerializable;
+import org.apache.cayenne.map.DataMap;
 
 /**
- * @since 4.0.
+ * @since 4.1
  */
-public class IncludeProcedure extends PatternParam implements XMLSerializable {
-    public IncludeProcedure() {
-    }
+public interface DataMapLinker {
 
-    public IncludeProcedure(String pattern) {
-        super(pattern);
-    }
-
-    @Override
-    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-        encoder.simpleTag("dbi:includeProcedure", this.getPattern());
-    }
+    void addAdditionalContent(String key, Object content);
+    void linkDataMap(DataMap dataMap);
+    DataMapAdditionalContent getAdditionalContent(DataMap key);
 }

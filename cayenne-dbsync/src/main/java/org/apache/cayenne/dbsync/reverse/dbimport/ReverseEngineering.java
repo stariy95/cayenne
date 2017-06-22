@@ -16,20 +16,29 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
+
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportLoaderDelegate;
+import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportSaverDelegate;
+import org.apache.cayenne.util.Util;
+import org.apache.cayenne.util.XMLEncoder;
+import org.apache.cayenne.util.XMLSerializable;
+
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 
 /**
  * @since 4.0
  */
-public class ReverseEngineering extends SchemaContainer implements Serializable {
+public class ReverseEngineering extends SchemaContainer implements Serializable, XMLSerializable {
 
-    private Boolean skipRelationshipsLoading;
+    private boolean skipRelationshipsLoading;
 
-    private Boolean skipPrimaryKeyLoading;
+    private boolean skipPrimaryKeyLoading;
 
     /*
      * <p>
@@ -175,10 +184,10 @@ public class ReverseEngineering extends SchemaContainer implements Serializable 
             }
         }
 
-        if (skipRelationshipsLoading != null && skipRelationshipsLoading) {
+        if (skipRelationshipsLoading) {
             res.append("\n        Skip Relationships Loading");
         }
-        if (skipPrimaryKeyLoading != null && skipPrimaryKeyLoading) {
+        if (skipPrimaryKeyLoading) {
             res.append("\n        Skip PrimaryKey Loading");
         }
 
@@ -248,4 +257,31 @@ public class ReverseEngineering extends SchemaContainer implements Serializable 
     public void setUseJava7Types(boolean useJava7Types) {
         this.useJava7Types = useJava7Types;
     }
+
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("dbi:config")
+                .attribute("xmlns:dbi", DbImportSaverDelegate.NAMESPACE)
+                .nested(this.getIncludeTables(), delegate)
+                .nested(this.getExcludeTables(), delegate)
+                .nested(this.getIncludeColumns(), delegate)
+                .nested(this.getExcludeColumns(), delegate)
+                .nested(this.getIncludeProcedures(), delegate)
+                .nested(this.getExcludeProcedures(), delegate)
+                .nested(this.getCatalogs(), delegate)
+                .nested(this.getSchemas(), delegate)
+                .simpleTag("dbi:db-type", Util.join(Arrays.asList(this.getTableTypes()), ","))
+                .simpleTag("dbi:defaultPackage", this.getDefaultPackage())
+                .simpleTag("dbi:forceDataMapCatalog", Boolean.toString(this.isForceDataMapCatalog()))
+                .simpleTag("dbi:forceDataMapSchema", Boolean.toString(this.isForceDataMapSchema()))
+                .simpleTag("dbi:meaningfulPkTables", this.getMeaningfulPkTables())
+                .simpleTag("dbi:namingStrategy", this.getNamingStrategy())
+                .simpleTag("dbi:skipPrimaryKeyLoading", this.getSkipPrimaryKeyLoading().toString())
+                .simpleTag("dbi:skipRelationshipsLoading", this.getSkipRelationshipsLoading().toString())
+                .simpleTag("dbi:stripFromTableNames", this.getNamingStrategy())
+                .simpleTag("dbi:useJava7Types", Boolean.toString(this.isUseJava7Types()))
+                .simpleTag("dbi:usePrimitives", Boolean.toString(this.isUsePrimitives()))
+                .end();
+    }
+
 }

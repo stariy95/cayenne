@@ -32,10 +32,10 @@ import org.xml.sax.SAXException;
  */
 public class IncludeTableHandler extends NamespaceAwareNestedTagHandler {
 
-    private static final String INCLUDE_TABLE_TAG = "include-table";
+    private static final String INCLUDE_TABLE_TAG = "includeTable";
     private static final String INCLUDE_TABLE_NAME_TAG = "name";
-    private static final String INCLUDE_COLUMN_TAG = "include-column";
-    private static final String EXCLUDE_COLUMN_TAG = "exclude-column";
+    private static final String INCLUDE_COLUMN_TAG = "includeColumn";
+    private static final String EXCLUDE_COLUMN_TAG = "excludeColumn";
 
     private IncludeTable includeTable;
 
@@ -50,7 +50,6 @@ public class IncludeTableHandler extends NamespaceAwareNestedTagHandler {
     protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
         switch (localName) {
             case INCLUDE_TABLE_TAG:
-                createIncludeTable();
                 return true;
         }
 
@@ -95,6 +94,10 @@ public class IncludeTableHandler extends NamespaceAwareNestedTagHandler {
     private void createIncludeTableName(String includeTableName) {
         if (includeTableName.trim().length() == 0) {
             return;
+        }
+
+        if (includeTable == null) {
+            createIncludeTable();
         }
 
         if (includeTable != null) {

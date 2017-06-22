@@ -20,7 +20,14 @@
 package org.apache.cayenne.dbsync.xml;
 
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
-import org.apache.cayenne.dbsync.reverse.dbimport.*;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeProcedure;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
+import org.apache.cayenne.dbsync.reverse.dbimport.SchemaContainer;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeColumn;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeColumn;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -32,12 +39,12 @@ public class SchemaHandler extends NamespaceAwareNestedTagHandler {
 
     private static final String SCHEMA_TAG = "schema";
     private static final String SCHEMA_NAME_TAG = "name";
-    private static final String INCLUDE_TABLE_TAG = "include-table";
-    private static final String EXCLUDE_TABLE_TAG = "exclude-table";
-    private static final String INCLUDE_COLUMN_TAG = "include-column";
-    private static final String EXCLUDE_COLUMN_TAG = "exclude-column";
-    private static final String INCLUDE_PROCEDURE_TAG = "include-procedure";
-    private static final String EXCLUDE_PROCEDURE_TAG = "exclude-procedure";
+    private static final String INCLUDE_TABLE_TAG = "includeTable";
+    private static final String EXCLUDE_TABLE_TAG = "excludeTable";
+    private static final String INCLUDE_COLUMN_TAG = "includeColumn";
+    private static final String EXCLUDE_COLUMN_TAG = "excludeColumn";
+    private static final String INCLUDE_PROCEDURE_TAG = "includeProcedure";
+    private static final String EXCLUDE_PROCEDURE_TAG = "excludeProcedure";
 
     private SchemaContainer entity;
 
@@ -76,6 +83,9 @@ public class SchemaHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected void processCharData(String localName, String data) {
         switch (localName) {
+            case INCLUDE_TABLE_TAG:
+                createIncludeTable(data);
+                break;
             case SCHEMA_NAME_TAG:
                 createSchemaName(data);
                 break;
@@ -94,6 +104,18 @@ public class SchemaHandler extends NamespaceAwareNestedTagHandler {
             case EXCLUDE_PROCEDURE_TAG:
                 createExcludeProcedure(data);
                 break;
+        }
+    }
+
+    private void createIncludeTable(String includeTableData) {
+        if (includeTableData.trim().length() == 0) {
+            return;
+        }
+
+        if (schema != null) {
+            IncludeTable includeTable = new IncludeTable();
+            includeTable.setName(includeTableData);
+            schema.addIncludeTable(includeTable);
         }
     }
 

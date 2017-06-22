@@ -19,10 +19,14 @@
 
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.util.XMLEncoder;
+import org.apache.cayenne.util.XMLSerializable;
+
 /**
  * @since 4.0.
  */
-public class Schema extends FilterContainer {
+public class Schema extends FilterContainer implements XMLSerializable {
 
     public Schema() {
     }
@@ -35,5 +39,18 @@ public class Schema extends FilterContainer {
     public StringBuilder toString(StringBuilder res, String prefix) {
         res.append(prefix).append("Schema: ").append(getName()).append("\n");
         return super.toString(res, prefix + "  ");
+    }
+
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("dbi:schema")
+            .nested(this.getIncludeTables(), delegate)
+            .nested(this.getExcludeTables(), delegate)
+            .nested(this.getIncludeColumns(), delegate)
+            .nested(this.getExcludeColumns(), delegate)
+            .nested(this.getIncludeProcedures(), delegate)
+            .nested(this.getExcludeProcedures(), delegate)
+            .simpleTag("dbi:name", this.getName())
+        .end();
     }
 }
