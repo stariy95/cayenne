@@ -485,12 +485,13 @@ public class XMLEncoder {
     }
 
     /**
-     * Prints common XML element - tag with name and value. If value is empty, nothing will be printed
+     * Prints common XML element - tag with name and text value (&lt;tag>value&lt;/tag>)
+     * If value is empty, nothing will be printed.
      * @since 4.1
      */
     public XMLEncoder simpleTag(String tag, String value) {
         if (!Util.isEmptyString(value)) {
-            this.start(tag).cdata(value).end();
+            start(tag).cdata(value).end();
         }
         return this;
     }

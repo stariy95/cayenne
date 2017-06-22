@@ -24,7 +24,7 @@ import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
-import org.apache.cayenne.configuration.xml.LegacyXMLDataMapLoader;
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.*;
 import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;
@@ -178,7 +178,7 @@ public class ProjectUpgrader_V9Test extends Project2Case {
                 binder.bind(AdhocObjectFactory.class).to(DefaultAdhocObjectFactory.class);
                 binder.bind(ProjectSaver.class).to(FileProjectSaver.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
-                binder.bind(DataMapLoader.class).to(LegacyXMLDataMapLoader.class);
+                binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
                 binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
                 ProjectModule.contributeExtension(binder);
             }
@@ -218,7 +218,7 @@ public class ProjectUpgrader_V9Test extends Project2Case {
 
         XPath xpath = XPathFactory.newInstance().newXPath();
         assertEquals("", xpath.evaluate("/domain/@name", document));
-        assertEquals("10", xpath.evaluate("/domain/@project-version", document));
+        assertEquals("9", xpath.evaluate("/domain/@project-version", document));
 
         NodeList maps = (NodeList) xpath.evaluate("/domain/map", document, XPathConstants.NODESET);
         assertNotNull(maps);
@@ -239,7 +239,7 @@ public class ProjectUpgrader_V9Test extends Project2Case {
         Document document = toDOMTree(file);
 
         XPath xpath = XPathFactory.newInstance().newXPath();
-        assertEquals("10", xpath.evaluate("/data-map/@project-version", document));
+        assertEquals("9", xpath.evaluate("/data-map/@project-version", document));
 
         NodeList reverseEngineeringNodes = (NodeList) xpath.evaluate("/data-map/reverse-engineering-config",
                 document, XPathConstants.NODESET);
@@ -250,7 +250,7 @@ public class ProjectUpgrader_V9Test extends Project2Case {
         Document document = toDOMTree(file);
 
         XPath xpath = XPathFactory.newInstance().newXPath();
-        assertEquals("10", xpath.evaluate("/data-map/@project-version", document));
+        assertEquals("9", xpath.evaluate("/data-map/@project-version", document));
     }
 
 }

@@ -73,21 +73,38 @@ public class UpgradeHandler_V9 extends BaseUpgradeHandler {
         }
 
         deleteReverseEngineeringFiles(projectSource);
+        return projectSource;
+    }
 
-        XMLDataChannelDescriptorLoader loader = new XMLDataChannelDescriptorLoader();
-        injector.injectMembers(loader);
-        ConfigurationTree<DataChannelDescriptor> tree = loader.load(projectSource);
-        Project project = new Project(tree);
+    private void processProjectFile(Document document) {
+        // Obtain the root element
+        Element domain = document.getDocumentElement();
+        domain.setAttribute("project-version", TO_VERSION);
+        try {
+            saveDocument(document, projectSource);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
-        // load and safe cycle updates project version
-        projectSaver.save(project);
-        return project.getConfigurationResource();
+    private void processDataMap(Document document) {
+        try {
+            Element dataMap = document.getDocumentElement();
+            dataMap.setAttribute("xmlns","http://cayenne.apache.org/schema/9/modelMap");
+            dataMap.setAttribute("xsi:schemaLocation", "http://cayenne.apache.org/schema/9/modelMap http://cayenne.apache.org/schema/9/modelMap.xsd");
+            dataMap.setAttribute("project-version", TO_VERSION);
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
     }
 
     private void deleteReverseEngineeringFiles(Resource projectSource) {
         Document projectDoc = readDOMDocument(projectSource);
 
         try {
+            processProjectFile(projectDoc);
+            saveDocument(projectDoc, projectSource);
+
             XPath xpath = XPathFactory.newInstance().newXPath();
             NodeList nodes = (NodeList) xpath.evaluate("/domain/map/@name", projectDoc, XPathConstants.NODESET);
 
@@ -95,11 +112,10 @@ public class UpgradeHandler_V9 extends BaseUpgradeHandler {
                 Node mapNode = nodes.item(i);
 
                 Resource mapResource = projectSource.getRelativeResource(mapNode.getNodeValue() + ".map.xml");
-
                 Document datamapDoc = readDOMDocument(mapResource);
+                processDataMap(datamapDoc);
 
-                Node reNode = (Node) xpath.evaluate("/data-map/reverse-engineering-config",
-                        datamapDoc, XPathConstants.NODE);
+                Node reNode = (Node) xpath.evaluate("/data-map/reverse-engineering-config", datamapDoc, XPathConstants.NODE);
 
                 if (reNode != null) {
                     String reFileName = ((Element) reNode).getAttribute("name") + ".xml";
@@ -114,26 +130,14 @@ public class UpgradeHandler_V9 extends BaseUpgradeHandler {
                     } catch (Exception e) {
                         // ignore...
                     }
-                }
-            }
 
+                    datamapDoc.getDocumentElement().removeChild(reNode);
+                }
+
+                saveDocument(datamapDoc, mapResource);
+            }
         } catch (Exception e) {
             throw new ConfigurationException("Unable to parse Cayenne XML configuration files.", e);
-        }
-    }
-
-    private Document readDOMDocument(Resource resource) {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        try {
-            DocumentBuilder domBuilder = documentBuilderFactory.newDocumentBuilder();
-
-            try (InputStream inputStream = resource.getURL().openStream()) {
-                return domBuilder.parse(inputStream);
-            } catch (IOException | SAXException e) {
-                throw new ConfigurationException("Error loading configuration from %s", e, resource);
-            }
-        } catch (ParserConfigurationException e) {
-            throw new ConfigurationException(e);
         }
     }
 

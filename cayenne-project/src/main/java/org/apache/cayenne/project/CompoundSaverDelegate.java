@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.project;
 
-import java.io.PrintWriter;
 import java.util.Collection;
 
 import org.apache.cayenne.configuration.DataChannelDescriptor;
@@ -48,6 +47,7 @@ class CompoundSaverDelegate implements SaverDelegate {
 
     CompoundSaverDelegate(Collection<SaverDelegate> delegates) {
         this.delegates = delegates;
+        setParentDelegate(this);
     }
 
     @Override
@@ -167,5 +167,17 @@ class CompoundSaverDelegate implements SaverDelegate {
         for(SaverDelegate delegate : delegates) {
             delegate.setXMLEncoder(encoder);
         }
+    }
+
+    @Override
+    public void setParentDelegate(SaverDelegate parentDelegate) {
+        for(SaverDelegate delegate : delegates) {
+            delegate.setParentDelegate(parentDelegate);
+        }
+    }
+
+    @Override
+    public SaverDelegate getParentDelegate() {
+        return null;
     }
 }

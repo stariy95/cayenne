@@ -29,4 +29,8 @@ public interface SaverDelegate extends ConfigurationNodeVisitor<Void> {
 
     void setXMLEncoder(XMLEncoder encoder);
 
+    void setParentDelegate(SaverDelegate parentDelegate);
+
+    SaverDelegate getParentDelegate();
+
 }

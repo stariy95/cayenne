@@ -102,4 +102,8 @@ public class ObjRelationshipHandler extends NamespaceAwareNestedTagHandler {
         objRelationship.setMapKey(attributes.getValue("map-key"));
         source.addRelationship(objRelationship);
     }
+
+    public ObjRelationship getObjRelationship() {
+        return objRelationship;
+    }
 }

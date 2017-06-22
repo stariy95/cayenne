@@ -53,6 +53,8 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
 
     private ObjEntity entity;
 
+    private ObjAttribute lastAttribute;
+
     public ObjEntityHandler(NamespaceAwareNestedTagHandler parentHandler, DataMap map) {
         super(parentHandler);
         this.map = map;
@@ -119,10 +121,6 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
         entity.setAbstract(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("abstract")));
         entity.setReadOnly(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("readOnly")));
         entity.setServerOnly(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("serverOnly")));
-        entity.setExcludingSuperclassListeners(
-                DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("exclude-superclass-listeners")));
-        entity.setExcludingDefaultListeners(
-                DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("exclude-default-listeners")));
         if ("optimistic".equals(attributes.getValue("", "lock-type"))) {
             entity.setDeclaredLockType(ObjEntity.LOCK_TYPE_OPTIMISTIC);
         }
@@ -145,11 +143,11 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
             dbPath = attributes.getValue("db-attribute-name");
         }
 
-        ObjAttribute oa = new ObjAttribute(attributes.getValue("name"));
-        oa.setType(attributes.getValue("type"));
-        oa.setUsedForLocking(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("lock")));
-        oa.setDbAttributePath(dbPath);
-        entity.addAttribute(oa);
+        lastAttribute = new ObjAttribute(attributes.getValue("name"));
+        lastAttribute.setType(attributes.getValue("type"));
+        lastAttribute.setUsedForLocking(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("lock")));
+        lastAttribute.setDbAttributePath(dbPath);
+        entity.addAttribute(lastAttribute);
     }
 
     private void processStartAttributeOverride(Attributes attributes) {
@@ -204,5 +202,9 @@ public class ObjEntityHandler extends NamespaceAwareNestedTagHandler {
 
     public ObjEntity getEntity() {
         return entity;
+    }
+
+    public ObjAttribute getLastAttribute() {
+        return lastAttribute;
     }
 }

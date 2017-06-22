@@ -81,14 +81,29 @@ public class UpgradeHandler_V8 extends BaseUpgradeHandler {
 
         upgradeFactories(projectSource);
 
-        XMLDataChannelDescriptorLoader loader = new XMLDataChannelDescriptorLoader();
-        injector.injectMembers(loader);
-        ConfigurationTree<DataChannelDescriptor> tree = loader.load(projectSource);
-        Project project = new Project(tree);
+        return projectSource;
+    }
 
-        // load and safe cycle updates project version
-        projectSaver.save(project);
-        return project.getConfigurationResource();
+    private void processProjectFile(Document document) {
+        // Obtain the root element
+        Element domain = document.getDocumentElement();
+        domain.setAttribute("project-version", TO_VERSION);
+        try {
+            saveDocument(document, projectSource);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void processDataMap(Document document) {
+        try {
+            Element dataMap = document.getDocumentElement();
+            dataMap.setAttribute("xmlns","http://cayenne.apache.org/schema/8/modelMap");
+            dataMap.setAttribute("xsi:schemaLocation", "http://cayenne.apache.org/schema/8/modelMap http://cayenne.apache.org/schema/8/modelMap.xsd");
+            dataMap.setAttribute("project-version", TO_VERSION);
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
     }
 
     private void upgradeFactories(Resource projectSource) {
@@ -97,9 +112,8 @@ public class UpgradeHandler_V8 extends BaseUpgradeHandler {
         try {
             XPath xpath = XPathFactory.newInstance().newXPath();
             NodeList nodes = (NodeList) xpath.evaluate("/domain/map/@name", projectDoc, XPathConstants.NODESET);
-
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
+            processProjectFile(projectDoc);
+            saveDocument(projectDoc, projectSource);
 
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node mapNode = nodes.item(i);
@@ -107,6 +121,7 @@ public class UpgradeHandler_V8 extends BaseUpgradeHandler {
                 Resource mapResource = projectSource.getRelativeResource(mapNode.getNodeValue() + ".map.xml");
 
                 Document datamapDoc = readDOMDocument(mapResource);
+                processDataMap(datamapDoc);
 
                 NodeList queryNodes = (NodeList) xpath.evaluate("/data-map/query", datamapDoc, XPathConstants.NODESET);
 
@@ -118,7 +133,6 @@ public class UpgradeHandler_V8 extends BaseUpgradeHandler {
                     }
 
                     String queryType;
-
                     switch (factory) {
                         case "org.apache.cayenne.map.SelectQueryBuilder":
                             queryType = QueryDescriptor.SELECT_QUERY;
@@ -140,29 +154,11 @@ public class UpgradeHandler_V8 extends BaseUpgradeHandler {
                     queryElement.removeAttribute("factory");
                 }
 
-                DOMSource domSource = new DOMSource(datamapDoc);
-                StreamResult result = new StreamResult(
-                        new FileOutputStream(new File(mapResource.getURL().getPath())));
-                transformer.transform(domSource, result);
+                saveDocument(datamapDoc, mapResource);
             }
 
         } catch (Exception e) {
             throw new ConfigurationException("Unable to parse Cayenne XML configuration files.", e);
-        }
-    }
-
-    private Document readDOMDocument(Resource resource) {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        try {
-            DocumentBuilder domBuilder = documentBuilderFactory.newDocumentBuilder();
-
-            try (InputStream inputStream = resource.getURL().openStream()) {
-                return domBuilder.parse(inputStream);
-            } catch (IOException | SAXException e) {
-                throw new ConfigurationException("Error loading configuration from %s", e, resource);
-            }
-        } catch (ParserConfigurationException e) {
-            throw new ConfigurationException(e);
         }
     }
 

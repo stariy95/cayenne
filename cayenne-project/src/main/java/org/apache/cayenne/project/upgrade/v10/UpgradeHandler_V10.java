@@ -18,17 +18,6 @@
  ****************************************************************/
 package org.apache.cayenne.project.upgrade.v10;
 
-import java.io.IOException;
-import java.io.InputStream;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
@@ -42,12 +31,10 @@ import org.apache.cayenne.project.upgrade.UpgradeHandler;
 import org.apache.cayenne.project.upgrade.UpgradeMetaData;
 import org.apache.cayenne.project.upgrade.v9.ProjectUpgrader_V9;
 import org.apache.cayenne.resource.Resource;
-import org.apache.cayenne.util.Util;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 public class UpgradeHandler_V10 extends BaseUpgradeHandler {
 
@@ -91,7 +78,7 @@ public class UpgradeHandler_V10 extends BaseUpgradeHandler {
         }
     }
 
-    private void updateDataMap(Document document) {
+    private void processDataMap(Document document) {
         try {
             Element dataMap = document.getDocumentElement();
             dataMap.setAttribute("xmlns","http://cayenne.apache.org/schema/10/modelMap");
@@ -102,14 +89,6 @@ public class UpgradeHandler_V10 extends BaseUpgradeHandler {
         }
     }
 
-    private void saveDocument(Document document, Resource mapResource) throws Exception {
-        Source input = new DOMSource(document);
-        Result output = new StreamResult(Util.toFile(mapResource.getURL()));
-
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.transform(input, output);
-    }
-
     private void processAdditionalDatamapFiles(Document document) {
         try {
             XPath xpath = XPathFactory.newInstance().newXPath();
@@ -118,26 +97,11 @@ public class UpgradeHandler_V10 extends BaseUpgradeHandler {
                 Node mapNode = nodes.item(i);
                 Resource mapResource = projectSource.getRelativeResource(mapNode.getNodeValue() + ".map.xml");
                 Document datamapDoc = readDOMDocument(mapResource);
-                updateDataMap(datamapDoc);
+                processDataMap(datamapDoc);
                 saveDocument(datamapDoc, mapResource);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
-    }
-
-    private Document readDOMDocument(Resource resource) {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        documentBuilderFactory.setNamespaceAware(false);
-        try {
-            DocumentBuilder domBuilder = documentBuilderFactory.newDocumentBuilder();
-            try (InputStream inputStream = resource.getURL().openStream()) {
-                return domBuilder.parse(inputStream);
-            } catch (IOException | SAXException e) {
-                throw new ConfigurationException("Error loading configuration from %s", e, resource);
-            }
-        } catch (ParserConfigurationException e) {
-            throw new ConfigurationException(e);
         }
     }
 

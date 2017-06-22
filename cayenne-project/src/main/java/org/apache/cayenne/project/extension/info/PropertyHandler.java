@@ -21,9 +21,11 @@ package org.apache.cayenne.project.extension.info;
 
 import org.apache.cayenne.configuration.xml.DataMapHandler;
 import org.apache.cayenne.configuration.xml.DbEntityHandler;
+import org.apache.cayenne.configuration.xml.DbRelationshipHandler;
 import org.apache.cayenne.configuration.xml.EmbeddableHandler;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.configuration.xml.ObjEntityHandler;
+import org.apache.cayenne.configuration.xml.ObjRelationshipHandler;
 import org.apache.cayenne.configuration.xml.ProcedureHandler;
 import org.apache.cayenne.configuration.xml.QueryDescriptorHandler;
 import org.slf4j.Logger;
@@ -85,6 +87,10 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
             return "query"; // TODO: how to get query descriptor?
         } else if(parentHandler instanceof ProcedureHandler) {
             return ((ProcedureHandler) parentHandler).getProcedure();
+        } else if(parentHandler instanceof DbRelationshipHandler) {
+            return ((DbRelationshipHandler) parentHandler).getDbRelationship();
+        } else if(parentHandler instanceof ObjRelationshipHandler) {
+            return ((ObjRelationshipHandler) parentHandler).getObjRelationship();
         }
 
         if(parentHandler instanceof NamespaceAwareNestedTagHandler) {
@@ -92,7 +98,7 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
             if(parentParentHandler instanceof DbEntityHandler) {
                 return ((DbEntityHandler) parentParentHandler).getLastAttribute();
             } else if(parentParentHandler instanceof ObjEntityHandler) {
-                return null;
+                return ((ObjEntityHandler) parentParentHandler).getLastAttribute();
             } else {
                 logger.info("Parent class unknown: {} -> {}", parentParentHandler.getClass().getName(), parentHandler.getClass().getName());
             }

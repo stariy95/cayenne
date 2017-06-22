@@ -118,6 +118,7 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
 
     protected JCheckBox serverOnly;
     protected JCheckBox isAbstract;
+    protected TextAdapter comment;
     protected TextAdapter clientClassName;
     protected TextAdapter clientSuperClassName;
 
@@ -197,6 +198,14 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
 
         isAbstract = new JCheckBox();
         serverOnly = new JCheckBox();
+
+        comment = new TextAdapter(new JTextField()) {
+            @Override
+            protected void updateModel(String text) throws ValidationException {
+                setComment(text);
+            }
+        };
+
         clientClassName = new TextAdapter(new JTextField()) {
 
             @Override
@@ -222,6 +231,7 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
         builder.append("Inheritance:", superEntityCombo);
         builder.append(tableLabel, dbEntityCombo);
         isAbstractLabel = builder.append("Abstract class:", isAbstract);
+        builder.append("Comment:", comment.getComponent());
         builder.appendSeparator();
 
         builder.append("Java Class:", className.getComponent());
@@ -445,6 +455,7 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
         readOnly.setSelected(entity.isReadOnly());
 
         isAbstract.setSelected(entity.isAbstract());
+        comment.setText(getComment(entity));
         serverOnly.setSelected(entity.isServerOnly());
         clientClassName.setText(entity.getClientClassName());
         clientSuperClassName.setText(entity.getClientSuperClassName());
@@ -688,6 +699,19 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
         }
 
         return result;
+    }
+
+    private void setComment(String value) {
+        ObjEntity entity = mediator.getCurrentObjEntity();
+        if (entity == null) {
+            return;
+        }
+
+        mediator.getApplication().getInfoStorage().putInfo(entity, "comment", value);
+    }
+
+    private String getComment(ObjEntity entity) {
+        return mediator.getApplication().getInfoStorage().getInfo(entity, "comment");
     }
 
 }

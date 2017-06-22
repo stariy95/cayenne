@@ -91,4 +91,7 @@ public class DbRelationshipHandler extends NamespaceAwareNestedTagHandler {
         dbRelationship.addJoin(join);
     }
 
+    public DbRelationship getDbRelationship() {
+        return dbRelationship;
+    }
 }

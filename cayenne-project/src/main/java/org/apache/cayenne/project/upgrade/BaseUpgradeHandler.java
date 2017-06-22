@@ -24,14 +24,25 @@ import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.util.Util;
+import org.w3c.dom.Document;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /**
  * A common superclass of UpgradeHandlers.
@@ -147,17 +158,13 @@ public abstract class BaseUpgradeHandler implements UpgradeHandler {
 
 		RootTagHandler rootHandler = new RootTagHandler();
 		URL url = projectSource.getURL();
-
-		try (InputStream in = url.openStream();) {
-
+		try (InputStream in = url.openStream()) {
 			XMLReader parser = Util.createXmlReader();
-
 			parser.setContentHandler(rootHandler);
 			parser.setErrorHandler(rootHandler);
 			parser.parse(new InputSource(in));
 		} catch (SAXException e) {
-			// expected ... handler will terminate as soon as it finds a root
-			// tag.
+			// expected... handler will terminate as soon as it finds a root tag.
 		} catch (Exception e) {
 			throw new ConfigurationException("Error reading configuration from %s", e, url);
 		}
@@ -201,6 +208,29 @@ public abstract class BaseUpgradeHandler implements UpgradeHandler {
 		return Double.parseDouble(buffer.toString());
 	}
 
+	protected Document readDOMDocument(Resource resource) {
+		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		documentBuilderFactory.setNamespaceAware(false);
+		try {
+			DocumentBuilder domBuilder = documentBuilderFactory.newDocumentBuilder();
+			try (InputStream inputStream = resource.getURL().openStream()) {
+				return domBuilder.parse(inputStream);
+			} catch (IOException | SAXException e) {
+				throw new ConfigurationException("Error loading configuration from %s", e, resource);
+			}
+		} catch (ParserConfigurationException e) {
+			throw new ConfigurationException(e);
+		}
+	}
+
+	protected void saveDocument(Document document, Resource mapResource) throws Exception {
+		Source input = new DOMSource(document);
+		Result output = new StreamResult(Util.toFile(mapResource.getURL()));
+
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		transformer.transform(input, output);
+	}
+
 	class RootTagHandler extends DefaultHandler {
 
 		private String projectVersion;
@@ -210,8 +240,7 @@ public abstract class BaseUpgradeHandler implements UpgradeHandler {
 
 			this.projectVersion = attributes.getValue("", "project-version");
 
-			// bail right away - we are not interested in reading this to the
-			// end
+			// bail right away - we are not interested in reading this to the end
 			throw new SAXException("finished");
 		}
 	}

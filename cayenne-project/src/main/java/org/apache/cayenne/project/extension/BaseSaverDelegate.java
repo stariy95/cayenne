@@ -42,6 +42,8 @@ public class BaseSaverDelegate implements SaverDelegate {
 
     protected XMLEncoder encoder;
 
+    protected SaverDelegate parentDelegate;
+
     @Override
     public Void visitDataChannelDescriptor(DataChannelDescriptor channelDescriptor) {
         return null;
@@ -115,5 +117,15 @@ public class BaseSaverDelegate implements SaverDelegate {
     @Override
     public void setXMLEncoder(XMLEncoder encoder) {
         this.encoder = encoder;
+    }
+
+    @Override
+    public void setParentDelegate(SaverDelegate parentDelegate) {
+        this.parentDelegate = parentDelegate;
+    }
+
+    @Override
+    public SaverDelegate getParentDelegate() {
+        return parentDelegate;
     }
 }
