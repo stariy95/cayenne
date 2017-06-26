@@ -20,6 +20,9 @@ public abstract class _Table3 extends CayenneDataObject {
     public void setCryptoString(String cryptoString) {
         writeProperty("cryptoString", cryptoString);
     }
+    /**
+     * 
+     */
     public String getCryptoString() {
         return (String)readProperty("cryptoString");
     }

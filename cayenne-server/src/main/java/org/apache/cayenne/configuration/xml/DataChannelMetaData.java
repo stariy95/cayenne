@@ -19,14 +19,12 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import org.apache.cayenne.map.DataMap;
-
 /**
  * @since 4.1
  */
-public interface DataMapLinker {
+public interface DataChannelMetaData {
 
-    void addAdditionalContent(String key, Object content);
-    void linkDataMap(DataMap dataMap);
-    DataMapAdditionalContent getAdditionalContent(DataMap key);
+    void add(Object key, Object value);
+
+    <T> T get(Object key, Class<? extends T> type);
 }

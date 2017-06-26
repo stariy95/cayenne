@@ -19,8 +19,7 @@
 
 package org.apache.cayenne.dbsync.xml.extension.dbi;
 
-import org.apache.cayenne.configuration.xml.DataMapLinker;
-import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.project.extension.LoaderDelegate;
 import org.apache.cayenne.project.extension.ProjectExtension;
@@ -32,26 +31,16 @@ import org.apache.cayenne.project.extension.SaverDelegate;
 public class DbImportExtension implements ProjectExtension {
 
     @Inject
-    private DataMapLinker linker;
-
-    private static ReverseEngineering configuration;
-
-    public static ReverseEngineering getConfiguration() {
-        return configuration;
-    }
-
-    public static void setConfiguration(ReverseEngineering configuration) {
-        DbImportExtension.configuration = configuration;
-    }
+    private DataChannelMetaData metaData;
 
     @Override
     public LoaderDelegate createLoaderDelegate() {
-        return new DbImportLoaderDelegate(linker);
+        return new DbImportLoaderDelegate(metaData);
     }
 
     @Override
     public SaverDelegate createSaverDelegate() {
-        return new DbImportSaverDelegate(linker);
+        return new DbImportSaverDelegate(metaData);
     }
 
 }

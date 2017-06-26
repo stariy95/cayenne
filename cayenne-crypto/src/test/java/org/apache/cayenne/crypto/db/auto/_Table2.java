@@ -21,6 +21,9 @@ public abstract class _Table2 extends CayenneDataObject {
     public void setCryptoBytes(byte[] cryptoBytes) {
         writeProperty("cryptoBytes", cryptoBytes);
     }
+    /**
+     * 
+     */
     public byte[] getCryptoBytes() {
         return (byte[])readProperty("cryptoBytes");
     }
@@ -28,6 +31,9 @@ public abstract class _Table2 extends CayenneDataObject {
     public void setPlainBytes(byte[] plainBytes) {
         writeProperty("plainBytes", plainBytes);
     }
+    /**
+     * 
+     */
     public byte[] getPlainBytes() {
         return (byte[])readProperty("plainBytes");
     }

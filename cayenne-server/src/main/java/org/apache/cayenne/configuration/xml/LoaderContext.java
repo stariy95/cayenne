@@ -35,6 +35,7 @@ public class LoaderContext {
     XMLReader xmlReader;
 
     HandlerFactory factory;
+    int i = 0;
 
     public LoaderContext(XMLReader reader, HandlerFactory factory) {
         this.xmlReader = reader;

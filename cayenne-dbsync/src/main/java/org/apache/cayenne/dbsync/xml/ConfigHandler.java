@@ -19,7 +19,8 @@
 
 package org.apache.cayenne.dbsync.xml;
 
-import org.apache.cayenne.configuration.xml.DataMapLinker;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+import org.apache.cayenne.configuration.xml.DataMapLoaderListener;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeColumn;
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeProcedure;
@@ -27,7 +28,7 @@ import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeColumn;
-import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportExtension;
+import org.apache.cayenne.map.DataMap;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -62,11 +63,11 @@ public class ConfigHandler extends NamespaceAwareNestedTagHandler {
     private static final String TRUE = "true";
 
     private ReverseEngineering configuration;
-    private DataMapLinker linker;
+    private DataChannelMetaData metaData;
 
-    public ConfigHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace, DataMapLinker linker) {
+    public ConfigHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace, DataChannelMetaData metaData) {
         super(parentHandler);
-        this.linker = linker;
+        this.metaData = metaData;
         this.targetNamespace = targetNamespace;
     }
 
@@ -155,8 +156,7 @@ public class ConfigHandler extends NamespaceAwareNestedTagHandler {
 
     @Override
     protected void beforeScopeEnd() {
-        linker.addAdditionalContent("dbimport", configuration);
-        DbImportExtension.setConfiguration(this.configuration);
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         System.out.println(this.configuration);
     }
 
@@ -346,5 +346,11 @@ public class ConfigHandler extends NamespaceAwareNestedTagHandler {
 
     private void createConfig() {
         configuration = new ReverseEngineering();
+        loaderContext.addDataMapListener(new DataMapLoaderListener() {
+            @Override
+            public void onDataMapLoaded(DataMap dataMap) {
+                ConfigHandler.this.metaData.add(dataMap, configuration);
+            }
+        });
     }
 }

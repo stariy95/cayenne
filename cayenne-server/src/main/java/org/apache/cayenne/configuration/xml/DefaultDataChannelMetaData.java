@@ -19,37 +19,26 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import org.apache.cayenne.map.DataMap;
-
 import java.util.HashMap;
 
 /**
  * @since 4.1
  */
-public class DefaultDataMapLinker implements DataMapLinker {
+public class DefaultDataChannelMetaData implements DataChannelMetaData {
 
-    private HashMap<DataMap, DataMapAdditionalContent> map = new HashMap<>();
-    private DataMapAdditionalContent additionalContent;
+    private HashMap<Object, Object> map;
 
-    @Override
-    public void addAdditionalContent(String key, Object content) {
-        if (additionalContent == null) {
-            additionalContent = new DataMapAdditionalContent();
-        }
-        additionalContent.putContent(key, content);
+    public DefaultDataChannelMetaData() {
+        map = new HashMap<>();
     }
 
     @Override
-    public void linkDataMap(DataMap dataMap) {
-        map.put(dataMap, additionalContent);
-        additionalContent = null;
+    public void add(Object key, Object value) {
+        map.put(key, value);
     }
 
-    // need map.get(key) !!!!
     @Override
-    public DataMapAdditionalContent getAdditionalContent(DataMap key) {
-        return additionalContent;
+    public <T> T get(Object key, Class<? extends T> type) {
+        return type.cast(map.get(key));
     }
-
-
 }

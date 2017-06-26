@@ -19,8 +19,7 @@
 
 package org.apache.cayenne.dbsync.xml.extension.dbi;
 
-import org.apache.cayenne.configuration.xml.DataMapAdditionalContent;
-import org.apache.cayenne.configuration.xml.DataMapLinker;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.project.Project;
@@ -31,19 +30,15 @@ import org.apache.cayenne.project.extension.BaseSaverDelegate;
  */
 public class DbImportSaverDelegate extends BaseSaverDelegate {
 
-    private DataMapLinker linker;
+    private DataChannelMetaData metaData;
     public static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/dbimport";
 
-    public DbImportSaverDelegate(DataMapLinker linker) {
-        this.linker = linker;
+    public DbImportSaverDelegate(DataChannelMetaData metaData) {
+        this.metaData = metaData;
     }
 
     private void printConfig(DataMap dataMap) {
-        DataMapAdditionalContent content = linker.getAdditionalContent(dataMap);
-        if(content == null) {
-            return;
-        }
-        ReverseEngineering reverseEngineering = (ReverseEngineering) content.getContent("dbimport");
+        ReverseEngineering reverseEngineering = metaData.get(dataMap, ReverseEngineering.class);
         if(reverseEngineering != null) {
             encoder.nested(reverseEngineering, null);
         }

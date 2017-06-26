@@ -29,7 +29,6 @@ import org.apache.cayenne.access.translator.select.DefaultSelectTranslatorFactor
 import org.apache.cayenne.ashwood.AshwoodEntitySorter;
 import org.apache.cayenne.cache.MapQueryCache;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
-import org.apache.cayenne.configuration.xml.NoopDataMapLinker;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.di.Inject;
@@ -117,7 +116,6 @@ public class SchemaBuilder {
 		for (int i = 0; i < maps.length; i++) {
 			URL mapURL = getClass().getClassLoader().getResource(MAPS_REQUIRING_SCHEMA_SETUP[i]);
 			XMLDataMapLoader loader = new XMLDataMapLoader();
-			loader.setLinker(new NoopDataMapLinker());
 			loader.setHandlerFactory(new DefaultHandlerFactory());
 			maps[i] = loader.load(new URLResource(mapURL));
 

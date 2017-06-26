@@ -22,6 +22,9 @@ public abstract class _LocalTimeTestEntity extends CayenneDataObject {
     public void setTime(LocalTime time) {
         writeProperty("time", time);
     }
+    /**
+     * 
+     */
     public LocalTime getTime() {
         return (LocalTime)readProperty("time");
     }

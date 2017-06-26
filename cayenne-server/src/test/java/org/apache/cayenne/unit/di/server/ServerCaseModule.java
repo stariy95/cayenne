@@ -52,11 +52,7 @@ import org.apache.cayenne.configuration.DefaultObjectStoreFactory;
 import org.apache.cayenne.configuration.DefaultRuntimeProperties;
 import org.apache.cayenne.configuration.ObjectStoreFactory;
 import org.apache.cayenne.configuration.RuntimeProperties;
-import org.apache.cayenne.configuration.xml.DataMapLinker;
-import org.apache.cayenne.configuration.xml.HandlerFactory;
-import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
-import org.apache.cayenne.configuration.xml.NoopDataMapLinker;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.configuration.xml.*;
 import org.apache.cayenne.configuration.server.DataSourceFactory;
 import org.apache.cayenne.configuration.server.ServerModule;
 import org.apache.cayenne.configuration.server.ServerRuntime;
@@ -203,7 +199,7 @@ public class ServerCaseModule implements Module {
         binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
         binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
         binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
-        binder.bind(DataMapLinker.class).to(NoopDataMapLinker.class);
+        binder.bind(DataChannelMetaData.class).to(NoopDataChannelMetaData.class);
 
         // test-scoped objects
         binder.bind(EntityResolver.class).toProvider(ServerCaseEntityResolverProvider.class).in(testScope);

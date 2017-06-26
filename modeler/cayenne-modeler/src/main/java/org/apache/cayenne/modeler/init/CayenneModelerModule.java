@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.cayenne.modeler.init;
 
-import org.apache.cayenne.configuration.xml.DataMapLinker;
-import org.apache.cayenne.configuration.xml.DefaultDataMapLinker;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+import org.apache.cayenne.configuration.xml.DefaultDataChannelMetaData;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
 import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportExtension;
 import org.apache.cayenne.di.Binder;
@@ -47,7 +47,7 @@ public class CayenneModelerModule implements Module {
         binder.bind(PlatformInitializer.class).to(GenericPlatformInitializer.class);
         binder.bind(WidgetFactory.class).to(DefaultWidgetFactory.class);
         binder.bind(HandlerFactory.class).to(ExtensionAwareHandlerFactory.class);
-        binder.bind(DataMapLinker.class).to(DefaultDataMapLinker.class);
+        binder.bind(DataChannelMetaData.class).to(DefaultDataChannelMetaData.class);
 
         ProjectModule.contributeExtension(binder).add(InfoExtension.class);
         ProjectModule.contributeExtension(binder).add(DbImportExtension.class);

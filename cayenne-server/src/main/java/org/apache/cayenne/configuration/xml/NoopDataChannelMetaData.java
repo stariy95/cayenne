@@ -19,29 +19,17 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import java.util.HashMap;
-
 /**
  * @since 4.1
  */
-public class DataMapAdditionalContent {
+public class NoopDataChannelMetaData implements DataChannelMetaData {
+    @Override
+    public void add(Object key, Object value) {
 
-    private HashMap<String, Object> map;
-
-    public DataMapAdditionalContent() {
-        map = new HashMap<>();
     }
 
-    public void putContent(String key, Object content) {
-        map.put(key, content);
+    @Override
+    public <T> T get(Object key, Class<? extends T> type) {
+        return null;
     }
-
-    public HashMap getMap() {
-        return map;
-    }
-
-    public Object getContent(String key) {
-        return map.get(key);
-    }
-
 }

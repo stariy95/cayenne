@@ -31,8 +31,8 @@ import org.apache.cayenne.configuration.server.DataSourceFactory;
 import org.apache.cayenne.configuration.server.DbAdapterFactory;
 import org.apache.cayenne.configuration.server.DefaultDbAdapterFactory;
 import org.apache.cayenne.configuration.server.ServerModule;
-import org.apache.cayenne.configuration.xml.DataMapLinker;
-import org.apache.cayenne.configuration.xml.DefaultDataMapLinker;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+import org.apache.cayenne.configuration.xml.DefaultDataChannelMetaData;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dba.db2.DB2Sniffer;
@@ -119,7 +119,7 @@ public class ToolsModule implements Module {
 
         binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
         binder.bind(HandlerFactory.class).to(ExtensionAwareHandlerFactory.class);
-        binder.bind(DataMapLinker.class).to(DefaultDataMapLinker.class);
+        binder.bind(DataChannelMetaData.class).to(DefaultDataChannelMetaData.class);
         binder.bind(InfoStorage.class).to(DefaultInfoStorage.class);
 
         ProjectModule.contributeExtension(binder).add(InfoExtension.class);

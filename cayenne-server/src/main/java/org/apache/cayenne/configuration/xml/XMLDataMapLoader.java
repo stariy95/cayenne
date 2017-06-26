@@ -40,9 +40,6 @@ public class XMLDataMapLoader implements DataMapLoader {
     @Inject
     protected HandlerFactory handlerFactory;
 
-    @Inject
-    private DataMapLinker linker;
-
     public DataMap load(Resource configurationResource) throws CayenneRuntimeException {
 
         final RootDataMapHandler rootHandler;
@@ -68,7 +65,6 @@ public class XMLDataMapLoader implements DataMapLoader {
             // set name based on location if no name provided by map itself
             map.setName(mapNameFromLocation(configurationResource.getURL().getFile()));
         }
-        linker.linkDataMap(map);
         return map;
     }
 
@@ -98,9 +94,5 @@ public class XMLDataMapLoader implements DataMapLoader {
 
     public void setHandlerFactory(HandlerFactory handlerFactory) {
         this.handlerFactory = handlerFactory;
-    }
-
-    public void setLinker(DataMapLinker linker) {
-        this.linker = linker;
     }
 }

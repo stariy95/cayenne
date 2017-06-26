@@ -19,7 +19,7 @@
 
 package org.apache.cayenne.dbsync.xml.extension.dbi;
 
-import org.apache.cayenne.configuration.xml.DataMapLinker;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.dbsync.xml.ConfigHandler;
 import org.apache.cayenne.project.Project;
@@ -30,10 +30,10 @@ import org.apache.cayenne.project.extension.LoaderDelegate;
  */
 public class DbImportLoaderDelegate implements LoaderDelegate {
 
-    private DataMapLinker linker;
+    private DataChannelMetaData metaData;
 
-    public DbImportLoaderDelegate(DataMapLinker linker) {
-        this.linker = linker;
+    public DbImportLoaderDelegate(DataChannelMetaData metaData) {
+        this.metaData = metaData;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class DbImportLoaderDelegate implements LoaderDelegate {
     @Override
     public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
         if(ConfigHandler.CONFIG_TAG.equals(tag)) {
-            ConfigHandler handler = new ConfigHandler(parent, getTargetNamespace(), linker);
+            ConfigHandler handler = new ConfigHandler(parent, getTargetNamespace(), metaData);
             return handler;
         }
         return null;
