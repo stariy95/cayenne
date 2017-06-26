@@ -25,6 +25,8 @@
 ##    stringUtils - class for string "helper" functions: See org.apache.cayenne.gen.StringUtils
 ##    entityUtils - class for entity "helper" functions: See org.apache.cayenne.gen.EntityUtils
 ##    importUtils - class for import statement management: See org.apache.cayenne.gen.ImportUtils
+##    infoUtils - class for meta information retrieval, e.g. importUtils.comment(object) method will return
+##                comments for object if any
 ##
 ##
 ${importUtils.setPackage($subPackageName)}##
@@ -32,6 +34,9 @@ ${importUtils.addReservedType("${subPackageName}.${subClassName}")}##
 ${importUtils.addType("${superPackageName}.${superClassName}")}##
 ${importUtils.generate()}
 
+/**
+ * $!infoUtils.comment($object)
+ */
 public#if("true" == "${object.isAbstract()}") abstract#end class ${subClassName} extends ${superClassName} {
 
     private static final long serialVersionUID = 1L; 

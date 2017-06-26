@@ -23,8 +23,10 @@ import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.DataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
+import org.apache.cayenne.configuration.xml.DataMapLinker;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
+import org.apache.cayenne.configuration.xml.NoopDataMapLinker;
 import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.di.AdhocObjectFactory;
@@ -69,6 +71,7 @@ public class DataChannelProjectSaverTest extends Project2Case {
                 binder.bind(ProjectLoader.class).to(DataChannelProjectLoader.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
                 binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
+                binder.bind(DataMapLinker.class).to(NoopDataMapLinker.class);
             }
         };
 
@@ -122,6 +125,7 @@ public class DataChannelProjectSaverTest extends Project2Case {
                 binder.bind(ProjectLoader.class).to(DataChannelProjectLoader.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
                 binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
+                binder.bind(DataMapLinker.class).to(NoopDataMapLinker.class);
             }
         };
 

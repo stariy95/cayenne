@@ -25,7 +25,9 @@
 	</obj-entity>
 	<obj-entity name="TestEntity" className="pack.TestEntity" dbEntityName="TestEntity">
 		<embedded-attribute name="embeddedAtr" type="pack.Embeddable"/>
-		<obj-attribute name="testAttr" type="java.lang.String" db-attribute-path="testAttr"/>
+		<obj-attribute name="testAttr" type="java.lang.String" db-attribute-path="testAttr">
+			<info:property xmlns:info="http://cayenne.apache.org/schema/10/info" name="comment" value="comment for test attribute"/>
+		</obj-attribute>
 	</obj-entity>
 	<obj-entity name="TestExcludedEntity" className="pack.TestExcludedEntity" dbEntityName="TestExcludedEntity">
 		<obj-attribute name="name" type="java.lang.String" db-attribute-path="name"/>

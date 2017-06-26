@@ -21,10 +21,12 @@ package org.apache.cayenne.gen;
 
 import org.apache.cayenne.CayenneException;
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.Embeddable;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.QueryDescriptor;
+import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.slf4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -64,6 +66,10 @@ public class ClassGenerationAction {
 
 	protected String superPkg;
 	protected DataMap dataMap;
+
+	@Inject
+	protected InfoStorage infoStorage;
+	private InfoUtils instance;
 
 	protected ArtifactsGenerationMode artifactsGenerationMode;
 	protected boolean makePairs;
@@ -189,6 +195,8 @@ public class ClassGenerationAction {
 		context.put(Artifact.STRING_UTILS_KEY, stringUtils);
 
 		context.put(Artifact.CREATE_PROPERTY_NAMES, createPropertyNames);
+
+		context.put(Artifact.INFO_UTILS_KEY, infoUtilsInstance());
 	}
 
 	/**
@@ -588,6 +596,37 @@ public class ClassGenerationAction {
 			this.artifactsGenerationMode = ArtifactsGenerationMode.DATAMAP;
 		} else {
 			this.artifactsGenerationMode = ArtifactsGenerationMode.ALL;
+		}
+	}
+
+	private InfoUtils infoUtilsInstance() {
+		if(instance == null) {
+			instance = new InfoUtils(infoStorage);
+		}
+		return instance;
+	}
+
+	public static class InfoUtils {
+		InfoStorage infoStorage;
+
+		InfoUtils(InfoStorage storage) {
+			this.infoStorage = storage;
+		}
+
+		public String javaDoc(Object object, String prefix) {
+			String comment = comment(object);
+			if(comment == null || comment.trim().isEmpty()) {
+				return "";
+			}
+
+			return prefix + "/**\n *" + comment + "\n */\n";
+		}
+
+		public String comment(Object object) {
+			if(infoStorage == null) {
+				return null;
+			}
+			return infoStorage.getInfo(object, "comment");
 		}
 	}
 }

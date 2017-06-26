@@ -62,6 +62,8 @@ public class XMLDataChannelDescriptorLoaderTest {
                 binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
                 binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
+                binder.bind(DataMapLinker.class).to(NoopDataMapLinker.class);
+
             }
         };
 

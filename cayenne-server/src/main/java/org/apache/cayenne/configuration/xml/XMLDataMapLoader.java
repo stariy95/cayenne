@@ -98,4 +98,8 @@ public class XMLDataMapLoader implements DataMapLoader {
     public void setHandlerFactory(HandlerFactory handlerFactory) {
         this.handlerFactory = handlerFactory;
     }
+
+    public void setLinker(DataMapLinker linker) {
+        this.linker = linker;
+    }
 }

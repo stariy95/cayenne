@@ -21,10 +21,25 @@ package org.apache.cayenne.tools;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.apache.cayenne.configuration.DataMapLoader;
+import org.apache.cayenne.configuration.xml.DataMapLinker;
+import org.apache.cayenne.configuration.xml.DefaultDataMapLinker;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
+import org.apache.cayenne.configuration.xml.HandlerFactory;
+import org.apache.cayenne.configuration.xml.NoopDataMapLinker;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportExtension;
+import org.apache.cayenne.di.Binder;
+import org.apache.cayenne.di.DIBootstrap;
+import org.apache.cayenne.di.Injector;
+import org.apache.cayenne.di.Module;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.project.ProjectModule;
+import org.apache.cayenne.project.extension.ExtensionAwareHandlerFactory;
+import org.apache.cayenne.project.extension.info.DefaultInfoStorage;
+import org.apache.cayenne.project.extension.info.InfoExtension;
+import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.apache.cayenne.resource.URLResource;
 
 /**
@@ -38,10 +53,15 @@ class CayenneGeneratorMapLoaderAction {
     private File[] additionalDataMapFiles;
     private DataMap mainDataMap;
 
+    private transient Injector injector;
+
+    CayenneGeneratorMapLoaderAction(Injector injector) {
+        this.injector = injector;
+    }
+
     DataMap getMainDataMap() throws MalformedURLException {
         if (mainDataMap == null) {
-            XMLDataMapLoader loader = new XMLDataMapLoader();
-            loader.setHandlerFactory(new DefaultHandlerFactory());
+            DataMapLoader loader = createLoader();
 
             DataMap mainDataMap = loadDataMap(loader, mainDataMapFile);
 
@@ -65,7 +85,11 @@ class CayenneGeneratorMapLoaderAction {
         return mainDataMap;
     }
 
-    protected DataMap loadDataMap(XMLDataMapLoader mapLoader, File dataMapFile) throws MalformedURLException {
+    DataMapLoader createLoader() {
+        return injector.getInstance(DataMapLoader.class);
+    }
+
+    protected DataMap loadDataMap(DataMapLoader mapLoader, File dataMapFile) throws MalformedURLException {
         return mapLoader.load(new URLResource(dataMapFile.toURI().toURL()));
     }
 

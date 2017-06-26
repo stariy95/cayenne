@@ -24,8 +24,10 @@ import org.apache.cayenne.configuration.ConfigurationTree;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
+import org.apache.cayenne.configuration.xml.DataMapLinker;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
+import org.apache.cayenne.configuration.xml.NoopDataMapLinker;
 import org.apache.cayenne.configuration.xml.XMLDataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dbsync.naming.DefaultObjectNameGenerator;
@@ -66,6 +68,7 @@ public class ManyToManyCandidateEntityTest {
                 binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
                 binder.bind(ConfigurationNameMapper.class).to(DefaultConfigurationNameMapper.class);
                 binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
+                binder.bind(DataMapLinker.class).to(NoopDataMapLinker.class);
             }
         };
 
