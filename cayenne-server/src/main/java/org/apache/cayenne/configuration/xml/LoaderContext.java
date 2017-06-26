@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.cayenne.map.DataMap;
@@ -38,6 +39,7 @@ public class LoaderContext {
     public LoaderContext(XMLReader reader, HandlerFactory factory) {
         this.xmlReader = reader;
         this.factory = factory;
+        dataMapListeners = new ArrayList<>();
     }
 
     public HandlerFactory getFactory() {
