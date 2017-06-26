@@ -21,6 +21,7 @@ package org.apache.cayenne.project.upgrade.v6;
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataNodeDescriptor;
+import org.apache.cayenne.configuration.xml.LoaderContext;
 import org.apache.cayenne.configuration.xml.SAXNestedTagHandler;
 import org.apache.cayenne.configuration.server.JNDIDataSourceFactory;
 import org.apache.cayenne.configuration.server.XMLPoolingDataSourceFactory;
@@ -150,7 +151,7 @@ class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 		private Resource configurationSource;
 
 		DomainsHandler(Resource configurationSource, Collection<DataChannelDescriptor> domains, XMLReader parser) {
-			super(parser);
+			super(new LoaderContext(parser, null));
 			this.domains = domains;
 			this.configurationSource = configurationSource;
 		}

@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.XMLReader;
 
 /**
  * @since 4.1
@@ -38,8 +37,8 @@ final class DataChannelHandler extends SAXNestedTagHandler {
     private XMLDataChannelDescriptorLoader xmlDataChannelDescriptorLoader;
     DataChannelDescriptor descriptor;
 
-    DataChannelHandler(XMLDataChannelDescriptorLoader xmlDataChannelDescriptorLoader, DataChannelDescriptor dataChannelDescriptor, XMLReader parser) {
-        super(parser);
+    DataChannelHandler(XMLDataChannelDescriptorLoader xmlDataChannelDescriptorLoader, DataChannelDescriptor dataChannelDescriptor, LoaderContext loaderContext) {
+        super(loaderContext);
         this.xmlDataChannelDescriptorLoader = xmlDataChannelDescriptorLoader;
         this.descriptor = dataChannelDescriptor;
     }

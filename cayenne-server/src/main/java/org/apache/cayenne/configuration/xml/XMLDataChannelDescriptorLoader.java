@@ -123,8 +123,9 @@ public class XMLDataChannelDescriptorLoader implements DataChannelDescriptorLoad
 
 		try(InputStream in = configurationURL.openStream()) {
 			XMLReader parser = Util.createXmlReader();
+			LoaderContext loaderContext = new LoaderContext(parser, handlerFactory);
 
-			DataChannelHandler rootHandler = new DataChannelHandler(this, descriptor, parser);
+			DataChannelHandler rootHandler = new DataChannelHandler(this, descriptor, loaderContext);
 			parser.setContentHandler(rootHandler);
 			parser.setErrorHandler(rootHandler);
 			parser.parse(new InputSource(in));

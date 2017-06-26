@@ -44,7 +44,7 @@ public class InfoLoaderDelegate implements LoaderDelegate {
     @Override
     public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
         if(PropertyHandler.PROPERTY_TAG.equals(tag)) {
-            return new PropertyHandler(parent, getTargetNamespace(), storage);
+            return new PropertyHandler(parent, storage);
         }
         return null;
     }

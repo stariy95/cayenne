@@ -19,26 +19,43 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.Attributes;
+import java.util.Collection;
+
+import org.apache.cayenne.map.DataMap;
+import org.xml.sax.XMLReader;
 
 /**
  * @since 4.1
  */
-public class DefaultHandlerFactory implements HandlerFactory {
+public class LoaderContext {
 
-    private static Logger logger = LoggerFactory.getLogger(XMLDataChannelDescriptorLoader.class);
+    Collection<DataMapLoaderListener> dataMapListeners;
 
-    @Override
-    public NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent) {
-        return new NamespaceAwareNestedTagHandler(parent, namespace) {
-            @Override
-            protected boolean processElement(String namespaceURI, String localName, Attributes attributes) {
-                logger.debug("Skipping unknown tag <{}:{}>", namespaceURI, localName);
-                return true;
-            }
-        };
+    XMLReader xmlReader;
+
+    HandlerFactory factory;
+
+    public LoaderContext(XMLReader reader, HandlerFactory factory) {
+        this.xmlReader = reader;
+        this.factory = factory;
+    }
+
+    public HandlerFactory getFactory() {
+        return factory;
+    }
+
+    public XMLReader getXmlReader() {
+        return xmlReader;
+    }
+
+    public void addDataMapListener(DataMapLoaderListener dataMapLoaderListener) {
+        dataMapListeners.add(dataMapLoaderListener);
+    }
+
+    public void dataMapLoaded(DataMap dataMap) {
+        for(DataMapLoaderListener listener : dataMapListeners) {
+            listener.onDataMapLoaded(dataMap);
+        }
     }
 
 }

@@ -45,8 +45,9 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
 
     InfoStorage storage;
 
-    public PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace, InfoStorage storage) {
-        super(parentHandler, targetNamespace);
+    public PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, InfoStorage storage) {
+        super(parentHandler);
+        setTargetNamespace(InfoLoaderDelegate.NAMESPACE);
         this.storage = storage;
     }
 
@@ -59,10 +60,10 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
                 if(parentObject != null) {
                     String oldValue = storage.putInfo(parentObject, name, attributes.getValue("value"));
                     if(oldValue != null) {
-                        logger.warn("Property {} defined more than one for object", name);
+                        logger.warn("Property {} defined more than once for object {}", name, parentObject);
                     }
+                    logger.debug("Loaded property for {}: {} = {}", parentObject, name, attributes.getValue("value"));
                 }
-                logger.info("Loaded property for {}: {} = {}", parentObject, name, attributes.getValue("value"));
                 return true;
         }
 
@@ -100,10 +101,10 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
             } else if(parentParentHandler instanceof ObjEntityHandler) {
                 return ((ObjEntityHandler) parentParentHandler).getLastAttribute();
             } else {
-                logger.info("Parent class unknown: {} -> {}", parentParentHandler.getClass().getName(), parentHandler.getClass().getName());
+                logger.debug("Parent class unknown: {} -> {}", parentParentHandler.getClass().getName(), parentHandler.getClass().getName());
             }
         } else {
-            logger.info("Parent class unknown: {}", parentHandler.getClass().getName());
+            logger.debug("Parent class unknown: {}", parentHandler.getClass().getName());
         }
         return null;
     }

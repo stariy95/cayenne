@@ -27,6 +27,7 @@ import java.net.URL;
 
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.configuration.PasswordEncoding;
+import org.apache.cayenne.configuration.xml.LoaderContext;
 import org.apache.cayenne.configuration.xml.SAXNestedTagHandler;
 import org.apache.cayenne.conn.DataSourceInfo;
 import org.apache.cayenne.resource.Resource;
@@ -139,7 +140,7 @@ class XMLDataSourceInfoLoader_V3_0_0_1 {
         private DataSourceInfo dataSourceDescriptor;
 
         DriverHandler(XMLReader parser, DataSourceInfo dataSourceDescriptor) {
-            super(parser);
+            super(new LoaderContext(parser, null));
             this.dataSourceDescriptor = dataSourceDescriptor;
         }
 

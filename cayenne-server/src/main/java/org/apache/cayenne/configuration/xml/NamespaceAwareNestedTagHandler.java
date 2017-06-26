@@ -19,11 +19,9 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
 /**
  * Base class for handlers that can delegate execution of unknown tags to
@@ -35,28 +33,19 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
 
     protected String targetNamespace;
 
-    protected HandlerFactory factory;
+    private StringBuilder charactersBuffer = new StringBuilder();
 
-    protected StringBuilder charactersBuffer = new StringBuilder();
-
-    public NamespaceAwareNestedTagHandler(XMLReader parser, String targetNamespace, HandlerFactory factory) {
-        super(parser);
-        this.targetNamespace = targetNamespace;
-        this.factory = factory;
+    public NamespaceAwareNestedTagHandler(LoaderContext loaderContext) {
+        super(loaderContext);
     }
 
-    public NamespaceAwareNestedTagHandler(SAXNestedTagHandler parentHandler, String targetNamespace, HandlerFactory factory) {
+    public NamespaceAwareNestedTagHandler(SAXNestedTagHandler parentHandler, String targetNamespace) {
         super(parentHandler);
         this.targetNamespace = targetNamespace;
-        this.factory = factory;
-    }
-
-    public NamespaceAwareNestedTagHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace) {
-        this(parentHandler, targetNamespace, parentHandler.factory);
     }
 
     public NamespaceAwareNestedTagHandler(NamespaceAwareNestedTagHandler parentHandler) {
-        this(parentHandler, parentHandler.targetNamespace, parentHandler.factory);
+        this(parentHandler, parentHandler.targetNamespace);
     }
 
     abstract protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException;
@@ -81,7 +70,7 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
             childHandler.startElement(namespaceURI, localName, qName, attributes);
         }
 
-        parser.setContentHandler(childHandler);
+        loaderContext.getXmlReader().setContentHandler(childHandler);
         charactersBuffer.delete(0, charactersBuffer.length());
     }
 
@@ -97,7 +86,7 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
     protected ContentHandler createChildTagHandler(String namespaceURI, String localName,
                                                    String qName, Attributes attributes) {
         // try to pass unknown tags to someone else
-        return factory.createHandler(namespaceURI, localName, this);
+        return loaderContext.getFactory().createHandler(namespaceURI, localName, this);
     }
 
     public void setTargetNamespace(String targetNamespace) {

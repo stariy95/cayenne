@@ -26,7 +26,6 @@ import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
@@ -60,18 +59,18 @@ public class SAXNestedTagHandler extends DefaultHandler {
         }
     };
 
-    protected XMLReader parser;
+    protected LoaderContext loaderContext;
     protected ContentHandler parentHandler;
     protected Locator locator;
 
-    public SAXNestedTagHandler(XMLReader parser) {
-        this.parser = parser;
+    public SAXNestedTagHandler(LoaderContext loaderContext) {
+        this.loaderContext = loaderContext;
         locator = NOOP_LOCATOR;
     }
 
     public SAXNestedTagHandler(SAXNestedTagHandler parentHandler) {
         this.parentHandler = parentHandler;
-        this.parser = parentHandler.parser;
+        this.loaderContext = parentHandler.loaderContext;
         locator = parentHandler.locator;
 
         if (locator == null) {
@@ -137,7 +136,7 @@ public class SAXNestedTagHandler extends DefaultHandler {
     protected void stop() {
         beforeScopeEnd();
         // pop self from the handler stack
-        parser.setContentHandler(parentHandler);
+        loaderContext.getXmlReader().setContentHandler(parentHandler);
     }
 
     /**
@@ -156,7 +155,7 @@ public class SAXNestedTagHandler extends DefaultHandler {
         }
 
         // push child handler to the stack...
-        parser.setContentHandler(childHandler);
+        loaderContext.getXmlReader().setContentHandler(childHandler);
     }
 
     @Override

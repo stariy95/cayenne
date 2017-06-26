@@ -19,26 +19,13 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.Attributes;
+import org.apache.cayenne.map.DataMap;
 
 /**
  * @since 4.1
  */
-public class DefaultHandlerFactory implements HandlerFactory {
+public interface DataMapLoaderListener {
 
-    private static Logger logger = LoggerFactory.getLogger(XMLDataChannelDescriptorLoader.class);
-
-    @Override
-    public NamespaceAwareNestedTagHandler createHandler(String namespace, String localName, NamespaceAwareNestedTagHandler parent) {
-        return new NamespaceAwareNestedTagHandler(parent, namespace) {
-            @Override
-            protected boolean processElement(String namespaceURI, String localName, Attributes attributes) {
-                logger.debug("Skipping unknown tag <{}:{}>", namespaceURI, localName);
-                return true;
-            }
-        };
-    }
+    void onDataMapLoaded(DataMap dataMap);
 
 }

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
 /**
  * @since 4.1
@@ -36,8 +35,9 @@ public class RootDataMapHandler extends NamespaceAwareNestedTagHandler {
 
     private DataMapHandler handler;
 
-    public RootDataMapHandler(XMLReader parser, HandlerFactory factory) {
-        super(parser, "http://cayenne.apache.org/schema/10/modelMap", factory);
+    public RootDataMapHandler(LoaderContext loaderContext) {
+        super(loaderContext);
+        setTargetNamespace(DataMap.SCHEMA_XSD);
     }
 
     @Override

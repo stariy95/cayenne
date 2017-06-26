@@ -49,7 +49,8 @@ public class XMLDataMapLoader implements DataMapLoader {
 
         try(InputStream in = configurationResource.getURL().openStream()) {
             XMLReader parser = Util.createXmlReader();
-            rootHandler = new RootDataMapHandler(parser, handlerFactory);
+            LoaderContext loaderContext = new LoaderContext(parser, handlerFactory);
+            rootHandler = new RootDataMapHandler(loaderContext);
 
             parser.setContentHandler(rootHandler);
             parser.setErrorHandler(rootHandler);

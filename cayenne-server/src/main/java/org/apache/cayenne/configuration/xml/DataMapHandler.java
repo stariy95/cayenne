@@ -56,9 +56,8 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
         super(parentHandler);
     }
 
-    public DataMapHandler(SAXNestedTagHandler parentHandler, HandlerFactory factory, DataChannelDescriptor descriptor) {
-        // TODO: do we need to define current namespace somewhere else to have better control over it?
-        super(parentHandler, "http://cayenne.apache.org/schema/10/modelMap", factory);
+    public DataMapHandler(SAXNestedTagHandler parentHandler, DataChannelDescriptor descriptor) {
+        super(parentHandler, DataMap.SCHEMA_XSD);
         this.descriptor = descriptor;
     }
 
@@ -116,6 +115,7 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
         if(descriptor != null) {
             descriptor.getDataMaps().add(dataMap);
         }
+        loaderContext.dataMapLoaded(dataMap);
     }
 
     private void addProperty(Attributes attributes) throws SAXException {
