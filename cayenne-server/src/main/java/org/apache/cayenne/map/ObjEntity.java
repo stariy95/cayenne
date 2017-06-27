@@ -121,25 +121,16 @@ public class ObjEntity extends Entity implements ObjEntityListener, Configuratio
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.start("obj-entity").attribute("name", getName());
 
-        // additionally validate that superentity exists
+        // additionally validate that super entity exists
         if (getSuperEntityName() != null && getSuperEntity() != null) {
             encoder.attribute("superEntityName", getSuperEntityName());
         }
 
-        if (isAbstract()) {
-            encoder.attribute("abstract", "true");
-        }
-
-        if (isServerOnly()) {
-            encoder.attribute("serverOnly", "true");
-        }
-
-        encoder.attribute("className", getClassName());
-        encoder.attribute("clientClassName", getClientClassName());
-
-        if (isReadOnly()) {
-            encoder.attribute("readOnly", "true");
-        }
+        encoder.attribute("abstract", isAbstract())
+                .attribute("serverOnly", isServerOnly())
+                .attribute("className", getClassName())
+                .attribute("clientClassName", getClientClassName())
+                .attribute("readOnly", isReadOnly());
 
         if (getDeclaredLockType() == LOCK_TYPE_OPTIMISTIC) {
             encoder.attribute("lock-type", "optimistic");

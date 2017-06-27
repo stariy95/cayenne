@@ -174,8 +174,7 @@ public class DataSourceInfo implements Cloneable, Serializable, XMLSerializable 
 			encoder.attribute("passwordSource", passwordSource);
 		}
 
-		encoder.end();
-		encoder.end();
+		encoder.end().end();
 	}
 
 	public DataSourceInfo cloneInfo() {

@@ -35,7 +35,6 @@ import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.resource.URLResource;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,10 +42,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class XMLDataChannelDescriptorLoaderTest {
 
@@ -84,7 +80,7 @@ public class XMLDataChannelDescriptorLoaderTest {
 
         assertNotNull(tree);
         assertNotNull(tree.getRootNode());
-        Assert.assertEquals(testConfigName, tree.getRootNode().getName());
+        assertEquals(testConfigName, tree.getRootNode().getName());
     }
 
     @Test

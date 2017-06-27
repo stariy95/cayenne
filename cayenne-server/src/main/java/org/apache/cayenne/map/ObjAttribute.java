@@ -103,13 +103,8 @@ public class ObjAttribute extends Attribute implements ConfigurationNode {
         encoder.start("obj-attribute")
                 .attribute("name", getName())
                 .attribute("type", getType())
-                .attribute("lock", isUsedForLocking());
-
-        // If this obj attribute is mapped to db attribute
-        // getDbAttribute() != null || (((ObjEntity) getEntity()).isAbstract() &&
-        if (!Util.isEmptyString(getDbAttributePath())) {
-            encoder.attribute("db-attribute-path", getDbAttributePath());
-        }
+                .attribute("lock", isUsedForLocking())
+                .attribute("db-attribute-path", getDbAttributePath());
 
         delegate.visitObjAttribute(this);
         encoder.end();

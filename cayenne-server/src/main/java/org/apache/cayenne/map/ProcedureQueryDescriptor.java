@@ -79,11 +79,8 @@ public class ProcedureQueryDescriptor extends QueryDescriptor {
             rootString = ((Procedure) root).getName();
         }
 
-        if (rootString != null) {
-            encoder.attribute("root-name", rootString);
-        }
-
-        encoder.attribute("result-entity", resultEntityName);
+        encoder.attribute("root-name", rootString)
+                .attribute("result-entity", resultEntityName);
 
         // print properties
         encodeProperties(encoder);

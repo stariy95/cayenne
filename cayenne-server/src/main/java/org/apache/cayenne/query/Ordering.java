@@ -20,24 +20,11 @@
 package org.apache.cayenne.query;
 
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.configuration.DataChannelDescriptor;
-import org.apache.cayenne.configuration.DataNodeDescriptor;
+import org.apache.cayenne.configuration.EmptyConfigurationNodeVisitor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionException;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTObjPath;
-import org.apache.cayenne.map.DataMap;
-import org.apache.cayenne.map.DbAttribute;
-import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.map.DbRelationship;
-import org.apache.cayenne.map.Embeddable;
-import org.apache.cayenne.map.EmbeddableAttribute;
-import org.apache.cayenne.map.ObjAttribute;
-import org.apache.cayenne.map.ObjEntity;
-import org.apache.cayenne.map.ObjRelationship;
-import org.apache.cayenne.map.Procedure;
-import org.apache.cayenne.map.ProcedureParameter;
-import org.apache.cayenne.map.QueryDescriptor;
 import org.apache.cayenne.util.ConversionUtil;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.util.XMLEncoder;
@@ -459,77 +446,7 @@ public class Ordering implements Comparator<Object>, Serializable, XMLSerializab
 		StringWriter buffer = new StringWriter();
 		PrintWriter pw = new PrintWriter(buffer);
 		XMLEncoder encoder = new XMLEncoder(pw);
-		encodeAsXML(encoder, new ConfigurationNodeVisitor() {
-			@Override
-			public Object visitDataChannelDescriptor(DataChannelDescriptor channelDescriptor) {
-				return null;
-			}
-
-			@Override
-			public Object visitDataNodeDescriptor(DataNodeDescriptor nodeDescriptor) {
-				return null;
-			}
-
-			@Override
-			public Object visitDataMap(DataMap dataMap) {
-				return null;
-			}
-
-			@Override
-			public Object visitObjEntity(ObjEntity entity) {
-				return null;
-			}
-
-			@Override
-			public Object visitDbEntity(DbEntity entity) {
-				return null;
-			}
-
-			@Override
-			public Object visitEmbeddable(Embeddable embeddable) {
-				return null;
-			}
-
-			@Override
-			public Object visitEmbeddableAttribute(EmbeddableAttribute attribute) {
-				return null;
-			}
-
-			@Override
-			public Object visitObjAttribute(ObjAttribute attribute) {
-				return null;
-			}
-
-			@Override
-			public Object visitDbAttribute(DbAttribute attribute) {
-				return null;
-			}
-
-			@Override
-			public Object visitObjRelationship(ObjRelationship relationship) {
-				return null;
-			}
-
-			@Override
-			public Object visitDbRelationship(DbRelationship relationship) {
-				return null;
-			}
-
-			@Override
-			public Object visitProcedure(Procedure procedure) {
-				return null;
-			}
-
-			@Override
-			public Object visitProcedureParameter(ProcedureParameter parameter) {
-				return null;
-			}
-
-			@Override
-			public Object visitQuery(QueryDescriptor query) {
-				return null;
-			}
-		});
+		encodeAsXML(encoder, new EmptyConfigurationNodeVisitor());
 		pw.close();
 		buffer.flush();
 		return buffer.toString();

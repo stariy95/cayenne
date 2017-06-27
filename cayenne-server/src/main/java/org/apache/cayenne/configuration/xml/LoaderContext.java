@@ -32,10 +32,9 @@ public class LoaderContext {
 
     Collection<DataMapLoaderListener> dataMapListeners;
 
-    XMLReader xmlReader;
+    private XMLReader xmlReader;
 
-    HandlerFactory factory;
-    int i = 0;
+    private HandlerFactory factory;
 
     public LoaderContext(XMLReader reader, HandlerFactory factory) {
         this.xmlReader = reader;

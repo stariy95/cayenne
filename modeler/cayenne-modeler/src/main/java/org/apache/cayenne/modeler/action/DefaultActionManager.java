@@ -20,7 +20,6 @@ package org.apache.cayenne.modeler.action;
 
 import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.ConfigurationNode;
-import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.graph.action.ShowGraphEntityAction;
@@ -57,7 +56,7 @@ public class DefaultActionManager implements ActionManager {
 
     protected Map<String, Action> actionMap;
 
-    public DefaultActionManager(@Inject Application application, @Inject ConfigurationNameMapper nameMapper, @Inject DataChannelMetaData metaData) {
+    public DefaultActionManager(@Inject Application application, @Inject ConfigurationNameMapper nameMapper) {
         initActions();
         this.actionMap = new HashMap<>(40);
 
@@ -93,7 +92,7 @@ public class DefaultActionManager implements ActionManager {
         registerAction(new DbEntityCounterpartAction(application));
         registerAction(new ObjEntityCounterpartAction(application));
         registerAction(new ObjEntityToSuperEntityAction(application));
-        registerAction(new ReverseEngineeringAction(application, metaData));
+        registerAction(new ReverseEngineeringAction(application));
         registerAction(new InferRelationshipsAction(application));
         registerAction(new ImportEOModelAction(application));
         registerAction(new GenerateDBAction(application));

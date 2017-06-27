@@ -21,7 +21,6 @@ package org.apache.cayenne.project.upgrade.v7;
 import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DefaultConfigurationNameMapper;
-import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
 import org.apache.cayenne.configuration.xml.LegacyXMLDataMapLoader;
@@ -35,8 +34,6 @@ import org.apache.cayenne.di.Injector;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.di.spi.DefaultAdhocObjectFactory;
 import org.apache.cayenne.di.spi.DefaultClassLoaderManager;
-import org.apache.cayenne.log.JdbcEventLogger;
-import org.apache.cayenne.log.NoopJdbcEventLogger;
 import org.apache.cayenne.project.FileProjectSaver;
 import org.apache.cayenne.project.ProjectModule;
 import org.apache.cayenne.project.ProjectSaver;
@@ -114,15 +111,6 @@ public class ProjectUpgrader_V7Test extends Project2Case {
 				ProjectModule.contributeExtension(binder);
 			}
 		};
-
-		ServerRuntime runtime = ServerRuntime.builder()
-				.addConfig("your_project.xml")
-				.addModule(new Module() {
-					public void configure(Binder binder) {
-						binder.bind(JdbcEventLogger.class).to(NoopJdbcEventLogger.class);
-					}
-				})
-				.build();
 
 		ProjectUpgrader_V7 upgrader = new ProjectUpgrader_V7();
 		Injector injector = DIBootstrap.createInjector(testModule);

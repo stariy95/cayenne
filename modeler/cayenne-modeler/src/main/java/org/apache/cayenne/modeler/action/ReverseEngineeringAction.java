@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.modeler.action;
 
-import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.dialog.db.DataSourceWizard;
 import org.apache.cayenne.modeler.dialog.db.load.DbLoaderContext;
@@ -37,11 +36,8 @@ import javax.swing.JOptionPane;
  */
 public class ReverseEngineeringAction extends DBWizardAction<DbLoaderOptionsDialog> {
 
-    private DataChannelMetaData metaData;
-
-    ReverseEngineeringAction(Application application, DataChannelMetaData metaData) {
+    ReverseEngineeringAction(Application application) {
         super(getActionName(), application);
-        this.metaData = metaData;
     }
 
     public static String getActionName() {
@@ -53,7 +49,7 @@ public class ReverseEngineeringAction extends DBWizardAction<DbLoaderOptionsDial
      */
     @Override
     public void performAction(ActionEvent event) {
-        final DbLoaderContext context = new DbLoaderContext(metaData);
+        final DbLoaderContext context = new DbLoaderContext(application.getMetaData());
         final DataSourceWizard connectWizard = dataSourceWizardDialog("Reengineer DB Schema: Connect to Database");
         if(connectWizard == null) {
             return;
