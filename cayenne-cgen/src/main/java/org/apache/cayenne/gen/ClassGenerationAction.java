@@ -28,6 +28,7 @@ import org.apache.cayenne.map.Embeddable;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.QueryDescriptor;
 import org.apache.cayenne.project.extension.info.ObjectInfo;
+import org.apache.cayenne.util.Util;
 import org.slf4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -607,11 +608,26 @@ public class ClassGenerationAction {
 		return instance;
 	}
 
+	/**
+	 * Info extension utilities used by templates.
+	 */
 	public static class InfoUtils {
 		DataChannelMetaData metaData;
 
 		InfoUtils(DataChannelMetaData metaData) {
 			this.metaData = metaData;
+		}
+
+		public String javaDoc(Object object, boolean indent) {
+			String comment = comment(object);
+			if(Util.isEmptyString(comment)) {
+				return "";
+			}
+
+			String prefix = indent ? "\t" : "";
+			return prefix + "/**\n" +
+				   prefix + " * " + comment + "\n" +
+				   prefix + " */";
 		}
 
 		public String comment(Object object) {

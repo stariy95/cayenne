@@ -62,7 +62,11 @@ public class DataChannelDescriptor implements ConfigurationNode, Serializable, X
 	@Override
 	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
 
-		encoder.start("domain").attribute("xmlns", SCHEMA_XSD).projectVersion();
+		encoder.start("domain")
+				.attribute("xmlns", SCHEMA_XSD)
+				.attribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance", true)
+				.attribute("xsi:schemaLocation", SCHEMA_XSD + " " + SCHEMA_XSD + ".xsd", true)
+				.projectVersion();
 
 		if (!properties.isEmpty()) {
 			List<String> keys = new ArrayList<>(properties.keySet());

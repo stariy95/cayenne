@@ -34,9 +34,7 @@ ${importUtils.addReservedType("${subPackageName}.${subClassName}")}##
 ${importUtils.addType("${superPackageName}.${superClassName}")}##
 ${importUtils.generate()}
 
-/**
- * $!infoUtils.comment($object)
- */
+${infoUtils.javaDoc($object, false)}
 public#if("true" == "${object.isAbstract()}") abstract#end class ${subClassName} extends ${superClassName} {
 
     private static final long serialVersionUID = 1L; 
