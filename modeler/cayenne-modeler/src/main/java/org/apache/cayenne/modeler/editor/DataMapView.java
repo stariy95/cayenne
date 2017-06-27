@@ -65,13 +65,15 @@ public class DataMapView extends JPanel {
 
     protected TextAdapter name;
     protected JLabel location;
-    protected JComboBox nodeSelector;
+    protected JComboBox<DataNodeDescriptor> nodeSelector;
     protected JCheckBox defaultLockType;
     protected TextAdapter defaultCatalog;
     protected TextAdapter defaultSchema;
     protected TextAdapter defaultPackage;
     protected TextAdapter defaultSuperclass;
     protected JCheckBox quoteSQLIdentifiers;
+
+    protected TextAdapter comment;
 
     protected JButton updateDefaultCatalog;
     protected JButton updateDefaultSchema;
@@ -127,6 +129,13 @@ public class DataMapView extends JPanel {
 
         quoteSQLIdentifiers = new JCheckBox();
 
+        comment = new TextAdapter(new JTextField()) {
+            @Override
+            protected void updateModel(String text) throws ValidationException {
+                updateComment(text);
+            }
+        };
+
         updateDefaultPackage = new JButton("Update...");
         defaultPackage = new TextAdapter(new JTextField()) {
 
@@ -175,6 +184,7 @@ public class DataMapView extends JPanel {
         builder.append("File:", location, 3);
         builder.append("DataNode:", nodeSelector, 2);
         builder.append("Quote SQL Identifiers:", quoteSQLIdentifiers, 3);
+        builder.append("Comment:", comment.getComponent(), 2);
 
         builder.appendSeparator("Entity Defaults");
         builder.append("DB Catalog:", defaultCatalog.getComponent(), updateDefaultCatalog);
@@ -301,19 +311,16 @@ public class DataMapView extends JPanel {
      */
     private void initFromModel(DataMap map) {
         name.setText(map.getName());
-        String locationText = map.getLocation();
-        location.setText((locationText != null) ? locationText : "(no file)");
-
+        location.setText((map.getLocation() != null) ? map.getLocation() : "(no file)");
         quoteSQLIdentifiers.setSelected(map.isQuotingSQLIdentifiers());
-        // rebuild data node list
+        comment.setText(eventController.getApplication().getMetaData().get(map, String.class));
 
-        Object nodes[] = ((DataChannelDescriptor) eventController
-                .getProject()
-                .getRootNode()).getNodeDescriptors().toArray();
+        // rebuild data node list
+        DataNodeDescriptor[] nodes = ((DataChannelDescriptor) eventController.getProject().getRootNode())
+                .getNodeDescriptors().toArray(new DataNodeDescriptor[0]);
 
         // add an empty item to the front
-        Object[] objects = new Object[nodes.length + 1];
-        // objects[0] = null;
+        DataNodeDescriptor[] objects = new DataNodeDescriptor[nodes.length + 1];
 
         // now add the entities
         if (nodes.length > 0) {
@@ -321,11 +328,10 @@ public class DataMapView extends JPanel {
             System.arraycopy(nodes, 0, objects, 1, nodes.length);
         }
 
-        DefaultComboBoxModel model = new DefaultComboBoxModel(objects);
+        DefaultComboBoxModel<DataNodeDescriptor> model = new DefaultComboBoxModel<>(objects);
 
         // find selected node
-        for (int i = 0; i < nodes.length; i++) {
-            DataNodeDescriptor node = (DataNodeDescriptor) nodes[i];
+        for (DataNodeDescriptor node : nodes) {
             if (node.getDataMapNames().contains(map.getName())) {
                 model.setSelectedItem(node);
                 break;
@@ -662,5 +668,15 @@ public class DataMapView extends JPanel {
         if (dataMap.getObjEntities().size() > 0) {
             new LockingUpdateController(eventController, dataMap).startup();
         }
+    }
+
+    void updateComment(String comment) {
+        DataMap dataMap = eventController.getCurrentDataMap();
+
+        if (dataMap == null) {
+            return;
+        }
+
+        eventController.getApplication().getMetaData().add(dataMap, comment);
     }
 }

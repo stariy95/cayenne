@@ -20,6 +20,7 @@
 package org.apache.cayenne.modeler;
 
 import org.apache.cayenne.configuration.DataChannelDescriptor;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Injector;
 import org.apache.cayenne.modeler.action.ActionManager;
@@ -31,7 +32,6 @@ import org.apache.cayenne.modeler.util.WidgetFactory;
 import org.apache.cayenne.pref.CayennePreference;
 import org.apache.cayenne.pref.CayenneProjectPreferences;
 import org.apache.cayenne.project.Project;
-import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.apache.cayenne.swing.BindingFactory;
 import org.apache.cayenne.util.IDUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -82,7 +82,7 @@ public class Application {
     protected Injector injector;
 
     @Inject
-    protected InfoStorage storage;
+    protected DataChannelMetaData metaData;
 
     private String newProjectTemporaryName;
 
@@ -284,8 +284,8 @@ public class Application {
         }
     }
 
-    public InfoStorage getInfoStorage() {
-        return storage;
+    public DataChannelMetaData getMetaData() {
+        return metaData;
     }
 
     protected void initPreferences() {

@@ -223,7 +223,7 @@ public class DbAttributeTableModel extends CayenneTableModel<DbAttribute> {
     }
 
     public String getComment(DbAttribute attr) {
-        return mediator.getApplication().getInfoStorage().getInfo(attr, "comment");
+        return mediator.getApplication().getMetaData().get(attr, String.class);
     }
 
     public void setMaxLength(String newVal, DbAttribute attr) {
@@ -325,7 +325,7 @@ public class DbAttributeTableModel extends CayenneTableModel<DbAttribute> {
     }
 
     public void setComment(String newVal, DbAttribute attr) {
-        mediator.getApplication().getInfoStorage().putInfo(attr, "comment", newVal);
+        mediator.getApplication().getMetaData().add(attr, newVal);
     }
 
     public boolean isCellEditable(int row, int col) {

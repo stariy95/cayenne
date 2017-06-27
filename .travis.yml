@@ -32,8 +32,8 @@ env:
   - DB_PROFILE=postgres-docker
 
 jdk:
-  - oraclejdk8
-  - oraclejdk7
+  - openjdk8
+  - openjdk7
 
 script:
   - mvn verify -q -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR

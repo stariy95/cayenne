@@ -19,26 +19,70 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * <p>
+ *     Default implementation of {@link DataChannelMetaData} that stores data in Map.
+ * </p>
+ * <p>
+ *     This implementation is thread safe.
+ * </p>
+ *
+ * @see NoopDataChannelMetaData
  * @since 4.1
  */
 public class DefaultDataChannelMetaData implements DataChannelMetaData {
 
-    private HashMap<Object, Object> map;
+    private Map<Object, Map<Class<?>, Object>> map;
 
     public DefaultDataChannelMetaData() {
-        map = new HashMap<>();
+        map = new ConcurrentHashMap<>();
     }
 
+    /**
+     * value.getClass() will be used under the hood to associate data with the key object.
+     * If either key or value is {@code null} then {@code null} will be returned.
+     *
+     * @param key object for which we want to store data
+     * @param value data to store
+     */
     @Override
     public void add(Object key, Object value) {
-        map.put(key, value);
+        if(key == null || value == null) {
+            return;
+        }
+
+        Map<Class<?>, Object> data = map.get(key);
+        if(data == null) {
+            data = new ConcurrentHashMap<>();
+            Map<Class<?>, Object> old = map.put(key, data);
+            // extra check in case if someone was fast enough
+            if(old != null) {
+                data.putAll(old);
+            }
+        }
+        data.put(value.getClass(), value);
     }
 
+    /**
+     * @param key object for wich we want meta data
+     * @param type meta data type class
+     * @param <T> data type
+     * @return value or {@code null}
+     */
     @Override
-    public <T> T get(Object key, Class<? extends T> type) {
-        return type.cast(map.get(key));
+    public <T> T get(Object key, Class<T> type) {
+        if(key == null || type == null) {
+            return null;
+        }
+
+        Map<Class<?>, Object> data = map.get(key);
+        if(data == null) {
+            return null;
+        }
+
+        return type.cast(data.get(type));
     }
 }

@@ -20,16 +20,21 @@
 package org.apache.cayenne.configuration.xml;
 
 /**
+ * Noop implementation of {@link DataChannelMetaData}.
+ * Used by Cayenne runtime by default as it doesn't need this information.
+ *
+ * @see DefaultDataChannelMetaData
  * @since 4.1
  */
 public class NoopDataChannelMetaData implements DataChannelMetaData {
+
     @Override
     public void add(Object key, Object value) {
-
+        // noop
     }
 
     @Override
-    public <T> T get(Object key, Class<? extends T> type) {
+    public <T> T get(Object key, Class<T> type) {
         return null;
     }
 }

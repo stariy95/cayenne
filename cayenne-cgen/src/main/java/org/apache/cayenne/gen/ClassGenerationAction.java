@@ -21,12 +21,12 @@ package org.apache.cayenne.gen;
 
 import org.apache.cayenne.CayenneException;
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.Embeddable;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.QueryDescriptor;
-import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.slf4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -68,7 +68,7 @@ public class ClassGenerationAction {
 	protected DataMap dataMap;
 
 	@Inject
-	protected InfoStorage infoStorage;
+	protected DataChannelMetaData metaData;
 	private InfoUtils instance;
 
 	protected ArtifactsGenerationMode artifactsGenerationMode;
@@ -601,32 +601,23 @@ public class ClassGenerationAction {
 
 	private InfoUtils infoUtilsInstance() {
 		if(instance == null) {
-			instance = new InfoUtils(infoStorage);
+			instance = new InfoUtils(metaData);
 		}
 		return instance;
 	}
 
 	public static class InfoUtils {
-		InfoStorage infoStorage;
+		DataChannelMetaData metaData;
 
-		InfoUtils(InfoStorage storage) {
-			this.infoStorage = storage;
-		}
-
-		public String javaDoc(Object object, String prefix) {
-			String comment = comment(object);
-			if(comment == null || comment.trim().isEmpty()) {
-				return "";
-			}
-
-			return prefix + "/**\n *" + comment + "\n */\n";
+		InfoUtils(DataChannelMetaData metaData) {
+			this.metaData = metaData;
 		}
 
 		public String comment(Object object) {
-			if(infoStorage == null) {
+			if(metaData == null) {
 				return null;
 			}
-			return infoStorage.getInfo(object, "comment");
+			return metaData.get(object, String.class);
 		}
 	}
 }

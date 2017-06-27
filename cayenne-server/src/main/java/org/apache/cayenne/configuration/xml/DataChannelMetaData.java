@@ -20,11 +20,43 @@
 package org.apache.cayenne.configuration.xml;
 
 /**
+ * <p>
+ * Storage for all kind of meta data that is not required for runtime.
+ * </p>
+ * <p>
+ * Currently used by Modeler and cli tools (e.g. Maven, Ant and Gradle) to store project extra data.
+ * </p>
+ *
+ * <p>
+ * Usage: <pre>
+ *      // attach custom information to data map
+ *      metaData.add(dataMap, myObject);
+ *
+ *      // read data
+ *      MyObject obj = metaData.get(dataMap, MyObject.class);
+ * </pre>
+ * </p>
+ *
  * @since 4.1
  */
 public interface DataChannelMetaData {
 
+    /**
+     * Store data for object.
+     *
+     * @param key object for which we want to store data
+     * @param value data to store
+     */
     void add(Object key, Object value);
 
-    <T> T get(Object key, Class<? extends T> type);
+    /**
+     *
+     * Get meta data for object
+     *
+     * @param key object for wich we want meta data
+     * @param type meta data type class
+     * @param <T> meta data type
+     * @return value or {@code null} if no data available
+     */
+    <T> T get(Object key, Class<T> type);
 }

@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.project.extension.info;
 
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.project.extension.LoaderDelegate;
 import org.apache.cayenne.project.extension.ProjectExtension;
@@ -30,15 +31,15 @@ import org.apache.cayenne.project.extension.SaverDelegate;
 public class InfoExtension implements ProjectExtension {
 
     @Inject
-    InfoStorage storage;
+    private DataChannelMetaData metaData;
 
     @Override
     public LoaderDelegate createLoaderDelegate() {
-        return new InfoLoaderDelegate(storage);
+        return new InfoLoaderDelegate(metaData);
     }
 
     @Override
     public SaverDelegate createSaverDelegate() {
-        return new InfoSaverDelegate(storage);
+        return new InfoSaverDelegate(metaData);
     }
 }

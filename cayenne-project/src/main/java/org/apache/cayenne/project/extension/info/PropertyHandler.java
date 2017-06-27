@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.project.extension.info;
 
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.configuration.xml.DataMapHandler;
 import org.apache.cayenne.configuration.xml.DbEntityHandler;
 import org.apache.cayenne.configuration.xml.DbRelationshipHandler;
@@ -43,12 +44,12 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PropertyHandler.class);
 
-    InfoStorage storage;
+    private DataChannelMetaData metaData;
 
-    public PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, InfoStorage storage) {
+    public PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, DataChannelMetaData metaData) {
         super(parentHandler);
         setTargetNamespace(InfoLoaderDelegate.NAMESPACE);
-        this.storage = storage;
+        this.metaData = metaData;
     }
 
     @Override
@@ -58,10 +59,7 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
                 Object parentObject = getParentObject();
                 String name = attributes.getValue("name");
                 if(parentObject != null) {
-                    String oldValue = storage.putInfo(parentObject, name, attributes.getValue("value"));
-                    if(oldValue != null) {
-                        logger.warn("Property {} defined more than once for object {}", name, parentObject);
-                    }
+                    metaData.add(parentObject, attributes.getValue("value"));
                     logger.debug("Loaded property for {}: {} = {}", parentObject, name, attributes.getValue("value"));
                 }
                 return true;

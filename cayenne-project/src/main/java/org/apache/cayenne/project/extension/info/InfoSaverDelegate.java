@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.project.extension.info;
 
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -39,14 +40,14 @@ import org.apache.cayenne.util.Util;
  */
 public class InfoSaverDelegate extends BaseSaverDelegate {
 
-    InfoStorage storage;
+    private DataChannelMetaData metaData;
 
-    InfoSaverDelegate(InfoStorage storage) {
-        this.storage = storage;
+    InfoSaverDelegate(DataChannelMetaData metaData) {
+        this.metaData = metaData;
     }
 
     void printComment(Object entity) {
-        String comment = storage.getInfo(entity, "comment");
+        String comment = metaData.get(entity, String.class);
         if(!Util.isEmptyString(comment)) {
             encoder.start("info:property")
                     .attribute("xmlns:info", InfoLoaderDelegate.NAMESPACE)

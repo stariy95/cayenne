@@ -19,7 +19,9 @@
 
 package org.apache.cayenne.project.extension.info;
 
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
+import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.project.Project;
 import org.apache.cayenne.project.extension.LoaderDelegate;
 
@@ -30,10 +32,10 @@ public class InfoLoaderDelegate implements LoaderDelegate {
 
     static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
 
-    InfoStorage storage;
+    private DataChannelMetaData metaData;
 
-    InfoLoaderDelegate(InfoStorage storage) {
-        this.storage = storage;
+    InfoLoaderDelegate(DataChannelMetaData metaData) {
+        this.metaData = metaData;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class InfoLoaderDelegate implements LoaderDelegate {
     @Override
     public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
         if(PropertyHandler.PROPERTY_TAG.equals(tag)) {
-            return new PropertyHandler(parent, storage);
+            return new PropertyHandler(parent, metaData);
         }
         return null;
     }

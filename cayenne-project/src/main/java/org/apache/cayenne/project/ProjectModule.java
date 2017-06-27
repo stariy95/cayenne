@@ -22,8 +22,6 @@ import org.apache.cayenne.di.Binder;
 import org.apache.cayenne.di.ListBuilder;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.project.extension.ProjectExtension;
-import org.apache.cayenne.project.extension.info.DefaultInfoStorage;
-import org.apache.cayenne.project.extension.info.InfoStorage;
 import org.apache.cayenne.project.upgrade.ProjectUpgrader;
 import org.apache.cayenne.project.upgrade.v10.ProjectUpgrader_V10;
 import org.apache.cayenne.project.validation.DefaultProjectValidator;
@@ -47,7 +45,6 @@ public class ProjectModule implements Module {
         binder.bind(ProjectUpgrader.class).to(ProjectUpgrader_V10.class);
         binder.bind(ProjectValidator.class).to(DefaultProjectValidator.class);
         binder.bind(ConfigurationNodeParentGetter.class).to(DefaultConfigurationNodeParentGetter.class);
-        binder.bind(InfoStorage.class).to(DefaultInfoStorage.class);
         contributeExtension(binder);
     }
 }

@@ -144,8 +144,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
                 if(mediator.getCurrentDbEntity() == null) {
                     return;
                 }
-                mediator.getApplication().getInfoStorage()
-                        .putInfo(mediator.getCurrentDbEntity(), "comment", text);
+                mediator.getApplication().getMetaData().add(mediator.getCurrentDbEntity(), text);
             }
         };
 
@@ -231,7 +230,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         catalog.setText(entity.getCatalog());
         schema.setText(entity.getSchema());
         qualifier.setText(new ExpressionConvertor().valueAsString(entity.getQualifier()));
-        comment.setText(mediator.getApplication().getInfoStorage().getInfo(entity, "comment"));
+        comment.setText(mediator.getApplication().getMetaData().get(entity, String.class));
 
         String type = PK_DEFAULT_GENERATOR;
 
