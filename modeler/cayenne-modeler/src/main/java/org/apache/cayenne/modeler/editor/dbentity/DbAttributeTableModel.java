@@ -37,6 +37,7 @@ import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.util.CayenneTableModel;
 import org.apache.cayenne.modeler.util.ProjectUtil;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 
 /**
  * Model for DbEntity attributes. Allows adding/removing attributes, modifying types and names.
@@ -223,7 +224,11 @@ public class DbAttributeTableModel extends CayenneTableModel<DbAttribute> {
     }
 
     public String getComment(DbAttribute attr) {
-        return mediator.getApplication().getMetaData().get(attr, String.class);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(attr, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
     }
 
     public void setMaxLength(String newVal, DbAttribute attr) {
@@ -325,7 +330,13 @@ public class DbAttributeTableModel extends CayenneTableModel<DbAttribute> {
     }
 
     public void setComment(String newVal, DbAttribute attr) {
-        mediator.getApplication().getMetaData().add(attr, newVal);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(attr, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            mediator.getApplication().getMetaData().add(attr, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, newVal);
     }
 
     public boolean isCellEditable(int row, int col) {

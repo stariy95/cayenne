@@ -38,7 +38,7 @@ import org.xml.sax.SAXException;
 /**
  * @since 4.1
  */
-public class PropertyHandler extends NamespaceAwareNestedTagHandler {
+class PropertyHandler extends NamespaceAwareNestedTagHandler {
 
     static final String PROPERTY_TAG = "property";
 
@@ -46,7 +46,7 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
 
     private DataChannelMetaData metaData;
 
-    public PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, DataChannelMetaData metaData) {
+    PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, DataChannelMetaData metaData) {
         super(parentHandler);
         setTargetNamespace(InfoLoaderDelegate.NAMESPACE);
         this.metaData = metaData;
@@ -59,7 +59,15 @@ public class PropertyHandler extends NamespaceAwareNestedTagHandler {
                 Object parentObject = getParentObject();
                 String name = attributes.getValue("name");
                 if(parentObject != null) {
-                    metaData.add(parentObject, attributes.getValue("value"));
+                    ObjectInfo info = metaData.get(parentObject, ObjectInfo.class);
+                    if(info == null) {
+                        info = new ObjectInfo();
+                        metaData.add(parentObject, info);
+                    }
+                    String oldValue = info.put(name, attributes.getValue("value"));
+                    if(oldValue != null) {
+                        logger.warn("Duplicated property {} for object {}", name, parentObject);
+                    }
                     logger.debug("Loaded property for {}: {} = {}", parentObject, name, attributes.getValue("value"));
                 }
                 return true;

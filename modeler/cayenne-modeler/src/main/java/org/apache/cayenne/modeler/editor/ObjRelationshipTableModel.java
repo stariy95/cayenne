@@ -24,6 +24,7 @@ import org.apache.cayenne.map.event.RelationshipEvent;
 import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.util.CayenneTableModel;
 import org.apache.cayenne.modeler.util.ProjectUtil;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.apache.cayenne.util.Util;
 
 import java.util.ArrayList;
@@ -314,10 +315,20 @@ public class ObjRelationshipTableModel extends CayenneTableModel<ObjRelationship
     }
 
     private String getComment(ObjRelationship rel) {
-        return mediator.getApplication().getMetaData().get(rel, String.class);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(rel, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
     }
 
     private void setComment(String newVal, ObjRelationship rel) {
-        mediator.getApplication().getMetaData().add(rel, newVal);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(rel, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            mediator.getApplication().getMetaData().add(rel, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, newVal);
     }
 }

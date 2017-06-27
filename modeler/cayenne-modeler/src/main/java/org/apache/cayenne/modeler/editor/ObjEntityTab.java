@@ -66,6 +66,7 @@ import org.apache.cayenne.modeler.util.Comparators;
 import org.apache.cayenne.modeler.util.ExpressionConvertor;
 import org.apache.cayenne.modeler.util.TextAdapter;
 import org.apache.cayenne.modeler.util.combo.AutoCompletion;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.apache.cayenne.util.CayenneMapEntry;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.validation.ValidationException;
@@ -707,11 +708,21 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
             return;
         }
 
-        mediator.getApplication().getMetaData().add(entity, value);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            mediator.getApplication().getMetaData().add(entity, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, value);
     }
 
     private String getComment(ObjEntity entity) {
-        return mediator.getApplication().getMetaData().get(entity, String.class);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
     }
 
 }

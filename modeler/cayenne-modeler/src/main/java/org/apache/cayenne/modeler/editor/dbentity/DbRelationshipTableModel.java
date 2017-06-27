@@ -38,6 +38,7 @@ import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.dialog.WarningDialogByDbTargetChange;
 import org.apache.cayenne.modeler.util.CayenneTableModel;
 import org.apache.cayenne.modeler.util.ProjectUtil;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 
 /**
  * Table model for DbRelationship table.
@@ -128,11 +129,21 @@ public class DbRelationshipTableModel extends CayenneTableModel<DbRelationship> 
     }
 
     private String getComment(DbRelationship rel) {
-        return mediator.getApplication().getMetaData().get(rel, String.class);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(rel, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
     }
 
     private void setComment(String newVal, DbRelationship rel) {
-        mediator.getApplication().getMetaData().add(rel, newVal);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(rel, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            mediator.getApplication().getMetaData().add(rel, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, newVal);
     }
 
     public void setUpdatedValueAt(Object aValue, int row, int column) {

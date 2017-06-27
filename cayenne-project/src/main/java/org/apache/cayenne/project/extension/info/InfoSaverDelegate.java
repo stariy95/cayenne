@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.project.extension.info;
 
+import java.util.Map;
+
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbAttribute;
@@ -38,7 +40,7 @@ import org.apache.cayenne.util.Util;
 /**
  * @since 4.1
  */
-public class InfoSaverDelegate extends BaseSaverDelegate {
+class InfoSaverDelegate extends BaseSaverDelegate {
 
     private DataChannelMetaData metaData;
 
@@ -46,86 +48,81 @@ public class InfoSaverDelegate extends BaseSaverDelegate {
         this.metaData = metaData;
     }
 
-    void printComment(Object entity) {
-        String comment = metaData.get(entity, String.class);
-        if(!Util.isEmptyString(comment)) {
-            encoder.start("info:property")
-                    .attribute("xmlns:info", InfoLoaderDelegate.NAMESPACE)
-                    .attribute("name", "comment")
-                    .attribute("value", comment)
-                    .end();
+    private Void printComment(Object entity) {
+        ObjectInfo info = metaData.get(entity, ObjectInfo.class);
+        if(info == null) {
+            return null;
         }
+
+        for(Map.Entry<String, String> entry : info.getSortedValues().entrySet()) {
+            if(!Util.isEmptyString(entry.getValue())) {
+                encoder.start("info:property")
+                        .attribute("xmlns:info", InfoLoaderDelegate.NAMESPACE)
+                        .attribute("name", entry.getKey())
+                        .attribute("value", entry.getValue())
+                        .end();
+            }
+        }
+        return null;
     }
 
     @Override
     public Void visitDataMap(DataMap dataMap) {
-        printComment(dataMap);
-        return null;
+        return printComment(dataMap);
     }
 
     @Override
     public Void visitObjEntity(ObjEntity entity) {
-        printComment(entity);
-        return null;
+        return printComment(entity);
     }
 
     @Override
     public Void visitDbEntity(DbEntity entity) {
-        printComment(entity);
-        return null;
+        return printComment(entity);
     }
 
     @Override
     public Void visitEmbeddable(Embeddable embeddable) {
-        printComment(embeddable);
-        return null;
+        return printComment(embeddable);
     }
 
     @Override
     public Void visitEmbeddableAttribute(EmbeddableAttribute attribute) {
-        printComment(attribute);
-        return null;
+        return printComment(attribute);
     }
 
     @Override
     public Void visitObjAttribute(ObjAttribute attribute) {
-        printComment(attribute);
-        return null;
+        return printComment(attribute);
     }
 
     @Override
     public Void visitDbAttribute(DbAttribute attribute) {
-        printComment(attribute);
-        return null;
+        return printComment(attribute);
     }
 
     @Override
     public Void visitObjRelationship(ObjRelationship relationship) {
-        printComment(relationship);
-        return null;
+        return printComment(relationship);
     }
 
     @Override
     public Void visitDbRelationship(DbRelationship relationship) {
-        printComment(relationship);
-        return null;
+        return printComment(relationship);
     }
 
     @Override
     public Void visitProcedure(Procedure procedure) {
-        printComment(procedure);
-        return null;
+        return printComment(procedure);
     }
 
     @Override
     public Void visitProcedureParameter(ProcedureParameter parameter) {
-        printComment(parameter);
-        return null;
+        return printComment(parameter);
     }
 
     @Override
     public Void visitQuery(QueryDescriptor query) {
-        printComment(query);
-        return null;
+        return printComment(query);
     }
 }

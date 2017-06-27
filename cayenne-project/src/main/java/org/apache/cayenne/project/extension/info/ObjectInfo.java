@@ -19,35 +19,30 @@
 
 package org.apache.cayenne.project.extension.info;
 
-import org.apache.cayenne.configuration.xml.DataChannelMetaData;
-import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
-import org.apache.cayenne.di.Inject;
-import org.apache.cayenne.project.Project;
-import org.apache.cayenne.project.extension.LoaderDelegate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @since 4.1
  */
-class InfoLoaderDelegate implements LoaderDelegate {
+public class ObjectInfo {
 
-    static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
+    public static final String COMMENT = "comment";
 
-    private DataChannelMetaData metaData;
+    public static final String ANNOTATION = "annotation";
 
-    InfoLoaderDelegate(DataChannelMetaData metaData) {
-        this.metaData = metaData;
+    private Map<String, String> infoMap = new HashMap<>();
+
+    public String put(String key, String value) {
+        return infoMap.put(key, value);
     }
 
-    @Override
-    public String getTargetNamespace() {
-        return NAMESPACE;
+    public String get(String key) {
+        return infoMap.get(key);
     }
 
-    @Override
-    public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
-        if(PropertyHandler.PROPERTY_TAG.equals(tag)) {
-            return new PropertyHandler(parent, metaData);
-        }
-        return null;
+    Map<String, String> getSortedValues() {
+        return new TreeMap<>(infoMap);
     }
 }

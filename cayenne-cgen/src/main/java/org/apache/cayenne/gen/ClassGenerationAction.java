@@ -27,6 +27,7 @@ import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.Embeddable;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.QueryDescriptor;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.slf4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -617,7 +618,12 @@ public class ClassGenerationAction {
 			if(metaData == null) {
 				return null;
 			}
-			return metaData.get(object, String.class);
+
+			ObjectInfo info = metaData.get(object, ObjectInfo.class);
+			if(info == null) {
+				return null;
+			}
+			return info.get(ObjectInfo.COMMENT);
 		}
 	}
 }

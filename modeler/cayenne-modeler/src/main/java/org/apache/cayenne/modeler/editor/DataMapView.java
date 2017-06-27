@@ -41,6 +41,7 @@ import org.apache.cayenne.modeler.util.CellRenderers;
 import org.apache.cayenne.modeler.util.Comparators;
 import org.apache.cayenne.modeler.util.ProjectUtil;
 import org.apache.cayenne.modeler.util.TextAdapter;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.validation.ValidationException;
 
@@ -313,7 +314,7 @@ public class DataMapView extends JPanel {
         name.setText(map.getName());
         location.setText((map.getLocation() != null) ? map.getLocation() : "(no file)");
         quoteSQLIdentifiers.setSelected(map.isQuotingSQLIdentifiers());
-        comment.setText(eventController.getApplication().getMetaData().get(map, String.class));
+        comment.setText(getComment(map));
 
         // rebuild data node list
         DataNodeDescriptor[] nodes = ((DataChannelDescriptor) eventController.getProject().getRootNode())
@@ -677,6 +678,20 @@ public class DataMapView extends JPanel {
             return;
         }
 
-        eventController.getApplication().getMetaData().add(dataMap, comment);
+        ObjectInfo info = eventController.getApplication().getMetaData().get(dataMap, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            eventController.getApplication().getMetaData().add(dataMap, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, comment);
+    }
+
+    private String getComment(DataMap dataMap) {
+        ObjectInfo info = eventController.getApplication().getMetaData().get(dataMap, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
     }
 }

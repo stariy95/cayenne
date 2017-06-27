@@ -42,6 +42,7 @@ import org.apache.cayenne.modeler.util.CayenneTableModel;
 import org.apache.cayenne.modeler.util.CellEditorForAttributeTable;
 import org.apache.cayenne.modeler.util.ModelerUtil;
 import org.apache.cayenne.modeler.util.ProjectUtil;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.apache.cayenne.util.Util;
 
 import java.util.ArrayList;
@@ -499,11 +500,21 @@ public class ObjAttributeTableModel extends CayenneTableModel<ObjAttributeWrappe
     }
 
     private String getComment(ObjAttribute attr) {
-        return mediator.getApplication().getMetaData().get(attr, String.class);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(attr, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
     }
 
     private void setComment(String newVal, ObjAttribute attr) {
-        mediator.getApplication().getMetaData().add(attr, newVal);
+        ObjectInfo info = mediator.getApplication().getMetaData().get(attr, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            mediator.getApplication().getMetaData().add(attr, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, newVal);
     }
 
     @Override

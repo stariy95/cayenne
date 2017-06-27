@@ -38,6 +38,7 @@ import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.map.event.EntityEvent;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.ProjectController;
@@ -53,6 +54,7 @@ import org.apache.cayenne.modeler.event.EntityDisplayEvent;
 import org.apache.cayenne.modeler.graph.action.ShowGraphEntityAction;
 import org.apache.cayenne.modeler.util.ExpressionConvertor;
 import org.apache.cayenne.modeler.util.TextAdapter;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.validation.ValidationException;
 
@@ -141,10 +143,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         comment = new TextAdapter(new JTextField()) {
             @Override
             protected void updateModel(String text) throws ValidationException {
-                if(mediator.getCurrentDbEntity() == null) {
-                    return;
-                }
-                mediator.getApplication().getMetaData().add(mediator.getCurrentDbEntity(), text);
+                setComment(text);
             }
         };
 
@@ -230,7 +229,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         catalog.setText(entity.getCatalog());
         schema.setText(entity.getSchema());
         qualifier.setText(new ExpressionConvertor().valueAsString(entity.getQualifier()));
-        comment.setText(mediator.getApplication().getMetaData().get(entity, String.class));
+        comment.setText(getComment(entity));
 
         String type = PK_DEFAULT_GENERATOR;
 
@@ -341,5 +340,29 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
             }
 
         }
+    }
+
+    private String getComment(DbEntity entity) {
+        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+        return info.get(ObjectInfo.COMMENT);
+    }
+
+    private void setComment(String value) {
+        DbEntity entity = mediator.getCurrentDbEntity();
+
+        if(entity == null) {
+            return;
+        }
+
+        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            mediator.getApplication().getMetaData().add(entity, info);
+        }
+
+        info.put(ObjectInfo.COMMENT, value);
     }
 }
