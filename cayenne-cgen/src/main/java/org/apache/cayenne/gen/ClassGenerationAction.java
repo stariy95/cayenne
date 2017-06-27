@@ -635,11 +635,7 @@ public class ClassGenerationAction {
 				return null;
 			}
 
-			ObjectInfo info = metaData.get(object, ObjectInfo.class);
-			if(info == null) {
-				return null;
-			}
-			return info.get(ObjectInfo.COMMENT);
+			return ObjectInfo.getFromMetaData(metaData, object, ObjectInfo.COMMENT);
 		}
 	}
 }

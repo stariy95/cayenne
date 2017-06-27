@@ -91,7 +91,7 @@ class PropertyHandler extends NamespaceAwareNestedTagHandler {
         } else if(parentHandler instanceof EmbeddableHandler) {
             return ((EmbeddableHandler) parentHandler).getEmbeddable();
         } else if(parentHandler instanceof QueryDescriptorHandler) {
-            return "query"; // TODO: how to get query descriptor?
+            return ((QueryDescriptorHandler) parentHandler).getQueryDescriptor();
         } else if(parentHandler instanceof ProcedureHandler) {
             return ((ProcedureHandler) parentHandler).getProcedure();
         } else if(parentHandler instanceof DbRelationshipHandler) {

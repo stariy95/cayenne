@@ -315,20 +315,10 @@ public class ObjRelationshipTableModel extends CayenneTableModel<ObjRelationship
     }
 
     private String getComment(ObjRelationship rel) {
-        ObjectInfo info = mediator.getApplication().getMetaData().get(rel, ObjectInfo.class);
-        if(info == null) {
-            return null;
-        }
-        return info.get(ObjectInfo.COMMENT);
+        return ObjectInfo.getFromMetaData(mediator.getApplication().getMetaData(), rel, ObjectInfo.COMMENT);
     }
 
     private void setComment(String newVal, ObjRelationship rel) {
-        ObjectInfo info = mediator.getApplication().getMetaData().get(rel, ObjectInfo.class);
-        if(info == null) {
-            info = new ObjectInfo();
-            mediator.getApplication().getMetaData().add(rel, info);
-        }
-
-        info.put(ObjectInfo.COMMENT, newVal);
+        ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), rel, ObjectInfo.COMMENT, newVal);
     }
 }

@@ -166,8 +166,8 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         builder.append("DbEntity Name:", name.getComponent());
         builder.append(catalogLabel, catalog.getComponent());
         builder.append(schemaLabel, schema.getComponent());
-        builder.append("Qualifier", qualifier.getComponent());
-        builder.append("Comment", comment.getComponent());
+        builder.append("Qualifier:", qualifier.getComponent());
+        builder.append("Comment:", comment.getComponent());
 
         builder.appendSeparator("Primary Key");
         builder.append("PK Generation Strategy:", pkGeneratorType);
@@ -343,11 +343,7 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
     }
 
     private String getComment(DbEntity entity) {
-        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
-        if(info == null) {
-            return null;
-        }
-        return info.get(ObjectInfo.COMMENT);
+        return ObjectInfo.getFromMetaData(mediator.getApplication().getMetaData(), entity, ObjectInfo.COMMENT);
     }
 
     private void setComment(String value) {
@@ -357,12 +353,6 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
             return;
         }
 
-        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
-        if(info == null) {
-            info = new ObjectInfo();
-            mediator.getApplication().getMetaData().add(entity, info);
-        }
-
-        info.put(ObjectInfo.COMMENT, value);
+        ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), entity, ObjectInfo.COMMENT, value);
     }
 }

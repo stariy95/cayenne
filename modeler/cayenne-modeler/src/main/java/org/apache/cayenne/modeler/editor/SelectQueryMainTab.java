@@ -51,6 +51,7 @@ import org.apache.cayenne.modeler.util.ProjectUtil;
 import org.apache.cayenne.modeler.util.TextAdapter;
 import org.apache.cayenne.modeler.util.ValidatorTextAdapter;
 import org.apache.cayenne.modeler.util.combo.AutoCompletion;
+import org.apache.cayenne.project.extension.info.ObjectInfo;
 import org.apache.cayenne.query.*;
 import org.apache.cayenne.util.CayenneMapEntry;
 import org.apache.cayenne.util.Util;
@@ -69,6 +70,7 @@ public class SelectQueryMainTab extends JPanel {
     protected ProjectController mediator;
 
     protected TextAdapter name;
+    protected TextAdapter comment;
     protected JComboBox<ObjEntity> queryRoot;
     protected TextAdapter qualifier;
     protected JCheckBox distinct;
@@ -108,6 +110,13 @@ public class SelectQueryMainTab extends JPanel {
             }
         };
 
+        comment = new TextAdapter(new JTextField()) {
+            @Override
+            protected void updateModel(String text) {
+                setQueryComment(text);
+            }
+        };
+
         distinct = new JCheckBox();
 
         properties = new ObjectQueryPropertiesPanel(mediator);
@@ -116,7 +125,7 @@ public class SelectQueryMainTab extends JPanel {
         CellConstraints cc = new CellConstraints();
         FormLayout layout = new FormLayout(
                 "right:max(80dlu;pref), 3dlu, fill:200dlu",
-                "p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p");
+                "p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p");
         PanelBuilder builder = new PanelBuilder(layout);
         builder.setDefaultDialogBorder();
 
@@ -129,6 +138,8 @@ public class SelectQueryMainTab extends JPanel {
         builder.add(qualifier.getComponent(), cc.xy(3, 7));
         builder.addLabel("Distinct:", cc.xy(1, 9));
         builder.add(distinct, cc.xy(3, 9));
+        builder.addLabel("Comment:", cc.xy(1, 11));
+        builder.add(comment.getComponent(), cc.xy(3, 11));
 
         this.setLayout(new BorderLayout());
         this.add(builder.getPanel(), BorderLayout.NORTH);
@@ -174,6 +185,7 @@ public class SelectQueryMainTab extends JPanel {
         qualifier.setText(query.getQualifier() != null ? query
                 .getQualifier()
                 .toString() : null);
+        comment.setText(getQueryComment(query));
 
         // init root choices and title label..
 
@@ -404,5 +416,17 @@ public class SelectQueryMainTab extends JPanel {
             
             return name.getComponent().getText().startsWith(prefix);
         }
+    }
+
+    private void setQueryComment(String text) {
+        QueryDescriptor query = getQuery();
+        if (query == null) {
+            return;
+        }
+        ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), query, ObjectInfo.COMMENT, text);
+    }
+
+    private String getQueryComment(QueryDescriptor queryDescriptor) {
+        return ObjectInfo.getFromMetaData(mediator.getApplication().getMetaData(), queryDescriptor, ObjectInfo.COMMENT);
     }
 }

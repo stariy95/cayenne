@@ -708,21 +708,11 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
             return;
         }
 
-        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
-        if(info == null) {
-            info = new ObjectInfo();
-            mediator.getApplication().getMetaData().add(entity, info);
-        }
-
-        info.put(ObjectInfo.COMMENT, value);
+        ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), entity, ObjectInfo.COMMENT, value);
     }
 
     private String getComment(ObjEntity entity) {
-        ObjectInfo info = mediator.getApplication().getMetaData().get(entity, ObjectInfo.class);
-        if(info == null) {
-            return null;
-        }
-        return info.get(ObjectInfo.COMMENT);
+        return ObjectInfo.getFromMetaData(mediator.getApplication().getMetaData(), entity, ObjectInfo.COMMENT);
     }
 
 }

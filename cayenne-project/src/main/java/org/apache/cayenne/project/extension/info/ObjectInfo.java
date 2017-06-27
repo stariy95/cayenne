@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+
 /**
  * @since 4.1
  */
@@ -33,6 +35,25 @@ public class ObjectInfo {
     public static final String ANNOTATION = "annotation";
 
     private Map<String, String> infoMap = new HashMap<>();
+
+    public static void putToMetaData(DataChannelMetaData metaData, Object object, String key, String value) {
+        ObjectInfo info = metaData.get(object, ObjectInfo.class);
+        if(info == null) {
+            info = new ObjectInfo();
+            metaData.add(object, info);
+        }
+
+        info.put(key, value);
+    }
+
+    public static String getFromMetaData(DataChannelMetaData metaData, Object object, String key) {
+        ObjectInfo info = metaData.get(object, ObjectInfo.class);
+        if(info == null) {
+            return null;
+        }
+
+        return info.get(key);
+    }
 
     public String put(String key, String value) {
         return infoMap.put(key, value);

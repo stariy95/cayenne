@@ -44,6 +44,8 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
     private DataMap map;
 
     private QueryDescriptorLoader queryBuilder;
+    private QueryDescriptor descriptor;
+    private boolean changed;
 
     private String sqlKey;
     private String descending;
@@ -68,12 +70,15 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
 
             case QUERY_SQL_TAG:
                 this.sqlKey = attributes.getValue("adapter-class");
+                return true;
+
+            case QUERY_ORDERING_TAG:
+                createQueryOrdering(attributes);
+                return true;
 
             case QUERY_EJBQL_TAG:
             case QUERY_QUALIFIER_TAG:
             case QUERY_PREFETCH_TAG:
-            case QUERY_ORDERING_TAG:
-                createQueryOrdering(attributes);
                 return true;
         }
 
@@ -107,8 +112,7 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
 
     @Override
     protected void beforeScopeEnd() {
-        QueryDescriptor descriptor = queryBuilder.buildQueryDescriptor();
-        map.addQueryDescriptor(descriptor);
+        map.addQueryDescriptor(getQueryDescriptor());
     }
 
     private void addQueryDescriptor(Attributes attributes) throws SAXException {
@@ -137,6 +141,8 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
         if (!Util.isEmptyString(resultEntity)) {
             queryBuilder.setResultEntity(resultEntity);
         }
+
+        changed = true;
     }
 
     private void addQueryDescriptorProperty(Attributes attributes) throws SAXException {
@@ -151,6 +157,7 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
         }
 
         queryBuilder.addProperty(name, value);
+        changed = true;
     }
 
     private void createQualifier(String qualifier) {
@@ -159,6 +166,7 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
         }
 
         queryBuilder.setQualifier(qualifier);
+        changed = true;
     }
 
     private void createQueryOrdering(Attributes attributes) {
@@ -168,5 +176,17 @@ public class QueryDescriptorHandler extends NamespaceAwareNestedTagHandler {
 
     private void addQueryOrdering(String path) {
         queryBuilder.addOrdering(path, descending, ignoreCase);
+        changed = true;
+    }
+
+    public QueryDescriptor getQueryDescriptor() {
+        if(queryBuilder == null) {
+            return null;
+        }
+        if(descriptor == null || changed) {
+            descriptor = queryBuilder.buildQueryDescriptor();
+            changed = false;
+        }
+        return descriptor;
     }
 }
