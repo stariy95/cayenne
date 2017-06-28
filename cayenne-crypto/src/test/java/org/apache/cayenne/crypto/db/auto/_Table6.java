@@ -21,9 +21,8 @@ public abstract class _Table6 extends CayenneDataObject {
     public void setCryptoInt1(long cryptoInt1) {
         writeProperty("cryptoInt1", cryptoInt1);
     }
-    /**
-     * 
-     */
+
+
     public long getCryptoInt1() {
         Object value = readProperty("cryptoInt1");
         return (value != null) ? (Long) value : 0;
@@ -32,9 +31,8 @@ public abstract class _Table6 extends CayenneDataObject {
     public void setCryptoInt4(int cryptoInt4) {
         writeProperty("cryptoInt4", cryptoInt4);
     }
-    /**
-     * 
-     */
+
+
     public int getCryptoInt4() {
         Object value = readProperty("cryptoInt4");
         return (value != null) ? (Integer) value : 0;

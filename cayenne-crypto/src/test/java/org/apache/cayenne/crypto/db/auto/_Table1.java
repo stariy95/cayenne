@@ -23,9 +23,8 @@ public abstract class _Table1 extends CayenneDataObject {
     public void setCryptoInt(int cryptoInt) {
         writeProperty("cryptoInt", cryptoInt);
     }
-    /**
-     * 
-     */
+
+
     public int getCryptoInt() {
         Object value = readProperty("cryptoInt");
         return (value != null) ? (Integer) value : 0;
@@ -34,9 +33,8 @@ public abstract class _Table1 extends CayenneDataObject {
     public void setCryptoString(String cryptoString) {
         writeProperty("cryptoString", cryptoString);
     }
-    /**
-     * 
-     */
+
+
     public String getCryptoString() {
         return (String)readProperty("cryptoString");
     }
@@ -44,9 +42,8 @@ public abstract class _Table1 extends CayenneDataObject {
     public void setPlainInt(int plainInt) {
         writeProperty("plainInt", plainInt);
     }
-    /**
-     * 
-     */
+
+
     public int getPlainInt() {
         Object value = readProperty("plainInt");
         return (value != null) ? (Integer) value : 0;
@@ -55,9 +52,8 @@ public abstract class _Table1 extends CayenneDataObject {
     public void setPlainString(String plainString) {
         writeProperty("plainString", plainString);
     }
-    /**
-     * 
-     */
+
+
     public String getPlainString() {
         return (String)readProperty("plainString");
     }

@@ -22,14 +22,19 @@ import org.apache.cayenne.di.Binder;
 import org.apache.cayenne.di.ListBuilder;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.project.extension.ProjectExtension;
-import org.apache.cayenne.project.upgrade.ProjectUpgrader;
-import org.apache.cayenne.project.upgrade.v10.ProjectUpgrader_V10;
+import org.apache.cayenne.project.upgrade.DefaultUpgradeService;
+import org.apache.cayenne.project.upgrade.UpgradeService;
+import org.apache.cayenne.project.upgrade.handlers.UpgradeHandler;
+import org.apache.cayenne.project.upgrade.handlers.UpgradeHandler_V10;
+import org.apache.cayenne.project.upgrade.handlers.UpgradeHandler_V7;
+import org.apache.cayenne.project.upgrade.handlers.UpgradeHandler_V8;
+import org.apache.cayenne.project.upgrade.handlers.UpgradeHandler_V9;
 import org.apache.cayenne.project.validation.DefaultProjectValidator;
 import org.apache.cayenne.project.validation.ProjectValidator;
 
 /**
- * A dependency injection (DI) module contributing configuration related to Cayenne mapping project manipulation to a
- * DI container.
+ * A dependency injection (DI) module contributing configuration related
+ * to Cayenne mapping project manipulation to a DI container.
  *
  * @since 4.0
  */
@@ -39,12 +44,24 @@ public class ProjectModule implements Module {
         return binder.bindList(ProjectExtension.class);
     }
 
+    public static ListBuilder<UpgradeHandler> contributeUpgradeHandler(Binder binder) {
+        return binder.bindList(UpgradeHandler.class);
+    }
+
     public void configure(Binder binder) {
         binder.bind(ProjectLoader.class).to(DataChannelProjectLoader.class);
         binder.bind(ProjectSaver.class).to(FileProjectSaver.class);
-        binder.bind(ProjectUpgrader.class).to(ProjectUpgrader_V10.class);
         binder.bind(ProjectValidator.class).to(DefaultProjectValidator.class);
         binder.bind(ConfigurationNodeParentGetter.class).to(DefaultConfigurationNodeParentGetter.class);
+
+        binder.bind(UpgradeService.class).to(DefaultUpgradeService.class);
+        // Note: order is important
+        contributeUpgradeHandler(binder)
+                .add(UpgradeHandler_V7.class)
+                .add(UpgradeHandler_V8.class)
+                .add(UpgradeHandler_V9.class)
+                .add(UpgradeHandler_V10.class);
+
         contributeExtension(binder);
     }
 }
