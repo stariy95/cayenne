@@ -20,7 +20,7 @@
 package org.apache.cayenne.tools;
 
 import org.apache.cayenne.access.DbGenerator;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.datasource.DriverDataSource;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.JdbcAdapter;
@@ -141,7 +141,7 @@ public class DbGeneratorMojo extends AbstractMojo {
                     objectFactory.newInstance(DbAdapter.class, adapter);
 
             // Load the data map and run the db generator.
-            DataMap dataMap = loadDataMap();
+            DataMap dataMap = loadDataMap(injector);
             DbGenerator generator = new DbGenerator(adapterInst, dataMap, NoopJdbcEventLogger.getInstance());
             generator.setShouldCreateFKConstraints(createFK);
             generator.setShouldCreatePKSupport(createPK);
@@ -166,8 +166,8 @@ public class DbGeneratorMojo extends AbstractMojo {
     }
 
     /** Loads and returns DataMap based on <code>map</code> attribute. */
-    private DataMap loadDataMap() throws Exception {
-        return new XMLDataMapLoader().load(new URLResource(new URL(map.getCanonicalPath())));
+    private DataMap loadDataMap(Injector injector) throws Exception {
+        return injector.getInstance(DataMapLoader.class).load(new URLResource(new URL(map.getCanonicalPath())));
     }
 
     @Deprecated

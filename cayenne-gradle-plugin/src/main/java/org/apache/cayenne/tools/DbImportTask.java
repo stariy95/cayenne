@@ -20,11 +20,8 @@
 package org.apache.cayenne.tools;
 
 import java.io.File;
-import java.net.URL;
 
 import groovy.lang.Closure;
-import org.apache.cayenne.configuration.xml.DataChannelMetaData;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dbsync.DbSyncModule;
 import org.apache.cayenne.dbsync.reverse.configuration.ToolsModule;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportAction;
@@ -32,12 +29,9 @@ import org.apache.cayenne.dbsync.reverse.dbimport.DbImportConfiguration;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportConfigurationValidator;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportModule;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
-import org.apache.cayenne.dbsync.reverse.filters.FiltersConfig;
 import org.apache.cayenne.dbsync.reverse.filters.FiltersConfigBuilder;
 import org.apache.cayenne.di.DIBootstrap;
-import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Injector;
-import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.tools.model.DataSourceConfig;
 import org.apache.cayenne.tools.model.DbImportConfig;
 import org.apache.cayenne.util.Util;

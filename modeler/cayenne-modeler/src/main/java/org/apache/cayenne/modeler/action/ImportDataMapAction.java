@@ -22,7 +22,7 @@ package org.apache.cayenne.modeler.action;
 import org.apache.cayenne.configuration.ConfigurationNameMapper;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.dbsync.naming.NameBuilder;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.modeler.Application;
@@ -75,7 +75,8 @@ public class ImportDataMapAction extends CayenneAction {
 
         try {
             URL url = dataMapFile.toURI().toURL();
-            newMap = new XMLDataMapLoader().load(new URLResource(url));
+            DataMapLoader loader = application.getInjector().getInstance(DataMapLoader.class);
+            newMap = loader.load(new URLResource(url));
 
             ConfigurationNode root = getProjectController().getProject().getRootNode();
             newMap.setName(NameBuilder

@@ -26,6 +26,7 @@ import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbKeyGenerator;
 import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
@@ -36,9 +37,6 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
     private static final String DB_ENTITY_TAG = "db-entity";
     private static final String DB_ATTRIBUTE_TAG = "db-attribute";
     private static final String DB_KEY_GENERATOR_TAG = "db-key-generator";
-    private static final String DB_GENERATOR_TYPE_TAG = "db-generator-type";
-    private static final String DB_GENERATOR_NAME_TAG = "db-generator-name";
-    private static final String DB_KEY_CACHE_SIZE_TAG = "db-key-cache-size";
     private static final String QUALIFIER_TAG = "qualifier";
 
     private DataMap dataMap;
@@ -61,13 +59,6 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
                 createDbAttribute(attributes);
                 return true;
 
-            case DB_KEY_GENERATOR_TAG:
-                createDbKeyGenerator();
-                return true;
-
-            case DB_GENERATOR_NAME_TAG:
-            case DB_GENERATOR_TYPE_TAG:
-            case DB_KEY_CACHE_SIZE_TAG:
             case QUALIFIER_TAG:
                 return true;
         }
@@ -78,22 +69,19 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected void processCharData(String localName, String data) {
         switch (localName) {
-            case DB_GENERATOR_TYPE_TAG:
-                setDbGeneratorType(data);
-                break;
-
-            case DB_GENERATOR_NAME_TAG:
-                setDbGeneratorName(data);
-                break;
-
-            case DB_KEY_CACHE_SIZE_TAG:
-                setDbKeyCacheSize(data);
-                break;
-
             case QUALIFIER_TAG:
                 createQualifier(data);
                 break;
         }
+    }
+
+    @Override
+    protected ContentHandler createChildTagHandler(String namespaceURI, String localName, String qName, Attributes attributes) {
+        switch (localName) {
+            case DB_KEY_GENERATOR_TAG:
+                return new DbKeyGeneratorHandler(this, entity);
+        }
+        return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
     }
 
     private void createDbEntity(Attributes attributes) {
@@ -136,47 +124,6 @@ public class DbEntityHandler extends NamespaceAwareNestedTagHandler {
         lastAttribute.setPrimaryKey(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isPrimaryKey")));
         lastAttribute.setMandatory(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isMandatory")));
         lastAttribute.setGenerated(DataMapHandler.TRUE.equalsIgnoreCase(attributes.getValue("isGenerated")));
-    }
-
-    private void createDbKeyGenerator() {
-        entity.setPrimaryKeyGenerator(new DbKeyGenerator());
-    }
-
-    private void setDbGeneratorType(String type) {
-        if (entity == null) {
-            return;
-        }
-        DbKeyGenerator pkGenerator = entity.getPrimaryKeyGenerator();
-        pkGenerator.setGeneratorType(type);
-        if (pkGenerator.getGeneratorType() == null) {
-            entity.setPrimaryKeyGenerator(null);
-        }
-    }
-
-    private void setDbGeneratorName(String name) {
-        if (entity == null) {
-            return;
-        }
-        DbKeyGenerator pkGenerator = entity.getPrimaryKeyGenerator();
-        if (pkGenerator == null) {
-            return;
-        }
-        pkGenerator.setGeneratorName(name);
-    }
-
-    private void setDbKeyCacheSize(String size) {
-        if (entity == null) {
-            return;
-        }
-        DbKeyGenerator pkGenerator = entity.getPrimaryKeyGenerator();
-        if (pkGenerator == null) {
-            return;
-        }
-        try {
-            pkGenerator.setKeyCacheSize(new Integer(size.trim()));
-        } catch (Exception ex) {
-            pkGenerator.setKeyCacheSize(null);
-        }
     }
 
     private void createQualifier(String qualifier) {

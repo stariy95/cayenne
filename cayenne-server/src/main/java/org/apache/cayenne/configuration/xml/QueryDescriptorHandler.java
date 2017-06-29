@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.configuration.xml;
 
-import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.QueryDescriptor;
 import org.apache.cayenne.map.QueryDescriptorLoader;

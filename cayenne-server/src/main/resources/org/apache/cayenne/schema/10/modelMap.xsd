@@ -106,7 +106,7 @@
 				<xs:any minOccurs="0" maxOccurs="unbounded" namespace="##other" processContents="lax"/>
 			</xs:sequence>
 			<xs:attribute name="className" type="xs:string"/>
-			<xs:attribute name="abstract" type="xs:string"/>
+			<xs:attribute name="abstract" type="xs:boolean"/>
 			<xs:attribute name="readOnly" type="xs:boolean"/>
 			<xs:attribute name="clientClassName" type="xs:string"/>
 			<xs:attribute name="clientSuperClassName" type="xs:string"/>
@@ -281,7 +281,7 @@
 			<xs:attribute name="name" use="required" type="xs:string"/>
 			<xs:attribute name="schema" type="xs:string"/>
 			<xs:attribute name="catalog" type="xs:string"/>
-			<xs:attribute name="returningValue" type="xs:string"/>
+			<xs:attribute name="returningValue" type="xs:boolean"/>
 		</xs:complexType>
 	</xs:element>
 	<xs:element name="pre-update">

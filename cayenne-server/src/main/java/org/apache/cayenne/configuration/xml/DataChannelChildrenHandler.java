@@ -80,7 +80,7 @@ final class DataChannelChildrenHandler extends SAXNestedTagHandler {
             return new DataNodeChildrenHandler(xmlDataChannelDescriptorLoader, this, nodeDescriptor);
         }
 
-        if(DATA_MAP_TAG.equals(localName)) {
+        if (DATA_MAP_TAG.equals(localName)) {
             return new DataMapHandler(this, descriptor);
         }
 

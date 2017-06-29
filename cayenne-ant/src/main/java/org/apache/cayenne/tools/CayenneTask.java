@@ -24,9 +24,9 @@ import java.net.URL;
 
 import javax.sql.DataSource;
 
+import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.configuration.DataNodeDescriptor;
 import org.apache.cayenne.configuration.server.DbAdapterFactory;
-import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.di.Injector;
 import org.apache.cayenne.map.DataMap;
@@ -143,8 +143,9 @@ public abstract class CayenneTask extends Task {
     }
 
     /** Loads and returns DataMap based on <code>map</code> attribute. */
-    protected DataMap loadDataMap() throws Exception {
-        return new XMLDataMapLoader().load(new URLResource(new URL(map.getCanonicalPath())));
+    protected DataMap loadDataMap(Injector injector) throws Exception {
+        DataMapLoader loader = injector.getInstance(DataMapLoader.class);
+        return loader.load(new URLResource(new URL(map.getCanonicalPath())));
     }
 
     protected DbAdapter getAdapter(Injector injector, DataSource dataSource)
