@@ -20,8 +20,7 @@
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportLoaderDelegate;
-import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportSaverDelegate;
+import org.apache.cayenne.dbsync.xml.DbImportExtension;
 import org.apache.cayenne.util.Util;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
@@ -261,7 +260,7 @@ public class ReverseEngineering extends SchemaContainer implements Serializable,
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.start("dbi:config")
-                .attribute("xmlns:dbi", DbImportSaverDelegate.NAMESPACE)
+                .attribute("xmlns:dbi", DbImportExtension.NAMESPACE)
                 .nested(this.getIncludeTables(), delegate)
                 .nested(this.getExcludeTables(), delegate)
                 .nested(this.getIncludeColumns(), delegate)

@@ -17,36 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.xml.extension.dbi;
+package org.apache.cayenne.dbsync.xml;
 
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
-import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
-import org.apache.cayenne.map.DataMap;
+import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.project.Project;
-import org.apache.cayenne.project.extension.BaseSaverDelegate;
+import org.apache.cayenne.project.extension.LoaderDelegate;
+import org.apache.cayenne.project.extension.ProjectExtension;
+import org.apache.cayenne.project.extension.SaverDelegate;
 
 /**
  * @since 4.1
  */
-public class DbImportSaverDelegate extends BaseSaverDelegate {
+public class DbImportExtension implements ProjectExtension {
 
-    private DataChannelMetaData metaData;
     public static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/dbimport";
 
-    public DbImportSaverDelegate(DataChannelMetaData metaData) {
-        this.metaData = metaData;
-    }
+    @Inject
+    private DataChannelMetaData metaData;
 
-    private void printConfig(DataMap dataMap) {
-        ReverseEngineering reverseEngineering = metaData.get(dataMap, ReverseEngineering.class);
-        if(reverseEngineering != null) {
-            encoder.nested(reverseEngineering, null);
-        }
+    @Override
+    public LoaderDelegate createLoaderDelegate() {
+        return new DbImportLoaderDelegate(metaData);
     }
 
     @Override
-    public Void visitDataMap(DataMap dataMap) {
-        printConfig(dataMap);
-        return null;
+    public SaverDelegate createSaverDelegate() {
+        return new DbImportSaverDelegate(metaData);
     }
+
 }

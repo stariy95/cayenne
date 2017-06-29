@@ -17,35 +17,29 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.xml.extension.dbi;
+package org.apache.cayenne.dbsync.xml;
 
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
-import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
-import org.apache.cayenne.dbsync.xml.ConfigHandler;
-import org.apache.cayenne.project.Project;
-import org.apache.cayenne.project.extension.LoaderDelegate;
+import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
+import org.apache.cayenne.map.DataMap;
+import org.apache.cayenne.project.extension.BaseSaverDelegate;
 
 /**
  * @since 4.1
  */
-public class DbImportLoaderDelegate implements LoaderDelegate {
+class DbImportSaverDelegate extends BaseSaverDelegate {
 
     private DataChannelMetaData metaData;
 
-    public DbImportLoaderDelegate(DataChannelMetaData metaData) {
+    DbImportSaverDelegate(DataChannelMetaData metaData) {
         this.metaData = metaData;
     }
 
     @Override
-    public String getTargetNamespace() {
-        return "http://cayenne.apache.org/schema/" + Project.VERSION + "/dbimport";
-    }
-
-    @Override
-    public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
-        if(ConfigHandler.CONFIG_TAG.equals(tag)) {
-            ConfigHandler handler = new ConfigHandler(parent, getTargetNamespace(), metaData);
-            return handler;
+    public Void visitDataMap(DataMap dataMap) {
+        ReverseEngineering reverseEngineering = metaData.get(dataMap, ReverseEngineering.class);
+        if(reverseEngineering != null) {
+            encoder.nested(reverseEngineering, getParentDelegate());
         }
         return null;
     }

@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
 /**
  * @since 4.1
  */
-public class SchemaHandler extends NamespaceAwareNestedTagHandler {
+class SchemaHandler extends NamespaceAwareNestedTagHandler {
 
     private static final String SCHEMA_TAG = "schema";
     private static final String SCHEMA_NAME_TAG = "name";
@@ -50,7 +50,7 @@ public class SchemaHandler extends NamespaceAwareNestedTagHandler {
 
     private Schema schema;
 
-    public SchemaHandler(NamespaceAwareNestedTagHandler parentHandler, SchemaContainer entity) {
+    SchemaHandler(NamespaceAwareNestedTagHandler parentHandler, SchemaContainer entity) {
         super(parentHandler);
         this.entity = entity;
     }

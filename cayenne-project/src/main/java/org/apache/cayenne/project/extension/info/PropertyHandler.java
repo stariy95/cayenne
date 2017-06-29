@@ -68,7 +68,6 @@ class PropertyHandler extends NamespaceAwareNestedTagHandler {
                     if(oldValue != null) {
                         logger.warn("Duplicated property {} for object {}", name, parentObject);
                     }
-                    logger.debug("Loaded property for {}: {} = {}", parentObject, name, attributes.getValue("value"));
                 }
                 return true;
         }
@@ -106,11 +105,7 @@ class PropertyHandler extends NamespaceAwareNestedTagHandler {
                 return ((DbEntityHandler) parentParentHandler).getLastAttribute();
             } else if(parentParentHandler instanceof ObjEntityHandler) {
                 return ((ObjEntityHandler) parentParentHandler).getLastAttribute();
-            } else {
-                logger.debug("Parent class unknown: {} -> {}", parentParentHandler.getClass().getName(), parentHandler.getClass().getName());
             }
-        } else {
-            logger.debug("Parent class unknown: {}", parentHandler.getClass().getName());
         }
         return null;
     }

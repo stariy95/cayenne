@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
 /**
  * @since 4.1
  */
-public class ConfigHandler extends NamespaceAwareNestedTagHandler {
+class ConfigHandler extends NamespaceAwareNestedTagHandler {
 
     public static final String CONFIG_TAG = "config";
 
@@ -65,10 +65,10 @@ public class ConfigHandler extends NamespaceAwareNestedTagHandler {
     private ReverseEngineering configuration;
     private DataChannelMetaData metaData;
 
-    public ConfigHandler(NamespaceAwareNestedTagHandler parentHandler, String targetNamespace, DataChannelMetaData metaData) {
+    ConfigHandler(NamespaceAwareNestedTagHandler parentHandler, DataChannelMetaData metaData) {
         super(parentHandler);
         this.metaData = metaData;
-        this.targetNamespace = targetNamespace;
+        this.targetNamespace = DbImportExtension.NAMESPACE;
     }
 
     @Override

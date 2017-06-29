@@ -17,30 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.xml.extension.dbi;
+package org.apache.cayenne.dbsync.xml;
 
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
-import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.project.extension.LoaderDelegate;
-import org.apache.cayenne.project.extension.ProjectExtension;
-import org.apache.cayenne.project.extension.SaverDelegate;
 
 /**
  * @since 4.1
  */
-public class DbImportExtension implements ProjectExtension {
+class DbImportLoaderDelegate implements LoaderDelegate {
 
-    @Inject
     private DataChannelMetaData metaData;
 
-    @Override
-    public LoaderDelegate createLoaderDelegate() {
-        return new DbImportLoaderDelegate(metaData);
+    DbImportLoaderDelegate(DataChannelMetaData metaData) {
+        this.metaData = metaData;
     }
 
     @Override
-    public SaverDelegate createSaverDelegate() {
-        return new DbImportSaverDelegate(metaData);
+    public String getTargetNamespace() {
+        return DbImportExtension.NAMESPACE;
     }
 
+    @Override
+    public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
+        if(ConfigHandler.CONFIG_TAG.equals(tag)) {
+            return new ConfigHandler(parent, metaData);
+        }
+        return null;
+    }
 }

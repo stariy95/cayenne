@@ -29,7 +29,7 @@ import org.xml.sax.SAXException;
 /**
  * @since 4.1
  */
-public class CatalogHandler extends NamespaceAwareNestedTagHandler {
+class CatalogHandler extends NamespaceAwareNestedTagHandler {
 
     private static final String CATALOG_TAG = "catalog";
     private static final String CATALOG_NAME_TAG = "name";
@@ -45,7 +45,7 @@ public class CatalogHandler extends NamespaceAwareNestedTagHandler {
 
     private Catalog catalog;
 
-    public CatalogHandler(NamespaceAwareNestedTagHandler parentHandler, ReverseEngineering configuration) {
+    CatalogHandler(NamespaceAwareNestedTagHandler parentHandler, ReverseEngineering configuration) {
         super(parentHandler);
         this.configuration = configuration;
     }
