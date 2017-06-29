@@ -22,7 +22,6 @@ package org.apache.cayenne.configuration.xml;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.map.DataMap;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -46,8 +45,6 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
 
     public static final String TRUE = "true";
 
-    private DataChannelDescriptor descriptor;
-
     private DataMap dataMap;
 
     private Map<String, Object> mapProperties;
@@ -56,9 +53,8 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
         super(parentHandler);
     }
 
-    public DataMapHandler(SAXNestedTagHandler parentHandler, DataChannelDescriptor descriptor) {
+    public DataMapHandler(SAXNestedTagHandler parentHandler) {
         super(parentHandler, DataMap.SCHEMA_XSD);
-        this.descriptor = descriptor;
     }
 
     @Override
@@ -112,9 +108,6 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected void beforeScopeEnd() {
         dataMap.initWithProperties(mapProperties);
-        if(descriptor != null) {
-            descriptor.getDataMaps().add(dataMap);
-        }
         loaderContext.dataMapLoaded(dataMap);
     }
 

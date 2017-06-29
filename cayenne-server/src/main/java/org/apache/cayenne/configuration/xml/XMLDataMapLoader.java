@@ -40,13 +40,21 @@ public class XMLDataMapLoader implements DataMapLoader {
     @Inject
     protected HandlerFactory handlerFactory;
 
-    public DataMap load(Resource configurationResource) throws CayenneRuntimeException {
+    private DataMap map;
+
+    public synchronized DataMap load(Resource configurationResource) throws CayenneRuntimeException {
 
         final RootDataMapHandler rootHandler;
 
         try(InputStream in = configurationResource.getURL().openStream()) {
             XMLReader parser = Util.createXmlReader();
             LoaderContext loaderContext = new LoaderContext(parser, handlerFactory);
+            loaderContext.addDataMapListener(new DataMapLoaderListener() {
+                @Override
+                public void onDataMapLoaded(DataMap dataMap) {
+                    map = dataMap;
+                }
+            });
             rootHandler = new RootDataMapHandler(loaderContext);
 
             parser.setContentHandler(rootHandler);
@@ -56,7 +64,6 @@ public class XMLDataMapLoader implements DataMapLoader {
             throw new CayenneRuntimeException("Error loading configuration from %s", e, configurationResource.getURL());
         }
 
-        DataMap map = rootHandler.getDataMap();
         if(map == null) {
             throw new CayenneRuntimeException("Unable to load data map from %s", configurationResource.getURL());
         }

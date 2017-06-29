@@ -20,8 +20,6 @@
 package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.map.DataMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -30,10 +28,6 @@ import org.xml.sax.SAXException;
  * @since 4.1
  */
 public class RootDataMapHandler extends NamespaceAwareNestedTagHandler {
-
-    Logger logger = LoggerFactory.getLogger(RootDataMapHandler.class);
-
-    private DataMapHandler handler;
 
     public RootDataMapHandler(LoaderContext loaderContext) {
         super(loaderContext);
@@ -48,17 +42,10 @@ public class RootDataMapHandler extends NamespaceAwareNestedTagHandler {
     @Override
     protected ContentHandler createChildTagHandler(String namespaceURI, String localName, String qName, Attributes attributes) {
         if(targetNamespace.equals(namespaceURI) && "data-map".equals(localName)) {
-            return handler = new DataMapHandler(this);
+            return new DataMapHandler(this);
         }
 
         return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
     }
 
-    DataMap getDataMap() {
-        if(handler == null) {
-            logger.warn("No <data-map> tag found or it is in a wrong namespace");
-            return null;
-        }
-        return handler.getDataMap();
-    }
 }

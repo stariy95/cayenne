@@ -26,6 +26,7 @@ import org.apache.cayenne.configuration.DataChannelDescriptorLoader;
 import org.apache.cayenne.configuration.DataMapLoader;
 import org.apache.cayenne.di.AdhocObjectFactory;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.util.Util;
 import org.slf4j.LoggerFactory;
@@ -117,13 +118,19 @@ public class XMLDataChannelDescriptorLoader implements DataChannelDescriptorLoad
 
 		logger.info("Loading XML configuration resource from " + configurationURL);
 
-		DataChannelDescriptor descriptor = new DataChannelDescriptor();
+		final DataChannelDescriptor descriptor = new DataChannelDescriptor();
 		descriptor.setConfigurationSource(configurationResource);
 		descriptor.setName(nameMapper.configurationNodeName(DataChannelDescriptor.class, configurationResource));
 
 		try(InputStream in = configurationURL.openStream()) {
 			XMLReader parser = Util.createXmlReader();
 			LoaderContext loaderContext = new LoaderContext(parser, handlerFactory);
+			loaderContext.addDataMapListener(new DataMapLoaderListener() {
+				@Override
+				public void onDataMapLoaded(DataMap dataMap) {
+					descriptor.getDataMaps().add(dataMap);
+				}
+			});
 
 			DataChannelHandler rootHandler = new DataChannelHandler(this, descriptor, loaderContext);
 			parser.setContentHandler(rootHandler);

@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import java.util.Objects;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -41,7 +43,7 @@ abstract public class NamespaceAwareNestedTagHandler extends SAXNestedTagHandler
 
     public NamespaceAwareNestedTagHandler(SAXNestedTagHandler parentHandler, String targetNamespace) {
         super(parentHandler);
-        this.targetNamespace = targetNamespace;
+        this.targetNamespace = Objects.requireNonNull(targetNamespace);
     }
 
     public NamespaceAwareNestedTagHandler(NamespaceAwareNestedTagHandler parentHandler) {

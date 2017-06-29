@@ -21,6 +21,7 @@ package org.apache.cayenne.configuration.xml;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -31,12 +32,12 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * A superclass of nested tag handlers for parsing of XML documents with SAX.
  * This class is not namespace aware, i.e. tags like &lt;info:property/> and &lt;property/>
- * will be treated as same.
+ * will be treated as equal.
  * Use {@link NamespaceAwareNestedTagHandler} if you need to process namespaces.
  *
  * @see NamespaceAwareNestedTagHandler
  * @since 3.1
- * @since 4.1 reworked and moved to {@link org.apache.cayenne.configuration.xml} package
+ * @since 4.1 redesigned and moved to {@link org.apache.cayenne.configuration.xml} package
  */
 public class SAXNestedTagHandler extends DefaultHandler {
 
@@ -64,15 +65,15 @@ public class SAXNestedTagHandler extends DefaultHandler {
     protected Locator locator;
 
     public SAXNestedTagHandler(LoaderContext loaderContext) {
-        this.loaderContext = loaderContext;
-        locator = NOOP_LOCATOR;
+        this.loaderContext = Objects.requireNonNull(loaderContext);
+        this.locator = NOOP_LOCATOR;
     }
 
     public SAXNestedTagHandler(SAXNestedTagHandler parentHandler) {
-        this.parentHandler = parentHandler;
-        this.loaderContext = parentHandler.loaderContext;
-        locator = parentHandler.locator;
+        this.parentHandler = Objects.requireNonNull(parentHandler);
+        this.loaderContext = Objects.requireNonNull(parentHandler.loaderContext);
 
+        locator = parentHandler.locator;
         if (locator == null) {
             locator = NOOP_LOCATOR;
         }
