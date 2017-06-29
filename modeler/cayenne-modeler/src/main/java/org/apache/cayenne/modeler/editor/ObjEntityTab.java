@@ -108,8 +108,6 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
     protected JButton tableLabel;
     protected JCheckBox readOnly;
     protected JCheckBox optimisticLocking;
-    protected JCheckBox excludeSuperclassListeners;
-    protected JCheckBox excludeDefaultListeners;
 
     protected JComponent clientSeparator;
     protected JLabel isAbstractLabel;
@@ -185,8 +183,6 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
 
         readOnly = new JCheckBox();
         optimisticLocking = new JCheckBox();
-        excludeSuperclassListeners = new JCheckBox();
-        excludeDefaultListeners = new JCheckBox();
 
         // borderless clickable button used as a label
         tableLabel = new JButton("Table/View:");
@@ -241,9 +237,6 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
         builder.append("Qualifier:", qualifier.getComponent());
         builder.append("Read-Only:", readOnly);
         builder.append("Optimistic Locking:", optimisticLocking);
-        // add callback-related stuff
-        builder.append("Exclude superclass listeners:", excludeSuperclassListeners);
-        builder.append("Exclude default listeners:", excludeDefaultListeners);
 
         clientSeparator = builder.appendSeparator("Java Client");
         serverOnlyLabel = builder.append("Not for Client Use:", serverOnly);
@@ -392,30 +385,6 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
             }
         });
 
-        excludeSuperclassListeners.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                ObjEntity entity = mediator.getCurrentObjEntity();
-                if (entity != null) {
-                    entity.setExcludingSuperclassListeners(excludeSuperclassListeners
-                            .isSelected());
-                    mediator.fireObjEntityEvent(new EntityEvent(this, entity));
-                }
-            }
-        });
-
-        excludeDefaultListeners.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                ObjEntity entity = mediator.getCurrentObjEntity();
-                if (entity != null) {
-                    entity.setExcludingDefaultListeners(excludeDefaultListeners
-                            .isSelected());
-                    mediator.fireObjEntityEvent(new EntityEvent(this, entity));
-                }
-            }
-        });
-
         serverOnly.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -467,10 +436,7 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
         // TODO: fix inheritance - we should allow to select optimistic
         // lock if superclass is not already locked,
         // otherwise we must keep this checked in but not editable.
-        optimisticLocking
-                .setSelected(entity.getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC);
-        excludeSuperclassListeners.setSelected(entity.isExcludingSuperclassListeners());
-        excludeDefaultListeners.setSelected(entity.isExcludingDefaultListeners());
+        optimisticLocking.setSelected(entity.getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC);
 
         // init DbEntities
         EntityResolver resolver = mediator.getEntityResolver();

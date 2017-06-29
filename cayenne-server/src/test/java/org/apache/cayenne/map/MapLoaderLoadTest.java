@@ -40,6 +40,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * @deprecated {@link MapLoader} class deprecated since 4.1
+ */
+@Deprecated
 public class MapLoaderLoadTest {
 
     private InputSource getMapXml(String mapName) {

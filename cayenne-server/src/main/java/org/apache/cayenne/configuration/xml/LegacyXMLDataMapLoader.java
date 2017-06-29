@@ -30,8 +30,10 @@ import org.apache.cayenne.resource.Resource;
 import org.xml.sax.InputSource;
 
 /**
- * @since 4.1
+ * @deprecated since 4.1 kept only for bakward compatibility in some test and upgrade code
+ *             use {@link org.apache.cayenne.configuration.xml.XMLDataMapLoader} instead
  */
+@Deprecated
 public class LegacyXMLDataMapLoader implements DataMapLoader {
 
     public DataMap load(Resource configurationResource) throws CayenneRuntimeException {

@@ -36,7 +36,9 @@ import java.util.TreeMap;
 /**
  * Default MapLoader. Its responsibilities include reading DataMaps from XML
  * files and saving DataMap objects back to XML.
+ * @deprecated since 4.1, new loader used by {@link org.apache.cayenne.configuration.xml.XMLDataMapLoader}
  */
+@Deprecated
 public class MapLoader extends DefaultHandler {
 
 	// TODO: andrus, 7/17/2006 - move upgrade logic out of here
