@@ -154,12 +154,6 @@ public class ConfigHandler extends NamespaceAwareNestedTagHandler {
         }
     }
 
-    @Override
-    protected void beforeScopeEnd() {
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        System.out.println(this.configuration);
-    }
-
     private void createExcludeProcedure(String excludeProcedure) {
         if (excludeProcedure.trim().length() == 0) {
             return;

@@ -20,8 +20,11 @@
 package org.apache.cayenne.tools;
 
 import java.io.File;
+import java.net.URL;
 
 import groovy.lang.Closure;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
 import org.apache.cayenne.dbsync.DbSyncModule;
 import org.apache.cayenne.dbsync.reverse.configuration.ToolsModule;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportAction;
@@ -29,9 +32,12 @@ import org.apache.cayenne.dbsync.reverse.dbimport.DbImportConfiguration;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportConfigurationValidator;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportModule;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
+import org.apache.cayenne.dbsync.reverse.filters.FiltersConfig;
 import org.apache.cayenne.dbsync.reverse.filters.FiltersConfigBuilder;
 import org.apache.cayenne.di.DIBootstrap;
+import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Injector;
+import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.tools.model.DataSourceConfig;
 import org.apache.cayenne.tools.model.DbImportConfig;
 import org.apache.cayenne.util.Util;
@@ -79,8 +85,8 @@ public class DbImportTask extends BaseCayenneTask {
         DbImportConfiguration config = createConfig();
 
         Injector injector = DIBootstrap.createInjector(new DbSyncModule(), new ToolsModule(getLogger()), new DbImportModule());
-
         DbImportConfigurationValidator validator = new DbImportConfigurationValidator(reverseEngineering, config, injector);
+
         try {
             validator.validate();
         } catch (Exception ex) {
@@ -106,28 +112,29 @@ public class DbImportTask extends BaseCayenneTask {
     DbImportConfiguration createConfig() {
 
         reverseEngineering = config.toReverseEngineering();
-
         DbImportConfiguration config = new DbImportConfiguration();
+        if (reverseEngineering.getCatalogs().size() == 0 && reverseEngineering.isEmptyContainer()) {
+            config.setUseDataMapReverseEngineering(true);
+        }
         config.setAdapter(adapter);
-        config.setDefaultPackage(reverseEngineering.getDefaultPackage());
         config.setDriver(dataSource.getDriver());
-        config.setFiltersConfig(new FiltersConfigBuilder(reverseEngineering).build());
-        config.setForceDataMapCatalog(reverseEngineering.isForceDataMapCatalog());
-        config.setForceDataMapSchema(reverseEngineering.isForceDataMapSchema());
         config.setLogger(getLogger());
-        config.setMeaningfulPkTables(reverseEngineering.getMeaningfulPkTables());
-        config.setNamingStrategy(reverseEngineering.getNamingStrategy());
         config.setPassword(dataSource.getPassword());
+        config.setTargetDataMap(getDataMapFile());
+        config.setUrl(dataSource.getUrl());
+        config.setUsername(dataSource.getUsername());
         config.setSkipRelationshipsLoading(reverseEngineering.getSkipRelationshipsLoading());
         config.setSkipPrimaryKeyLoading(reverseEngineering.getSkipPrimaryKeyLoading());
         config.setStripFromTableNames(reverseEngineering.getStripFromTableNames());
         config.setTableTypes(reverseEngineering.getTableTypes());
-        config.setTargetDataMap(getDataMapFile());
-        config.setUrl(dataSource.getUrl());
-        config.setUsername(dataSource.getUsername());
+        config.setMeaningfulPkTables(reverseEngineering.getMeaningfulPkTables());
+        config.setNamingStrategy(reverseEngineering.getNamingStrategy());
+        config.setFiltersConfig(new FiltersConfigBuilder(reverseEngineering).build());
+        config.setForceDataMapCatalog(reverseEngineering.isForceDataMapCatalog());
+        config.setForceDataMapSchema(reverseEngineering.isForceDataMapSchema());
+        config.setDefaultPackage(reverseEngineering.getDefaultPackage());
         config.setUsePrimitives(reverseEngineering.isUsePrimitives());
         config.setUseJava7Types(reverseEngineering.isUseJava7Types());
-
         return config;
     }
 

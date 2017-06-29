@@ -27,10 +27,13 @@ import org.apache.cayenne.configuration.xml.DefaultDataChannelMetaData;
 import org.apache.cayenne.configuration.xml.DefaultHandlerFactory;
 import org.apache.cayenne.configuration.xml.HandlerFactory;
 import org.apache.cayenne.configuration.xml.XMLDataMapLoader;
+import org.apache.cayenne.dbsync.xml.extension.dbi.DbImportExtension;
 import org.apache.cayenne.di.Binder;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.project.FileProjectSaver;
+import org.apache.cayenne.project.ProjectModule;
 import org.apache.cayenne.project.ProjectSaver;
+import org.apache.cayenne.project.extension.ExtensionAwareHandlerFactory;
 
 /**
  * A DI module that bootstraps {@link DbImportAction}.
@@ -48,6 +51,8 @@ public class DbImportModule implements Module {
         binder.bind(DataMapLoader.class).to(XMLDataMapLoader.class);
         binder.bind(HandlerFactory.class).to(DefaultHandlerFactory.class);
         binder.bind(DataChannelMetaData.class).to(DefaultDataChannelMetaData.class);
+        binder.bind(HandlerFactory.class).to(ExtensionAwareHandlerFactory.class);
+        ProjectModule.contributeExtension(binder).add(DbImportExtension.class);
     }
 
 }
