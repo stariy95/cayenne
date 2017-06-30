@@ -30,6 +30,7 @@ import org.xml.sax.InputSource;
 /**
  * @since 3.1
  */
+@Deprecated
 class XMLDataMapLoader_V3_0_0_1 {
 
 	public DataMap load(Resource configurationResource) throws CayenneRuntimeException {

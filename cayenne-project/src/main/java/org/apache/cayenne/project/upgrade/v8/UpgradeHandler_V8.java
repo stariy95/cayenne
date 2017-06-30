@@ -54,7 +54,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-
+@Deprecated
 public class UpgradeHandler_V8 extends BaseUpgradeHandler {
 
     static final String PREVIOUS_VERSION = "7";

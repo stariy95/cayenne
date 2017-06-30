@@ -29,6 +29,7 @@ import org.apache.cayenne.resource.Resource;
  * 
  * @since 3.1
  */
+@Deprecated
 public class ProjectUpgrader_V6 implements ProjectUpgrader {
 
     @Inject

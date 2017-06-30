@@ -91,9 +91,6 @@ public class DefaultUpgradeService implements UpgradeService {
     TreeMap<String, UpgradeHandler> handlers = new TreeMap<>(VersionComparator.INSTANCE);
 
     @Inject
-    protected Injector injector;
-
-    @Inject
     private ProjectSaver projectSaver;
 
     @Inject
@@ -153,12 +150,12 @@ public class DefaultUpgradeService implements UpgradeService {
         return resource;
     }
 
-    private Resource upgradeDOM(Resource resource, List<UpgradeHandler> handlerList) {
+    Resource upgradeDOM(Resource resource, List<UpgradeHandler> handlerList) {
         // Load DOM for all resources
         Document projectDocument = readDocument(resource);
         UpgradeUnit projectUnit = new UpgradeUnit(resource, projectDocument);
 
-        List<Resource> dataMapResources = getAdditionalDatamapResources(resource, projectDocument);
+        List<Resource> dataMapResources = getAdditionalDatamapResources(projectUnit);
         List<UpgradeUnit> upgradeUnits = new ArrayList<>(dataMapResources.size());
         for (Resource dataMapResource : dataMapResources) {
             upgradeUnits.add(new UpgradeUnit(dataMapResource, readDocument(dataMapResource)));
@@ -181,7 +178,7 @@ public class DefaultUpgradeService implements UpgradeService {
         return projectUnit.getResource();
     }
 
-    private void upgradeModel(Resource resource, List<UpgradeHandler> handlerList) {
+    void upgradeModel(Resource resource, List<UpgradeHandler> handlerList) {
         // Load Model back from the update XML
         ConfigurationTree<DataChannelDescriptor> configurationTree = loader.load(resource);
 
@@ -195,16 +192,16 @@ public class DefaultUpgradeService implements UpgradeService {
         projectSaver.save(project);
     }
 
-    private List<Resource> getAdditionalDatamapResources(Resource resource, Document document) {
+    List<Resource> getAdditionalDatamapResources(UpgradeUnit upgradeUnit) {
         List<Resource> resources = new ArrayList<>();
         try {
             XPath xpath = XPathFactory.newInstance().newXPath();
-            NodeList nodes = (NodeList) xpath.evaluate("/domain/map/@name", document, XPathConstants.NODESET);
+            NodeList nodes = (NodeList) xpath.evaluate("/domain/map/@name", upgradeUnit.getDocument(), XPathConstants.NODESET);
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node mapNode = nodes.item(i);
                 // in version 3.0.0.1 and earlier map tag had attribute location,
                 // but it was always equal to data map name + ".map.xml"
-                Resource mapResource = resource.getRelativeResource(mapNode.getNodeValue() + ".map.xml");
+                Resource mapResource = upgradeUnit.getResource().getRelativeResource(mapNode.getNodeValue() + ".map.xml");
                 resources.add(mapResource);
             }
         } catch (Exception ex) {

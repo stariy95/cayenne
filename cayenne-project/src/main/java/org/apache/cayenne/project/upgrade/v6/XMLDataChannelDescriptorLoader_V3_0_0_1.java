@@ -47,6 +47,7 @@ import java.util.Map;
 /**
  * A loader of Cayenne projects descriptor for version "3.0.0.1".
  */
+@Deprecated
 class XMLDataChannelDescriptorLoader_V3_0_0_1 {
 
 	static final String DBCP_DATA_SOURCE_FACTORY = "org.apache.cayenne.configuration.server.DBCPDataSourceFactory";

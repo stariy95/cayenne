@@ -25,7 +25,9 @@ import org.apache.cayenne.resource.Resource;
  * A stateful helper object for analyzing the projects and performing upgrades.
  * 
  * @since 3.1
+ * @deprecated since 4.1
  */
+@Deprecated
 public interface UpgradeHandler {
 
     /**

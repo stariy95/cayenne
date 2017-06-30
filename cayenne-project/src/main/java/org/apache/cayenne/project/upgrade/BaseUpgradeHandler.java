@@ -48,9 +48,11 @@ import javax.xml.transform.stream.StreamResult;
  * A common superclass of UpgradeHandlers.
  * 
  * @since 3.1
+ * @deprecated since 4.1
  */
 // there's no guarantee this will survive the further version upgrades, but for
 // now all the code here seems like version-agnostic
+@Deprecated
 public abstract class BaseUpgradeHandler implements UpgradeHandler {
 
 	static final String UNKNOWN_VERSION = "0";

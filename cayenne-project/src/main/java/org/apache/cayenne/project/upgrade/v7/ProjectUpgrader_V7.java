@@ -28,6 +28,7 @@ import org.apache.cayenne.resource.Resource;
  * A ProjectUpgrader that handles project upgrades from version 3.0.0.1 and 6
  * to version 7
  */
+@Deprecated
 public class ProjectUpgrader_V7 implements ProjectUpgrader {
 
     @Inject

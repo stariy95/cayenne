@@ -24,7 +24,9 @@ import org.apache.cayenne.resource.Resource;
  * Defines API of an upgrade handler for Cayenne projects.
  * 
  * @since 3.1
+ * @deprecated since 4.1 in favour of {@link UpgradeService}
  */
+@Deprecated
 public interface ProjectUpgrader {
 
     /**

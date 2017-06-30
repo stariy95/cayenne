@@ -42,6 +42,7 @@ import org.xml.sax.XMLReader;
 /**
  * @since 3.1
  */
+@Deprecated
 class XMLDataSourceInfoLoader_V3_0_0_1 {
 
     private static Logger logger = LoggerFactory.getLogger(XMLDataSourceInfoLoader_V3_0_0_1.class);

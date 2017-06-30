@@ -68,7 +68,7 @@ public class UpgradeHandler_V9 implements UpgradeHandler {
                 if (file.exists()) {
                     file.delete();
                 }
-                document.getDocumentElement().removeChild(reNode);
+                dataMap.removeChild(reNode);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

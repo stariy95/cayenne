@@ -38,6 +38,7 @@ import org.apache.cayenne.resource.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 class UpgradeHandler_V7 extends BaseUpgradeHandler {
 
     static final String PREVIOUS_VERSION = "6";

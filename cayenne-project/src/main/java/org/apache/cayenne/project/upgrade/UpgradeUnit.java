@@ -31,7 +31,7 @@ public class UpgradeUnit {
 
     private Document document;
 
-    UpgradeUnit(Resource resource, Document document) {
+    public UpgradeUnit(Resource resource, Document document) {
         this.resource = resource;
         this.document = document;
     }

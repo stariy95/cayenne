@@ -38,6 +38,7 @@ import java.util.List;
 /**
  * @since 3.1
  */
+@Deprecated
 class UpgradeHandler_V6 extends BaseUpgradeHandler {
 
     static final String TO_VERSION = "6";
