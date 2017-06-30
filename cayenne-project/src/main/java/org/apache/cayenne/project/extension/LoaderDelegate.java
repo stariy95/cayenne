@@ -22,12 +22,24 @@ package org.apache.cayenne.project.extension;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 
 /**
+ * Delegate that handles loading process for extension specific parts of XML document.
+ *
  * @since 4.1
  */
 public interface LoaderDelegate {
 
+    /**
+     * @return target namespace that this extension is using
+     */
     String getTargetNamespace();
 
+    /**
+     * Create handler that will handle parsing process further.
+     *
+     * @param parent parent handler
+     * @param tag current tag that in question
+     * @return new handler that will process tag or null if there is no interest in tag
+     */
     NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag);
 
 }

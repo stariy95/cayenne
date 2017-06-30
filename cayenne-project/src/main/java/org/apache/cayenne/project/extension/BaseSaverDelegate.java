@@ -36,6 +36,8 @@ import org.apache.cayenne.map.QueryDescriptor;
 import org.apache.cayenne.util.XMLEncoder;
 
 /**
+ * Base saver delegate that handles common setters/getters, as well as provides empty stub for all methods.
+ *
  * @since 4.1
  */
 public class BaseSaverDelegate implements SaverDelegate {

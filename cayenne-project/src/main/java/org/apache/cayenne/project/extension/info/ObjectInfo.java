@@ -26,6 +26,8 @@ import java.util.TreeMap;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 
 /**
+ * Key-value storage for additional info associated with data map elements.
+ *
  * @since 4.1
  */
 public class ObjectInfo {
@@ -53,6 +55,13 @@ public class ObjectInfo {
         }
 
         return info.get(key);
+    }
+
+    /**
+     * Package private constructor, use {@link ObjectInfo#putToMetaData(DataChannelMetaData, Object, String, String)}
+     * to create instance.
+     */
+    ObjectInfo() {
     }
 
     public String put(String key, String value) {

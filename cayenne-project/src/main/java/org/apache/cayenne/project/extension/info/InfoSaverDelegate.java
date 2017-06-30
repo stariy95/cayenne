@@ -57,7 +57,7 @@ class InfoSaverDelegate extends BaseSaverDelegate {
         for(Map.Entry<String, String> entry : info.getSortedValues().entrySet()) {
             if(!Util.isEmptyString(entry.getValue())) {
                 encoder.start("info:property")
-                        .attribute("xmlns:info", InfoLoaderDelegate.NAMESPACE)
+                        .attribute("xmlns:info", InfoExtension.NAMESPACE)
                         .attribute("name", entry.getKey())
                         .attribute("value", entry.getValue())
                         .end();

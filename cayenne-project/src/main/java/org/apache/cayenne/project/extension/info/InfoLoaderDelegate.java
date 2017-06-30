@@ -21,16 +21,12 @@ package org.apache.cayenne.project.extension.info;
 
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
-import org.apache.cayenne.di.Inject;
-import org.apache.cayenne.project.Project;
 import org.apache.cayenne.project.extension.LoaderDelegate;
 
 /**
  * @since 4.1
  */
 class InfoLoaderDelegate implements LoaderDelegate {
-
-    static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
 
     private DataChannelMetaData metaData;
 
@@ -40,7 +36,7 @@ class InfoLoaderDelegate implements LoaderDelegate {
 
     @Override
     public String getTargetNamespace() {
-        return NAMESPACE;
+        return InfoExtension.NAMESPACE;
     }
 
     @Override

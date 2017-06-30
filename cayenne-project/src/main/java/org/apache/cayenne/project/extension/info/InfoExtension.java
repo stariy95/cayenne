@@ -21,14 +21,21 @@ package org.apache.cayenne.project.extension.info;
 
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.project.Project;
 import org.apache.cayenne.project.extension.LoaderDelegate;
 import org.apache.cayenne.project.extension.ProjectExtension;
 import org.apache.cayenne.project.extension.SaverDelegate;
 
 /**
+ * Extension that provides additional properties for project entities.
+ * It stores data in {@link ObjectInfo} associated with objects via {@link DataChannelMetaData}.
+ * Currently used by Modeler and cgen tools to provide user comments.
+ *
  * @since 4.1
  */
 public class InfoExtension implements ProjectExtension {
+
+    static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/info";
 
     @Inject
     private DataChannelMetaData metaData;

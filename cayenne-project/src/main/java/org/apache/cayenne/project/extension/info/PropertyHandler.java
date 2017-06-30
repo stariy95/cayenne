@@ -48,7 +48,7 @@ class PropertyHandler extends NamespaceAwareNestedTagHandler {
 
     PropertyHandler(NamespaceAwareNestedTagHandler parentHandler, DataChannelMetaData metaData) {
         super(parentHandler);
-        setTargetNamespace(InfoLoaderDelegate.NAMESPACE);
+        setTargetNamespace(InfoExtension.NAMESPACE);
         this.metaData = metaData;
     }
 

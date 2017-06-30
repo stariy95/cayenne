@@ -23,12 +23,21 @@ import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 
 /**
+ * Delegate that handles saving XML of extension.
+ * {@link BaseSaverDelegate} should be used as a base class for custom delegates.
+ *
  * @since 4.1
  */
 public interface SaverDelegate extends ConfigurationNodeVisitor<Void> {
 
+    /**
+     * @param encoder provided by caller
+     */
     void setXMLEncoder(XMLEncoder encoder);
 
+    /**
+     * @param parentDelegate parent delegate, provided by caller
+     */
     void setParentDelegate(SaverDelegate parentDelegate);
 
     SaverDelegate getParentDelegate();
