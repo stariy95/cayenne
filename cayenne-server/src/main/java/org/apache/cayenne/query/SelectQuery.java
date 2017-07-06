@@ -49,7 +49,7 @@ import java.util.Map;
  * other parameters that serve as runtime hints to Cayenne on how to optimize
  * the fetch and result processing.
  */
-public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery, XMLSerializable, Select<T> {
+public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery, Select<T> {
 
 	private static final long serialVersionUID = 5486418811888197559L;
 
@@ -432,74 +432,6 @@ public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery,
 		this.distinct = (distinct != null) ? "true".equalsIgnoreCase(distinct.toString()) : DISTINCT_DEFAULT;
 
 		metaData.initWithProperties(properties);
-	}
-
-	/**
-	 * Prints itself as XML to the provided PrintWriter.
-	 * 
-	 * @since 1.1
-	 */
-	@Override
-	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-		encoder.print("<query name=\"");
-		encoder.print(getName());
-		encoder.print("\" factory=\"");
-		encoder.print("org.apache.cayenne.map.SelectQueryBuilder");
-
-		String rootString = null;
-		String rootType = null;
-
-		if (root instanceof String) {
-			rootType = QueryDescriptor.OBJ_ENTITY_ROOT;
-			rootString = root.toString();
-		} else if (root instanceof ObjEntity) {
-			rootType = QueryDescriptor.OBJ_ENTITY_ROOT;
-			rootString = ((ObjEntity) root).getName();
-		} else if (root instanceof DbEntity) {
-			rootType = QueryDescriptor.DB_ENTITY_ROOT;
-			rootString = ((DbEntity) root).getName();
-		} else if (root instanceof Procedure) {
-			rootType = QueryDescriptor.PROCEDURE_ROOT;
-			rootString = ((Procedure) root).getName();
-		} else if (root instanceof Class<?>) {
-			rootType = QueryDescriptor.JAVA_CLASS_ROOT;
-			rootString = ((Class<?>) root).getName();
-		}
-
-		if (rootType != null) {
-			encoder.print("\" root=\"");
-			encoder.print(rootType);
-			encoder.print("\" root-name=\"");
-			encoder.print(rootString);
-		}
-
-		encoder.println("\">");
-
-		encoder.indent(1);
-
-		// print properties
-		if (distinct != DISTINCT_DEFAULT) {
-			encoder.property(DISTINCT_PROPERTY, distinct);
-		}
-
-		metaData.encodeAsXML(encoder, delegate);
-
-		// encode qualifier
-		if (qualifier != null) {
-			encoder.print("<qualifier>");
-			qualifier.encodeAsXML(encoder, delegate);
-			encoder.println("</qualifier>");
-		}
-
-		// encode orderings
-		if (orderings != null && !orderings.isEmpty()) {
-			for (Ordering ordering : orderings) {
-				ordering.encodeAsXML(encoder, delegate);
-			}
-		}
-
-		encoder.indent(-1);
-		encoder.println("</query>");
 	}
 
 	/**

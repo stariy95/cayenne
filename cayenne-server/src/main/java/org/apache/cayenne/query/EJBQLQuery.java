@@ -37,7 +37,7 @@ import java.util.Map;
  * 
  * @since 3.0
  */
-public class EJBQLQuery extends CacheableQuery implements XMLSerializable {
+public class EJBQLQuery extends CacheableQuery {
 
     @Deprecated
     protected String name;
@@ -223,29 +223,6 @@ public class EJBQLQuery extends CacheableQuery implements XMLSerializable {
 
     public void setFetchOffset(int fetchOffset) {
         metadata.setFetchOffset(fetchOffset);
-    }
-
-    @Override
-    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-        encoder.print("<query name=\"");
-        encoder.print(getName());
-        encoder.print("\" factory=\"");
-        encoder.print("org.apache.cayenne.map.EjbqlBuilder");
-
-        encoder.println("\">");
-
-        encoder.indent(1);
-
-        metadata.encodeAsXML(encoder, delegate);
-
-        if (ejbqlStatement != null) {
-            encoder.print("<ejbql><![CDATA[");
-            encoder.print(ejbqlStatement);
-            encoder.println("]]></ejbql>");
-        }
-
-        encoder.indent(-1);
-        encoder.println("</query>");
     }
 
     public void setEjbqlStatement(String text) {

@@ -504,7 +504,7 @@ public class PrefetchTreeNode implements Serializable, XMLSerializable {
 		public boolean startDisjointPrefetch(PrefetchTreeNode node) {
 			encoder.start("prefetch")
 					.attribute("type", "disjoint")
-					.cdata(node.getPath())
+					.cdata(node.getPath(), true)
 					.end();
 			return true;
 		}
@@ -512,7 +512,7 @@ public class PrefetchTreeNode implements Serializable, XMLSerializable {
 		public boolean startDisjointByIdPrefetch(PrefetchTreeNode node) {
 			encoder.start("prefetch")
 					.attribute("type", "disjointById")
-					.cdata(node.getPath())
+					.cdata(node.getPath(), true)
 					.end();
 			return true;
 		}
@@ -520,14 +520,14 @@ public class PrefetchTreeNode implements Serializable, XMLSerializable {
 		public boolean startJointPrefetch(PrefetchTreeNode node) {
 			encoder.start("prefetch")
 					.attribute("type", "joint")
-					.cdata(node.getPath())
+					.cdata(node.getPath(), true)
 					.end();
 			return true;
 		}
 
 		public boolean startUnknownPrefetch(PrefetchTreeNode node) {
 			encoder.start("prefetch")
-					.cdata(node.getPath())
+					.cdata(node.getPath(), true)
 					.end();
 			return true;
 		}

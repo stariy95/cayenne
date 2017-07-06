@@ -26,7 +26,7 @@ import org.apache.cayenne.resource.Resource;
  */
 public interface UpgradeService {
 
-    UpgradeType getUpgradeType(Resource resource);
+    UpgradeMetaData getUpgradeType(Resource resource);
 
     Resource upgradeProject(Resource resource);
 

@@ -42,7 +42,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
-import java.net.URL;
 import java.sql.Driver;
 
 /**
@@ -167,7 +166,7 @@ public class DbGeneratorMojo extends AbstractMojo {
 
     /** Loads and returns DataMap based on <code>map</code> attribute. */
     private DataMap loadDataMap(Injector injector) throws Exception {
-        return injector.getInstance(DataMapLoader.class).load(new URLResource(new URL(map.getCanonicalPath())));
+        return injector.getInstance(DataMapLoader.class).load(new URLResource(map.toURI().toURL()));
     }
 
     @Deprecated

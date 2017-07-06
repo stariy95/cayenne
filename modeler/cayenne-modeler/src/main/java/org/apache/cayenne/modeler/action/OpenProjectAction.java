@@ -24,6 +24,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -33,8 +36,8 @@ import org.apache.cayenne.modeler.CayenneModelerController;
 import org.apache.cayenne.modeler.dialog.ErrorDebugDialog;
 import org.apache.cayenne.project.Project;
 import org.apache.cayenne.project.ProjectLoader;
+import org.apache.cayenne.project.upgrade.UpgradeMetaData;
 import org.apache.cayenne.project.upgrade.UpgradeService;
-import org.apache.cayenne.project.upgrade.UpgradeType;
 import org.apache.cayenne.resource.Resource;
 import org.apache.cayenne.resource.URLResource;
 import org.apache.cayenne.swing.control.FileMenuItem;
@@ -44,6 +47,19 @@ import org.slf4j.LoggerFactory;
 public class OpenProjectAction extends ProjectAction {
 
     private static Logger logObj = LoggerFactory.getLogger(OpenProjectAction.class);
+
+    private static final Map<String, String> PROJECT_TO_MODELER_VERSION;
+    static {
+        // Correspondence between project version and latest Modeler version that can upgrade it.
+        // Modeler v4.1 can handle versions from 3.1 and 4.0 (including intermediate versions) modeler.
+        Map<String, String> map = new HashMap<>();
+        map.put("1.0",      "v3.0");
+        map.put("1.1",      "v3.0");
+        map.put("1.2",      "v3.0");
+        map.put("2.0",      "v3.0");
+        map.put("3.0.0.1",  "v3.1");
+        PROJECT_TO_MODELER_VERSION = Collections.unmodifiableMap(map);
+    }
 
     private ProjectOpener fileChooser;
 
@@ -122,12 +138,16 @@ public class OpenProjectAction extends ProjectAction {
             Resource rootSource = new URLResource(url);
 
             UpgradeService upgradeService = getApplication().getInjector().getInstance(UpgradeService.class);
-            UpgradeType upgradeType = upgradeService.getUpgradeType(rootSource);
-            switch (upgradeType) {
+            UpgradeMetaData metaData = upgradeService.getUpgradeType(rootSource);
+            switch (metaData.getUpgradeType()) {
                 case INTERMEDIATE_UPGRADE_NEEDED:
+                    String modelerVersion = PROJECT_TO_MODELER_VERSION.get(metaData.getProjectVersion());
+                    if(modelerVersion == null) {
+                        modelerVersion = "";
+                    }
                     JOptionPane.showMessageDialog(Application.getFrame(),
-                                    "Open the project in the older Modeler "
-                                            + "to do an intermediate upgrade\nbefore you can upgrade to latest version.",
+                                    "Open the project in the older Modeler " + modelerVersion
+                                            + " to do an intermediate upgrade\nbefore you can upgrade to latest version.",
                                     "Can't Upgrade Project", JOptionPane.ERROR_MESSAGE);
                     closeProject(false);
                     return;

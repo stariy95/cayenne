@@ -48,6 +48,8 @@ public class XMLDataChannelDescriptorLoader implements DataChannelDescriptorLoad
 
 	private static Logger logger = LoggerFactory.getLogger(XMLDataChannelDescriptorLoader.class);
 
+	static final String CURRENT_PROJECT_VERSION = "10";
+
 	/**
 	 * @deprecated the caller should use password resolving strategy instead of
 	 *             resolving the password on the spot. For one thing this can be

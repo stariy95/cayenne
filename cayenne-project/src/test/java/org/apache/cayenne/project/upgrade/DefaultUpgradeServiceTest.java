@@ -57,17 +57,17 @@ public class DefaultUpgradeServiceTest {
 
     @Test
     public void getUpgradeType() throws Exception {
-        UpgradeType type = upgradeService.getUpgradeType(getResourceForVersion("5"));
-        assertEquals(UpgradeType.INTERMEDIATE_UPGRADE_NEEDED, type);
+        UpgradeMetaData metaData = upgradeService.getUpgradeType(getResourceForVersion("5"));
+        assertEquals(UpgradeType.INTERMEDIATE_UPGRADE_NEEDED, metaData.getUpgradeType());
 
-        type = upgradeService.getUpgradeType(getResourceForVersion("6"));
-        assertEquals(UpgradeType.UPGRADE_NEEDED, type);
+        metaData = upgradeService.getUpgradeType(getResourceForVersion("6"));
+        assertEquals(UpgradeType.UPGRADE_NEEDED, metaData.getUpgradeType());
 
-        type = upgradeService.getUpgradeType(getResourceForVersion("10"));
-        assertEquals(UpgradeType.UPGRADE_NOT_NEEDED, type);
+        metaData = upgradeService.getUpgradeType(getResourceForVersion("10"));
+        assertEquals(UpgradeType.UPGRADE_NOT_NEEDED, metaData.getUpgradeType());
 
-        type = upgradeService.getUpgradeType(getResourceForVersion("11"));
-        assertEquals(UpgradeType.DOWNGRADE_NEEDED, type);
+        metaData = upgradeService.getUpgradeType(getResourceForVersion("11"));
+        assertEquals(UpgradeType.DOWNGRADE_NEEDED, metaData.getUpgradeType());
     }
 
     @Test

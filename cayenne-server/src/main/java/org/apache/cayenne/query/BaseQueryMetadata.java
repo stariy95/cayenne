@@ -42,7 +42,7 @@ import org.apache.cayenne.util.XMLSerializable;
  * 
  * @since 1.1
  */
-class BaseQueryMetadata implements QueryMetadata, XMLSerializable, Serializable {
+class BaseQueryMetadata implements QueryMetadata, Serializable {
 
 	private static final long serialVersionUID = 5129792493303459115L;
 
@@ -193,22 +193,6 @@ class BaseQueryMetadata implements QueryMetadata, XMLSerializable, Serializable 
 			}
 		} else if (cacheGroups instanceof String[]) {
 			this.cacheGroup = ((String[]) cacheGroups)[0];
-		}
-	}
-
-	@Override
-	public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-		encoder
-				.property(QueryMetadata.FETCHING_DATA_ROWS_PROPERTY, fetchingDataRows)
-				.property(QueryMetadata.FETCH_OFFSET_PROPERTY, fetchOffset)
-				.property(QueryMetadata.FETCH_LIMIT_PROPERTY, fetchLimit)
-				.property(QueryMetadata.PAGE_SIZE_PROPERTY, pageSize)
-				.property(QueryMetadata.STATEMENT_FETCH_SIZE_PROPERTY, statementFetchSize)
-				.property(QueryMetadata.CACHE_GROUPS_PROPERTY, cacheGroup)
-				.nested(prefetchTree, delegate);
-
-		if (cacheStrategy != null && QueryCacheStrategy.getDefaultStrategy() != cacheStrategy) {
-			encoder.property(QueryMetadata.CACHE_STRATEGY_PROPERTY, cacheStrategy.name());
 		}
 	}
 

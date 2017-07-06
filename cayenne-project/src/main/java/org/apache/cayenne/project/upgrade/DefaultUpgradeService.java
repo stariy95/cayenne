@@ -46,7 +46,6 @@ import org.apache.cayenne.configuration.ConfigurationTree;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
 import org.apache.cayenne.configuration.DataChannelDescriptorLoader;
 import org.apache.cayenne.di.Inject;
-import org.apache.cayenne.di.Injector;
 import org.apache.cayenne.project.Project;
 import org.apache.cayenne.project.ProjectSaver;
 import org.apache.cayenne.project.upgrade.handlers.UpgradeHandler;
@@ -103,22 +102,29 @@ public class DefaultUpgradeService implements UpgradeService {
     }
 
     @Override
-    public UpgradeType getUpgradeType(Resource resource) {
+    public UpgradeMetaData getUpgradeType(Resource resource) {
+        UpgradeMetaData metaData = new UpgradeMetaData();
+
         String version = loadProjectVersion(resource);
+        metaData.setProjectVersion(version);
+        metaData.setSupportedVersion(String.valueOf(Project.VERSION));
 
         int c1 = VersionComparator.INSTANCE.compare(version, MIN_SUPPORTED_VERSION);
         if (c1 < 0) {
-            return UpgradeType.INTERMEDIATE_UPGRADE_NEEDED;
+            metaData.setIntermediateUpgradeVersion(MIN_SUPPORTED_VERSION);
+            metaData.setUpgradeType(UpgradeType.INTERMEDIATE_UPGRADE_NEEDED);
+            return metaData;
         }
 
         int c2 = VersionComparator.INSTANCE.compare(String.valueOf(Project.VERSION), version);
         if (c2 < 0) {
-            return UpgradeType.DOWNGRADE_NEEDED;
+            metaData.setUpgradeType(UpgradeType.DOWNGRADE_NEEDED);
         } else if (c2 == 0) {
-            return UpgradeType.UPGRADE_NOT_NEEDED;
+            metaData.setUpgradeType(UpgradeType.UPGRADE_NOT_NEEDED);
         } else {
-            return UpgradeType.UPGRADE_NEEDED;
+            metaData.setUpgradeType(UpgradeType.UPGRADE_NEEDED);
         }
+        return metaData;
     }
 
     List<UpgradeHandler> getHandlersForVersion(String version) {
