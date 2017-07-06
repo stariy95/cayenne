@@ -22,6 +22,8 @@ package org.apache.cayenne.configuration.xml;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.cayenne.configuration.ConfigurationNode;
+
 /**
  * <p>
  *     Default implementation of {@link DataChannelMetaData} that stores data in Map.
@@ -35,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DefaultDataChannelMetaData implements DataChannelMetaData {
 
-    private Map<Object, Map<Class<?>, Object>> map;
+    private Map<ConfigurationNode, Map<Class<?>, Object>> map;
 
     public DefaultDataChannelMetaData() {
         map = new ConcurrentHashMap<>();
@@ -49,7 +51,7 @@ public class DefaultDataChannelMetaData implements DataChannelMetaData {
      * @param value data to store
      */
     @Override
-    public void add(Object key, Object value) {
+    public void add(ConfigurationNode key, Object value) {
         if(key == null || value == null) {
             return;
         }
@@ -73,7 +75,7 @@ public class DefaultDataChannelMetaData implements DataChannelMetaData {
      * @return value or {@code null}
      */
     @Override
-    public <T> T get(Object key, Class<T> type) {
+    public <T> T get(ConfigurationNode key, Class<T> type) {
         if(key == null || type == null) {
             return null;
         }

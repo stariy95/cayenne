@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.project.extension.info;
 
+import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.configuration.xml.DataMapHandler;
 import org.apache.cayenne.configuration.xml.DbEntityHandler;
@@ -56,7 +57,7 @@ class PropertyHandler extends NamespaceAwareNestedTagHandler {
     protected boolean processElement(String namespaceURI, String localName, Attributes attributes) throws SAXException {
         switch (localName) {
             case PROPERTY_TAG:
-                Object parentObject = getParentObject();
+                ConfigurationNode parentObject = getParentObject();
                 String name = attributes.getValue("name");
                 if(parentObject != null) {
                     ObjectInfo info = metaData.get(parentObject, ObjectInfo.class);
@@ -80,7 +81,7 @@ class PropertyHandler extends NamespaceAwareNestedTagHandler {
         return super.createChildTagHandler(namespaceURI, localName, qName, attributes);
     }
 
-    private Object getParentObject() {
+    private ConfigurationNode getParentObject() {
         if(parentHandler instanceof DataMapHandler) {
             return ((DataMapHandler) parentHandler).getDataMap();
         } else if(parentHandler instanceof DbEntityHandler) {

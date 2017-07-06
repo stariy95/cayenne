@@ -21,6 +21,7 @@ package org.apache.cayenne.gen;
 
 import org.apache.cayenne.CayenneException;
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DataMap;
@@ -618,7 +619,7 @@ public class ClassGenerationAction {
 			this.metaData = metaData;
 		}
 
-		public String javaDoc(Object object, boolean indent) {
+		public String javaDoc(ConfigurationNode object, boolean indent) {
 			String comment = comment(object);
 			if(Util.isEmptyString(comment)) {
 				return "";
@@ -630,7 +631,7 @@ public class ClassGenerationAction {
 				   prefix + " */";
 		}
 
-		public String comment(Object object) {
+		public String comment(ConfigurationNode object) {
 			if(metaData == null) {
 				return null;
 			}

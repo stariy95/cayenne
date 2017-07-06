@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 
 /**
@@ -38,7 +39,7 @@ public class ObjectInfo {
 
     private Map<String, String> infoMap = new HashMap<>();
 
-    public static void putToMetaData(DataChannelMetaData metaData, Object object, String key, String value) {
+    public static void putToMetaData(DataChannelMetaData metaData, ConfigurationNode object, String key, String value) {
         ObjectInfo info = metaData.get(object, ObjectInfo.class);
         if(info == null) {
             info = new ObjectInfo();
@@ -48,7 +49,7 @@ public class ObjectInfo {
         info.put(key, value);
     }
 
-    public static String getFromMetaData(DataChannelMetaData metaData, Object object, String key) {
+    public static String getFromMetaData(DataChannelMetaData metaData, ConfigurationNode object, String key) {
         ObjectInfo info = metaData.get(object, ObjectInfo.class);
         if(info == null) {
             return null;
@@ -58,7 +59,7 @@ public class ObjectInfo {
     }
 
     /**
-     * Package private constructor, use {@link ObjectInfo#putToMetaData(DataChannelMetaData, Object, String, String)}
+     * Package private constructor, use {@link ObjectInfo#putToMetaData(DataChannelMetaData, ConfigurationNode, String, String)}
      * to create instance.
      */
     ObjectInfo() {

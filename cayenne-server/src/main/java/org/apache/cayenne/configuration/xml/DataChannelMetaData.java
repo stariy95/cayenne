@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.configuration.xml;
 
+import org.apache.cayenne.configuration.ConfigurationNode;
+
 /**
  * <p>
  * Storage for all kind of meta data that is not required for runtime.
@@ -47,7 +49,7 @@ public interface DataChannelMetaData {
      * @param key object for which we want to store data
      * @param value data to store
      */
-    void add(Object key, Object value);
+    void add(ConfigurationNode key, Object value);
 
     /**
      *
@@ -58,5 +60,5 @@ public interface DataChannelMetaData {
      * @param <T> meta data type
      * @return value or {@code null} if no data available
      */
-    <T> T get(Object key, Class<T> type);
+    <T> T get(ConfigurationNode key, Class<T> type);
 }
