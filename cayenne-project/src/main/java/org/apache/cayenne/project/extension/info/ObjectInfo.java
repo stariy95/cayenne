@@ -35,8 +35,6 @@ public class ObjectInfo {
 
     public static final String COMMENT = "comment";
 
-    public static final String ANNOTATION = "annotation";
-
     private Map<String, String> infoMap = new HashMap<>();
 
     public static void putToMetaData(DataChannelMetaData metaData, ConfigurationNode object, String key, String value) {

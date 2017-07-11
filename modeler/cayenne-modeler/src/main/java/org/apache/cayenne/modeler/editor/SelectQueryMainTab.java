@@ -424,6 +424,7 @@ public class SelectQueryMainTab extends JPanel {
             return;
         }
         ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), query, ObjectInfo.COMMENT, text);
+        mediator.fireQueryEvent(new QueryEvent(this, query));
     }
 
     private String getQueryComment(QueryDescriptor queryDescriptor) {

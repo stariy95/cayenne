@@ -354,5 +354,6 @@ public class DbEntityTab extends JPanel implements ExistingSelectionProcessor, D
         }
 
         ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), entity, ObjectInfo.COMMENT, value);
+        mediator.fireDbEntityEvent(new EntityEvent(this, entity));
     }
 }

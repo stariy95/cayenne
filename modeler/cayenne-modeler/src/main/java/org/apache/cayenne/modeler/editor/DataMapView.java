@@ -678,6 +678,7 @@ public class DataMapView extends JPanel {
         }
 
         ObjectInfo.putToMetaData(eventController.getApplication().getMetaData(), dataMap, ObjectInfo.COMMENT, comment);
+        eventController.fireDataMapEvent(new DataMapEvent(this, dataMap));
     }
 
     private String getComment(DataMap dataMap) {

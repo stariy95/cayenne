@@ -210,6 +210,7 @@ public class ProcedureTab extends JPanel implements ProcedureDisplayListener, Ex
         }
 
         ObjectInfo.putToMetaData(eventController.getApplication().getMetaData(), procedure, ObjectInfo.COMMENT, comment);
+        eventController.fireProcedureEvent(new ProcedureEvent(this, procedure));
     }
 
     String getComment(Procedure procedure) {

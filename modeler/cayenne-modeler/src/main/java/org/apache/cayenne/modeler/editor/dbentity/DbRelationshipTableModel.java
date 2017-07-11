@@ -186,6 +186,7 @@ public class DbRelationshipTableModel extends CayenneTableModel<DbRelationship> 
             updateDependentObjRelationships(rel);
         } else if(column == COMMENTS) {
             setComment((String) aValue, rel);
+            mediator.fireDbRelationshipEvent(new RelationshipEvent(eventSource, rel, entity));
         }
         fireTableRowsUpdated(row, row);
     }

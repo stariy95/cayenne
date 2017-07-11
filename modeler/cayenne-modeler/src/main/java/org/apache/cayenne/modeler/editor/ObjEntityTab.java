@@ -675,6 +675,7 @@ public class ObjEntityTab extends JPanel implements ObjEntityDisplayListener,
         }
 
         ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), entity, ObjectInfo.COMMENT, value);
+        mediator.fireObjEntityEvent(new EntityEvent(this, entity));
     }
 
     private String getComment(ObjEntity entity) {

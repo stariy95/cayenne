@@ -201,6 +201,7 @@ public class EmbeddableTab extends JPanel implements EmbeddableDisplayListener {
         }
 
         ObjectInfo.putToMetaData(mediator.getApplication().getMetaData(), embeddable, ObjectInfo.COMMENT, comment);
+        mediator.fireEmbeddableEvent(new EmbeddableEvent(this, embeddable), mediator.getCurrentDataMap());
     }
 
     String getComment(Embeddable embeddable) {
