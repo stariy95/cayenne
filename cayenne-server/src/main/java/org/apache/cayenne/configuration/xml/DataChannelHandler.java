@@ -21,6 +21,7 @@ package org.apache.cayenne.configuration.xml;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.configuration.DataChannelDescriptor;
+import org.apache.cayenne.util.LocalizedStringsHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -58,7 +59,8 @@ final class DataChannelHandler extends SAXNestedTagHandler {
     protected void validateVersion(Attributes attributes) {
         String version = attributes.getValue("project-version");
         if(!XMLDataChannelDescriptorLoader.CURRENT_PROJECT_VERSION.equals(version)) {
-            throw new CayenneRuntimeException("Unsupported project version: %s, please upgrade project using Modeler.", version);
+            throw new CayenneRuntimeException("Unsupported project version: %s, please upgrade project using Modeler v%s",
+                    version, LocalizedStringsHandler.getString("cayenne.version"));
         }
     }
 
