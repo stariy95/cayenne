@@ -74,14 +74,4 @@ public abstract class SchemaContainer extends FilterContainer implements Cloneab
 
         return super.toString(res, prefix + "  ");
     }
-
-    /*@Override
-    public SchemaContainer clone() throws CloneNotSupportedException {
-        SchemaContainer schemaContainer = (SchemaContainer) super.clone();
-        Collection<Schema> schemas = new LinkedList<>(this.getSchemas());
-        for (Schema schema : schemas) {
-            schemaContainer.addSchema(schema.clone());
-        }
-        return schemaContainer;
-    }*/
 }

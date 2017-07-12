@@ -28,7 +28,7 @@ import java.io.Serializable;
 /**
  * @since 4.0.
  */
-public class ExcludeTable extends PatternParam implements XMLSerializable, Cloneable {
+public class ExcludeTable extends PatternParam implements XMLSerializable {
     public ExcludeTable() {
     }
 
@@ -43,10 +43,5 @@ public class ExcludeTable extends PatternParam implements XMLSerializable, Clone
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.simpleTag("dbi:excludeTable", this.getPattern());
-    }
-
-    @Override
-    public ExcludeTable clone() throws CloneNotSupportedException {
-        return (ExcludeTable) super.clone();
     }
 }

@@ -28,7 +28,7 @@ import java.io.Serializable;
 /**
  * @since 4.0.
  */
-public class Schema extends FilterContainer implements XMLSerializable, Cloneable {
+public class Schema extends FilterContainer implements XMLSerializable {
 
     public Schema() {
     }

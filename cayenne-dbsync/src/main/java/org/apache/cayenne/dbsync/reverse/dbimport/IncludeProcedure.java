@@ -28,7 +28,7 @@ import java.io.Serializable;
 /**
  * @since 4.0.
  */
-public class IncludeProcedure extends PatternParam implements XMLSerializable, Cloneable {
+public class IncludeProcedure extends PatternParam implements XMLSerializable {
     public IncludeProcedure() {
     }
 
@@ -43,10 +43,5 @@ public class IncludeProcedure extends PatternParam implements XMLSerializable, C
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.simpleTag("dbi:includeProcedure", this.getPattern());
-    }
-
-    @Override
-    public IncludeProcedure clone() throws CloneNotSupportedException {
-        return (IncludeProcedure) super.clone();
     }
 }

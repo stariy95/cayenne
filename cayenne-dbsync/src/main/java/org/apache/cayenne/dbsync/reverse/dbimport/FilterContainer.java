@@ -25,7 +25,7 @@ import java.util.LinkedList;
 /**
  * @since 4.0.
  */
-public abstract class FilterContainer implements Cloneable {
+public abstract class FilterContainer {
 
     private String name;
 
@@ -194,34 +194,4 @@ public abstract class FilterContainer implements Cloneable {
             }
         }
     }
-
-    /*@Override
-    public FilterContainer clone() throws CloneNotSupportedException {
-        FilterContainer filterContainer = (FilterContainer) super.clone();
-        Collection<IncludeTable> includeTables = new LinkedList<>(this.getIncludeTables());
-        Collection<ExcludeTable> excludeTables = new LinkedList<>(this.getExcludeTables());
-        Collection<IncludeColumn> includeColumns = new LinkedList<>(this.getIncludeColumns());
-        Collection<ExcludeColumn> excludeColumns = new LinkedList<>(this.getExcludeColumns());
-        Collection<IncludeProcedure> includeProcedures = new LinkedList<>(this.getIncludeProcedures());
-        Collection<ExcludeProcedure> excludeProcedures = new LinkedList<>(this.getExcludeProcedures());
-        for (IncludeTable includeTable : includeTables) {
-            filterContainer.addIncludeTable(includeTable.clone());
-        }
-        for (ExcludeTable excludeTable : excludeTables) {
-            filterContainer.addExcludeTable(excludeTable.clone());
-        }
-        for (IncludeColumn includeColumn : includeColumns) {
-            filterContainer.addIncludeColumn(includeColumn.clone());
-        }
-        for (ExcludeColumn excludeColumn : excludeColumns) {
-            filterContainer.addExcludeColumn(excludeColumn.clone());
-        }
-        for (IncludeProcedure includeProcedure : includeProcedures) {
-            filterContainer.addIncludeProcedure(includeProcedure.clone());
-        }
-        for (ExcludeProcedure excludeProcedure : excludeProcedures) {
-            filterContainer.addExcludeProcedure(excludeProcedure.clone());
-        }
-        return filterContainer;
-    }*/
 }

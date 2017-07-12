@@ -22,7 +22,7 @@ package org.apache.cayenne.dbsync.reverse.dbimport;
 /**
  * @since 4.0.
  */
-public class PatternParam implements Cloneable {
+public class PatternParam {
 
     private String pattern;
 
@@ -83,10 +83,5 @@ public class PatternParam implements Cloneable {
     public StringBuilder toString(StringBuilder res, String s) {
         res.append(s).append(getClass().getSimpleName()).append(": ").append(pattern).append("\n");
         return res;
-    }
-
-    @Override
-    public PatternParam clone() throws CloneNotSupportedException {
-        return (PatternParam) super.clone();
     }
 }

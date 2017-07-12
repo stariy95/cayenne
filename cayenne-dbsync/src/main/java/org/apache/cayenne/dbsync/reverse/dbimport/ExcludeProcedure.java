@@ -26,7 +26,7 @@ import org.apache.cayenne.util.XMLSerializable;
 /**
  * @since 4.0.
  */
-public class ExcludeProcedure extends PatternParam implements XMLSerializable, Cloneable {
+public class ExcludeProcedure extends PatternParam implements XMLSerializable {
     public ExcludeProcedure() {
     }
 

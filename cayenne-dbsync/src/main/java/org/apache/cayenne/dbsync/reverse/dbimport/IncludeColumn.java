@@ -28,7 +28,7 @@ import java.io.Serializable;
 /**
  * @since 4.0.
  */
-public class IncludeColumn extends PatternParam implements XMLSerializable, Cloneable {
+public class IncludeColumn extends PatternParam implements XMLSerializable {
     public IncludeColumn() {
     }
 
@@ -43,10 +43,5 @@ public class IncludeColumn extends PatternParam implements XMLSerializable, Clon
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.simpleTag("dbi:includeColumn", this.getPattern());
-    }
-
-    @Override
-    public IncludeColumn clone() throws CloneNotSupportedException {
-        return (IncludeColumn) super.clone();
     }
 }

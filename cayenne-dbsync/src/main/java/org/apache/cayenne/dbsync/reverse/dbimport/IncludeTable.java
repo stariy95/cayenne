@@ -30,7 +30,7 @@ import java.util.LinkedList;
 /**
  * @since 4.0.
  */
-public class IncludeTable extends PatternParam implements XMLSerializable, Cloneable {
+public class IncludeTable extends PatternParam implements XMLSerializable {
 
     private final Collection<IncludeColumn> includeColumns = new LinkedList<>();
 
@@ -104,19 +104,5 @@ public class IncludeTable extends PatternParam implements XMLSerializable, Clone
         }
 
         return res;
-    }
-
-    @Override
-    public IncludeTable clone() throws CloneNotSupportedException {
-        IncludeTable includeTable = (IncludeTable) super.clone();
-        Collection<IncludeColumn> includeColumns = new LinkedList<>(this.getIncludeColumns());
-        Collection<ExcludeColumn> excludeColumns = new LinkedList<>(this.getExcludeColumns());
-        for (IncludeColumn includeColumn : includeColumns) {
-            includeTable.addIncludeColumn(includeColumn.clone());
-        }
-        for (ExcludeColumn excludeColumn : excludeColumns) {
-            includeTable.addExcludeColumn(excludeColumn.clone());
-        }
-        return includeTable;
     }
 }

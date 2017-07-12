@@ -34,7 +34,7 @@ import java.util.LinkedList;
 /**
  * @since 4.0
  */
-public class ReverseEngineering extends SchemaContainer implements Serializable, XMLSerializable, Cloneable {
+public class ReverseEngineering extends SchemaContainer implements Serializable, XMLSerializable {
 
     private boolean skipRelationshipsLoading;
 
