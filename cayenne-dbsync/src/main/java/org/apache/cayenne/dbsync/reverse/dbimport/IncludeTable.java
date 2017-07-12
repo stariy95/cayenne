@@ -23,13 +23,14 @@ import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
 
 /**
  * @since 4.0.
  */
-public class IncludeTable extends PatternParam implements XMLSerializable {
+public class IncludeTable extends PatternParam implements XMLSerializable, Cloneable {
 
     private final Collection<IncludeColumn> includeColumns = new LinkedList<>();
 
@@ -40,6 +41,16 @@ public class IncludeTable extends PatternParam implements XMLSerializable {
 
     public IncludeTable(String pattern) {
         super(pattern);
+    }
+
+    public IncludeTable(IncludeTable original) {
+        super(original);
+        for (IncludeColumn includeColumn : original.getIncludeColumns()) {
+            this.addIncludeColumn(new IncludeColumn(includeColumn));
+        }
+        for (ExcludeColumn excludeColumn : original.getExcludeColumns()) {
+            this.addExcludeColumn(new ExcludeColumn(excludeColumn));
+        }
     }
 
     public Collection<IncludeColumn> getIncludeColumns() {
@@ -93,5 +104,19 @@ public class IncludeTable extends PatternParam implements XMLSerializable {
         }
 
         return res;
+    }
+
+    @Override
+    public IncludeTable clone() throws CloneNotSupportedException {
+        IncludeTable includeTable = (IncludeTable) super.clone();
+        Collection<IncludeColumn> includeColumns = new LinkedList<>(this.getIncludeColumns());
+        Collection<ExcludeColumn> excludeColumns = new LinkedList<>(this.getExcludeColumns());
+        for (IncludeColumn includeColumn : includeColumns) {
+            includeTable.addIncludeColumn(includeColumn.clone());
+        }
+        for (ExcludeColumn excludeColumn : excludeColumns) {
+            includeTable.addExcludeColumn(excludeColumn.clone());
+        }
+        return includeTable;
     }
 }

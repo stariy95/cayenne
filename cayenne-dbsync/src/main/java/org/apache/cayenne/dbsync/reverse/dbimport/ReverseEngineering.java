@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
+import com.sun.tools.javac.util.List;
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.dbsync.xml.DbImportExtension;
 import org.apache.cayenne.util.Util;
@@ -33,7 +34,7 @@ import java.util.LinkedList;
 /**
  * @since 4.0
  */
-public class ReverseEngineering extends SchemaContainer implements Serializable, XMLSerializable {
+public class ReverseEngineering extends SchemaContainer implements Serializable, XMLSerializable, Cloneable {
 
     private boolean skipRelationshipsLoading;
 
@@ -126,6 +127,25 @@ public class ReverseEngineering extends SchemaContainer implements Serializable,
     public ReverseEngineering() {
     }
 
+    public ReverseEngineering(ReverseEngineering original) {
+        super(original);
+        this.setDefaultPackage(original.getDefaultPackage());
+        this.setStripFromTableNames(original.getStripFromTableNames());
+        this.setNamingStrategy(original.getNamingStrategy());
+        this.setMeaningfulPkTables(original.getMeaningfulPkTables());
+        this.setSkipPrimaryKeyLoading(original.getSkipPrimaryKeyLoading());
+        this.setSkipRelationshipsLoading(original.getSkipRelationshipsLoading());
+        this.setForceDataMapSchema(original.isForceDataMapSchema());
+        this.setForceDataMapCatalog(original.isForceDataMapCatalog());
+        this.setUseJava7Types(original.isUseJava7Types());
+        this.setUsePrimitives(original.isUsePrimitives());
+        this.setTableTypes(List.from(original.getTableTypes()));
+        this.setName(original.getName());
+        for (Catalog catalog : original.getCatalogs()) {
+            this.addCatalog(new Catalog(catalog));
+        }
+    }
+
     public Boolean getSkipRelationshipsLoading() {
         return skipRelationshipsLoading;
     }
@@ -183,14 +203,27 @@ public class ReverseEngineering extends SchemaContainer implements Serializable,
             }
         }
 
+        super.toString(res, "  ");
+
         if (skipRelationshipsLoading) {
-            res.append("\n        Skip Relationships Loading");
+            res.append("\n  Skip Relationships Loading");
         }
         if (skipPrimaryKeyLoading) {
-            res.append("\n        Skip PrimaryKey Loading");
+            res.append("\n  Skip PrimaryKey Loading");
         }
-
-        return super.toString(res, "  ").toString();
+        if (forceDataMapCatalog) {
+            res.append("\n  Force DataMap catalog");
+        }
+        if (forceDataMapSchema) {
+            res.append("\n  Force DataMap schema");
+        }
+        if (usePrimitives) {
+            res.append("\n  Use primitives");
+        }
+        if (useJava7Types) {
+            res.append("\n  Use Java 7 types");
+        }
+        return res.toString();
     }
 
     public String getDefaultPackage() {
@@ -277,7 +310,7 @@ public class ReverseEngineering extends SchemaContainer implements Serializable,
                 .simpleTag("dbi:namingStrategy", this.getNamingStrategy())
                 .simpleTag("dbi:skipPrimaryKeyLoading", this.getSkipPrimaryKeyLoading().toString())
                 .simpleTag("dbi:skipRelationshipsLoading", this.getSkipRelationshipsLoading().toString())
-                .simpleTag("dbi:stripFromTableNames", this.getNamingStrategy())
+                .simpleTag("dbi:stripFromTableNames", this.getStripFromTableNames())
                 .simpleTag("dbi:useJava7Types", Boolean.toString(this.isUseJava7Types()))
                 .simpleTag("dbi:usePrimitives", Boolean.toString(this.isUsePrimitives()))
                 .end();

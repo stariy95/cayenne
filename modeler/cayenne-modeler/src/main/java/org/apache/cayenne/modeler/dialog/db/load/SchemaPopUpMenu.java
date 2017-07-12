@@ -17,36 +17,17 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.reverse.dbimport;
-
-import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.util.XMLEncoder;
-import org.apache.cayenne.util.XMLSerializable;
-
-import java.io.Serializable;
+package org.apache.cayenne.modeler.dialog.db.load;
 
 /**
- * @since 4.0.
+ * @since 4.1
  */
-public class ExcludeColumn extends PatternParam implements XMLSerializable, Cloneable {
-    public ExcludeColumn() {
-    }
+public class SchemaPopUpMenu extends RootPopUpMenu {
 
-    public ExcludeColumn(String pattern) {
-        super(pattern);
-    }
-
-    public ExcludeColumn(ExcludeColumn original) {
-        super(original);
-    }
-
-    @Override
-    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-        encoder.simpleTag("dbi:excludeColumn", this.getPattern());
-    }
-
-    @Override
-    public ExcludeColumn clone() throws CloneNotSupportedException {
-        return (ExcludeColumn) super.clone();
+    public SchemaPopUpMenu() {
+        rename.setVisible(true);
+        delete.setVisible(true);
+        addSchema.setVisible(false);
+        addCatalog.setVisible(false);
     }
 }

@@ -23,10 +23,12 @@ import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
 
+import java.io.Serializable;
+
 /**
  * @since 4.0.
  */
-public class IncludeProcedure extends PatternParam implements XMLSerializable {
+public class IncludeProcedure extends PatternParam implements XMLSerializable, Cloneable {
     public IncludeProcedure() {
     }
 
@@ -34,8 +36,17 @@ public class IncludeProcedure extends PatternParam implements XMLSerializable {
         super(pattern);
     }
 
+    public IncludeProcedure(IncludeProcedure original) {
+        super(original);
+    }
+
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.simpleTag("dbi:includeProcedure", this.getPattern());
+    }
+
+    @Override
+    public IncludeProcedure clone() throws CloneNotSupportedException {
+        return (IncludeProcedure) super.clone();
     }
 }

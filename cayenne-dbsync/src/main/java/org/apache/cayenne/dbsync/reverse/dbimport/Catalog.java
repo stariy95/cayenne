@@ -26,13 +26,17 @@ import org.apache.cayenne.util.XMLSerializable;
 /**
  * @since 4.0.
  */
-public class Catalog extends SchemaContainer implements XMLSerializable {
+public class Catalog extends SchemaContainer implements XMLSerializable, Cloneable {
 
     public Catalog() {
     }
 
     public Catalog(String name) {
         setName(name);
+    }
+
+    public Catalog(Catalog original) {
+        super(original);
     }
 
     @Override

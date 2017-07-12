@@ -25,7 +25,7 @@ import java.util.LinkedList;
 /**
  * @since 4.0
  */
-public abstract class SchemaContainer extends FilterContainer {
+public abstract class SchemaContainer extends FilterContainer implements Cloneable {
 
     private final Collection<Schema> schemaCollection = new LinkedList<>();
 
@@ -35,6 +35,16 @@ public abstract class SchemaContainer extends FilterContainer {
 
     public void addSchema(Schema schema) {
         this.schemaCollection.add(schema);
+    }
+
+    public SchemaContainer(){
+    }
+
+    public SchemaContainer(SchemaContainer original) {
+        super(original);
+        for (Schema schema : original.getSchemas()) {
+            this.addSchema(new Schema(schema));
+        }
     }
 
     @Override
@@ -64,4 +74,14 @@ public abstract class SchemaContainer extends FilterContainer {
 
         return super.toString(res, prefix + "  ");
     }
+
+    /*@Override
+    public SchemaContainer clone() throws CloneNotSupportedException {
+        SchemaContainer schemaContainer = (SchemaContainer) super.clone();
+        Collection<Schema> schemas = new LinkedList<>(this.getSchemas());
+        for (Schema schema : schemas) {
+            schemaContainer.addSchema(schema.clone());
+        }
+        return schemaContainer;
+    }*/
 }

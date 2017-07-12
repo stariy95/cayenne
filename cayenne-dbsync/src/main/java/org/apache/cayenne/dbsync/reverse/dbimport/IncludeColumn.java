@@ -23,10 +23,12 @@ import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
 
+import java.io.Serializable;
+
 /**
  * @since 4.0.
  */
-public class IncludeColumn extends PatternParam implements XMLSerializable {
+public class IncludeColumn extends PatternParam implements XMLSerializable, Cloneable {
     public IncludeColumn() {
     }
 
@@ -34,8 +36,17 @@ public class IncludeColumn extends PatternParam implements XMLSerializable {
         super(pattern);
     }
 
+    public IncludeColumn(IncludeColumn original) {
+        super(original);
+    }
+
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.simpleTag("dbi:includeColumn", this.getPattern());
+    }
+
+    @Override
+    public IncludeColumn clone() throws CloneNotSupportedException {
+        return (IncludeColumn) super.clone();
     }
 }

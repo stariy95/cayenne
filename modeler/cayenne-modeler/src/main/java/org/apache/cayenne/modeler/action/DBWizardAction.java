@@ -51,7 +51,7 @@ public abstract class DBWizardAction<T extends DbActionOptionsDialog> extends Ca
         return connectWizard;
     }
 
-    protected abstract T createDialog(Collection<String> catalogs, Collection<String> schemas, String currentCatalog, String currentSchema);
+    protected abstract T createDialog(Collection<String> catalogs, Collection<String> schemas, String currentCatalog, String currentSchema, int command);
 
     protected T loaderOptionDialog(DataSourceWizard connectWizard) {
 
@@ -82,9 +82,13 @@ public abstract class DBWizardAction<T extends DbActionOptionsDialog> extends Ca
             return null;
         }
 
-        final T optionsDialog = createDialog(catalogs, schemas, currentCatalog, currentSchema);
+        T optionsDialog = createDialog(catalogs, schemas, currentCatalog, currentSchema, DbActionOptionsDialog.SELECT);
         optionsDialog.setVisible(true);
-        if (optionsDialog.getChoice() == DbActionOptionsDialog.SELECT) {
+        if (optionsDialog.getChoice() == DbActionOptionsDialog.ADVANCED_CONFIG) {
+            optionsDialog = createDialog(catalogs, schemas, currentCatalog, currentSchema, DbActionOptionsDialog.ADVANCED_CONFIG);
+            optionsDialog.setVisible(true);
+        }
+        if (optionsDialog.getChoice() != DbActionOptionsDialog.CANCEL) {
             return optionsDialog;
         }
 

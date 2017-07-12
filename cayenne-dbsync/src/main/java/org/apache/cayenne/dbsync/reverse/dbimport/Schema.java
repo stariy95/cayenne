@@ -23,16 +23,22 @@ import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
 
+import java.io.Serializable;
+
 /**
  * @since 4.0.
  */
-public class Schema extends FilterContainer implements XMLSerializable {
+public class Schema extends FilterContainer implements XMLSerializable, Cloneable {
 
     public Schema() {
     }
 
     public Schema(String name) {
         setName(name);
+    }
+
+    public Schema(Schema original) {
+        super(original);
     }
 
     @Override

@@ -24,12 +24,11 @@ import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.dialog.db.DbActionOptionsDialog;
 import org.apache.cayenne.modeler.util.NameGeneratorPreferences;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.Vector;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 /**
  * Dialog for selecting database reverse-engineering parameters.
@@ -39,6 +38,7 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
     private JTextField tableIncludePatternField;
     private JTextField tableExcludePatternField;
     private JTextField meaningfulPk;
+    private JButton advancedConfigurations;
     private JTextField procNamePatternField;
     private JComboBox<String> strategyCombo;
     protected String strategy;
@@ -70,6 +70,16 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
         meaningfulPk.setToolTipText("<html>Regular expression to filter tables with meaningful primary keys.<br>" +
                 "Multiple expressions divided by comma can be used.<br>" +
                 "Example: <b>^table1|^table2|^prefix.*|table_name</b></html>");
+
+        advancedConfigurations = new JButton("Advanced configuration");
+        buttons.add(advancedConfigurations);
+        advancedConfigurations.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                openAdvancedConfigDialog();
+            }
+        });
+
         strategyCombo = new JComboBox<>();
         strategyCombo.setEditable(true);
 
@@ -89,6 +99,11 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
         builder.append("Tables with Meaningful PK Pattern:", meaningfulPk);
         builder.append("Use Java primitive types:", usePrimitives);
         builder.append("Use old java.util.Date type:", useJava7Types);
+    }
+
+    private void openAdvancedConfigDialog() {
+        choice = ADVANCED_CONFIG;
+        setVisible(false);
     }
 
     protected void initFromModel(Collection<String> catalogs, Collection<String> schemas, String currentCatalog, String currentSchema) {

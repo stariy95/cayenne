@@ -27,14 +27,20 @@ import javax.swing.SwingUtilities;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.dbsync.naming.NameBuilder;
+import org.apache.cayenne.dbsync.reverse.dbimport.Catalog;
 import org.apache.cayenne.dbsync.reverse.dbimport.DbImportConfiguration;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
+import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
 import org.apache.cayenne.dbsync.reverse.dbload.DbLoaderDelegate;
 import org.apache.cayenne.dbsync.reverse.filters.FiltersConfigBuilder;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.dialog.db.DataSourceWizard;
+import org.apache.cayenne.modeler.dialog.db.DbActionOptionsDialog;
 import org.apache.cayenne.modeler.pref.DBConnectionInfo;
 import org.apache.cayenne.util.Util;
 import org.slf4j.Logger;
@@ -97,6 +103,10 @@ public class DbLoaderContext {
         return stopping;
     }
 
+    public DataChannelMetaData getMetaData() {
+        return metaData;
+    }
+
     void setStopping(boolean stopping) {
         this.stopping = stopping;
     }
@@ -109,34 +119,46 @@ public class DbLoaderContext {
         this.loadStatusNote = loadStatusNote;
     }
 
-    public boolean buildConfig(DataSourceWizard connectionWizard, DbLoaderOptionsDialog dialog) {
+    public boolean buildConfig(DataSourceWizard connectionWizard, DbActionOptionsDialog dialog) {
         if (dialog == null || connectionWizard == null) {
             return false;
         }
-
-        // Build filters
-        /*ReverseEngineering reverseEngineering = new ReverseEngineering();
-        reverseEngineering.addCatalog(new Catalog(dialog.getSelectedCatalog()));
-        reverseEngineering.addSchema(new Schema(dialog.getSelectedSchema()));
-        reverseEngineering.addIncludeTable(new IncludeTable(dialog.getTableIncludePattern()));
-        if(dialog.getTableExcludePattern() != null) {
-            reverseEngineering.addExcludeTable(new ExcludeTable(dialog.getTableExcludePattern()));
+        if (dialog instanceof AdvancedConfigurationDialog) {
+            return buildConfig(connectionWizard, (AdvancedConfigurationDialog) dialog);
+        } else if (dialog instanceof DbLoaderOptionsDialog) {
+            return buildConfig(connectionWizard, (DbLoaderOptionsDialog) dialog);
         }
-        // Add here auto_pk_support table
-        reverseEngineering.addExcludeTable(new ExcludeTable("auto_pk_support|AUTO_PK_SUPPORT"));
-        reverseEngineering.addIncludeProcedure(new IncludeProcedure(dialog.getProcedureNamePattern()));*/
 
-        ReverseEngineering reverseEngineering = metaData.get(getProjectController().getCurrentDataMap(), ReverseEngineering.class);
+        return false;
+    }
+
+    // Fill config from metadata reverseEngineering
+    private void fillConfig(DbImportConfiguration config, DataSourceWizard connectionWizard,
+                             ReverseEngineering reverseEngineering) {
         FiltersConfigBuilder filtersConfigBuilder = new FiltersConfigBuilder(reverseEngineering);
+        DBConnectionInfo connectionInfo = connectionWizard.getConnectionInfo();
+        config.setAdapter(connectionWizard.getAdapter().getClass().getName());
+        config.setUsername(connectionInfo.getUserName());
+        config.setPassword(connectionInfo.getPassword());
+        config.setDriver(connectionInfo.getJdbcDriver());
+        config.setUrl(connectionInfo.getUrl());
+        config.getDbLoaderConfig().setFiltersConfig(filtersConfigBuilder.build());
+        config.setMeaningfulPkTables(reverseEngineering.getMeaningfulPkTables());
+        config.setNamingStrategy(reverseEngineering.getNamingStrategy());
+        config.setDefaultPackage(reverseEngineering.getDefaultPackage());
+        config.setStripFromTableNames(reverseEngineering.getStripFromTableNames());
+        config.setUsePrimitives(reverseEngineering.isUsePrimitives());
+        config.setUseJava7Types(reverseEngineering.isUseJava7Types());
+        config.setForceDataMapCatalog(reverseEngineering.isForceDataMapCatalog());
+        config.setForceDataMapSchema(reverseEngineering.isForceDataMapSchema());
+        config.setSkipRelationshipsLoading(reverseEngineering.getSkipRelationshipsLoading());
+        config.setSkipPrimaryKeyLoading(reverseEngineering.getSkipPrimaryKeyLoading());
+    }
 
-        DbImportConfiguration config = new DbImportConfiguration() {
-            @Override
-            public DbLoaderDelegate createLoaderDelegate() {
-                return new LoaderDelegate(DbLoaderContext.this);
-            }
-        };
-
-        // Build config
+    // Fill config from DbLoaderOptionDialog
+    private void fillConfig(DbImportConfiguration config, DataSourceWizard connectionWizard, ReverseEngineering reverseEngineering,
+                            DbLoaderOptionsDialog dialog) {
+        FiltersConfigBuilder filtersConfigBuilder = new FiltersConfigBuilder(reverseEngineering);
         DBConnectionInfo connectionInfo = connectionWizard.getConnectionInfo();
         config.setAdapter(connectionWizard.getAdapter().getClass().getName());
         config.setUsername(connectionInfo.getUserName());
@@ -148,6 +170,71 @@ public class DbLoaderContext {
         config.setNamingStrategy(dialog.getNamingStrategy());
         config.setUsePrimitives(dialog.isUsePrimitives());
         config.setUseJava7Types(dialog.isUseJava7Typed());
+    }
+
+    private void fillReverseEngineeringFromDialog(ReverseEngineering reverseEngineering, AdvancedConfigurationDialog dialog) {
+        reverseEngineering.setUsePrimitives(dialog.isUsePrimitives());
+        reverseEngineering.setUseJava7Types(dialog.isUseJava7Typed());
+        reverseEngineering.setForceDataMapCatalog(dialog.isForceDataMapCatalog());
+        reverseEngineering.setForceDataMapSchema(dialog.isForceDataMapSchema());
+        reverseEngineering.setSkipRelationshipsLoading(dialog.isSkipRelationshipsLoading());
+        reverseEngineering.setSkipPrimaryKeyLoading(dialog.isSkipPrimaryKeyLoading());
+        reverseEngineering.setMeaningfulPkTables(dialog.getMeaningfulPk());
+        reverseEngineering.setNamingStrategy(dialog.getNamingStrategy());
+        reverseEngineering.setStripFromTableNames(dialog.getStripFromTableNames());
+        reverseEngineering.setDefaultPackage(dialog.getDefaultPackage());
+    }
+
+    private boolean buildConfig(DataSourceWizard connectionWizard, AdvancedConfigurationDialog dialog) {
+        if (dialog == null || connectionWizard == null) {
+            return false;
+        }
+
+        // Build reverse engineering from metadata and dialog values
+        ReverseEngineering metaReverseEngineering = metaData.get(getProjectController().getCurrentDataMap(), ReverseEngineering.class);
+        fillReverseEngineeringFromDialog(metaReverseEngineering, dialog);
+        // Create copy of metaReverseEngineering
+        ReverseEngineering reverseEngineering = new ReverseEngineering(metaReverseEngineering);
+
+        DbImportConfiguration config = new DbImportConfiguration() {
+            @Override
+            public DbLoaderDelegate createLoaderDelegate() {
+                return new LoaderDelegate(DbLoaderContext.this);
+            }
+        };
+        fillConfig(config, connectionWizard, reverseEngineering);
+        setConfig(config);
+
+        prepareDataMap();
+
+        return true;
+    }
+
+    private boolean buildConfig(DataSourceWizard connectionWizard, DbLoaderOptionsDialog dialog) {
+        if (dialog == null || connectionWizard == null) {
+            return false;
+        }
+
+        // Build filters
+        ReverseEngineering reverseEngineering = new ReverseEngineering();
+        reverseEngineering.addCatalog(new Catalog(dialog.getSelectedCatalog()));
+        reverseEngineering.addSchema(new Schema(dialog.getSelectedSchema()));
+        reverseEngineering.addIncludeTable(new IncludeTable(dialog.getTableIncludePattern()));
+        if(dialog.getTableExcludePattern() != null) {
+            reverseEngineering.addExcludeTable(new ExcludeTable(dialog.getTableExcludePattern()));
+        }
+        // Add here auto_pk_support table
+        reverseEngineering.addExcludeTable(new ExcludeTable("auto_pk_support|AUTO_PK_SUPPORT"));
+        reverseEngineering.addIncludeProcedure(new IncludeProcedure(dialog.getProcedureNamePattern()));
+
+
+        DbImportConfiguration config = new DbImportConfiguration() {
+            @Override
+            public DbLoaderDelegate createLoaderDelegate() {
+                return new LoaderDelegate(DbLoaderContext.this);
+            }
+        };
+        fillConfig(config, connectionWizard, reverseEngineering, dialog);
         setConfig(config);
 
         prepareDataMap();

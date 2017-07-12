@@ -23,10 +23,12 @@ import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.util.XMLEncoder;
 import org.apache.cayenne.util.XMLSerializable;
 
+import java.io.Serializable;
+
 /**
  * @since 4.0.
  */
-public class ExcludeTable extends PatternParam implements XMLSerializable {
+public class ExcludeTable extends PatternParam implements XMLSerializable, Cloneable {
     public ExcludeTable() {
     }
 
@@ -34,8 +36,17 @@ public class ExcludeTable extends PatternParam implements XMLSerializable {
         super(pattern);
     }
 
+    public ExcludeTable(ExcludeTable original) {
+        super(original);
+    }
+
     @Override
     public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
         encoder.simpleTag("dbi:excludeTable", this.getPattern());
+    }
+
+    @Override
+    public ExcludeTable clone() throws CloneNotSupportedException {
+        return (ExcludeTable) super.clone();
     }
 }
