@@ -128,7 +128,7 @@ public class AdvancedConfigurationDialog extends DbActionOptionsDialog {
         }
     }
 
-    private void printChilds(FilterContainer container, DbImportTreeNode parent) {
+    private void printChildren(FilterContainer container, DbImportTreeNode parent) {
         printIncludeTables(container.getIncludeTables(), parent);
         printParams(container.getExcludeTables(), parent);
         printParams(container.getIncludeColumns(), parent);
@@ -140,7 +140,7 @@ public class AdvancedConfigurationDialog extends DbActionOptionsDialog {
     private void printSchemas(Collection<Schema> schemas, DbImportTreeNode parent) {
         for (Schema schema : schemas) {
             DbImportTreeNode node = new DbImportTreeNode(schema);
-            printChilds(schema, node);
+            printChildren(schema, node);
             parent.add(node);
         }
     }
@@ -149,7 +149,7 @@ public class AdvancedConfigurationDialog extends DbActionOptionsDialog {
         for (Catalog catalog : catalogs) {
             DbImportTreeNode node = new DbImportTreeNode(catalog);
             printSchemas(catalog.getSchemas(), node);
-            printChilds(catalog, node);
+            printChildren(catalog, node);
             parent.add(node);
         }
     }

@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
-import com.sun.tools.javac.util.List;
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.dbsync.xml.DbImportExtension;
 import org.apache.cayenne.util.Util;
@@ -139,7 +138,7 @@ public class ReverseEngineering extends SchemaContainer implements Serializable,
         this.setForceDataMapCatalog(original.isForceDataMapCatalog());
         this.setUseJava7Types(original.isUseJava7Types());
         this.setUsePrimitives(original.isUsePrimitives());
-        this.setTableTypes(List.from(original.getTableTypes()));
+        this.setTableTypes(Arrays.asList(original.getTableTypes()));
         this.setName(original.getName());
         for (Catalog catalog : original.getCatalogs()) {
             this.addCatalog(new Catalog(catalog));
