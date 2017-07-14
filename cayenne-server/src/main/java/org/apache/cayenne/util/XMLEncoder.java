@@ -74,163 +74,17 @@ public class XMLEncoder {
         this.projectVersion = projectVersion;
     }
 
-    /**
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public PrintWriter getPrintWriter() {
-        return out;
-    }
-
-    public void indent(int i) {
+    public XMLEncoder indent(int i) {
         indentTimes += i;
         if (indentTimes < 0) {
             indentTimes = 0;
         }
-    }
-
-    /**
-     * Utility method that prints all map values, assuming they are XMLSerializable
-     * objects.
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void print(Map<?, ? extends XMLSerializable> map, ConfigurationNodeVisitor delegate) {
-        for (XMLSerializable value : map.values()) {
-            value.encodeAsXML(this, delegate);
-        }
-    }
-
-    /**
-     * Utility method that prints all map values, assuming they are XMLSerializable
-     * objects.
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void print(Collection<? extends XMLSerializable> c, ConfigurationNodeVisitor delegate) {
-        for (XMLSerializable value : c) {
-            value.encodeAsXML(this, delegate);
-        }
-    }
-
-    /**
-     * Inserts an optional project version attribute in the output. If the project version
-     * is not initialized for encoder, will do nothing.
-     * 
-     * @since 3.1
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void printProjectVersion() {
-        printAttribute("project-version", projectVersion);
-    }
-
-    /**
-     * Prints an XML attribute. The value is trimmed (so leading and following spaces are
-     * lost) and then encoded to be a proper XML attribute value. E.g. "&amp;" becomes
-     * "&amp;amp;", etc.
-     * 
-     * @since 3.1
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void printAttribute(String name, String value) {
-        printAttribute(name, value, false);
-    }
-
-    /**
-     * @since 3.1
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void printlnAttribute(String name, String value) {
-        printAttribute(name, value, true);
-    }
-
-    private void printAttribute(String name, String value, boolean lineBreak) {
-        if (value == null) {
-            return;
-        }
-
-        value = value.trim();
-        if (value.length() == 0) {
-            return;
-        }
-
-        value = Util.encodeXmlAttribute(value);
-
-        printIndent();
-        out.print(' ');
-        out.print(name);
-        out.print("=\"");
-        out.print(value);
-        out.print("\"");
-        if (lineBreak) {
-            println();
-        }
-    }
-
-    /**
-     * Prints a common XML element - property with name and value.
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void printProperty(String name, String value) {
-        if(value == null) {
-            return;
-        }
-        start("property");
-        attribute("name", name);
-        attribute("value", value);
-        end();
-        indentLine = true;
-    }
-
-    /**
-     * Prints a common XML element - property with name and value.
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void printProperty(String name, boolean b) {
-        printProperty(name, String.valueOf(b));
-    }
-
-    /**
-     * Prints a common XML element - property with name and value.
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public void printProperty(String name, int i) {
-        printProperty(name, String.valueOf(i));
+        return this;
     }
 
     public XMLEncoder print(String text) {
         printIndent();
         out.print(text);
-        return this;
-    }
-
-    /**
-     * @deprecated since 4.1
-     */
-    @Deprecated
-    public XMLEncoder print(char c) {
-        printIndent();
-        out.print(c);
-        return this;
-    }
-
-    @Deprecated
-    public XMLEncoder print(boolean b) {
-        printIndent();
-        out.print(b);
-        return this;
-    }
-
-    @Deprecated
-    public XMLEncoder print(int i) {
-        printIndent();
-        out.print(i);
         return this;
     }
 
@@ -244,22 +98,13 @@ public class XMLEncoder {
     /**
      * @since 3.1
      */
-    @Deprecated
     public XMLEncoder println() {
         out.println();
         indentLine = true;
         return this;
     }
 
-    @Deprecated
-    public XMLEncoder println(char c) {
-        printIndent();
-        out.println(c);
-        indentLine = true;
-        return this;
-    }
-
-    private void printIndent() {
+    private XMLEncoder printIndent() {
         if (indentLine) {
             indentLine = false;
 
@@ -269,6 +114,7 @@ public class XMLEncoder {
                 }
             }
         }
+        return this;
     }
 
     /**
@@ -278,12 +124,10 @@ public class XMLEncoder {
      */
     public XMLEncoder start(String tag) {
         if(tagOpened) {
-            println('>');
-            indent(1);
+            println(">").indent(1);
         }
-        printIndent();
-        out.print('<');
-        out.print(tag);
+        printIndent().print("<").print(tag);
+
         lastTagLevel = ++currentTagLevel;
         tagOpened = true;
         openTags.push(tag);
@@ -303,13 +147,10 @@ public class XMLEncoder {
             println("/>");
         } else {
             if(!cdata) {
-                indent(-1);
-                printIndent();
+                indent(-1).printIndent();
             }
             cdata = false;
-            out.print("</");
-            out.print(openTags.pop());
-            println('>');
+            print("</").print(openTags.pop()).println(">");
         }
         return this;
     }
@@ -341,10 +182,9 @@ public class XMLEncoder {
         }
 
         if(newLine) {
-            indent(1);
-            println();
+            indent(1).println().printIndent();
         }
-        printAttribute(name, value, false);
+        print(" ").print(name).print("=\"").print(Util.encodeXmlAttribute(value)).print("\"");
         if(newLine) {
             indent(-1);
         }
@@ -394,7 +234,7 @@ public class XMLEncoder {
      */
     public XMLEncoder cdata(String data, boolean escape) {
         if(tagOpened) {
-            print('>');
+            print(">");
         }
         cdata = true;
         if(escape) {
@@ -431,21 +271,25 @@ public class XMLEncoder {
         if(collection == null) {
             return this;
         }
-        this.print(collection, delegate);
+        for (XMLSerializable value : collection) {
+            value.encodeAsXML(this, delegate);
+        }
         return this;
     }
 
     /**
      * @since 4.1
-     * @param collection of nested objects
+     * @param map of nested objects
      * @param delegate visitor
      * @return this
      */
-    public XMLEncoder nested(Map<?, ? extends XMLSerializable> collection, ConfigurationNodeVisitor delegate) {
-        if(collection == null) {
+    public XMLEncoder nested(Map<?, ? extends XMLSerializable> map, ConfigurationNodeVisitor delegate) {
+        if(map == null) {
             return this;
         }
-        this.print(collection, delegate);
+        for (XMLSerializable value : map.values()) {
+            value.encodeAsXML(this, delegate);
+        }
         return this;
     }
 
