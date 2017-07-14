@@ -25,7 +25,7 @@
 ##    stringUtils - class for string "helper" functions: See org.apache.cayenne.gen.StringUtils
 ##    entityUtils - class for entity "helper" functions: See org.apache.cayenne.gen.EntityUtils
 ##    importUtils - class for import statement management: See org.apache.cayenne.gen.ImportUtils
-##    infoUtils - class for meta information retrieval, e.g. importUtils.comment(object) method will return
+##    infoUtils - class for meta information retrieval, e.g. importUtils.rawComment(object) method will return
 ##                comments for object if any
 ##    superClassName
 ##    superPackageName
@@ -105,7 +105,7 @@ public abstract class ${superClassName} extends ${baseClassName} {
     }
 #end
 
-${infoUtils.javaDoc($attr, true)}
+${infoUtils.javaDoc($attr, true)}##
 #if ( $importUtils.isBoolean(${attr.Type}) )
 	public boolean is${stringUtils.capitalized($attr.Name)}() {
         Boolean value = (Boolean)readProperty("${attr.Name}");
@@ -136,7 +136,7 @@ ${infoUtils.javaDoc($attr, true)}
     }
 #end
 
-${infoUtils.javaDoc($rel, true)}
+${infoUtils.javaDoc($rel, true)}##
     @SuppressWarnings("unchecked")
 #if ( ${rel.CollectionType} == "java.util.Map")
     public $importUtils.formatJavaType($rel.CollectionType)<$importUtils.formatJavaType($entityUtils.getMapKeyType($rel)), $importUtils.formatJavaType($rel.TargetEntity.ClassName)> get${stringUtils.capitalized($rel.Name)}() {
@@ -154,7 +154,7 @@ ${infoUtils.javaDoc($rel, true)}
     }
 #end
 
-${infoUtils.javaDoc($rel, true)}
+${infoUtils.javaDoc($rel, true)}##
     public $importUtils.formatJavaType(${rel.TargetEntity.ClassName}) get${stringUtils.capitalized($rel.Name)}() {
         return ($importUtils.formatJavaType(${rel.TargetEntity.ClassName}))readProperty("${rel.Name}");
     }

@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.gen;
 
-import org.apache.cayenne.CayenneException;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
@@ -524,16 +523,9 @@ public class ClassGenerationAction {
 
 	/**
 	 * Adds entities to the internal entity list.
+	 * @param entities to add
 	 */
-
-	/**
-	 *
-	 * @param entities
-	 * @throws CayenneException
-	 *
-	 * @since 4.0 throws exception
-	 */
-	public void addEntities(Collection<ObjEntity> entities) throws CayenneException {
+	public void addEntities(Collection<ObjEntity> entities) {
 		if (artifactsGenerationMode == ArtifactsGenerationMode.ENTITY
 				|| artifactsGenerationMode == ArtifactsGenerationMode.ALL) {
 			if (entities != null) {
@@ -620,7 +612,7 @@ public class ClassGenerationAction {
 		}
 
 		public String javaDoc(ConfigurationNode object, boolean indent) {
-			String comment = comment(object);
+			String comment = rawComment(object);
 			if(Util.isEmptyString(comment)) {
 				return "";
 			}
@@ -628,10 +620,10 @@ public class ClassGenerationAction {
 			String prefix = indent ? "\t" : "";
 			return prefix + "/**\n" +
 				   prefix + " * " + comment + "\n" +
-				   prefix + " */";
+				   prefix + " */\n";
 		}
 
-		public String comment(ConfigurationNode object) {
+		public String rawComment(ConfigurationNode object) {
 			if(metaData == null) {
 				return null;
 			}
