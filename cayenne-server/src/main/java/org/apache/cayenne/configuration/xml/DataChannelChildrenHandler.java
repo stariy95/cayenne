@@ -81,7 +81,7 @@ final class DataChannelChildrenHandler extends SAXNestedTagHandler {
         }
 
         if (DATA_MAP_TAG.equals(localName)) {
-            return new DataMapHandler(this);
+            return new DataMapHandler(loaderContext);
         }
 
         return super.createChildTagHandler(namespaceURI, localName, name, attributes);

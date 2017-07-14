@@ -53,8 +53,9 @@ public class DataMapHandler extends NamespaceAwareNestedTagHandler {
         super(parentHandler);
     }
 
-    public DataMapHandler(SAXNestedTagHandler parentHandler) {
-        super(parentHandler, DataMap.SCHEMA_XSD);
+    public DataMapHandler(LoaderContext loaderContext) {
+        super(loaderContext);
+        setTargetNamespace(DataMap.SCHEMA_XSD);
     }
 
     @Override
