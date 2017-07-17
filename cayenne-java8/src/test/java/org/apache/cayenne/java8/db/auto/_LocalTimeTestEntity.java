@@ -23,7 +23,6 @@ public abstract class _LocalTimeTestEntity extends CayenneDataObject {
         writeProperty("time", time);
     }
 
-
     public LocalTime getTime() {
         return (LocalTime)readProperty("time");
     }
