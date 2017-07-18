@@ -22,7 +22,6 @@ public abstract class _Table4 extends CayenneDataObject {
         writeProperty("plainInt", plainInt);
     }
 
-
     public int getPlainInt() {
         Object value = readProperty("plainInt");
         return (value != null) ? (Integer) value : 0;
@@ -31,7 +30,6 @@ public abstract class _Table4 extends CayenneDataObject {
     public void setPlainString(String plainString) {
         writeProperty("plainString", plainString);
     }
-
 
     public String getPlainString() {
         return (String)readProperty("plainString");

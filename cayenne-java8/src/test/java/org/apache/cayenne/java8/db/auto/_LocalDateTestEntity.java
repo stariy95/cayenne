@@ -23,7 +23,6 @@ public abstract class _LocalDateTestEntity extends CayenneDataObject {
         writeProperty("date", date);
     }
 
-
     public LocalDate getDate() {
         return (LocalDate)readProperty("date");
     }
