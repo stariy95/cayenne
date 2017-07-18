@@ -37,6 +37,7 @@ import org.apache.cayenne.modeler.dialog.db.DbActionOptionsDialog;
 import org.apache.cayenne.modeler.util.NameGeneratorPreferences;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
@@ -46,6 +47,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
@@ -70,6 +73,7 @@ public class AdvancedConfigurationDialog extends DbActionOptionsDialog {
     private JCheckBox forceDataMapSchema;
     private JCheckBox usePrimitives;
     private JCheckBox useJava7Types;
+    private JButton returnButton;
     protected String strategy;
 
     private ReverseEngineering reverseEngineering;
@@ -211,6 +215,15 @@ public class AdvancedConfigurationDialog extends DbActionOptionsDialog {
         strategyCombo = new JComboBox<>();
         strategyCombo.setEditable(true);
 
+        returnButton = new JButton("Simple configurations");
+        returnButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                returnToSimpleConfig();
+            }
+        });
+        buttons.add(returnButton);
+
         meaningfulPk = new JTextField();
         meaningfulPk.setToolTipText("<html>Regular expression to filter tables with meaningful primary keys.<br>" +
                 "Multiple expressions divided by comma can be used.<br>" +
@@ -260,6 +273,11 @@ public class AdvancedConfigurationDialog extends DbActionOptionsDialog {
         builder.append("Force datamap schema:", forceDataMapSchema);
         builder.append("Use Java primitive types:", usePrimitives);
         builder.append("Use old java.util.Date type:", useJava7Types);
+    }
+
+    private void returnToSimpleConfig() {
+        choice = SIMPLE_CONFIG;
+        setVisible(false);
     }
 
     @Override

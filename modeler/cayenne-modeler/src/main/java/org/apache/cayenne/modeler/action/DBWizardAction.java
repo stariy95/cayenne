@@ -25,12 +25,15 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JOptionPane;
-	
+
+import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbload.DbLoader;
+import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.dialog.db.DataSourceWizard;
 import org.apache.cayenne.modeler.dialog.db.DbActionOptionsDialog;
 import org.apache.cayenne.modeler.util.CayenneAction;
+import org.apache.cayenne.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,18 +84,50 @@ public abstract class DBWizardAction<T extends DbActionOptionsDialog> extends Ca
                     JOptionPane.ERROR_MESSAGE);
             return null;
         }
-
-        T optionsDialog = createDialog(catalogs, schemas, currentCatalog, currentSchema, DbActionOptionsDialog.SELECT);
+        T optionsDialog = getStartDialog(catalogs, schemas, currentCatalog, currentSchema);
         optionsDialog.setVisible(true);
-        if (optionsDialog.getChoice() == DbActionOptionsDialog.ADVANCED_CONFIG) {
-            optionsDialog = createDialog(catalogs, schemas, currentCatalog, currentSchema, DbActionOptionsDialog.ADVANCED_CONFIG);
+        while ((optionsDialog.getChoice() != DbActionOptionsDialog.CANCEL)) {
+            if (optionsDialog.getChoice() == DbActionOptionsDialog.SELECT) {
+                return optionsDialog;
+            }
+            optionsDialog = createDialog(catalogs, schemas, currentCatalog, currentSchema, optionsDialog.getChoice());
             optionsDialog.setVisible(true);
-        }
-        if (optionsDialog.getChoice() != DbActionOptionsDialog.CANCEL) {
-            return optionsDialog;
         }
 
         return null;
+    }
+
+    private boolean isSimpleConfig(ReverseEngineering reverseEngineering) {
+        if (reverseEngineering == null) {
+            return true;
+        }
+        if ((reverseEngineering.getCatalogs().size() > 0) || (reverseEngineering.getSchemas().size() > 0)
+            || (reverseEngineering.getIncludeTables().size() > 1) || (reverseEngineering.getExcludeTables().size() > 1)
+            || (reverseEngineering.getIncludeColumns().size() > 0) || (reverseEngineering.getExcludeColumns().size() > 0)
+            || (reverseEngineering.getIncludeProcedures().size() > 1)
+            || (reverseEngineering.getExcludeProcedures().size() > 0)) {
+            return false;
+        }
+        if ((reverseEngineering.getSkipPrimaryKeyLoading()) || (reverseEngineering.getSkipRelationshipsLoading())
+            || (reverseEngineering.isForceDataMapCatalog()) || (reverseEngineering.isForceDataMapSchema())) {
+            return false;
+        }
+
+        if (!Util.isEmptyString(reverseEngineering.getDefaultPackage())
+            || (!Util.isEmptyString(reverseEngineering.getStripFromTableNames()))) {
+            return false;
+        }
+        return true;
+    }
+
+    private T getStartDialog(List<String> catalogs, List<String> schemas, String currentCatalog, String currentSchema) {
+        DataMap dataMap = getProjectController().getCurrentDataMap();
+        ReverseEngineering reverseEngineering = application.getMetaData().get(dataMap, ReverseEngineering.class);
+        int command = DbActionOptionsDialog.SIMPLE_CONFIG;
+        if (!isSimpleConfig(reverseEngineering)) {
+            command = DbActionOptionsDialog.ADVANCED_CONFIG;
+        }
+        return createDialog(catalogs, schemas, currentCatalog, currentSchema, command);
     }
 
     @SuppressWarnings("unchecked")

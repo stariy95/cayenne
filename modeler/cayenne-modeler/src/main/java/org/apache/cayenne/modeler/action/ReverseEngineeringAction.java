@@ -101,7 +101,10 @@ public class ReverseEngineeringAction extends DBWizardAction<DbActionOptionsDial
 
     private DbLoaderOptionsDialog getOptionsDialog(Collection<String> catalogs, Collection<String> schemas,
                                                    String currentCatalog, String currentSchema) {
-        return new DbLoaderOptionsDialog(catalogs, schemas, currentCatalog, currentSchema);
+        final DbLoaderContext context = new DbLoaderContext(application.getMetaData());
+        context.setProjectController(getProjectController());
+
+        return new DbLoaderOptionsDialog(catalogs, schemas, currentCatalog, currentSchema, context);
     }
 
     private AdvancedConfigurationDialog getAdvancedConfigurationDialog(Collection<String> catalogs, Collection<String> schemas,
@@ -116,7 +119,7 @@ public class ReverseEngineeringAction extends DBWizardAction<DbActionOptionsDial
     protected DbActionOptionsDialog createDialog(Collection<String> catalogs, Collection<String> schemas,
                                                  String currentCatalog, String currentSchema, int command) {
         switch (command) {
-            case DbActionOptionsDialog.SELECT:
+            case DbActionOptionsDialog.SIMPLE_CONFIG:
                 return getOptionsDialog(catalogs, schemas, currentCatalog, currentSchema);
             case DbActionOptionsDialog.ADVANCED_CONFIG:
                 return getAdvancedConfigurationDialog(catalogs, schemas, currentCatalog, currentSchema);
