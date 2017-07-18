@@ -210,23 +210,62 @@ public class DbLoaderContext {
         return true;
     }
 
+    // Clear dbimport metadata
+    private void resetReverseEngineering(ReverseEngineering reverseEngineering) {
+        reverseEngineering.clearIncludeTables();
+        reverseEngineering.clearExcludeTables();
+        reverseEngineering.clearIncludeColumns();
+        reverseEngineering.clearExcludeColumns();
+        reverseEngineering.clearIncludeProcedures();
+        reverseEngineering.clearExcludeProcedures();
+        reverseEngineering.getCatalogs().clear();
+        reverseEngineering.getSchemas().clear();
+        reverseEngineering.setDefaultPackage("");
+        reverseEngineering.setStripFromTableNames("");
+        reverseEngineering.setForceDataMapCatalog(false);
+        reverseEngineering.setForceDataMapSchema(false);
+        reverseEngineering.setSkipRelationshipsLoading(false);
+        reverseEngineering.setSkipPrimaryKeyLoading(false);
+    }
+
     private boolean buildConfig(DataSourceWizard connectionWizard, DbLoaderOptionsDialog dialog) {
         if (dialog == null || connectionWizard == null) {
             return false;
         }
+        ReverseEngineering metaReverseEngineering = metaData.get(getProjectController().getCurrentDataMap(), ReverseEngineering.class);
+        if (metaReverseEngineering == null) {
+            metaReverseEngineering = new ReverseEngineering();
+        }
+        resetReverseEngineering(metaReverseEngineering);
 
         // Build filters
         ReverseEngineering reverseEngineering = new ReverseEngineering();
+        IncludeTable includeTable = new IncludeTable(dialog.getTableIncludePattern());
+        ExcludeTable excludeTable = new ExcludeTable(dialog.getTableExcludePattern());
+        IncludeProcedure includeProcedure = new IncludeProcedure(dialog.getProcedureNamePattern());
+        // Add patterns in metadata if text fields is not empty
+        if (dialog.getTableIncludePattern() != null) {
+            metaReverseEngineering.addIncludeTable(new IncludeTable(includeTable));
+        }
+        if (dialog.getTableExcludePattern() != null) {
+            metaReverseEngineering.addExcludeTable(new ExcludeTable(excludeTable));
+        }
+        if (dialog.getProcedureNamePattern() != null) {
+            metaReverseEngineering.addIncludeProcedure(new IncludeProcedure(includeProcedure));
+        }
+        metaReverseEngineering.setUsePrimitives(dialog.isUsePrimitives());
+        metaReverseEngineering.setUseJava7Types(dialog.isUseJava7Typed());
+        metaReverseEngineering.setMeaningfulPkTables(dialog.getMeaningfulPk());
+        metaReverseEngineering.setNamingStrategy(dialog.getNamingStrategy());
+        reverseEngineering.addIncludeTable(includeTable);
+        reverseEngineering.addExcludeTable(excludeTable);
+        reverseEngineering.addIncludeProcedure(includeProcedure);
         reverseEngineering.addCatalog(new Catalog(dialog.getSelectedCatalog()));
         reverseEngineering.addSchema(new Schema(dialog.getSelectedSchema()));
-        reverseEngineering.addIncludeTable(new IncludeTable(dialog.getTableIncludePattern()));
-        if(dialog.getTableExcludePattern() != null) {
-            reverseEngineering.addExcludeTable(new ExcludeTable(dialog.getTableExcludePattern()));
-        }
+
         // Add here auto_pk_support table
         reverseEngineering.addExcludeTable(new ExcludeTable("auto_pk_support|AUTO_PK_SUPPORT"));
         reverseEngineering.addIncludeProcedure(new IncludeProcedure(dialog.getProcedureNamePattern()));
-
 
         DbImportConfiguration config = new DbImportConfiguration() {
             @Override

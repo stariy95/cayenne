@@ -97,24 +97,26 @@ public abstract class DBWizardAction<T extends DbActionOptionsDialog> extends Ca
         return null;
     }
 
-    private boolean isSimpleConfig(ReverseEngineering reverseEngineering) {
-        if (reverseEngineering == null) {
-            return true;
-        }
+    public boolean isSimpleConfig(ReverseEngineering reverseEngineering) {
         if ((reverseEngineering.getCatalogs().size() > 0) || (reverseEngineering.getSchemas().size() > 0)
-            || (reverseEngineering.getIncludeTables().size() > 1) || (reverseEngineering.getExcludeTables().size() > 1)
-            || (reverseEngineering.getIncludeColumns().size() > 0) || (reverseEngineering.getExcludeColumns().size() > 0)
-            || (reverseEngineering.getIncludeProcedures().size() > 1)
-            || (reverseEngineering.getExcludeProcedures().size() > 0)) {
+                || (reverseEngineering.getIncludeTables().size() > 1) || (reverseEngineering.getExcludeTables().size() > 1)
+                || (reverseEngineering.getIncludeColumns().size() > 0) || (reverseEngineering.getExcludeColumns().size() > 0)
+                || (reverseEngineering.getIncludeProcedures().size() > 1)
+                || (reverseEngineering.getExcludeProcedures().size() > 0)) {
             return false;
         }
         if ((reverseEngineering.getSkipPrimaryKeyLoading()) || (reverseEngineering.getSkipRelationshipsLoading())
-            || (reverseEngineering.isForceDataMapCatalog()) || (reverseEngineering.isForceDataMapSchema())) {
+                || (reverseEngineering.isForceDataMapCatalog()) || (reverseEngineering.isForceDataMapSchema())) {
             return false;
         }
 
         if (!Util.isEmptyString(reverseEngineering.getDefaultPackage())
-            || (!Util.isEmptyString(reverseEngineering.getStripFromTableNames()))) {
+                || (!Util.isEmptyString(reverseEngineering.getStripFromTableNames()))) {
+            return false;
+        }
+
+        if ((reverseEngineering.isForceDataMapSchema()) || (reverseEngineering.isForceDataMapCatalog())
+                || (reverseEngineering.getSkipPrimaryKeyLoading()) || (reverseEngineering.getSkipRelationshipsLoading())) {
             return false;
         }
         return true;

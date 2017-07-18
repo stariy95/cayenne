@@ -31,7 +31,6 @@ import org.apache.cayenne.modeler.util.NameGeneratorPreferences;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Vector;
@@ -116,7 +115,6 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
         DataMap dataMap = context.getProjectController().getCurrentDataMap();
         ReverseEngineering reverseEngineering = context.getMetaData().get(dataMap, ReverseEngineering.class);
         if (reverseEngineering != null) {
-            // FIX SAVING IN GRADLE-MAVEN-ANT
             useJava7Types.setSelected(reverseEngineering.isUseJava7Types());
             usePrimitives.setSelected(reverseEngineering.isUsePrimitives());
             if (reverseEngineering.getIncludeTables().size() == 1) {
