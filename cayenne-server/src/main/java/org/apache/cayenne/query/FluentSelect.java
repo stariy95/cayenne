@@ -60,10 +60,10 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
      */
     @SuppressWarnings({"deprecation", "unchecked"})
     @Override
-    protected Query createReplacementQuery(EntityResolver resolver) {
+    protected SelectQuery<?> createReplacementQuery(EntityResolver resolver) {
 
         @SuppressWarnings("rawtypes")
-        SelectQuery replacement = new SelectQuery();
+        SelectQuery<?> replacement = new SelectQuery<>();
 
         if (entityType != null) {
             replacement.setRoot(entityType);
@@ -99,6 +99,14 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
         replacement.setStatementFetchSize(statementFetchSize);
 
         return replacement;
+    }
+
+
+    /**
+     * @since 4.1
+     */
+    public SelectQuery<?> toSelectQuery(EntityResolver resolver) {
+        return createReplacementQuery(resolver);
     }
 
     public String getCacheGroup() {

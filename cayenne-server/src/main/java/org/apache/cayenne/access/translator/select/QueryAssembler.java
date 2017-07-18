@@ -28,6 +28,7 @@ import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.JoinType;
@@ -107,6 +108,11 @@ public abstract class QueryAssembler {
 	public abstract String getCurrentAlias();
 
 	/**
+	 * @since 4.1
+	 */
+	public abstract String getAliasForDbEntity(DbEntity entity);
+
+	/**
 	 * Appends a join with given semantics to the query.
 	 *
 	 * @since 3.0
@@ -159,10 +165,15 @@ public abstract class QueryAssembler {
 				: adapter.getExtendedTypes().getDefaultType();
 
 		DbAttributeBinding binding = new DbAttributeBinding(dbAttr);
-		binding.setStatementPosition(bindings.size() + 1);
 		binding.setValue(anObject);
 		binding.setExtendedType(extendedType);
 
+		addBinding(binding);
+	}
+
+	protected void addBinding(DbAttributeBinding binding) {
+		// recalculate position first
+		binding.setStatementPosition(bindings.size() + 1);
 		bindings.add(binding);
 		if(addBindingListener != null) {
 			addBindingListener.onAdd(binding);

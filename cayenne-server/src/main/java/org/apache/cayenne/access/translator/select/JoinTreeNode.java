@@ -97,7 +97,7 @@ public final class JoinTreeNode {
                 alias,
                 this);
         child.setSourceTableAlias(this.targetTableAlias);
-        child.setTargetTableAlias(joinProcessor.newAlias());
+        child.setTargetTableAlias(joinProcessor.newAlias(relationship.getTargetEntity()));
         children.add(child);
         return child;
     }

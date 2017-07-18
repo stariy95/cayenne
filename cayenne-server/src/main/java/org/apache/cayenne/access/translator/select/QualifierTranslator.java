@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.TraversalHandler;
@@ -39,6 +40,7 @@ import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
 import org.apache.cayenne.map.ObjEntity;
+import org.apache.cayenne.query.FluentSelect;
 import org.apache.cayenne.query.Query;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.reflect.ClassDescriptor;
@@ -421,6 +423,8 @@ public class QualifierTranslator extends QueryAssemblerHelper implements Travers
 				out.append("(");
 			}
 			return;
+		} else if (node.getType() == Expression.EXISTS) {
+			out.append("EXISTS ");
 		}
 
 		if(node.getType() == Expression.FULL_OBJECT && parentNode != null) {
@@ -535,11 +539,32 @@ public class QualifierTranslator extends QueryAssemblerHelper implements Travers
 				case Expression.FUNCTION_CALL:
 					appendFunctionArg(leaf, (ASTFunctionCall)parentNode);
 					break;
+				case Expression.EXISTS:
+					appendSubquery((FluentSelect<?>)leaf);
+					break;
 				default:
 					appendLiteral(leaf, paramsDbType(parentNode), parentNode);
 			}
 		} catch (IOException ioex) {
 			throw new CayenneRuntimeException("Error appending content", ioex);
+		}
+	}
+
+	private void appendSubquery(FluentSelect<?> query) {
+		SelectTranslator translator = queryAssembler.getAdapter().getSelectTranslator(
+				query.toSelectQuery(queryAssembler.getEntityResolver()),
+				queryAssembler.getEntityResolver()
+		);
+		if(translator instanceof DefaultSelectTranslator) {
+			((DefaultSelectTranslator) translator).setParentTranslator((DefaultSelectTranslator)queryAssembler);
+		}
+		try {
+			out.append(translator.getSql());
+			for(DbAttributeBinding binding : translator.getBindings()) {
+				queryAssembler.addBinding(binding);
+			}
+		} catch (Exception ex) {
+			throw new CayenneRuntimeException("Unable to parse subquery", ex);
 		}
 	}
 
@@ -549,7 +574,7 @@ public class QualifierTranslator extends QueryAssemblerHelper implements Travers
 		}
 
 		if (parentNode == null) {
-			return false;
+			return node.getType() == Expression.EXISTS;
 		}
 
 		// only unary expressions can go w/o parenthesis

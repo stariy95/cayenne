@@ -32,6 +32,7 @@ import org.apache.cayenne.exp.parser.ASTBitwiseXor;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTDivide;
 import org.apache.cayenne.exp.parser.ASTEqual;
+import org.apache.cayenne.exp.parser.ASTExists;
 import org.apache.cayenne.exp.parser.ASTFalse;
 import org.apache.cayenne.exp.parser.ASTFullObject;
 import org.apache.cayenne.exp.parser.ASTGreater;
@@ -61,6 +62,7 @@ import org.apache.cayenne.exp.parser.ExpressionParserTokenManager;
 import org.apache.cayenne.exp.parser.JavaCharStream;
 import org.apache.cayenne.exp.parser.SimpleNode;
 import org.apache.cayenne.map.Entity;
+import org.apache.cayenne.query.FluentSelect;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -1302,6 +1304,13 @@ public class ExpressionFactory {
 		}
 
 		return e;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	public static Expression exists(FluentSelect<?> subselect) {
+		return new ASTExists(subselect);
 	}
 
 	/**

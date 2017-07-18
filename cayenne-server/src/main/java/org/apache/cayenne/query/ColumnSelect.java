@@ -95,8 +95,8 @@ public class ColumnSelect<T> extends FluentSelect<T> {
     }
 
     @Override
-    protected Query createReplacementQuery(EntityResolver resolver) {
-        SelectQuery<?> replacement = (SelectQuery)super.createReplacementQuery(resolver);
+    protected SelectQuery<?> createReplacementQuery(EntityResolver resolver) {
+        SelectQuery<?> replacement = super.createReplacementQuery(resolver);
         replacement.setColumns(columns);
         replacement.setHavingQualifier(having);
         replacement.setCanReturnScalarValue(singleColumn);

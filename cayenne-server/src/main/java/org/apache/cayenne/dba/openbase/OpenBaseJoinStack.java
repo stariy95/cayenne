@@ -20,11 +20,11 @@ package org.apache.cayenne.dba.openbase;
 
 import java.util.List;
 
+import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
 import org.apache.cayenne.access.translator.select.JoinStack;
 import org.apache.cayenne.access.translator.select.JoinTreeNode;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.dba.DbAdapter;
-import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
@@ -39,8 +39,8 @@ import org.apache.cayenne.map.DbRelationship;
  */
 class OpenBaseJoinStack extends JoinStack {
 
-	protected OpenBaseJoinStack(DbAdapter dbAdapter, QueryAssembler assembler) {
-		super(dbAdapter, assembler);
+	protected OpenBaseJoinStack(DbAdapter dbAdapter, QueryAssembler assembler, DefaultSelectTranslator parentTranslator) {
+		super(dbAdapter, assembler, parentTranslator);
 	}
 
 	@Override

@@ -41,7 +41,7 @@ class Oracle8SelectTranslator extends OracleSelectTranslator {
 	 */
 	@Override
 	protected JoinStack createJoinStack() {
-		return new Oracle8JoinStack(getAdapter(), this);
+		return new Oracle8JoinStack(getAdapter(), this, parentTranslator);
 	}
 
 }

@@ -154,8 +154,8 @@ public class ObjectSelect<T> extends FluentSelect<T> {
      */
     @SuppressWarnings({"deprecation", "unchecked"})
     @Override
-    protected Query createReplacementQuery(EntityResolver resolver) {
-        SelectQuery<?> replacement = (SelectQuery<?>) super.createReplacementQuery(resolver);
+    protected SelectQuery<?> createReplacementQuery(EntityResolver resolver) {
+        SelectQuery<?> replacement = super.createReplacementQuery(resolver);
         replacement.setFetchingDataRows(fetchingDataRows);
         return replacement;
     }

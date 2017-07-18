@@ -34,11 +34,13 @@ import org.apache.cayenne.ResultIteratorCallback;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.FunctionExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
+import org.apache.cayenne.testdo.testmap.Painting;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
@@ -206,4 +208,26 @@ public class ObjectSelect_RunIT extends ServerCase {
 		assertEquals("artist1", a.getArtistName());
 	}
 
+	@Test
+	public void testExistsQuery() {
+
+		Property<Artist> selfArtist = Property.createSelf(Artist.class);
+		Property<Long> artistId = Property.create(ExpressionFactory.dbPathExp("toArtist.ARTIST_ID"), Long.class);
+
+		List<Artist> result = ObjectSelect.query(Artist.class)
+				.where(Artist.ARTIST_NAME.like("artist1"))
+				.and(
+						ExpressionFactory.exists(
+								ObjectSelect.query(Painting.class)
+										.where(Painting.PAINTING_TITLE.likeIgnoreCase("painting%"))
+										.and(Painting.TO_ARTIST.eq(artistId))
+						)
+				)
+//				.or(Artist.GROUP_ARRAY.in(
+//						ExpressionFactory.any(
+//								ObjectSelect.query(ArtGroup.class)
+//						)
+//				))
+				.select(context);
+	}
 }

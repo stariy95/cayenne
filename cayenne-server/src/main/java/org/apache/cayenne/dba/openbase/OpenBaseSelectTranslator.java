@@ -39,7 +39,7 @@ class OpenBaseSelectTranslator extends DefaultSelectTranslator {
 
 	@Override
 	protected JoinStack createJoinStack() {
-		return new OpenBaseJoinStack(getAdapter(), this);
+		return new OpenBaseJoinStack(getAdapter(), this, parentTranslator);
 	}
 
 	@Override

@@ -166,6 +166,11 @@ public abstract class Expression implements Serializable, XMLSerializable {
 	 */
 	public static final int FULL_OBJECT = 47;
 
+	/**
+	 * @since 4.1
+	 */
+	public static final int EXISTS = 48;
+
 	protected int type;
 
 	/**
@@ -237,6 +242,8 @@ public abstract class Expression implements Serializable, XMLSerializable {
 			return "NOT LIKE IGNORE CASE";
 		case FUNCTION_CALL:
 			return "FUNCTION_CALL";
+		case EXISTS:
+			return "EXISTS";
 		default:
 			return "other";
 		}

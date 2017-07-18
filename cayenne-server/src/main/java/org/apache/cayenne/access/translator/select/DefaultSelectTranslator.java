@@ -110,6 +110,8 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	 */
 	AddJoinListener joinListener;
 
+	protected DefaultSelectTranslator parentTranslator;
+
 
 	public DefaultSelectTranslator(Query query, DbAdapter adapter, EntityResolver entityResolver) {
 		super(query, adapter, entityResolver);
@@ -123,7 +125,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	}
 
 	protected JoinStack createJoinStack() {
-		return new JoinStack(getAdapter(), this);
+		return new JoinStack(getAdapter(), this, parentTranslator);
 	}
 
 	@Override
@@ -329,6 +331,11 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		return getJoinStack().getCurrentAlias();
 	}
 
+	@Override
+	public String getAliasForDbEntity(DbEntity entity) {
+		return getJoinStack().getAliasForTable(entity);
+	}
+
 	/**
 	 * Returns a list of ColumnDescriptors for the query columns.
 	 * 
@@ -384,7 +391,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			appendOverriddenColumns(columns, query);
 		} else if (query.getRoot() instanceof DbEntity) {
 			appendDbEntityColumns(columns, query);
-		} else if (getQueryMetadata().getPageSize() > 0) {
+		} else if (isIdOnlyQuery()) {
 			appendIdColumns(columns, queryMetadata.getClassDescriptor().getEntity());
 		} else {
 			appendQueryColumns(columns, query, queryMetadata.getClassDescriptor(), null);
@@ -437,7 +444,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 				// If we want full object, use appendQueryColumns method, to fully process class descriptor
 				List<ColumnDescriptor> classColumns = new ArrayList<>();
 				ObjEntity entity = entityResolver.getObjEntity(property.getType());
-				if(getQueryMetadata().getPageSize() > 0) {
+				if(isIdOnlyQuery()) {
 					appendIdColumns(classColumns, entity);
 				} else {
 					ClassDescriptor classDescriptor = entityResolver.getClassDescriptor(entity.getName());
@@ -474,6 +481,10 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		joinListener = null;
 
 		return columns;
+	}
+
+	private boolean isIdOnlyQuery() {
+		return getQueryMetadata().getPageSize() > 0 || parentTranslator != null;
 	}
 
 	private int getJdbcTypeForProperty(Property<?> property) {
@@ -855,6 +866,16 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	@Override
 	public boolean hasJoins() {
 		return joinStack != null && joinStack.size() > 0;
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	protected void setParentTranslator(DefaultSelectTranslator parentTranslator) {
+		this.parentTranslator = parentTranslator;
+		if(joinStack != null) {
+			throw new IllegalStateException("Join stack already initialized!");
+		}
 	}
 
 	static final class ColumnTracker {

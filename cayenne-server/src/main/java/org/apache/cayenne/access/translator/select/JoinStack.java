@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.cayenne.access.translator.select;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.QuotingStrategy;
@@ -48,6 +50,9 @@ public class JoinStack {
 	protected JoinTreeNode topNode;
 	private QuotingStrategy quotingStrategy;
 
+	protected Map<DbEntity, String> aliasMap;
+	protected Map<DbEntity, String> parentAliasMap;
+
 	private int aliasCounter;
 
 	/**
@@ -55,9 +60,16 @@ public class JoinStack {
 	 */
 	private QualifierTranslator qualifierTranslator;
 
-	protected JoinStack(DbAdapter dbAdapter, QueryAssembler assembler) {
+	protected JoinStack(DbAdapter dbAdapter, QueryAssembler assembler, DefaultSelectTranslator parentTranslator) {
+		aliasMap = new HashMap<>();
+		parentAliasMap = new HashMap<>();
+		if(parentTranslator != null && parentTranslator.joinStack != null) {
+			parentAliasMap.putAll(parentTranslator.joinStack.aliasMap);
+		}
+		aliasCounter = parentAliasMap.size();
+
 		this.rootNode = new JoinTreeNode(this);
-		this.rootNode.setTargetTableAlias(newAlias());
+		this.rootNode.setTargetTableAlias(newAlias(assembler.queryMetadata.getDbEntity()));
 
 		this.quotingStrategy = dbAdapter.getQuotingStrategy();
 		this.qualifierTranslator = dbAdapter.getQualifierTranslator(assembler);
@@ -67,6 +79,13 @@ public class JoinStack {
 
 	String getCurrentAlias() {
 		return topNode.getTargetTableAlias();
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	String getAliasForTable(DbEntity entity) {
+		return aliasMap.get(entity);
 	}
 
 	/**
@@ -102,6 +121,12 @@ public class JoinStack {
 		DbEntity targetEntity = relationship.getTargetEntity();
 		String srcAlias = node.getSourceTableAlias();
 		String targetAlias = node.getTargetTableAlias();
+
+		// skip joins for tables that are already mapped in parent query
+		String parentAlias = parentAliasMap.get(targetEntity);
+		if(parentAlias != null) {
+			return;
+		}
 
 		switch (node.getJoinType()) {
 		case INNER:
@@ -177,8 +202,14 @@ public class JoinStack {
 		topNode = topNode.findOrCreateChild(relationship, joinType, alias);
 	}
 
-	protected String newAlias() {
-		return "t" + aliasCounter++;
+	protected String newAlias(DbEntity entity) {
+		String parentAlias = parentAliasMap.get(entity);
+		if(parentAlias != null) {
+			return parentAlias;
+		}
+		String alias = "t" + aliasCounter++;
+		aliasMap.put(entity, alias);
+		return alias;
 	}
 
 	/**

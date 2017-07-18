@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.JoinType;
@@ -45,6 +46,11 @@ public class TstQueryAssembler extends QueryAssembler {
 
 	@Override
 	public String getCurrentAlias() {
+		return "ta";
+	}
+
+	@Override
+	public String getAliasForDbEntity(DbEntity entity) {
 		return "ta";
 	}
 
