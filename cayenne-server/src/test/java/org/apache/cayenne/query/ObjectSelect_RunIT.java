@@ -19,26 +19,30 @@
 package org.apache.cayenne.query;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.DataRow;
+import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.ResultIteratorCallback;
 import org.apache.cayenne.access.DataContext;
+import org.apache.cayenne.access.ToOneFault;
+import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.FunctionExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
+import org.apache.cayenne.testdo.testmap.Painting;
+import org.apache.cayenne.testdo.testmap.PaintingInfo;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
@@ -53,6 +57,9 @@ public class ObjectSelect_RunIT extends ServerCase {
 
 	@Inject
 	private DBHelper dbHelper;
+
+	@Inject
+	private ServerRuntime runtime;
 
 	@Before
 	public void createArtistsDataSet() throws Exception {
@@ -204,6 +211,40 @@ public class ObjectSelect_RunIT extends ServerCase {
 				.orderBy("db:ARTIST_ID").selectFirst(context);
 		assertNotNull(a);
 		assertEquals("artist1", a.getArtistName());
+	}
+
+	@Test
+	public void testToMany() throws Exception {
+		Painting painting = ObjectSelect.query(Painting.class).selectFirst(context);
+		Artist artist = ObjectSelect.query(Artist.class)
+				.where(ExpressionFactory.exp("paintingArray = $p", painting))
+				// currently can't do this, see CAY-2332:
+				//.where(Artist.PAINTING_ARRAY.eq(painting))
+				.selectFirst(context);
+	}
+
+	@Test
+	public void testNestedContextEdit() throws Exception {
+
+		PaintingInfo paintingInfo = context.newObject(PaintingInfo.class);
+		paintingInfo.setTextReview("review");
+		Painting painting = context.newObject(Painting.class);
+		painting.setToPaintingInfo(paintingInfo);
+
+		ObjectContext childContext = runtime.newContext(context);
+		Painting painting2 = childContext.localObject(painting);
+
+		// here is null after transferring to new Context
+		assertNull(painting2.readPropertyDirectly("toPaintingInfo"));
+		assertSame(painting, paintingInfo.getPainting());
+
+		painting2.setPaintingTitle("test");
+
+		// here will be Fault now
+		Object rel = painting2.readPropertyDirectly("toPaintingInfo");
+		assertThat(rel, instanceOf(ToOneFault.class));
+
+		assertSame(painting, paintingInfo.getPainting());
 	}
 
 }
