@@ -224,27 +224,29 @@ public class ObjectSelect_RunIT extends ServerCase {
 	}
 
 	@Test
-	public void testNestedContextEdit() throws Exception {
+	public void nestedContextLocalObjectSimple() throws Exception {
+		Artist artist = context.newObject(Artist.class);
+		artist.setArtistName("Artist");
 
-		PaintingInfo paintingInfo = context.newObject(PaintingInfo.class);
-		paintingInfo.setTextReview("review");
 		Painting painting = context.newObject(Painting.class);
-		painting.setToPaintingInfo(paintingInfo);
+		artist.addToPaintingArray(painting);
+		painting.setPaintingTitle("");
+
+		assertNotNull(painting.readPropertyDirectly("toArtist"));
+		assertSame(artist, painting.getToArtist());
+		assertEquals(1, artist.getPaintingArray().size());
+		assertSame(painting, artist.getPaintingArray().get(0));
 
 		ObjectContext childContext = runtime.newContext(context);
-		Painting painting2 = childContext.localObject(painting);
+		Painting localPainting = childContext.localObject(painting);
+		localPainting.setPaintingTitle("test");
 
-		// here is null after transferring to new Context
-		assertNull(painting2.readPropertyDirectly("toPaintingInfo"));
-		assertSame(painting, paintingInfo.getPainting());
+		assertNotNull(localPainting.readPropertyDirectly("toArtist"));
+		assertSame(artist.getArtistName(), localPainting.getToArtist().getArtistName());
 
-		painting2.setPaintingTitle("test");
-
-		// here will be Fault now
-		Object rel = painting2.readPropertyDirectly("toPaintingInfo");
-		assertThat(rel, instanceOf(ToOneFault.class));
-
-		assertSame(painting, paintingInfo.getPainting());
+		assertEquals(1, artist.getPaintingArray().size());
+		assertNotEquals(painting, localPainting);
+		assertSame(painting, artist.getPaintingArray().get(0));
 	}
 
 }

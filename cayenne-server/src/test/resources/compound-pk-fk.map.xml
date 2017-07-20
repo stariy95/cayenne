@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-map xmlns="http://cayenne.apache.org/schema/9/modelMap"
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://cayenne.apache.org/schema/9/modelMap http://cayenne.apache.org/schema/9/modelMap.xsd"
+	 project-version="9">
+	<property name="defaultPackage" value="org.apache.cayenne.testdo.compoundpk"/>
+	<db-entity name="compound_orders">
+		<db-attribute name="order_number" type="INTEGER" isPrimaryKey="true" isMandatory="true"/>
+		<db-attribute name="value" type="VARCHAR" length="10"/>
+	</db-entity>
+	<db-entity name="compound_payments">
+		<db-attribute name="amount" type="NUMERIC"/>
+		<db-attribute name="order_number" type="INTEGER" isPrimaryKey="true" isMandatory="true"/>
+		<db-attribute name="payment_number" type="INTEGER" isPrimaryKey="true" isMandatory="true"/>
+	</db-entity>
+	<obj-entity name="Order" className="org.apache.cayenne.testdo.compoundpk.Order" dbEntityName="compound_orders">
+		<obj-attribute name="orderNumber" type="java.lang.Integer" db-attribute-path="order_number"/>
+		<obj-attribute name="value" type="java.lang.String" db-attribute-path="value"/>
+	</obj-entity>
+	<obj-entity name="Payment" className="org.apache.cayenne.testdo.compoundpk.Payment" dbEntityName="compound_payments">
+		<obj-attribute name="amount" type="java.math.BigDecimal" db-attribute-path="amount"/>
+		<obj-attribute name="orderNumber" type="java.lang.Integer" db-attribute-path="order_number"/>
+		<obj-attribute name="paymentNumber" type="java.lang.Integer" db-attribute-path="payment_number"/>
+	</obj-entity>
+	<db-relationship name="payments" source="compound_orders" target="compound_payments" toDependentPK="true" toMany="true">
+		<db-attribute-pair source="order_number" target="order_number"/>
+	</db-relationship>
+	<db-relationship name="order" source="compound_payments" target="compound_orders" toMany="false">
+		<db-attribute-pair source="order_number" target="order_number"/>
+	</db-relationship>
+	<obj-relationship name="payments" source="Order" target="Payment" deleteRule="Deny" db-relationship-path="payments"/>
+	<obj-relationship name="order" source="Payment" target="Order" deleteRule="Nullify" db-relationship-path="order"/>
+</data-map>
