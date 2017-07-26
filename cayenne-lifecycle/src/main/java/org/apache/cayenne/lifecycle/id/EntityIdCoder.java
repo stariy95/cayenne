@@ -70,12 +70,11 @@ public class EntityIdCoder {
     public EntityIdCoder(ObjEntity entity) {
 
         this.entityName = entity.getName();
-        this.converters = new TreeMap<String, Converter>();
+        this.converters = new TreeMap<>();
 
         for (ObjAttribute attribute : entity.getAttributes()) {
             if (attribute.isPrimaryKey()) {
-                converters.put(attribute.getDbAttributeName(),
-                        create(attribute.getJavaClass()));
+                converters.put(attribute.getDbAttributeName(), create(attribute.getJavaClass()));
             }
         }
 
@@ -84,8 +83,7 @@ public class EntityIdCoder {
                 String type = TypesMapping
                         .getJavaBySqlType(attribute.getType());
                 try {
-                    converters.put(attribute.getName(),
-                            create(Util.getJavaClass(type)));
+                    converters.put(attribute.getName(), create(Util.getJavaClass(type)));
                 } catch (ClassNotFoundException e) {
                     throw new CayenneRuntimeException(
                             "Can't instantiate class " + type, e);
@@ -119,18 +117,7 @@ public class EntityIdCoder {
     }
 
     private String toTempIdString(ObjectId id) {
-        StringBuilder buffer = new StringBuilder();
-
-        buffer.append(TEMP_ID_PREFIX);
-
-        buffer.append(id.getEntityName());
-
-        buffer.append(ID_SEPARATOR);
-
-        for (byte b : id.getKey()) {
-            IDUtil.appendFormattedByte(buffer, b);
-        }
-        return buffer.toString();
+        return TEMP_ID_PREFIX + id.getEntityName() + ID_SEPARATOR + id.getKey();
     }
 
     private String toPermIdString(ObjectId id) {
@@ -149,9 +136,8 @@ public class EntityIdCoder {
     public ObjectId toObjectId(String stringId) {
 
         if (stringId.startsWith(TEMP_ID_PREFIX)) {
-            String idValues = stringId.substring(entityName.length() + 1
-                    + TEMP_PREFIX_LENGTH);
-            return new ObjectId(entityName, decodeTemp(idValues));
+            String idValues = stringId.substring(entityName.length() + 1 + TEMP_PREFIX_LENGTH);
+            return new ObjectId(entityName, Long.valueOf(idValues));
         }
 
         String idValues = stringId.substring(entityName.length() + 1);
@@ -194,23 +180,6 @@ public class EntityIdCoder {
         }
 
         return new ObjectId(entityName, idMap);
-    }
-
-    private byte[] decodeTemp(String byteString) {
-
-        byte[] bytes = new byte[byteString.length() / 2];
-        for (int i = 0; i < bytes.length; i++) {
-            int index = i * 2;
-
-            // this is better than Byte.parseByte which can't parse values >=
-            // 128 as negative bytes
-            int c1 = byteString.charAt(index);
-            int c2 = byteString.charAt(index + 1);
-            bytes[i] = (byte) ((Character.digit(c1, 16) << 4) + Character
-                    .digit(c2, 16));
-        }
-
-        return bytes;
     }
 
     private Converter create(Class<?> type) {

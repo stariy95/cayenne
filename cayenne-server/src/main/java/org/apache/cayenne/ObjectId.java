@@ -21,16 +21,15 @@ package org.apache.cayenne;
 
 import org.apache.cayenne.util.EqualsBuilder;
 import org.apache.cayenne.util.HashCodeBuilder;
-import org.apache.cayenne.util.IDUtil;
 import org.apache.cayenne.util.Util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A portable global identifier for persistent objects. ObjectId can be
@@ -43,16 +42,20 @@ import java.util.Map;
 public class ObjectId implements Serializable {
 
 	private static final long serialVersionUID = -2265029098344119323L;
-	
-	protected String entityName;
-	protected Map<String, Object> objectIdKeys;
 
-	private String singleKey;
-	private Object singleValue;
+	private static final AtomicLong TMP_ID_SEQUENCE = new AtomicLong(1);
+
+	// this two fields are constant per ObjEntity thus can be hidden and optimized
+	protected String entityName;
+	private String[] keys;
+
+	// PK values
+	private Object[] values;
 
 	// key which is used for temporary ObjectIds only
-	protected byte[] key;
+	protected long tmpKey;
 
+	// New values for keys in this ObjectId
 	protected Map<String, Object> replacementIdMap;
 
 	// hash code is transient to make sure id is portable across VM
@@ -69,7 +72,18 @@ public class ObjectId implements Serializable {
 	 * @since 1.2
 	 */
 	public ObjectId(String entityName) {
-		this(entityName, IDUtil.pseudoUniqueByteSequence8());
+		this(entityName, getNextTmpId());
+	}
+
+	/**
+	 * @return next id
+	 */
+	static long getNextTmpId() {
+		if(TMP_ID_SEQUENCE.get() == Long.MAX_VALUE) {
+			TMP_ID_SEQUENCE.set(1);
+		}
+
+		return TMP_ID_SEQUENCE.getAndIncrement();
 	}
 
 	/**
@@ -78,9 +92,9 @@ public class ObjectId implements Serializable {
 	 * 
 	 * @since 1.2
 	 */
-	public ObjectId(String entityName, byte[] key) {
+	public ObjectId(String entityName, long tmpKey) {
 		this.entityName = entityName;
-		this.key = key;
+		this.tmpKey = tmpKey;
 	}
 
 	/**
@@ -114,8 +128,8 @@ public class ObjectId implements Serializable {
 	public ObjectId(String entityName, String key, Object value) {
 		this.entityName = entityName;
 
-		this.singleKey = key;
-		this.singleValue = value;
+		this.keys = new String[]{key};
+		this.values = new Object[]{value};
 	}
 
 	/**
@@ -132,17 +146,17 @@ public class ObjectId implements Serializable {
 		this.entityName = entityName;
 
 		if (idMap == null || idMap.size() == 0) {
+			return;
+		}
 
-		} else if (idMap.size() == 1) {
-			Map.Entry<String, ?> e = idMap.entrySet().iterator().next();
-			this.singleKey = String.valueOf(e.getKey());
-			this.singleValue = e.getValue();
-		} else {
+		keys = new String[idMap.size()];
+		values = new Object[idMap.size()];
 
-			// we have to create a copy of the map, otherwise we may run into
-			// serialization
-			// problems with hessian
-			this.objectIdKeys = new HashMap<>(idMap);
+		int idx = 0;
+		for(Map.Entry<String, ?> e : idMap.entrySet()) {
+			keys[idx] = e.getKey();
+			values[idx] = e.getValue();
+			idx++;
 		}
 	}
 
@@ -151,7 +165,7 @@ public class ObjectId implements Serializable {
 	 * persisted to the data store).
 	 */
 	public boolean isTemporary() {
-		return key != null;
+		return tmpKey != 0;
 	}
 
 	/**
@@ -164,9 +178,10 @@ public class ObjectId implements Serializable {
 	/**
 	 * Get the binary temporary object id. Null if this object id is permanent
 	 * (persisted to the data store).
+	 * @since 4.1 this method returns long
 	 */
-	public byte[] getKey() {
-		return key;
+	public long getKey() {
+		return tmpKey;
 	}
 
 	/**
@@ -179,11 +194,16 @@ public class ObjectId implements Serializable {
 			return (replacementIdMap == null) ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(replacementIdMap);
 		}
 
-		if (singleKey != null) {
-			return Collections.singletonMap(singleKey, singleValue);
+		if(keys == null) {
+			return Collections.emptyMap();
 		}
 
-		return objectIdKeys != null ? Collections.unmodifiableMap(objectIdKeys) : Collections.<String, Object>emptyMap();
+		// TODO: can we get rid of this map?
+		Map<String, Object> snapshot = new HashMap<>();
+		for(int i=0; i<keys.length; i++) {
+			snapshot.put(keys[i], values[i]);
+		}
+		return Collections.unmodifiableMap(snapshot);
 	}
 
 	@Override
@@ -203,99 +223,78 @@ public class ObjectId implements Serializable {
 		}
 
 		if (isTemporary()) {
-			return new EqualsBuilder().append(key, id.key).isEquals();
+			return new EqualsBuilder().append(tmpKey, id.tmpKey).isEquals();
 		}
 
-		if (singleKey != null) {
-			return Util.nullSafeEquals(singleKey, id.singleKey) && valueEquals(singleValue, id.singleValue);
+		if(keys == null) {
+			return id.keys == null;
 		}
 
-		if (id.objectIdKeys == null) {
-			return objectIdKeys == null;
-		}
-
-		if (id.objectIdKeys.size() != objectIdKeys.size()) {
+		if(id.keys == null) {
 			return false;
 		}
 
-		for (Map.Entry<String, ?> entry : objectIdKeys.entrySet()) {
-			String entryKey = entry.getKey();
-			Object entryValue = entry.getValue();
+		if(keys.length != id.keys.length) {
+			return false;
+		}
 
-			if (entryValue == null) {
-				if (id.objectIdKeys.get(entryKey) != null || !id.objectIdKeys.containsKey(entryKey)) {
+		for(int i=0; i<keys.length; i++) {
+			int idx = find(id.keys, keys[i]);
+			if(idx < 0) {
+				return false;
+			}
+
+			if (values[i] instanceof Number) {
+				if(!(id.values[idx] instanceof Number) ||
+						((Number) values[i]).longValue() != ((Number) id.values[idx]).longValue()) {
 					return false;
 				}
-			} else {
-				if (!valueEquals(entryValue, id.objectIdKeys.get(entryKey))) {
+			} else if (values[i].getClass().isArray()) {
+				if(!new EqualsBuilder().append( values[i], id.values[idx]).isEquals()) {
 					return false;
 				}
+			} else if (!Util.nullSafeEquals(values[i], id.values[idx])) {
+				return false;
 			}
 		}
 
 		return true;
 	}
 
-	private final boolean valueEquals(Object o1, Object o2) {
-		if (o1 == o2) {
-			return true;
+	/**
+	 * Linear scan search, good for small count of elements.
+	 *
+	 * @return index of element in array or -1 if it's not found
+	 */
+	static int find(String[] values, String key) {
+		if(values == null) {
+			return -1;
 		}
 
-		if (o1 == null) {
-			return false;
+		for(int i=0; i<values.length; i++) {
+			if((key == null && values[i] == null)
+					|| values[i].equals(key)) {
+				return i;
+			}
 		}
 
-		if (o1 instanceof Number) {
-			return o2 instanceof Number && ((Number) o1).longValue() == ((Number) o2).longValue();
-		}
-
-		if (o1.getClass().isArray()) {
-			return new EqualsBuilder().append(o1, o2).isEquals();
-		}
-
-		return Util.nullSafeEquals(o1, o2);
+		return -1;
 	}
 
 	@Override
 	public int hashCode() {
-
 		if (this.hashCode == 0) {
-
 			HashCodeBuilder builder = new HashCodeBuilder(3, 5);
 			builder.append(entityName.hashCode());
-
-			if (key != null) {
-				builder.append(key);
-			} else if (singleKey != null) {
-				builder.append(singleKey.hashCode());
-
-				// must reconcile all possible numeric types
-				if (singleValue instanceof Number) {
-					builder.append(((Number) singleValue).longValue());
-				} else {
-					builder.append(singleValue);
-				}
-			} else if (objectIdKeys != null) {
-				int len = objectIdKeys.size();
-
-				// handle multiple keys - must sort the keys to use with
-				// HashCodeBuilder
-
-				String[] keys = objectIdKeys.keySet().toArray(new String[0]);
-				Arrays.sort(keys);
-
-				for (int i = 0; i < len; i++) {
-					// HashCodeBuilder will take care of processing object if it
-					// happens to be a primitive array such as byte[]
-
-					// also we don't have to append the key hashcode, its index
-					// will
-					// work
-					builder.append(i);
-
-					Object value = objectIdKeys.get(keys[i]);
-					// must reconcile all possible numeric types
-					if (value instanceof Number) {
+			if(tmpKey != 0) {
+				builder.append(tmpKey);
+			} else if(keys != null){
+				Map<String, ?> snapshot = getIdSnapshot();
+				List<String> keys = new ArrayList<>(snapshot.keySet());
+				Collections.sort(keys);
+				for (String key : keys) {
+					Object value = snapshot.get(key);
+					if(value instanceof Number) {
 						builder.append(((Number) value).longValue());
 					} else {
 						builder.append(value);
@@ -360,23 +359,16 @@ public class ObjectId implements Serializable {
 		buffer.append("<ObjectId:").append(entityName);
 
 		if (isTemporary()) {
-			buffer.append(", TEMP:");
-			for (byte aKey : key) {
-				IDUtil.appendFormattedByte(buffer, aKey);
-			}
-		} else if (singleKey != null) {
-			buffer.append(", ").append(String.valueOf(singleKey)).append("=").append(singleValue);
-		} else if (objectIdKeys != null) {
-
+			buffer.append(", TEMP:").append(tmpKey);
+		} else if(keys != null) {
 			// ensure consistent order of the keys, so that toString could be
-			// used as a
-			// unique key, just like id itself
-
-			List<String> keys = new ArrayList<>(objectIdKeys.keySet());
+			// used as a unique key, just like id itself
+			Map<String, ?> snapshot = getIdSnapshot();
+			List<String> keys = new ArrayList<>(snapshot.keySet());
 			Collections.sort(keys);
 			for (String key : keys) {
 				buffer.append(", ");
-				buffer.append(String.valueOf(key)).append("=").append(objectIdKeys.get(key));
+				buffer.append(String.valueOf(key)).append("=").append(snapshot.get(key));
 			}
 		}
 

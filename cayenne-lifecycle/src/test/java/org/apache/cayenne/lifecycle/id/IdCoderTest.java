@@ -60,30 +60,25 @@ public class IdCoderTest {
     public void testGetStringId_Temp() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
 
-        byte[] key = new byte[] { 1, 2, 10, 100 };
-
         E1 e1 = new E1();
-        e1.setObjectId(new ObjectId("E1", key));
+        e1.setObjectId(new ObjectId("E1", 1210100));
 
-        assertEquals(".E1:01020A64", handler.getStringId(e1));
+        assertEquals(".E1:1210100", handler.getStringId(e1));
     }
 
     @Test
     public void testGetObjectId_Temp() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
 
-        byte[] key = new byte[] { 1, (byte) 0xD7, 10, 100 };
-
-        ObjectId decoded = handler.getObjectId(".E1:01D70A64");
-        assertEquals(new ObjectId("E1", key), decoded);
+        ObjectId decoded = handler.getObjectId(".E1:10237618");
+        assertEquals(new ObjectId("E1", 10237618L), decoded);
     }
 
     @Test
     public void testGetSringId_TempWithReplacement() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
 
-        byte[] key = new byte[] { 5, 2, 11, 99 };
-        ObjectId id = new ObjectId("E1", key);
+        ObjectId id = new ObjectId("E1", 521199);
         id.getReplacementIdMap().put("ID", 6);
 
         E1 e1 = new E1();

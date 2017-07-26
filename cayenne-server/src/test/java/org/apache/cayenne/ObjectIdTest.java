@@ -27,12 +27,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ObjectIdTest {
 
@@ -41,9 +36,9 @@ public class ObjectIdTest {
         ObjectId temp1 = new ObjectId("e");
         assertEquals("e", temp1.getEntityName());
         assertTrue(temp1.isTemporary());
-        assertNotNull(temp1.getKey());
+        assertNotEquals(0, temp1.getKey());
 
-        byte[] key = new byte[] { 1, 2, 3 };
+        long key = 123;
         ObjectId temp2 = new ObjectId("e1", key);
         assertEquals("e1", temp2.getEntityName());
         assertTrue(temp2.isTemporary());

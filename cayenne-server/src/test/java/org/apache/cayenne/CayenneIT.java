@@ -204,9 +204,7 @@ public class CayenneIT extends ServerCase {
         assertSame(o1, Cayenne.objectForPK(context, o1.getObjectId()));
         assertSame(o2, Cayenne.objectForPK(context, o2.getObjectId()));
 
-        assertNull(Cayenne.objectForPK(context, new ObjectId("Artist", new byte[] {
-                1, 2, 3
-        })));
+        assertNull(Cayenne.objectForPK(context, new ObjectId("Artist", 123L)));
     }
 
     @Test

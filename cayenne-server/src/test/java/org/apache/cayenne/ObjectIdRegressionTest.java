@@ -48,7 +48,7 @@ public class ObjectIdRegressionTest {
         int size = 100000;
 
         new ObjectId("Artist");
-        Object[] pool = new Object[size];
+        ObjectId[] pool = new ObjectId[size];
 
         long t0 = System.currentTimeMillis();
         // fill in
@@ -60,7 +60,7 @@ public class ObjectIdRegressionTest {
 
         assertTrue("This machine is too fast to run such test!", t1 - t0 > 1);
 
-        Set idSet = new HashSet();
+        Set<ObjectId> idSet = new HashSet<>();
         for (int i = 0; i < size; i++) {
             assertTrue("Failed to generate unique id #" + i, idSet.add(pool[i]));
         }

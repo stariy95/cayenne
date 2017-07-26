@@ -35,35 +35,31 @@ public class IDUtil {
     private static final int BITMASK_0 = 0xff;
     private static final int BITMASK_1 = 0xff << 8;
     private static final int BITMASK_2 = 0xff << 16;
-    private static final int BITMASK_3 = 0xff << 24;
-    private static final int BITMASK_4 = 0xff << 32;
-    private static final int BITMASK_5 = 0xff << 40;
-    private static final int BITMASK_6 = 0xff << 48;
-    private static final int BITMASK_7 = 0xff << 56;
+    private static final long BITMASK_3 = (long)0xff << 24;
+    private static final long BITMASK_4 = (long)0xff << 32;
+    private static final long BITMASK_5 = (long)0xff << 40;
+    private static final long BITMASK_6 = (long)0xff << 48;
+    private static final long BITMASK_7 = (long)0xff << 56; // this overflows
 
     // this id sequence needs to be long enough to feel
     // the gap within the same timestamp millisecond
     private static volatile int currentId;
 
-    private static MessageDigest md;
+    private static final MessageDigest md;
     private static byte[] ipAddress;
 
     static {
         try {
             md = MessageDigest.getInstance("MD5");
-        }
-        catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new CayenneRuntimeException("Can't initialize MessageDigest.", e);
         }
 
         try {
             ipAddress = java.net.InetAddress.getLocalHost().getAddress();
-        }
-        catch (UnknownHostException e) {
+        } catch (UnknownHostException e) {
             // use loopback interface
-            ipAddress = new byte[] {
-                    127, 0, 0, 1
-            };
+            ipAddress = new byte[] {127, 0, 0, 1};
         }
     }
 
@@ -92,9 +88,7 @@ public class IDUtil {
      */
     public synchronized static byte[] pseudoUniqueByteSequence(int length) {
         if (length < 16) {
-            throw new IllegalArgumentException(
-                    "Can't generate unique byte sequence shorter than 16 bytes: "
-                            + length);
+            throw new IllegalArgumentException("Can't generate unique byte sequence shorter than 16 bytes: " + length);
         }
 
         if (length == 16) {
@@ -119,9 +113,7 @@ public class IDUtil {
 
     public synchronized static byte[] pseudoUniqueSecureByteSequence(int length) {
         if (length < 16) {
-            throw new IllegalArgumentException(
-                    "Can't generate unique byte sequence shorter than 16 bytes: "
-                            + length);
+            throw new IllegalArgumentException("Can't generate unique byte sequence shorter than 16 bytes: " + length);
         }
 
         if (length == 16) {
@@ -144,7 +136,7 @@ public class IDUtil {
         return bytes;
     }
 
-    public static final byte[] pseudoUniqueByteSequence8() {
+    public static byte[] pseudoUniqueByteSequence8() {
         byte[] bytes = new byte[8];
 
         // bytes 0..2 - incrementing #
@@ -173,7 +165,7 @@ public class IDUtil {
     /**
      * @return A pseudo unique 16-byte array.
      */
-    public static final byte[] pseudoUniqueByteSequence16() {
+    public static byte[] pseudoUniqueByteSequence16() {
         byte[] bytes = new byte[16];
 
         // bytes 0..3 - incrementing #
@@ -213,7 +205,7 @@ public class IDUtil {
         }
     }
 
-    private static final int nextInt() {
+    private static int nextInt() {
         if (currentId == Integer.MAX_VALUE) {
             currentId = 0;
         }

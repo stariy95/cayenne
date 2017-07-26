@@ -63,11 +63,10 @@ public class EntityIdCoderTest {
                 .getObjEntity("E1");
         EntityIdCoder coder = new EntityIdCoder(e1);
 
-        byte[] key = new byte[] { 2, 2, 10, 100 };
-        ObjectId encoded = new ObjectId("E1", key);
+        ObjectId encoded = new ObjectId("E1", 0x02020A64);
 
         String string = coder.toStringId(encoded);
-        assertEquals(".E1:02020A64", string);
+        assertEquals(".E1:33688164", string);
 
         ObjectId decoded = coder.toObjectId(string);
         assertTrue(decoded.isTemporary());
