@@ -19,6 +19,7 @@
 package org.apache.cayenne.exp.parser;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.Persistent;
 import org.junit.Test;
 
@@ -36,7 +37,8 @@ public class ASTListTest {
 
     @Test
 	public void testConstructorWithCollection() {
-		ObjectId objectId = new ObjectId("Artist", "ARTIST_ID", 1);
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("Artist", "ARTIST_ID");
+		ObjectId objectId = new ObjectId(descriptor, "ARTIST_ID", 1);
 		Persistent artist = mock(Persistent.class);
 		when(artist.getObjectId()).thenReturn(objectId);
 
@@ -51,7 +53,8 @@ public class ASTListTest {
 
 	@Test
 	public void testEquals() throws Exception {
-		ObjectId objectId = new ObjectId("Artist", "ARTIST_ID", 1);
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("Artist", "ARTIST_ID");
+		ObjectId objectId = new ObjectId(descriptor, "ARTIST_ID", 1);
 		Persistent artist = mock(Persistent.class);
 		when(artist.getObjectId()).thenReturn(objectId);
 
@@ -68,7 +71,8 @@ public class ASTListTest {
 
 	@Test
 	public void testHashCode() throws Exception {
-		ObjectId objectId = new ObjectId("Artist", "ARTIST_ID", 1);
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("Artist", "ARTIST_ID");
+		ObjectId objectId = new ObjectId(descriptor, "ARTIST_ID", 1);
 		Persistent artist = mock(Persistent.class);
 		when(artist.getObjectId()).thenReturn(objectId);
 

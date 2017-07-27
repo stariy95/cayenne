@@ -34,7 +34,7 @@ public class ObjectIdTest {
 
     @Test
     public void testHessianSerializabilityTemp() throws Exception {
-        ObjectId temp1 = new ObjectId("e");
+        ObjectId temp1 = new ObjectId(new ObjectIdDescriptor("e"));
 
         // make sure hashcode is resolved
         int h = temp1.hashCode();
@@ -53,7 +53,7 @@ public class ObjectIdTest {
 
     @Test
     public void testHessianSerializabilityPerm() throws Exception {
-        ObjectId perm1 = new ObjectId("e", "a", "b");
+        ObjectId perm1 = new ObjectId(new ObjectIdDescriptor("e", "a"), "a", "b");
 
         // make sure hashcode is resolved
         int h = perm1.hashCode();
@@ -74,8 +74,8 @@ public class ObjectIdTest {
     public void testHessianSerializabilityPerm1() throws Exception {
         // test serializing an id created with unmodifiable map
 
-        Map id = Collections.unmodifiableMap(Collections.singletonMap("a", "b"));
-        ObjectId perm1 = new ObjectId("e", id);
+        Map<String, ?> id = Collections.unmodifiableMap(Collections.singletonMap("a", "b"));
+        ObjectId perm1 = new ObjectId(new ObjectIdDescriptor("e", "a"), id);
         ObjectId perm2 = (ObjectId) HessianUtil.cloneViaClientServerSerialization(perm1, new EntityResolver());
 
         assertFalse(perm2.isTemporary());

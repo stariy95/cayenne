@@ -19,6 +19,7 @@
 package org.apache.cayenne.lifecycle.id;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -53,7 +54,7 @@ public class EntityIdCoderTest {
     @Test
     public void testGetEntityName() {
         assertEquals("M", EntityIdCoder.getEntityName("M:N:K"));
-        assertEquals("M", EntityIdCoder.getEntityName(".M:N:K"));
+        assertEquals("M", EntityIdCoder.getEntityName(".M[]:N:K"));
     }
 
     @Test
@@ -63,10 +64,11 @@ public class EntityIdCoderTest {
                 .getObjEntity("E1");
         EntityIdCoder coder = new EntityIdCoder(e1);
 
-        ObjectId encoded = new ObjectId("E1", 0x02020A64);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
+        ObjectId encoded = new ObjectId(descriptor, 0x02020A64);
 
         String string = coder.toStringId(encoded);
-        assertEquals(".E1:33688164", string);
+        assertEquals(".E1[ID]:33688164", string);
 
         ObjectId decoded = coder.toObjectId(string);
         assertTrue(decoded.isTemporary());
@@ -86,7 +88,8 @@ public class EntityIdCoderTest {
         when(entity.getDbEntityName()).thenReturn(dbEntity.getName());
         when(entity.getDbEntity()).thenReturn(dbEntity);
 
-        ObjectId id = new ObjectId("x", "ID", 3);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("x", "ID");
+        ObjectId id = new ObjectId(descriptor, "ID", 3);
 
         EntityIdCoder coder = new EntityIdCoder(entity);
         assertEquals("x:3", coder.toStringId(id));
@@ -108,7 +111,8 @@ public class EntityIdCoderTest {
         when(entity.getDbEntityName()).thenReturn(dbEntity.getName());
         when(entity.getDbEntity()).thenReturn(dbEntity);
 
-        ObjectId id = new ObjectId("x", "ID", 3L);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("x", "ID");
+        ObjectId id = new ObjectId(descriptor, "ID", 3L);
 
         EntityIdCoder coder = new EntityIdCoder(entity);
         assertEquals("x:3", coder.toStringId(id));
@@ -132,7 +136,8 @@ public class EntityIdCoderTest {
 
         EntityIdCoder coder = new EntityIdCoder(entity);
 
-        ObjectId id = new ObjectId("x", "ID", "AbC");
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("x", "ID");
+        ObjectId id = new ObjectId(descriptor, "ID", "AbC");
         assertEquals("x:AbC", coder.toStringId(id));
 
         ObjectId parsedId = coder.toObjectId("x:AbC");
@@ -154,7 +159,8 @@ public class EntityIdCoderTest {
 
         EntityIdCoder coder = new EntityIdCoder(entity);
 
-        ObjectId id = new ObjectId("x", "ID", "Ab:C");
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("x", "ID");
+        ObjectId id = new ObjectId(descriptor, "ID", "Ab:C");
         assertEquals("x:Ab%3AC", coder.toStringId(id));
 
         ObjectId parsedId = coder.toObjectId("x:Ab%3AC");
@@ -190,7 +196,10 @@ public class EntityIdCoderTest {
         idMap.put("ID", "X;Y");
         idMap.put("ABC", 6783463L);
         idMap.put("ZZZ", "'_'");
-        ObjectId id = new ObjectId("x", idMap);
+
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("x", "ABC", "ID", "ZZZ");
+        ObjectId id = new ObjectId(descriptor, idMap);
+
         assertEquals("x:6783463:X%3BY:%27_%27", coder.toStringId(id));
 
         ObjectId parsedId = coder.toObjectId("x:6783463:X%3BY:%27_%27");

@@ -19,6 +19,7 @@
 package org.apache.cayenne.lifecycle.id;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.lifecycle.db.E1;
 import org.junit.After;
@@ -44,41 +45,43 @@ public class IdCoderTest {
     @Test
     public void testGetStringId() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
-
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
         E1 e1 = new E1();
-        e1.setObjectId(new ObjectId("E1", "ID", 5));
+        e1.setObjectId(new ObjectId(descriptor, "ID", 5));
         assertEquals("E1:5", handler.getStringId(e1));
     }
 
     @Test
     public void testGetStringId_ObjectId() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
-        assertEquals("E1:5", handler.getStringId(new ObjectId("E1", "ID", 5)));
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
+        assertEquals("E1:5", handler.getStringId(new ObjectId(descriptor, "ID", 5)));
     }
 
     @Test
     public void testGetStringId_Temp() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
 
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
         E1 e1 = new E1();
-        e1.setObjectId(new ObjectId("E1", 1210100));
+        e1.setObjectId(new ObjectId(descriptor, 1210100));
 
-        assertEquals(".E1:1210100", handler.getStringId(e1));
+        assertEquals(".E1[ID]:1210100", handler.getStringId(e1));
     }
 
     @Test
     public void testGetObjectId_Temp() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
-
-        ObjectId decoded = handler.getObjectId(".E1:10237618");
-        assertEquals(new ObjectId("E1", 10237618L), decoded);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
+        ObjectId decoded = handler.getObjectId(".E1[ID]:10237618");
+        assertEquals(new ObjectId(descriptor, 10237618L), decoded);
     }
 
     @Test
     public void testGetSringId_TempWithReplacement() {
         IdCoder handler = new IdCoder(runtime.getChannel().getEntityResolver());
-
-        ObjectId id = new ObjectId("E1", 521199);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
+        ObjectId id = new ObjectId(descriptor, 521199);
         id.getReplacementIdMap().put("ID", 6);
 
         E1 e1 = new E1();

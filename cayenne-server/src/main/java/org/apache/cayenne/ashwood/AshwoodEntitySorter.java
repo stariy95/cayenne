@@ -23,6 +23,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.QueryResponse;
 import org.apache.cayenne.ashwood.graph.Digraph;
@@ -237,7 +238,7 @@ public class AshwoodEntitySorter implements EntitySorter {
 
 				if (masters[k] == null) {
 					masters[k] = findReflexiveMaster(current, objEntity.getRelationship(reflexiveRelName), current
-							.getObjectId().getEntityName());
+							.getObjectId().getDescriptor());
 				}
 
 				if (masters[k] != null) {
@@ -283,7 +284,7 @@ public class AshwoodEntitySorter implements EntitySorter {
 		}
 	}
 
-	protected Object findReflexiveMaster(Persistent object, ObjRelationship toOneRel, String targetEntityName) {
+	protected Object findReflexiveMaster(Persistent object, ObjRelationship toOneRel, ObjectIdDescriptor descriptor) {
 
 		DbRelationship finalRel = toOneRel.getDbRelationships().get(0);
 		ObjectContext context = object.getObjectContext();
@@ -307,7 +308,7 @@ public class AshwoodEntitySorter implements EntitySorter {
 
 		DataRow snapshot = (DataRow) result.get(0);
 
-		ObjectId id = snapshot.createTargetObjectId(targetEntityName, finalRel);
+		ObjectId id = snapshot.createTargetObjectId(descriptor, finalRel);
 
 		// not using 'localObject', looking up in context instead, as within the
 		// sorter

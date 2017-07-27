@@ -42,7 +42,7 @@ public class ObjectContextChangeLogSubListMessageFactoryTest extends ProtostuffP
     @Test
     public void testGetDiffsSerializable() throws Exception {
         ObjectContextChangeLog recorder = new ObjectContextChangeLog();
-        recorder.addOperation(new NodeCreateOperation(new ObjectId("test")));
+        recorder.addOperation(new NodeCreateOperation(new ObjectId(new ObjectIdDescriptor("test"))));
         CompoundDiff diff = (CompoundDiff) recorder.getDiffs();
 
         byte[] data = serializationService.serialize(diff);

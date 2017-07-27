@@ -24,10 +24,10 @@ import org.apache.cayenne.util.HashCodeBuilder;
 import org.apache.cayenne.util.Util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,9 +45,8 @@ public class ObjectId implements Serializable {
 
 	private static final AtomicLong TMP_ID_SEQUENCE = new AtomicLong(1);
 
-	// this two fields are constant per ObjEntity thus can be hidden and optimized
-	protected String entityName;
-	private String[] keys;
+	// descriptor for ObjEntity PKs
+	private ObjectIdDescriptor descriptor;
 
 	// PK values
 	private Object[] values;
@@ -71,8 +70,8 @@ public class ObjectId implements Serializable {
 	 * 
 	 * @since 1.2
 	 */
-	public ObjectId(String entityName) {
-		this(entityName, getNextTmpId());
+	public ObjectId(ObjectIdDescriptor descriptor) {
+		this(descriptor, getNextTmpId());
 	}
 
 	/**
@@ -92,16 +91,16 @@ public class ObjectId implements Serializable {
 	 * 
 	 * @since 1.2
 	 */
-	public ObjectId(String entityName, long tmpKey) {
-		this.entityName = entityName;
+	public ObjectId(ObjectIdDescriptor descriptor, long tmpKey) {
+		this.descriptor = descriptor;
 		this.tmpKey = tmpKey;
 	}
 
 	/**
 	 * Creates a portable permanent ObjectId.
 	 * 
-	 * @param entityName
-	 *            The entity name which this object id is for
+	 * @param descriptor
+	 *            The entity ID descriptor which this object id is for
 	 * @param key
 	 *            A key describing this object id, usually the attribute name
 	 *            for the primary key
@@ -109,14 +108,14 @@ public class ObjectId implements Serializable {
 	 *            The unique value for this object id
 	 * @since 1.2
 	 */
-	public ObjectId(String entityName, String key, int value) {
-		this(entityName, key, Integer.valueOf(value));
+	public ObjectId(ObjectIdDescriptor descriptor, String key, int value) {
+		this(descriptor, key, Integer.valueOf(value));
 	}
 
 	/**
 	 * Creates a portable permanent ObjectId.
 	 * 
-	 * @param entityName
+	 * @param descriptor
 	 *            The entity name which this object id is for
 	 * @param key
 	 *            A key describing this object id, usually the attribute name
@@ -125,38 +124,32 @@ public class ObjectId implements Serializable {
 	 *            The unique value for this object id
 	 * @since 1.2
 	 */
-	public ObjectId(String entityName, String key, Object value) {
-		this.entityName = entityName;
-
-		this.keys = new String[]{key};
+	public ObjectId(ObjectIdDescriptor descriptor, String key, Object value) {
+		this.descriptor = descriptor;
 		this.values = new Object[]{value};
 	}
 
 	/**
 	 * Creates a portable permanent ObjectId as a compound primary key.
 	 * 
-	 * @param entityName
+	 * @param descriptor
 	 *            The entity name which this object id is for
 	 * @param idMap
 	 *            Keys are usually the attribute names for each part of the
 	 *            primary key. Values are unique when taken as a whole.
 	 * @since 1.2
 	 */
-	public ObjectId(String entityName, Map<String, ?> idMap) {
-		this.entityName = entityName;
+	public ObjectId(ObjectIdDescriptor descriptor, Map<String, ?> idMap) {
+		this.descriptor = descriptor;
 
 		if (idMap == null || idMap.size() == 0) {
 			return;
 		}
 
-		keys = new String[idMap.size()];
-		values = new Object[idMap.size()];
-
-		int idx = 0;
-		for(Map.Entry<String, ?> e : idMap.entrySet()) {
-			keys[idx] = e.getKey();
-			values[idx] = e.getValue();
-			idx++;
+		int pkLength = descriptor.getPkNames().length;
+		values = new Object[pkLength];
+		for(int i=0; i<pkLength; i++) {
+			values[i] = idMap.get(descriptor.getPkNames()[i]);
 		}
 	}
 
@@ -172,7 +165,14 @@ public class ObjectId implements Serializable {
 	 * @since 1.2
 	 */
 	public String getEntityName() {
-		return entityName;
+		return descriptor.getEntityName();
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	public ObjectIdDescriptor getDescriptor() {
+		return descriptor;
 	}
 
 	/**
@@ -194,16 +194,21 @@ public class ObjectId implements Serializable {
 			return (replacementIdMap == null) ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(replacementIdMap);
 		}
 
-		if(keys == null) {
+		if(values == null) {
 			return Collections.emptyMap();
 		}
 
 		// TODO: can we get rid of this map?
 		Map<String, Object> snapshot = new HashMap<>();
-		for(int i=0; i<keys.length; i++) {
-			snapshot.put(keys[i], values[i]);
+		int idx = 0;
+		for(String pk : descriptor.getPkNames()) {
+			snapshot.put(pk, values[idx++]);
 		}
 		return Collections.unmodifiableMap(snapshot);
+	}
+
+	public Collection<Object> getValues() {
+		return Collections.unmodifiableCollection(Arrays.asList(values));
 	}
 
 	@Override
@@ -218,7 +223,7 @@ public class ObjectId implements Serializable {
 
 		ObjectId id = (ObjectId) object;
 
-		if (!Util.nullSafeEquals(entityName, id.entityName)) {
+		if (!Util.nullSafeEquals(descriptor, id.descriptor)) {
 			return false;
 		}
 
@@ -226,34 +231,29 @@ public class ObjectId implements Serializable {
 			return new EqualsBuilder().append(tmpKey, id.tmpKey).isEquals();
 		}
 
-		if(keys == null) {
-			return id.keys == null;
+		if(values == null) {
+			return id.values == null;
 		}
 
-		if(id.keys == null) {
+		if(id.values == null) {
 			return false;
 		}
 
-		if(keys.length != id.keys.length) {
+		if(values.length != id.values.length) {
 			return false;
 		}
 
-		for(int i=0; i<keys.length; i++) {
-			int idx = find(id.keys, keys[i]);
-			if(idx < 0) {
-				return false;
-			}
-
+		for(int i=0; i<values.length; i++) {
 			if (values[i] instanceof Number) {
-				if(!(id.values[idx] instanceof Number) ||
-						((Number) values[i]).longValue() != ((Number) id.values[idx]).longValue()) {
+				if(!(id.values[i] instanceof Number) ||
+						((Number) values[i]).longValue() != ((Number) id.values[i]).longValue()) {
 					return false;
 				}
 			} else if (values[i].getClass().isArray()) {
-				if(!new EqualsBuilder().append( values[i], id.values[idx]).isEquals()) {
+				if(!new EqualsBuilder().append( values[i], id.values[i]).isEquals()) {
 					return false;
 				}
-			} else if (!Util.nullSafeEquals(values[i], id.values[idx])) {
+			} else if (!Util.nullSafeEquals(values[i], id.values[i])) {
 				return false;
 			}
 		}
@@ -261,39 +261,15 @@ public class ObjectId implements Serializable {
 		return true;
 	}
 
-	/**
-	 * Linear scan search, good for small count of elements.
-	 *
-	 * @return index of element in array or -1 if it's not found
-	 */
-	static int find(String[] values, String key) {
-		if(values == null) {
-			return -1;
-		}
-
-		for(int i=0; i<values.length; i++) {
-			if((key == null && values[i] == null)
-					|| values[i].equals(key)) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
 	@Override
 	public int hashCode() {
 		if (this.hashCode == 0) {
 			HashCodeBuilder builder = new HashCodeBuilder(3, 5);
-			builder.append(entityName.hashCode());
+			builder.append(descriptor);
 			if(tmpKey != 0) {
 				builder.append(tmpKey);
-			} else if(keys != null){
-				Map<String, ?> snapshot = getIdSnapshot();
-				List<String> keys = new ArrayList<>(snapshot.keySet());
-				Collections.sort(keys);
-				for (String key : keys) {
-					Object value = snapshot.get(key);
+			} else if(values != null){
+				for (Object value : values) {
 					if(value instanceof Number) {
 						builder.append(((Number) value).longValue());
 					} else {
@@ -335,7 +311,7 @@ public class ObjectId implements Serializable {
 		if (replacementIdMap != null) {
 			newIdMap.putAll(replacementIdMap);
 		}
-		return new ObjectId(getEntityName(), newIdMap);
+		return new ObjectId(descriptor, newIdMap);
 	}
 
 	/**
@@ -356,19 +332,17 @@ public class ObjectId implements Serializable {
 
 		StringBuilder buffer = new StringBuilder();
 
-		buffer.append("<ObjectId:").append(entityName);
+		buffer.append("<ObjectId:").append(descriptor.getEntityName());
 
 		if (isTemporary()) {
 			buffer.append(", TEMP:").append(tmpKey);
-		} else if(keys != null) {
+		} else if(values != null) {
 			// ensure consistent order of the keys, so that toString could be
 			// used as a unique key, just like id itself
-			Map<String, ?> snapshot = getIdSnapshot();
-			List<String> keys = new ArrayList<>(snapshot.keySet());
-			Collections.sort(keys);
-			for (String key : keys) {
+			int idx = 0;
+			for (String key : descriptor.getPkNames()) {
 				buffer.append(", ");
-				buffer.append(String.valueOf(key)).append("=").append(snapshot.get(key));
+				buffer.append(String.valueOf(key)).append("=").append(values[idx++]);
 			}
 		}
 

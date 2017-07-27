@@ -42,8 +42,8 @@ public class CayenneContextGraphManagerTest {
 
     @Test
     public void testRegisterNode() {
-
-        ObjectId id = new ObjectId("E1", "ID", 500);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
+        ObjectId id = new ObjectId(descriptor, "ID", 500);
         Persistent object = mock(Persistent.class);
 
         graphManager.registerNode(id, object);
@@ -52,8 +52,8 @@ public class CayenneContextGraphManagerTest {
 
     @Test
     public void testUnregisterNode() {
-
-        ObjectId id = new ObjectId("E1", "ID", 500);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", "ID");
+        ObjectId id = new ObjectId(descriptor, "ID", 500);
         Persistent object = mock(Persistent.class);
 
         graphManager.registerNode(id, object);

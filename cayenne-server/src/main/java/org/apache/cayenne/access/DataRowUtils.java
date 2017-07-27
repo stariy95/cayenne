@@ -182,7 +182,7 @@ class DataRowUtils {
                         // snapshots
                         if (hasFK(dbRelationship, snapshot)) {
                             ObjectId id = snapshot.createTargetObjectId(
-                                    relationship.getTargetEntityName(),
+                                    relationship.getTargetEntity().getObjectIdDescriptor(),
                                     dbRelationship);
 
                             if (diff == null

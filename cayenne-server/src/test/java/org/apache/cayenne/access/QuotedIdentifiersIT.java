@@ -20,9 +20,11 @@ package org.apache.cayenne.access;
 
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.query.EJBQLQuery;
 import org.apache.cayenne.query.ObjectIdQuery;
 import org.apache.cayenne.query.RelationshipQuery;
@@ -86,7 +88,8 @@ public class QuotedIdentifiersIT extends ServerCase {
 
     @Test
     public void testPrefetchQuote() throws Exception {
-        DbEntity entity = context.getEntityResolver().getObjEntity(QuoteAdress.class).getDbEntity();
+        ObjEntity objEntity = context.getEntityResolver().getObjEntity(QuoteAdress.class);
+        DbEntity entity = objEntity.getDbEntity();
         List idAttributes = Collections.singletonList(entity.getAttribute("City"));
         List updatedAttributes = Collections.singletonList(entity.getAttribute("City"));
 
@@ -112,12 +115,18 @@ public class QuotedIdentifiersIT extends ServerCase {
         List objects7 = context.performQuery(quoteAdress1);
         assertEquals(1, objects7.size());
 
-        ObjectIdQuery queryObjectId = new ObjectIdQuery(new ObjectId("QuoteAdress", QuoteAdress.GROUP.getName(), "324"));
+        // FIXME: here we using not PK as query qualifier, but "group" field.
+        // still this code works as before, but should be revised.
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("QuoteAdress", "group");
+        ObjectIdQuery queryObjectId = new ObjectIdQuery(
+                new ObjectId(descriptor, QuoteAdress.GROUP.getName(), "324"));
 
         List objects8 = context.performQuery(queryObjectId);
         assertEquals(1, objects8.size());
 
-        ObjectIdQuery queryObjectId2 = new ObjectIdQuery(new ObjectId("Quote_Person", "GROUP", "1111"));
+        ObjectIdQuery queryObjectId2 = new ObjectIdQuery(new ObjectId(
+                new ObjectIdDescriptor("Quote_Person", new String[]{"GROUP"}),
+                "GROUP", "1111"));
         List objects9 = context.performQuery(queryObjectId2);
         assertEquals(1, objects9.size());
 

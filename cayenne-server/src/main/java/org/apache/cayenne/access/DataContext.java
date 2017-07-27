@@ -501,7 +501,7 @@ public class DataContext extends BaseContext {
         // this will initialize to-many lists
         descriptor.injectValueHolders(object);
 
-        ObjectId id = new ObjectId(entityName);
+        ObjectId id = new ObjectId(descriptor.getEntity().getObjectIdDescriptor());
 
         // note that the order of initialization of persistence artifacts below
         // is
@@ -548,7 +548,7 @@ public class DataContext extends BaseContext {
                         + "Try using 'localObjects()' instead.");
             }
         } else {
-            persistent.setObjectId(new ObjectId(entity.getName()));
+            persistent.setObjectId(new ObjectId(entity.getObjectIdDescriptor()));
         }
 
         ClassDescriptor descriptor = getEntityResolver().getClassDescriptor(entity.getName());

@@ -76,7 +76,7 @@ public class PersistentObjectInContextIT extends ClientCase {
         createTwoMtTable1sAnd2sDataSet();
 
         ObjectId gid = new ObjectId(
-                "MtTable1",
+                context.getEntityResolver().getObjEntity("MtTable1").getObjectIdDescriptor(),
                 MtTable1.TABLE1_ID_PK_COLUMN,
                 new Integer(1));
         ClientMtTable1 t1 = (ClientMtTable1) Cayenne.objectForQuery(
@@ -101,7 +101,7 @@ public class PersistentObjectInContextIT extends ClientCase {
         createTwoMtTable1sAnd2sDataSet();
 
         ObjectId gid = new ObjectId(
-                "MtTable2",
+                context.getEntityResolver().getObjEntity("MtTable2").getObjectIdDescriptor(),
                 MtTable2.TABLE2_ID_PK_COLUMN,
                 new Integer(1));
         ClientMtTable2 mtTable21 = (ClientMtTable2) Cayenne.objectForQuery(
@@ -120,7 +120,7 @@ public class PersistentObjectInContextIT extends ClientCase {
         createTwoMtTable1sAnd2sDataSet();
 
         ObjectId gid = new ObjectId(
-                "MtTable2",
+                context.getEntityResolver().getObjEntity("MtTable2").getObjectIdDescriptor(),
                 MtTable2.TABLE2_ID_PK_COLUMN,
                 new Integer(1));
         ClientMtTable2 mtTable21 = (ClientMtTable2) Cayenne.objectForQuery(

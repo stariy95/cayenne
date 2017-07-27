@@ -29,6 +29,7 @@ import java.sql.Types;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.test.jdbc.DBHelper;
@@ -116,12 +117,13 @@ public class SelectById_RunIT extends ServerCase {
 	public void testObjectIdPk() throws Exception {
 		createTwoArtists();
 
-		ObjectId oid3 = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, 3);
+		ObjectIdDescriptor descriptor = resolver.getObjEntity("Artist").getObjectIdDescriptor();
+		ObjectId oid3 = new ObjectId(descriptor, Artist.ARTIST_ID_PK_COLUMN, 3);
 		Artist a3 = SelectById.query(Artist.class, oid3).selectOne(context);
 		assertNotNull(a3);
 		assertEquals("artist3", a3.getArtistName());
 
-		ObjectId oid2 = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, 2);
+		ObjectId oid2 = new ObjectId(descriptor, Artist.ARTIST_ID_PK_COLUMN, 2);
 		Artist a2 = SelectById.query(Artist.class, oid2).selectOne(context);
 		assertNotNull(a2);
 		assertEquals("artist2", a2.getArtistName());
@@ -170,7 +172,8 @@ public class SelectById_RunIT extends ServerCase {
 		assertNotEquals(md1.getCacheKey(), md4.getCacheKey());
 
 		SelectById<Painting> q5 = SelectById
-				.query(Painting.class, new ObjectId("Painting", Painting.PAINTING_ID_PK_COLUMN, 4)).localCache();
+				.query(Painting.class, new ObjectId(resolver.getObjEntity("Painting").getObjectIdDescriptor(),
+						Painting.PAINTING_ID_PK_COLUMN, 4)).localCache();
 		QueryMetadata md5 = q5.getMetaData(resolver);
 		assertNotNull(md5);
 		assertNotNull(md5.getCacheKey());

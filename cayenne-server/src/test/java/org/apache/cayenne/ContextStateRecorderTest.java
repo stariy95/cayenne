@@ -58,8 +58,10 @@ public class ContextStateRecorderTest {
 		assertTrue(recorder.dirtyNodes(PersistenceState.TRANSIENT).isEmpty());
 		assertTrue(recorder.dirtyNodes(PersistenceState.HOLLOW).isEmpty());
 
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("MockPersistentObject", "key");
+
 		MockPersistentObject modified = new MockPersistentObject();
-		modified.setObjectId(new ObjectId("MockPersistentObject", "key", "value1"));
+		modified.setObjectId(new ObjectId(descriptor, "key", "value1"));
 		modified.setPersistenceState(PersistenceState.MODIFIED);
 		
 		when(mockGraphManager.getNode(modified.getObjectId())).thenReturn(modified);
@@ -73,7 +75,7 @@ public class ContextStateRecorderTest {
 		assertTrue(recorder.dirtyNodes(PersistenceState.HOLLOW).isEmpty());
 
 		MockPersistentObject deleted = new MockPersistentObject();
-		deleted.setObjectId(new ObjectId("MockPersistentObject", "key", "value2"));
+		deleted.setObjectId(new ObjectId(descriptor, "key", "value2"));
 		deleted.setPersistenceState(PersistenceState.DELETED);
 		when(mockGraphManager.getNode(deleted.getObjectId())).thenReturn(deleted);
 		recorder.nodeRemoved(deleted.getObjectId());
@@ -94,7 +96,8 @@ public class ContextStateRecorderTest {
 
 		// introduce a fake dirty object
 		MockPersistentObject object = new MockPersistentObject();
-		object.setObjectId(new ObjectId("MockPersistentObject", "key", "value"));
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("MockPersistentObject", "key");
+		object.setObjectId(new ObjectId(descriptor, "key", "value"));
 		object.setPersistenceState(PersistenceState.MODIFIED);
 
 		when(mockGraphManager.getNode(object.getObjectId())).thenReturn(object);
@@ -116,7 +119,8 @@ public class ContextStateRecorderTest {
 
 		// introduce a fake dirty object
 		MockPersistentObject object = new MockPersistentObject();
-		object.setObjectId(new ObjectId("MockPersistentObject", "key", "value"));
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("MockPersistentObject", "key");
+		object.setObjectId(new ObjectId(descriptor, "key", "value"));
 		object.setPersistenceState(PersistenceState.MODIFIED);
 		recorder.nodePropertyChanged(object.getObjectId(), "xyz", "a", "b");
 

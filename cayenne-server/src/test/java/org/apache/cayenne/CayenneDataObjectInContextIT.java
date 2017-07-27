@@ -300,7 +300,7 @@ public class CayenneDataObjectInContextIT extends ServerCase {
 
         // do a manual id substitution
         object.setObjectId(new ObjectId(
-                "Artist",
+                context.getEntityResolver().getObjEntity("Artist").getObjectIdDescriptor(),
                 Artist.ARTIST_ID_PK_COLUMN,
                 new Integer(3)));
 

@@ -300,7 +300,7 @@ public class NestedDataContextReadIT extends ServerCase {
         final ObjectContext child = runtime.newContext(context);
 
         final ObjectId prefetchedId = new ObjectId(
-                "Artist",
+                context.getEntityResolver().getObjEntity("Artist").getObjectIdDescriptor(),
                 Artist.ARTIST_ID_PK_COLUMN,
                 new Integer(33001));
 

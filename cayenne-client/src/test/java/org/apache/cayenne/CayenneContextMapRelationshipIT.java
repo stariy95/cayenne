@@ -69,7 +69,8 @@ public class CayenneContextMapRelationshipIT extends ClientCase {
     public void testReadToMany() throws Exception {
         createTwoMapToManysWithTargetsDataSet();
 
-        ObjectId id = new ObjectId("IdMapToMany", IdMapToMany.ID_PK_COLUMN, 1);
+        ObjectId id = new ObjectId(context.getEntityResolver().getObjEntity("IdMapToMany").getObjectIdDescriptor(),
+                IdMapToMany.ID_PK_COLUMN, 1);
         ClientIdMapToMany o1 = (ClientIdMapToMany) Cayenne.objectForQuery(
                 context,
                 new ObjectIdQuery(id));
@@ -89,7 +90,8 @@ public class CayenneContextMapRelationshipIT extends ClientCase {
     public void testAddToMany() throws Exception {
         createTwoMapToManysWithTargetsDataSet();
 
-        ObjectId id = new ObjectId("IdMapToMany", IdMapToMany.ID_PK_COLUMN, 1);
+        ObjectId id = new ObjectId(context.getEntityResolver().getObjEntity("IdMapToMany").getObjectIdDescriptor(),
+                IdMapToMany.ID_PK_COLUMN, 1);
         ClientIdMapToMany o1 = (ClientIdMapToMany) Cayenne.objectForQuery(
                 context,
                 new ObjectIdQuery(id));

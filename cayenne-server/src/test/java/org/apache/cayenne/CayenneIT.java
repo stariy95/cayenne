@@ -152,8 +152,7 @@ public class CayenneIT extends ServerCase {
     public void testObjectForQuery() throws Exception {
         createOneArtist();
 
-        ObjectId id = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, new Integer(
-                33002));
+        ObjectId id = new ObjectId(getArtistObjectIdDescriptor(), Artist.ARTIST_ID_PK_COLUMN, 33002);
 
         assertNull(context.getGraphManager().getNode(id));
 
@@ -173,15 +172,13 @@ public class CayenneIT extends ServerCase {
         Artist object = context.selectOne(query);
 
         assertNotNull(object);
-        assertTrue(object instanceof Artist);
-        assertEquals("artist2", ((Artist) object).getArtistName());
+        assertEquals("artist2", object.getArtistName());
     }
 
     @Test
     public void testObjectForQueryNoObject() throws Exception {
 
-        ObjectId id = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, new Integer(
-                44001));
+        ObjectId id = new ObjectId(getArtistObjectIdDescriptor(), Artist.ARTIST_ID_PK_COLUMN, 44001);
 
         Object object = Cayenne.objectForQuery(context, new ObjectIdQuery(id));
         assertNull(object);
@@ -204,7 +201,7 @@ public class CayenneIT extends ServerCase {
         assertSame(o1, Cayenne.objectForPK(context, o1.getObjectId()));
         assertSame(o2, Cayenne.objectForPK(context, o2.getObjectId()));
 
-        assertNull(Cayenne.objectForPK(context, new ObjectId("Artist", 123L)));
+        assertNull(Cayenne.objectForPK(context, new ObjectId(getArtistObjectIdDescriptor(), 123L)));
     }
 
     @Test
@@ -212,9 +209,7 @@ public class CayenneIT extends ServerCase {
         createOneArtist();
 
         Object object = Cayenne.objectForPK(context, new ObjectId(
-                "Artist",
-                Artist.ARTIST_ID_PK_COLUMN,
-                33002));
+                getArtistObjectIdDescriptor(), Artist.ARTIST_ID_PK_COLUMN, 33002));
 
         assertNotNull(object);
         assertTrue(object instanceof Artist);
@@ -225,11 +220,10 @@ public class CayenneIT extends ServerCase {
     public void testObjectForPKClassInt() throws Exception {
         createOneArtist();
 
-        Object object = Cayenne.objectForPK(context, Artist.class, 33002);
+        Artist object = Cayenne.objectForPK(context, Artist.class, 33002);
 
         assertNotNull(object);
-        assertTrue(object instanceof Artist);
-        assertEquals("artist2", ((Artist) object).getArtistName());
+        assertEquals("artist2", object.getArtistName());
     }
 
     @Test
@@ -249,19 +243,18 @@ public class CayenneIT extends ServerCase {
 
         Map<String, Integer> pk = Collections.singletonMap(
                 Artist.ARTIST_ID_PK_COLUMN,
-                new Integer(33002));
-        Object object = Cayenne.objectForPK(context, Artist.class, pk);
+                33002);
+        Artist object = Cayenne.objectForPK(context, Artist.class, pk);
 
         assertNotNull(object);
-        assertTrue(object instanceof Artist);
-        assertEquals("artist2", ((Artist) object).getArtistName());
+        assertEquals("artist2", object.getArtistName());
     }
 
     @Test
     public void testIntPKForObject() throws Exception {
         createOneArtist();
 
-        List<?> objects = context.performQuery(new SelectQuery(Artist.class));
+        List<?> objects = context.performQuery(new SelectQuery<>(Artist.class));
         assertEquals(1, objects.size());
         DataObject object = (DataObject) objects.get(0);
 
@@ -272,11 +265,11 @@ public class CayenneIT extends ServerCase {
     public void testPKForObject() throws Exception {
         createOneArtist();
 
-        List<?> objects = context.performQuery(new SelectQuery(Artist.class));
+        List<?> objects = context.performQuery(new SelectQuery<>(Artist.class));
         assertEquals(1, objects.size());
         DataObject object = (DataObject) objects.get(0);
 
-        assertEquals(new Long(33002), Cayenne.pkForObject(object));
+        assertEquals(33002L, Cayenne.pkForObject(object));
     }
 
     @Test
@@ -287,7 +280,11 @@ public class CayenneIT extends ServerCase {
         assertEquals(1, objects.size());
         Artist object = (Artist) objects.get(0);
 
-        assertEquals(new Long(33002), Cayenne.pkForObject(object));
+        assertEquals(33002L, Cayenne.pkForObject(object));
     }
 
+
+    private ObjectIdDescriptor getArtistObjectIdDescriptor() {
+        return context.getEntityResolver().getObjEntity("Artist").getObjectIdDescriptor();
+    }
 }

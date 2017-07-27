@@ -58,7 +58,7 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
         obj.setDescr("aaa-aaa");
         context.commitChanges();
         ObjectIdQuery q = new ObjectIdQuery(new ObjectId(
-                "MeaningfulPKTest1",
+                context.getEntityResolver().getObjEntity("MeaningfulPKTest1").getObjectIdDescriptor(),
                 MeaningfulPKTest1.PK_ATTRIBUTE_PK_COLUMN,
                 1000), true, ObjectIdQuery.CACHE_REFRESH);
         assertEquals(1, context.performQuery(q).size());

@@ -21,6 +21,7 @@ package org.apache.cayenne.util;
 import org.apache.cayenne.Cayenne;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataContext;
@@ -104,18 +105,19 @@ public class ShallowMergeOperationIT extends ServerCase {
 
         ObjectContext childContext = runtime.newContext(context);
         final ShallowMergeOperation op = new ShallowMergeOperation(childContext);
+        ObjectIdDescriptor descriptor = context.getEntityResolver().getObjEntity("Artist").getObjectIdDescriptor();
 
         int modifiedId = 33003;
         final Artist modified = (Artist) Cayenne.objectForQuery(
                 context,
                 new ObjectIdQuery(new ObjectId(
-                        "Artist",
+                        descriptor,
                         Artist.ARTIST_ID_PK_COLUMN,
                         modifiedId)));
         final Artist peerModified = (Artist) Cayenne.objectForQuery(
                 childContext,
                 new ObjectIdQuery(new ObjectId(
-                        "Artist",
+                        descriptor,
                         Artist.ARTIST_ID_PK_COLUMN,
                         modifiedId)));
 

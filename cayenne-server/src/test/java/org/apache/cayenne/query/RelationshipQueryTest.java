@@ -20,6 +20,7 @@
 package org.apache.cayenne.query;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.util.Util;
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ public class RelationshipQueryTest {
     @Test
     public void testConstructorObjectId() {
 
-        ObjectId oid = new ObjectId("MockDataObject", "a", "b");
+        ObjectId oid = new ObjectId(new ObjectIdDescriptor("MockDataObject", new String[]{"a"}), "a", "b");
         RelationshipQuery query = new RelationshipQuery(oid, "relX");
         assertSame(oid, query.getObjectId());
         assertSame("relX", query.getRelationshipName());
@@ -40,10 +41,10 @@ public class RelationshipQueryTest {
 
     @Test
     public void testSerializability() throws Exception {
-        ObjectId oid = new ObjectId("test", "a", "b");
+        ObjectId oid = new ObjectId(new ObjectIdDescriptor("test", new String[]{"a"}), "a", "b");
         RelationshipQuery query = new RelationshipQuery(oid, "relX");
 
-        RelationshipQuery q1 = (RelationshipQuery) Util.cloneViaSerialization(query);
+        RelationshipQuery q1 = Util.cloneViaSerialization(query);
         assertNotNull(q1);
         assertEquals(oid, q1.getObjectId());
         assertEquals("relX", q1.getRelationshipName());

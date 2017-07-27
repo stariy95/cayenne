@@ -203,7 +203,7 @@ public abstract class ObjectContextQueryAction {
 	private Object polymorphicObjectFromCache(EntityInheritanceTree superNode, Map<String, ?> idSnapshot) {
 
 		for (EntityInheritanceTree child : superNode.getChildren()) {
-			ObjectId id = new ObjectId(child.getEntity().getName(), idSnapshot);
+			ObjectId id = new ObjectId(child.getEntity().getObjectIdDescriptor(), idSnapshot);
 			Object object = actingContext.getGraphManager().getNode(id);
 			if (object != null) {
 				return object;

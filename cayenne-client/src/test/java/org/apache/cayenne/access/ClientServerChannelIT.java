@@ -32,6 +32,7 @@ import org.apache.cayenne.DataChannel;
 import org.apache.cayenne.MockDataChannel;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.QueryResponse;
 import org.apache.cayenne.ValueHolder;
 import org.apache.cayenne.configuration.server.ServerRuntime;
@@ -126,7 +127,8 @@ public class ClientServerChannelIT extends ClientCase {
 		assertEquals(0, serverContext.performQuery(query).size());
 
 		// introduce changes
-		clientServerChannel.onSync(serverContext, new NodeCreateOperation(new ObjectId("MtTable1")),
+		clientServerChannel.onSync(serverContext, new NodeCreateOperation(
+				new ObjectId(new ObjectIdDescriptor("MtTable1", MtTable1.TABLE1_ID_PK_COLUMN))),
 				DataChannel.FLUSH_CASCADE_SYNC);
 
 		assertEquals(1, serverContext.performQuery(query).size());
@@ -151,7 +153,9 @@ public class ClientServerChannelIT extends ClientCase {
 		ClientMtTable1 clientObject = (ClientMtTable1) result;
 		assertNotNull(clientObject.getObjectId());
 
-		assertEquals(new ObjectId("MtTable1", MtTable1.TABLE1_ID_PK_COLUMN, 55), clientObject.getObjectId());
+		assertEquals(new ObjectId(
+				new ObjectIdDescriptor("MtTable1", MtTable1.TABLE1_ID_PK_COLUMN),
+				MtTable1.TABLE1_ID_PK_COLUMN, 55), clientObject.getObjectId());
 	}
 
 	@Test

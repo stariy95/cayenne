@@ -47,13 +47,15 @@ public class ObjectIdRegressionTest {
 
         int size = 100000;
 
-        new ObjectId("Artist");
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("Artist");
+
+        new ObjectId(descriptor);
         ObjectId[] pool = new ObjectId[size];
 
         long t0 = System.currentTimeMillis();
         // fill in
         for (int i = 0; i < size; i++) {
-            pool[i] = new ObjectId("Artist");
+            pool[i] = new ObjectId(descriptor);
         }
 
         long t1 = System.currentTimeMillis();

@@ -20,6 +20,7 @@
 package org.apache.cayenne.map;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.configuration.ConfigurationNode;
 import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
 import org.apache.cayenne.dba.TypesMapping;
@@ -91,6 +92,8 @@ public class ObjEntity extends Entity implements ObjEntityListener, Configuratio
     protected boolean excludingSuperclassListeners;
 
     protected Map<String, String> attributeOverrides;
+
+    protected volatile ObjectIdDescriptor objectIdDescriptor;
 
     public ObjEntity() {
         this(null);
@@ -1221,6 +1224,24 @@ public class ObjEntity extends Entity implements ObjEntityListener, Configuratio
     /** Entity has been removed. */
     public void objEntityRemoved(EntityEvent e) {
         // does nothing currently
+    }
+
+    /**
+     * @return ObjectId descriptor
+     */
+    public ObjectIdDescriptor getObjectIdDescriptor() {
+        ObjectIdDescriptor descriptor = objectIdDescriptor;
+        if(descriptor == null) {
+            synchronized (this) {
+                descriptor = objectIdDescriptor;
+                if(descriptor == null) {
+                    List<String> keyNames = new ArrayList<>(getPrimaryKeyNames());
+                    Collections.sort(keyNames);
+                    objectIdDescriptor = descriptor = new ObjectIdDescriptor(name, keyNames.toArray(new String[0]));
+                }
+            }
+        }
+        return descriptor;
     }
 
     /**

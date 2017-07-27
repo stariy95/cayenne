@@ -23,6 +23,7 @@ import org.apache.cayenne.CayenneContext;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.MockPersistentObject;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.QueryResponse;
@@ -74,7 +75,7 @@ public class ClientChannelTest {
     public void testOnQuerySelect() {
 
         final MockPersistentObject o1 = new MockPersistentObject();
-        ObjectId oid1 = new ObjectId("test_entity");
+        ObjectId oid1 = new ObjectId(new ObjectIdDescriptor("test_entity"));
         o1.setObjectId(oid1);
 
         ClientConnection connection = mock(ClientConnection.class);
@@ -135,7 +136,7 @@ public class ClientChannelTest {
         CayenneContext context = new CayenneContext();
         context.setEntityResolver(resolver);
 
-        ObjectId oid = new ObjectId("test_entity", "x", "y");
+        ObjectId oid = new ObjectId(new ObjectIdDescriptor("test_entity", "x"), "x", "y");
 
         MockPersistentObject o1 = new MockPersistentObject(oid);
         context.getGraphManager().registerNode(oid, o1);
@@ -176,7 +177,7 @@ public class ClientChannelTest {
         CayenneContext context = new CayenneContext();
         context.setEntityResolver(resolver);
 
-        ObjectId oid = new ObjectId("test_entity", "x", "y");
+        ObjectId oid = new ObjectId(new ObjectIdDescriptor("test_entity", "x"), "x", "y");
 
         MockPersistentObject o1 = new MockPersistentObject(oid);
         o1.setPersistenceState(PersistenceState.MODIFIED);

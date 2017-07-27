@@ -21,6 +21,7 @@ package org.apache.cayenne.access;
 
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.configuration.DefaultRuntimeProperties;
 import org.apache.cayenne.testdo.testmap.Artist;
@@ -76,6 +77,8 @@ public class DataRowStoreIT extends ServerCase {
         Map<String, String> props = new HashMap<>();
         props.put(Constants.SNAPSHOT_CACHE_SIZE_PROPERTY, String.valueOf(2));
 
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("Artist", Artist.ARTIST_ID_PK_COLUMN);
+
         cache = new DataRowStore(
                 "cacheXYZ",
                 new DefaultRuntimeProperties(props),
@@ -83,15 +86,15 @@ public class DataRowStoreIT extends ServerCase {
         assertEquals(2, cache.maximumSize());
         assertEquals(0, cache.size());
 
-        ObjectId key1 = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, 1);
+        ObjectId key1 = new ObjectId(descriptor, Artist.ARTIST_ID_PK_COLUMN, 1);
         Map<ObjectId, DataRow> diff1 = new HashMap<>();
         diff1.put(key1, new DataRow(1));
 
-        ObjectId key2 = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, 2);
+        ObjectId key2 = new ObjectId(descriptor, Artist.ARTIST_ID_PK_COLUMN, 2);
         Map<ObjectId, DataRow> diff2 = new HashMap<>();
         diff2.put(key2, new DataRow(1));
 
-        ObjectId key3 = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, 3);
+        ObjectId key3 = new ObjectId(descriptor, Artist.ARTIST_ID_PK_COLUMN, 3);
         Map<ObjectId, DataRow> diff3 = new HashMap<>();
         diff3.put(key3, new DataRow(1));
 

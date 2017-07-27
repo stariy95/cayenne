@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.Expression;
@@ -122,8 +123,9 @@ public class QualifierTranslatorIT extends ServerCase {
 
 	@Test
 	public void testExtras() throws Exception {
-		ObjectId oid1 = new ObjectId("Gallery", "GALLERY_ID", 1);
-		ObjectId oid2 = new ObjectId("Gallery", "GALLERY_ID", 2);
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("Gallery", "GALLERY_ID");
+		ObjectId oid1 = new ObjectId(descriptor, "GALLERY_ID", 1);
+		ObjectId oid2 = new ObjectId(descriptor, "GALLERY_ID", 2);
 		Gallery g1 = new Gallery();
 		Gallery g2 = new Gallery();
 		g1.setObjectId(oid1);

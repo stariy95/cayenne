@@ -119,14 +119,14 @@ public class DataRow extends HashMap<String, Object> {
      * this DataRow representing a source of relationship. Returns null if snapshot FK
      * columns indicate a null to-one relationship.
      */
-    public ObjectId createTargetObjectId(String entityName, DbRelationship relationship) {
+    public ObjectId createTargetObjectId(ObjectIdDescriptor descriptor, DbRelationship relationship) {
 
         if (relationship.isToMany()) {
             throw new CayenneRuntimeException("Only 'to one' can have a target ObjectId.");
         }
 
         Map<String, Object> target = relationship.targetPkSnapshotWithSrcSnapshot(this);
-        return (target != null) ? new ObjectId(entityName, target) : null;
+        return (target != null) ? new ObjectId(descriptor, target) : null;
     }
 
     @Override

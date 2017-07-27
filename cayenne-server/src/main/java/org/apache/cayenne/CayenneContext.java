@@ -319,13 +319,13 @@ public class CayenneContext extends BaseContext {
     // ****** non-public methods ******
 
     void registerNewObject(Persistent object, String entityName, ClassDescriptor descriptor) {
-        /**
+        /*
          * We should create new id only if it is not set for this object. It
          * could have been created, for instance, in child context
          */
         ObjectId id = object.getObjectId();
         if (id == null) {
-            id = new ObjectId(entityName);
+            id = new ObjectId(descriptor.getEntity().getObjectIdDescriptor());
             object.setObjectId(id);
         }
 

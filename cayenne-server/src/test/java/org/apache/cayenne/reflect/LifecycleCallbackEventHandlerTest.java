@@ -19,6 +19,7 @@
 package org.apache.cayenne.reflect;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistentObject;
 import org.apache.cayenne.map.EntityResolver;
 import org.junit.Test;
@@ -40,7 +41,8 @@ public class LifecycleCallbackEventHandlerTest {
         map.addDefaultListener(l1, "callback");
 
         C1 c1 = new C1();
-        c1.setObjectId(new ObjectId("bogus"));
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("bogus");
+        c1.setObjectId(new ObjectId(descriptor));
 
         assertEquals(0, l1.entities.size());
         map.performCallbacks(c1);
@@ -60,7 +62,8 @@ public class LifecycleCallbackEventHandlerTest {
         map.addDefaultListener(l2, "callback");
 
         C1 c1 = new C1();
-        c1.setObjectId(new ObjectId("bogus"));
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("bogus");
+        c1.setObjectId(new ObjectId(descriptor));
 
         map.performCallbacks(c1);
         assertEquals(1, l1.callbackTimes.size());
@@ -79,7 +82,8 @@ public class LifecycleCallbackEventHandlerTest {
         map.addListener(C1.class, "c1Callback");
 
         C3 subclass = new C3();
-        subclass.setObjectId(new ObjectId("bogusSubclass"));
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("bogusSubclass");
+        subclass.setObjectId(new ObjectId(descriptor));
 
         assertEquals(0, subclass.callbacks.size());
         map.performCallbacks(subclass);
@@ -94,7 +98,8 @@ public class LifecycleCallbackEventHandlerTest {
         map.addListener(C1.class, "c1Callback");
 
         C4 subclass = new C4();
-        subclass.setObjectId(new ObjectId("bogus"));
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("bogus");
+        subclass.setObjectId(new ObjectId(descriptor));
 
         assertEquals(0, subclass.callbacks.size());
         map.performCallbacks(subclass);
@@ -111,7 +116,8 @@ public class LifecycleCallbackEventHandlerTest {
         map.addListener(C1.class, "c1Callback");
 
         C2 c = new C2();
-        c.setObjectId(new ObjectId("bogus"));
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("bogus");
+        c.setObjectId(new ObjectId(descriptor));
 
         assertTrue(c.callbacks.isEmpty());
         map.performCallbacks(c);

@@ -361,14 +361,14 @@ public class DataContextFlattenedAttributesIT extends ServerCase {
 
         Number artistCount = (Number) Cayenne.objectForQuery(context, new EJBQLQuery(
                 "select count(a) from Artist a"));
-        assertEquals(1, artistCount.intValue());
+        assertEquals(2, artistCount.intValue());
         Number paintingCount = (Number) Cayenne.objectForQuery(context, new EJBQLQuery(
                 "select count(a) from Painting a"));
         assertEquals(0, paintingCount.intValue());
 
         Number galleryCount = (Number) Cayenne.objectForQuery(context, new EJBQLQuery(
                 "select count(a) from Gallery a"));
-        assertEquals(0, galleryCount.intValue());
+        assertEquals(1, galleryCount.intValue());
     }
 
     @Test

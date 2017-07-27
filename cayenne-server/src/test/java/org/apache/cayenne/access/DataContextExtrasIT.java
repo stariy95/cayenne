@@ -24,6 +24,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.DataObject;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.dba.JdbcAdapter;
@@ -121,7 +122,7 @@ public class DataContextExtrasIT extends ServerCase {
         assertEquals(PersistenceState.NEW, object.getPersistenceState());
 
         // do a manual ID substitution
-        ObjectId manualId = new ObjectId("Artist", Artist.ARTIST_ID_PK_COLUMN, 77777);
+        ObjectId manualId = new ObjectId(getArtistIdDescriptor(), Artist.ARTIST_ID_PK_COLUMN, 77777);
         object.setObjectId(manualId);
 
         context.commitChanges();
@@ -151,7 +152,7 @@ public class DataContextExtrasIT extends ServerCase {
     public void testResolveFaultFailure() {
 
         Persistent o1 = context.findOrCreateObject(new ObjectId(
-                "Artist",
+                getArtistIdDescriptor(),
                 Artist.ARTIST_ID_PK_COLUMN,
                 234));
 
@@ -441,5 +442,9 @@ public class DataContextExtrasIT extends ServerCase {
         p1.resetValidationFlags();
         context.commitChanges();
         assertFalse(p1.isValidateForSaveCalled());
+    }
+
+    private ObjectIdDescriptor getArtistIdDescriptor() {
+        return context.getEntityResolver().getObjEntity("Artist").getObjectIdDescriptor();
     }
 }

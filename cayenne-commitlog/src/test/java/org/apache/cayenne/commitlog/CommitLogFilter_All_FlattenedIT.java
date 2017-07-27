@@ -20,6 +20,7 @@ package org.apache.cayenne.commitlog;
 
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.commitlog.db.E3;
 import org.apache.cayenne.commitlog.db.E4;
 import org.apache.cayenne.commitlog.model.ChangeMap;
@@ -77,7 +78,7 @@ public class CommitLogFilter_All_FlattenedIT extends FlattenedServerCase {
 				assertNotNull(changes);
 				assertEquals(3, changes.getUniqueChanges().size());
 
-				ObjectChange e3c = changes.getChanges().get(new ObjectId("E3", E3.ID_PK_COLUMN, 1));
+				ObjectChange e3c = changes.getChanges().get(objectId("E3", E3.ID_PK_COLUMN, 1));
 				assertNotNull(e3c);
 				assertEquals(ObjectChangeType.UPDATE, e3c.getType());
 				assertEquals(0, e3c.getAttributeChanges().size());
@@ -92,7 +93,7 @@ public class CommitLogFilter_All_FlattenedIT extends FlattenedServerCase {
 				assertEquals(1, e3c1.getRemoved().size());
 				assertTrue(e3c1.getRemoved().contains(e4_1.getObjectId()));
 				
-				ObjectChange e41c = changes.getChanges().get(new ObjectId("E4", E4.ID_PK_COLUMN, 11));
+				ObjectChange e41c = changes.getChanges().get(objectId("E4", E4.ID_PK_COLUMN, 11));
 				assertNotNull(e41c);
 				assertEquals(ObjectChangeType.UPDATE, e41c.getType());
 				assertEquals(0, e41c.getAttributeChanges().size());
@@ -106,7 +107,7 @@ public class CommitLogFilter_All_FlattenedIT extends FlattenedServerCase {
 				assertEquals(1, e41c1.getRemoved().size());
 				assertTrue(e41c1.getRemoved().contains(e3.getObjectId()));
 				
-				ObjectChange e42c = changes.getChanges().get(new ObjectId("E4", E4.ID_PK_COLUMN, 12));
+				ObjectChange e42c = changes.getChanges().get(objectId("E4", E4.ID_PK_COLUMN, 12));
 				assertNotNull(e42c);
 				assertEquals(ObjectChangeType.UPDATE, e42c.getType());
 				assertEquals(0, e42c.getAttributeChanges().size());
@@ -130,6 +131,10 @@ public class CommitLogFilter_All_FlattenedIT extends FlattenedServerCase {
 		context.commitChanges();
 
 		verify(mockListener).onPostCommit(any(ObjectContext.class), any(ChangeMap.class));
+	}
+
+	private ObjectId objectId(String entityName, String pkName, int value) {
+		return new ObjectId(new ObjectIdDescriptor(entityName, pkName), pkName, value);
 	}
 
 }

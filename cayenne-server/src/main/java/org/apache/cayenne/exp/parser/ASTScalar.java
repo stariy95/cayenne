@@ -20,6 +20,7 @@
 package org.apache.cayenne.exp.parser;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.cayenne.ObjectId;
@@ -89,8 +90,9 @@ public class ASTScalar extends SimpleNode {
 
         if(scalar instanceof ObjectId) {
             ObjectId temp = (ObjectId)value;
-            if (!temp.isTemporary() && temp.getIdSnapshot().size() == 1) {
-                scalar = temp.getIdSnapshot().values().iterator().next();
+            Collection<Object> values = temp.getValues();
+            if (!temp.isTemporary() && values.size() == 1) {
+                scalar = values.iterator().next();
             }
         }
 

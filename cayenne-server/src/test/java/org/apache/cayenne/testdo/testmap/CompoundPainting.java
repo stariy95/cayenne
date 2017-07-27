@@ -19,6 +19,13 @@
 
 package org.apache.cayenne.testdo.testmap;
 
+import org.apache.cayenne.ObjectId;
+
 public class CompoundPainting extends org.apache.cayenne.testdo.testmap.auto._CompoundPainting {
+
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
+    }
+
 
 }

@@ -19,6 +19,7 @@
 package org.apache.cayenne.query;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.remote.hessian.service.HessianUtil;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class ObjectIdQueryTest {
 
     @Test
     public void testSerializabilityWithHessian() throws Exception {
-        ObjectId oid = new ObjectId("test", "a", "b");
+        ObjectId oid = new ObjectId(new ObjectIdDescriptor("test", "a"), "a", "b");
         ObjectIdQuery query = new ObjectIdQuery(oid);
 
         Object o = HessianUtil.cloneViaClientServerSerialization(query, new EntityResolver());

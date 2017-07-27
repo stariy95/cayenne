@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.cayenne.CayenneDataObject;
 import org.apache.cayenne.DataObject;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.access.jdbc.SQLStatement;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.junit.Before;
@@ -154,7 +155,7 @@ public class VelocitySQLTemplateProcessorTest {
 		String sqlTemplate = "SELECT * FROM ME WHERE COLUMN1 = #bind($helper.cayenneExp($a, 'db:ID_COLUMN'))";
 
 		DataObject dataObject = new CayenneDataObject();
-		dataObject.setObjectId(new ObjectId("T", "ID_COLUMN", 5));
+		dataObject.setObjectId(new ObjectId(new ObjectIdDescriptor("T", "ID_COLUMN"), "ID_COLUMN", 5));
 
 		Map<String, Object> map = Collections.<String, Object> singletonMap("a", dataObject);
 
@@ -162,7 +163,7 @@ public class VelocitySQLTemplateProcessorTest {
 
 		assertEquals("SELECT * FROM ME WHERE COLUMN1 = ?", compiled.getSql());
 		assertEquals(1, compiled.getBindings().length);
-		assertBindingValue(new Integer(5), compiled.getBindings()[0]);
+		assertBindingValue(5, compiled.getBindings()[0]);
 	}
 
 	@Test
@@ -172,9 +173,9 @@ public class VelocitySQLTemplateProcessorTest {
 				+ "AND COLUMN2 #bindNotEqual($helper.cayenneExp($a, 'db:ID_COLUMN2'))";
 
 		Map<String, Object> idMap = new HashMap<>();
-		idMap.put("ID_COLUMN1", new Integer(3));
+		idMap.put("ID_COLUMN1", 3);
 		idMap.put("ID_COLUMN2", "aaa");
-		ObjectId id = new ObjectId("T", idMap);
+		ObjectId id = new ObjectId(new ObjectIdDescriptor("T", "ID_COLUMN1", "ID_COLUMN2"), idMap);
 		DataObject dataObject = new CayenneDataObject();
 		dataObject.setObjectId(id);
 
@@ -184,7 +185,7 @@ public class VelocitySQLTemplateProcessorTest {
 
 		assertEquals("SELECT * FROM ME WHERE COLUMN1 <> ? AND COLUMN2 <> ?", compiled.getSql());
 		assertEquals(2, compiled.getBindings().length);
-		assertBindingValue(new Integer(3), compiled.getBindings()[0]);
+		assertBindingValue(3, compiled.getBindings()[0]);
 		assertBindingValue("aaa", compiled.getBindings()[1]);
 	}
 

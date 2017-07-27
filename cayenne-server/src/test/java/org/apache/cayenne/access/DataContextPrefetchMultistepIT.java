@@ -21,6 +21,7 @@ package org.apache.cayenne.access;
 
 import org.apache.cayenne.Fault;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.ValueHolder;
@@ -119,18 +120,19 @@ public class DataContextPrefetchMultistepIT extends ServerCase {
         // so ensure ObjectStore uses a regular map just for this test
 
         context.getObjectStore().objectMap = new HashMap<Object, Persistent>();
+        ObjectIdDescriptor descriptor = context.getEntityResolver().getObjEntity("ArtistExhibit").getObjectIdDescriptor();
 
         // Check the target ArtistExhibit objects do not exist yet
 
         Map<String, Object> id1 = new HashMap<>();
         id1.put("ARTIST_ID", 11);
         id1.put("EXHIBIT_ID", 2);
-        ObjectId oid1 = new ObjectId("ArtistExhibit", id1);
+        ObjectId oid1 = new ObjectId(descriptor, id1);
 
         Map<String, Object> id2 = new HashMap<>();
         id2.put("ARTIST_ID", 101);
         id2.put("EXHIBIT_ID", 2);
-        ObjectId oid2 = new ObjectId("ArtistExhibit", id2);
+        ObjectId oid2 = new ObjectId(descriptor, id2);
 
         assertNull(context.getGraphManager().getNode(oid1));
         assertNull(context.getGraphManager().getNode(oid2));

@@ -309,7 +309,8 @@ public class CayenneContextWithDataContextIT extends ClientCase {
     public void testCreateFault() throws Exception {
         tMtTable1.insert(1, "g1", "s1");
 
-        ObjectId id = new ObjectId("MtTable1", MtTable1.TABLE1_ID_PK_COLUMN, 1);
+        ObjectId id = new ObjectId(clientContext.getEntityResolver().getObjEntity("MtTable1").getObjectIdDescriptor(),
+                MtTable1.TABLE1_ID_PK_COLUMN, 1);
 
         Object fault = clientContext.createFault(id);
         assertTrue(fault instanceof ClientMtTable1);
@@ -331,7 +332,8 @@ public class CayenneContextWithDataContextIT extends ClientCase {
     public void testCreateBadFault() throws Exception {
         tMtTable1.insert(1, "g1", "s1");
 
-        ObjectId id = new ObjectId("MtTable1", MtTable1.TABLE1_ID_PK_COLUMN, 2);
+        ObjectId id = new ObjectId(clientContext.getEntityResolver().getObjEntity("MtTable1").getObjectIdDescriptor(),
+                MtTable1.TABLE1_ID_PK_COLUMN, 2);
 
         Object fault = clientContext.createFault(id);
         assertTrue(fault instanceof ClientMtTable1);
@@ -353,7 +355,7 @@ public class CayenneContextWithDataContextIT extends ClientCase {
         createTwoMtTable1sAnd2sDataSet();
 
         final ObjectId prefetchedId = new ObjectId(
-                "MtTable1",
+                clientContext.getEntityResolver().getObjEntity("MtTable1").getObjectIdDescriptor(),
                 MtTable1.TABLE1_ID_PK_COLUMN,
                 1);
 

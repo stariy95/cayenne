@@ -22,6 +22,7 @@ package org.apache.cayenne.access;
 import org.apache.cayenne.DataObject;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.ValueHolder;
@@ -436,6 +437,9 @@ public class JointPrefetchIT extends ServerCase {
     public void testJointPrefetchMultiStep() throws Exception {
         createJointPrefetchDataSet2();
 
+        final ObjectIdDescriptor descriptor =
+                context.getEntityResolver().getObjEntity("Gallery").getObjectIdDescriptor();
+
         // query with to-many joint prefetches
         SelectQuery<Artist> q = new SelectQuery<>(Artist.class);
         q.addPrefetch(Artist.PAINTING_ARRAY.dot(Painting.TO_GALLERY).joint());
@@ -447,7 +451,7 @@ public class JointPrefetchIT extends ServerCase {
 
         // sanity check...
         DataObject g1 = (DataObject) context.getGraphManager().getNode(
-                new ObjectId("Gallery", Gallery.GALLERY_ID_PK_COLUMN, 33001));
+                new ObjectId(descriptor, Gallery.GALLERY_ID_PK_COLUMN, 33001));
         assertNull(g1);
 
         final List<?> objects = context.performQuery(q);
@@ -457,9 +461,8 @@ public class JointPrefetchIT extends ServerCase {
             public void execute() {
                 assertEquals(3, objects.size());
 
-                Iterator<?> it = objects.iterator();
-                while (it.hasNext()) {
-                    Artist a = (Artist) it.next();
+                for (Object object : objects) {
+                    Artist a = (Artist) object;
                     ValueHolder list = (ValueHolder) a.getPaintingArray();
 
                     assertNotNull(list);
@@ -470,11 +473,11 @@ public class JointPrefetchIT extends ServerCase {
 
                 // however both galleries must be in memory...
                 DataObject g1 = (DataObject) context.getGraphManager().getNode(
-                        new ObjectId("Gallery", Gallery.GALLERY_ID_PK_COLUMN, 33001));
+                        new ObjectId(descriptor, Gallery.GALLERY_ID_PK_COLUMN, 33001));
                 assertNotNull(g1);
                 assertEquals(PersistenceState.COMMITTED, g1.getPersistenceState());
                 DataObject g2 = (DataObject) context.getGraphManager().getNode(
-                        new ObjectId("Gallery", Gallery.GALLERY_ID_PK_COLUMN, 33002));
+                        new ObjectId(descriptor, Gallery.GALLERY_ID_PK_COLUMN, 33002));
                 assertNotNull(g2);
                 assertEquals(PersistenceState.COMMITTED, g2.getPersistenceState());
             }

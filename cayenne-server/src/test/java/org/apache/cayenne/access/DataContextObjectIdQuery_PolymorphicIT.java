@@ -21,6 +21,7 @@ package org.apache.cayenne.access;
 
 import org.apache.cayenne.Cayenne;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.query.ObjectIdQuery;
 import org.apache.cayenne.test.jdbc.TableHelper;
@@ -61,8 +62,9 @@ public class DataContextObjectIdQuery_PolymorphicIT extends PeopleProjectCase {
 	public void testPolymorphicSharedCache() throws SQLException {
 
 		tPerson.insert(1, "P1", "EM");
-
-		final ObjectIdQuery q1 = new ObjectIdQuery(new ObjectId("AbstractPerson", "PERSON_ID", 1), false,
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("AbstractPerson", "PERSON_ID");
+		final ObjectIdQuery q1 = new ObjectIdQuery(new ObjectId(descriptor, "PERSON_ID", 1),
+				false,
 				ObjectIdQuery.CACHE);
 
 		AbstractPerson ap1 = (AbstractPerson) Cayenne.objectForQuery(context1, q1);
@@ -91,9 +93,9 @@ public class DataContextObjectIdQuery_PolymorphicIT extends PeopleProjectCase {
 
 		context1.commitChanges();
 
-
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("AbstractPerson", "PERSON_ID");
 		final ObjectIdQuery q1 = new ObjectIdQuery(
-				new ObjectId("AbstractPerson", "PERSON_ID", Cayenne.intPKForObject(e)),
+				new ObjectId(descriptor, "PERSON_ID", Cayenne.intPKForObject(e)),
 				false,
 				ObjectIdQuery.CACHE);
 
@@ -114,7 +116,8 @@ public class DataContextObjectIdQuery_PolymorphicIT extends PeopleProjectCase {
 
 		tPerson.insert(1, "P1", "EM");
 
-		final ObjectIdQuery q1 = new ObjectIdQuery(new ObjectId("AbstractPerson", "PERSON_ID", 1), false,
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("AbstractPerson", "PERSON_ID");
+		final ObjectIdQuery q1 = new ObjectIdQuery(new ObjectId(descriptor, "PERSON_ID", 1), false,
 				ObjectIdQuery.CACHE);
 
 		AbstractPerson ap1 = (AbstractPerson) Cayenne.objectForQuery(context1, q1);

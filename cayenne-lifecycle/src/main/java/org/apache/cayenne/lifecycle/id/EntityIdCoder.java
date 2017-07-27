@@ -21,6 +21,7 @@ package org.apache.cayenne.lifecycle.id;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,6 +31,7 @@ import java.util.TreeMap;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.ObjAttribute;
@@ -61,7 +63,7 @@ public class EntityIdCoder {
         String name = id.substring(0, separator);
 
         if (name.startsWith(TEMP_ID_PREFIX)) {
-            name = name.substring(TEMP_PREFIX_LENGTH);
+            name = name.substring(TEMP_PREFIX_LENGTH, name.indexOf('['));
         }
 
         return name;
@@ -117,7 +119,10 @@ public class EntityIdCoder {
     }
 
     private String toTempIdString(ObjectId id) {
-        return TEMP_ID_PREFIX + id.getEntityName() + ID_SEPARATOR + id.getKey();
+        return TEMP_ID_PREFIX +
+                id.getEntityName() +
+                Arrays.toString(id.getDescriptor().getPkNames()) +
+                ID_SEPARATOR + id.getKey();
     }
 
     private String toPermIdString(ObjectId id) {
@@ -136,15 +141,16 @@ public class EntityIdCoder {
     public ObjectId toObjectId(String stringId) {
 
         if (stringId.startsWith(TEMP_ID_PREFIX)) {
-            String idValues = stringId.substring(entityName.length() + 1 + TEMP_PREFIX_LENGTH);
-            return new ObjectId(entityName, Long.valueOf(idValues));
+            String idValues = stringId.substring(stringId.indexOf(ID_SEPARATOR) + 1);
+            String keysStr = stringId.substring(stringId.indexOf('[') + 1, stringId.indexOf(']'));
+            String[] keys = keysStr.split(",");
+            return new ObjectId(new ObjectIdDescriptor(entityName, keys), Long.valueOf(idValues));
         }
 
         String idValues = stringId.substring(entityName.length() + 1);
 
         if (converters.size() == 1) {
-            Entry<String, Converter> entry = converters.entrySet().iterator()
-                    .next();
+            Entry<String, Converter> entry = converters.entrySet().iterator().next();
 
             String decoded;
             try {
@@ -153,8 +159,8 @@ public class EntityIdCoder {
                 // unexpected
                 throw new CayenneRuntimeException("Unsupported encoding", e);
             }
-            return new ObjectId(entityName, entry.getKey(), entry.getValue()
-                    .fromStringId(decoded));
+            // TODO
+            return new ObjectId(new ObjectIdDescriptor(entityName, entry.getKey()), entry.getKey(), entry.getValue().fromStringId(decoded));
         }
 
         Map<String, Object> idMap = new HashMap<>(idSize);
@@ -179,7 +185,8 @@ public class EntityIdCoder {
             idMap.put(entry.getKey(), entry.getValue().fromStringId(decoded));
         }
 
-        return new ObjectId(entityName, idMap);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor(entityName, idMap.keySet().toArray(new String[0]));
+        return new ObjectId(descriptor, idMap);
     }
 
     private Converter create(Class<?> type) {

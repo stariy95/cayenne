@@ -24,6 +24,7 @@ import org.apache.cayenne.DataChannelFilterChain;
 import org.apache.cayenne.DataObject;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.graph.GraphDiff;
@@ -110,7 +111,7 @@ public class AuditableFilterTest {
 
         Persistent auditedParent = mock(Persistent.class);
         DataObject audited = new MockAuditableChild();
-        audited.setObjectId(new ObjectId("MockAuditableChild", "a", 1));
+        audited.setObjectId(new ObjectId(new ObjectIdDescriptor("MockAuditableChild", "a"), "a", 1));
         audited.writeProperty("parent", auditedParent);
         filter.updateAuditChild(audited);
         filter.postSync();

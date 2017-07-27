@@ -45,7 +45,8 @@ public class CayenneDataObjectIT extends ServerCase {
 	@Test
 	public void testSetObjectId() throws Exception {
 		CayenneDataObject object = new CayenneDataObject();
-		ObjectId oid = new ObjectId("T");
+		ObjectIdDescriptor descriptor = new ObjectIdDescriptor("T");
+		ObjectId oid = new ObjectId(descriptor);
 
 		assertNull(object.getObjectId());
 

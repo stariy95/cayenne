@@ -20,6 +20,7 @@ package org.apache.cayenne.commitlog;
 
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.commitlog.db.Auditable1;
 import org.apache.cayenne.commitlog.db.AuditableChild1;
 import org.apache.cayenne.commitlog.model.AttributeChange;
@@ -115,7 +116,7 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 				assertNotNull(changes);
 				assertEquals(1, changes.getUniqueChanges().size());
 
-				ObjectChange c = changes.getChanges().get(new ObjectId("Auditable1", Auditable1.ID_PK_COLUMN, 1));
+				ObjectChange c = changes.getChanges().get(objectId("Auditable1", Auditable1.ID_PK_COLUMN, 1));
 				assertNotNull(c);
 				assertEquals(ObjectChangeType.UPDATE, c.getType());
 				assertEquals(1, c.getAttributeChanges().size());
@@ -151,7 +152,7 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 				assertNotNull(changes);
 				assertEquals(1, changes.getUniqueChanges().size());
 
-				ObjectChange c = changes.getChanges().get(new ObjectId("Auditable1", Auditable1.ID_PK_COLUMN, 1));
+				ObjectChange c = changes.getChanges().get(objectId("Auditable1", Auditable1.ID_PK_COLUMN, 1));
 				assertNotNull(c);
 				assertEquals(ObjectChangeType.DELETE, c.getType());
 				assertEquals(1, c.getAttributeChanges().size());
@@ -196,7 +197,7 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 				assertEquals(4, changes.getUniqueChanges().size());
 
 				ObjectChange ac1c = changes.getChanges().get(
-						new ObjectId("AuditableChild1", AuditableChild1.ID_PK_COLUMN, 1));
+						objectId("AuditableChild1", AuditableChild1.ID_PK_COLUMN, 1));
 				assertNotNull(ac1c);
 				assertEquals(ObjectChangeType.UPDATE, ac1c.getType());
 				ToOneRelationshipChange ac1c1 = ac1c.getToOneRelationshipChanges()
@@ -205,7 +206,7 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 				assertEquals(null, ac1c1.getNewValue());
 
 				ObjectChange ac2c = changes.getChanges().get(
-						new ObjectId("AuditableChild1", AuditableChild1.ID_PK_COLUMN, 2));
+						objectId("AuditableChild1", AuditableChild1.ID_PK_COLUMN, 2));
 				assertNotNull(ac2c);
 				assertEquals(ObjectChangeType.UPDATE, ac2c.getType());
 				ToOneRelationshipChange ac2c1 = ac2c.getToOneRelationshipChanges()
@@ -214,7 +215,7 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 				assertEquals(a1.getObjectId(), ac2c1.getNewValue());
 
 				ObjectChange ac3c = changes.getChanges().get(
-						new ObjectId("AuditableChild1", AuditableChild1.ID_PK_COLUMN, 3));
+						objectId("AuditableChild1", AuditableChild1.ID_PK_COLUMN, 3));
 				assertNotNull(ac3c);
 				assertEquals(ObjectChangeType.UPDATE, ac3c.getType());
 				ToOneRelationshipChange ac3c1 = ac3c.getToOneRelationshipChanges()
@@ -258,7 +259,7 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 				assertNotNull(changes);
 				assertEquals(4, changes.getUniqueChanges().size());
 
-				ObjectChange a1c = changes.getChanges().get(new ObjectId("Auditable1", Auditable1.ID_PK_COLUMN, 1));
+				ObjectChange a1c = changes.getChanges().get(objectId("Auditable1", Auditable1.ID_PK_COLUMN, 1));
 				assertNotNull(a1c);
 				assertEquals(ObjectChangeType.UPDATE, a1c.getType());
 				assertEquals(0, a1c.getAttributeChanges().size());
@@ -286,5 +287,9 @@ public class CommitLogFilter_AllIT extends AuditableServerCase {
 		context.commitChanges();
 
 		verify(mockListener).onPostCommit(any(ObjectContext.class), any(ChangeMap.class));
+	}
+
+	private ObjectId objectId(String entityName, String pkName, int value) {
+		return new ObjectId(new ObjectIdDescriptor(entityName, pkName), pkName, value);
 	}
 }

@@ -20,6 +20,7 @@
 package org.apache.cayenne.access;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjRelationship;
@@ -42,8 +43,10 @@ public class FlattenedArcKeyIT extends ServerCase {
 
     @Test
     public void testAttributes() {
-        ObjectId src = new ObjectId("X");
-        ObjectId target = new ObjectId("Y");
+        ObjectIdDescriptor descriptorSrc = new ObjectIdDescriptor("X");
+        ObjectIdDescriptor descriptorTarget = new ObjectIdDescriptor("Y");
+        ObjectId src = new ObjectId(descriptorSrc);
+        ObjectId target = new ObjectId(descriptorTarget);
         ObjRelationship r1 = entityResolver.getObjEntity(FlattenedTest3.class).getRelationship(
                 FlattenedTest3.TO_FT1.getName());
 
@@ -56,8 +59,10 @@ public class FlattenedArcKeyIT extends ServerCase {
 
     @Test
     public void testHashCode() {
-        ObjectId src = new ObjectId("X");
-        ObjectId target = new ObjectId("Y");
+        ObjectIdDescriptor descriptorSrc = new ObjectIdDescriptor("X");
+        ObjectIdDescriptor descriptorTarget = new ObjectIdDescriptor("Y");
+        ObjectId src = new ObjectId(descriptorSrc);
+        ObjectId target = new ObjectId(descriptorTarget);
         ObjRelationship r1 = entityResolver.getObjEntity(FlattenedTest3.class).getRelationship(
                 FlattenedTest3.TO_FT1.getName());
 
@@ -79,8 +84,10 @@ public class FlattenedArcKeyIT extends ServerCase {
 
     @Test
     public void testEquals() {
-        ObjectId src = new ObjectId("X");
-        ObjectId target = new ObjectId("Y");
+        ObjectIdDescriptor descriptorSrc = new ObjectIdDescriptor("X");
+        ObjectIdDescriptor descriptorTarget = new ObjectIdDescriptor("Y");
+        ObjectId src = new ObjectId(descriptorSrc);
+        ObjectId target = new ObjectId(descriptorTarget);
         ObjRelationship r1 = entityResolver.getObjEntity(FlattenedTest3.class).getRelationship(
                 FlattenedTest3.TO_FT1.getName());
 

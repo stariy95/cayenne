@@ -22,6 +22,7 @@ package org.apache.cayenne.access;
 import java.util.HashMap;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.ObjectIdDescriptor;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.junit.Before;
@@ -47,8 +48,8 @@ public class ObjectStoreTest {
 
     @Test
     public void testRegisterNode() {
-
-        ObjectId id = new ObjectId("E1", "ID", 500);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", new String[]{"ID"});
+        ObjectId id = new ObjectId(descriptor, "ID", 500);
         Persistent object = mock(Persistent.class);
 
         objectStore.registerNode(id, object);
@@ -57,8 +58,8 @@ public class ObjectStoreTest {
 
     @Test
     public void testUnregisterNode() {
-
-        ObjectId id = new ObjectId("E1", "ID", 500);
+        ObjectIdDescriptor descriptor = new ObjectIdDescriptor("E1", new String[]{"ID"});
+        ObjectId id = new ObjectId(descriptor, "ID", 500);
         Persistent object = mock(Persistent.class);
 
         objectStore.registerNode(id, object);

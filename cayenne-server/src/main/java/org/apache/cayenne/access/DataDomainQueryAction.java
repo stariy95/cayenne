@@ -200,7 +200,7 @@ class DataDomainQueryAction implements QueryRouter, OperationObserver {
 	private DataRow polymorphicRowFromCache(EntityInheritanceTree superNode, Map<String, ?> idSnapshot) {
 
 		for (EntityInheritanceTree child : superNode.getChildren()) {
-			ObjectId id = new ObjectId(child.getEntity().getName(), idSnapshot);
+			ObjectId id = new ObjectId(child.getEntity().getObjectIdDescriptor(), idSnapshot);
 			DataRow row = cache.getCachedSnapshot(id);
 			if (row != null) {
 				return row;
@@ -251,7 +251,7 @@ class DataDomainQueryAction implements QueryRouter, OperationObserver {
                 return !DONE;
             }
 
-            ObjectId targetId = sourceRow.createTargetObjectId(relationship.getTargetEntityName(), dbRelationship);
+            ObjectId targetId = sourceRow.createTargetObjectId(relationship.getTargetEntity().getObjectIdDescriptor(), dbRelationship);
 
             // null id means that FK is null...
             if (targetId == null) {
