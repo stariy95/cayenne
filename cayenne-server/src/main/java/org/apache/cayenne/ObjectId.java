@@ -28,7 +28,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -78,10 +81,7 @@ public class ObjectId implements Serializable {
 	 * @return next id
 	 */
 	static long getNextTmpId() {
-		if(TMP_ID_SEQUENCE.get() == Long.MAX_VALUE) {
-			TMP_ID_SEQUENCE.set(1);
-		}
-
+		TMP_ID_SEQUENCE.compareAndSet(Long.MAX_VALUE, 1);
 		return TMP_ID_SEQUENCE.getAndIncrement();
 	}
 
@@ -90,6 +90,7 @@ public class ObjectId implements Serializable {
 	 * is a caller responsibility to provide a globally unique binary key.
 	 * 
 	 * @since 1.2
+	 * @since 4.1 tmpKey is long
 	 */
 	public ObjectId(ObjectIdDescriptor descriptor, long tmpKey) {
 		this.descriptor = descriptor;
@@ -198,13 +199,7 @@ public class ObjectId implements Serializable {
 			return Collections.emptyMap();
 		}
 
-		// TODO: can we get rid of this map?
-		Map<String, Object> snapshot = new HashMap<>();
-		int idx = 0;
-		for(String pk : descriptor.getPkNames()) {
-			snapshot.put(pk, values[idx++]);
-		}
-		return Collections.unmodifiableMap(snapshot);
+		return new SnapshotView();
 	}
 
 	public Collection<Object> getValues() {
@@ -228,18 +223,14 @@ public class ObjectId implements Serializable {
 		}
 
 		if (isTemporary()) {
-			return new EqualsBuilder().append(tmpKey, id.tmpKey).isEquals();
+			return tmpKey == id.tmpKey;
 		}
 
 		if(values == null) {
 			return id.values == null;
 		}
 
-		if(id.values == null) {
-			return false;
-		}
-
-		if(values.length != id.values.length) {
+		if(id.values == null || values.length != id.values.length) {
 			return false;
 		}
 
@@ -316,7 +307,7 @@ public class ObjectId implements Serializable {
 
 	/**
 	 * Returns true if there is full or partial replacement id attached to this
-	 * id. This method is preferrable to "!getReplacementIdMap().isEmpty()" as
+	 * id. This method is preferable to "!getReplacementIdMap().isEmpty()" as
 	 * it avoids unneeded replacement id map creation.
 	 */
 	public boolean isReplacementIdAttached() {
@@ -349,4 +340,141 @@ public class ObjectId implements Serializable {
 		buffer.append(">");
 		return buffer.toString();
 	}
+
+	/**
+	 * Custom Map implementation used to export snapshot to outer world.
+	 * This class is immutable as it is just a "view" over ObjectId internals.
+	 * Note also that it doesn't check "values" of ObjectId, the caller must make sure it's not null.
+	 * This class uses full array scan to find keys and values, that shouldn't be a problem as there is hardly
+	 * can be over 10 of PK in an object.
+	 */
+	private class SnapshotView implements Map<String, Object> {
+
+        @Override
+        public int size() {
+            return values.length;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return values.length > 0;
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            for(String pk : descriptor.getPkNames()) {
+                if(pk.equals(key)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            for(Object v : values) {
+                if(value == null) {
+					if(v == null) {
+                    	return true;
+					}
+                } else if(value.equals(v)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public Object get(Object key) {
+            for(int i=0; i<descriptor.getPkNames().length; i++) {
+                if(descriptor.getPkNames()[i].equals(key)) {
+                    return values[i];
+                }
+            }
+            return null;
+        }
+
+		@Override
+		public Set<String> keySet() {
+			return new HashSet<>(Arrays.asList(descriptor.getPkNames()));
+		}
+
+		@Override
+		public Collection<Object> values() {
+			return Collections.unmodifiableCollection(Arrays.asList(values));
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) {
+				return true;
+			}
+
+			if (!(o instanceof Map)) {
+				return false;
+			}
+			Map<?,?> m = (Map<?,?>) o;
+			if (m.size() != size()) {
+				return false;
+			}
+
+			try {
+				for(int i=0; i<descriptor.getPkNames().length; i++) {
+					String key = descriptor.getPkNames()[i];
+					Object value = values[i];
+					if (value == null) {
+						if (!(m.get(key) == null && m.containsKey(key))) {
+							return false;
+						}
+					} else if (!value.equals(m.get(key))) {
+						return false;
+					}
+				}
+			} catch (ClassCastException | NullPointerException unused) {
+				return false;
+			}
+
+			return true;
+		}
+
+		/**
+		 * This method should return same hashCode as will for example HashMap with same content.
+		 * @return hash code
+		 */
+		@Override
+		public int hashCode() {
+        	int hashCode = 0;
+			for(int i=0; i<descriptor.getPkNames().length; i++) {
+				String key = descriptor.getPkNames()[i];
+				hashCode += Objects.hashCode(key) ^ Objects.hashCode(values[i]);
+			}
+			return hashCode;
+		}
+
+		@Override
+		public Set<Entry<String, Object>> entrySet() {
+			// not used for now, so it's unimplemented
+			throw new UnsupportedOperationException();
+		}
+
+        @Override
+        public Object put(String key, Object value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object remove(Object key) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void putAll(Map<? extends String, ?> m) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException();
+        }
+    }
 }
