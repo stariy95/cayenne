@@ -61,6 +61,7 @@ public class DbImportConfiguration {
     private String stripFromTableNames;
     private boolean forceDataMapCatalog;
     private boolean forceDataMapSchema;
+    private boolean useDataMapReverseEngineering;
 
     public DbImportConfiguration() {
         this.dataSourceInfo = new DataSourceInfo();
@@ -307,5 +308,13 @@ public class DbImportConfiguration {
 
     public boolean isForceDataMapSchema() {
         return forceDataMapSchema;
+    }
+
+    public boolean isUseDataMapReverseEngineering() {
+        return useDataMapReverseEngineering;
+    }
+
+    public void setUseDataMapReverseEngineering(boolean useDataMapReverseEngineering) {
+        this.useDataMapReverseEngineering = useDataMapReverseEngineering;
     }
 }

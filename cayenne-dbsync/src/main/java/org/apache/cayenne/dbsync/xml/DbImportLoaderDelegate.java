@@ -17,29 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.reverse.dbimport;
+package org.apache.cayenne.dbsync.xml;
 
-import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.util.XMLEncoder;
-import org.apache.cayenne.util.XMLSerializable;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
+import org.apache.cayenne.project.extension.LoaderDelegate;
 
 /**
- * @since 4.0.
+ * @since 4.1
  */
-public class ExcludeColumn extends PatternParam implements XMLSerializable {
-    public ExcludeColumn() {
-    }
+class DbImportLoaderDelegate implements LoaderDelegate {
 
-    public ExcludeColumn(String pattern) {
-        super(pattern);
-    }
+    private DataChannelMetaData metaData;
 
-    public ExcludeColumn(ExcludeColumn original) {
-        super(original);
+    DbImportLoaderDelegate(DataChannelMetaData metaData) {
+        this.metaData = metaData;
     }
 
     @Override
-    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-        encoder.simpleTag("dbi:excludeColumn", this.getPattern());
+    public String getTargetNamespace() {
+        return DbImportExtension.NAMESPACE;
+    }
+
+    @Override
+    public NamespaceAwareNestedTagHandler createHandler(NamespaceAwareNestedTagHandler parent, String tag) {
+        if(ConfigHandler.CONFIG_TAG.equals(tag)) {
+            return new ConfigHandler(parent, metaData);
+        }
+        return null;
     }
 }

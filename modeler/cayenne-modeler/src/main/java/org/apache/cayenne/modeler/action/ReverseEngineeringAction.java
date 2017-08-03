@@ -21,6 +21,8 @@ package org.apache.cayenne.modeler.action;
 
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.dialog.db.DataSourceWizard;
+import org.apache.cayenne.modeler.dialog.db.DbActionOptionsDialog;
+import org.apache.cayenne.modeler.dialog.db.load.AdvancedConfigurationDialog;
 import org.apache.cayenne.modeler.dialog.db.load.DbLoaderContext;
 import org.apache.cayenne.modeler.dialog.db.load.DbLoaderOptionsDialog;
 import org.apache.cayenne.modeler.dialog.db.load.LoadDataMapTask;
@@ -34,7 +36,7 @@ import javax.swing.JOptionPane;
 /**
  * Action that imports database structure into a DataMap.
  */
-public class ReverseEngineeringAction extends DBWizardAction<DbLoaderOptionsDialog> {
+public class ReverseEngineeringAction extends DBWizardAction<DbActionOptionsDialog> {
 
     ReverseEngineeringAction(Application application) {
         super(getActionName(), application);
@@ -49,7 +51,7 @@ public class ReverseEngineeringAction extends DBWizardAction<DbLoaderOptionsDial
      */
     @Override
     public void performAction(ActionEvent event) {
-        final DbLoaderContext context = new DbLoaderContext();
+        final DbLoaderContext context = new DbLoaderContext(application.getMetaData());
         final DataSourceWizard connectWizard = dataSourceWizardDialog("Reengineer DB Schema: Connect to Database");
         if(connectWizard == null) {
             return;
@@ -67,7 +69,7 @@ public class ReverseEngineeringAction extends DBWizardAction<DbLoaderOptionsDial
             return;
         }
 
-        final DbLoaderOptionsDialog loaderOptionsDialog = loaderOptionDialog(connectWizard);
+        final DbActionOptionsDialog loaderOptionsDialog = loaderOptionDialog(connectWizard);
         if(!context.buildConfig(connectWizard, loaderOptionsDialog)) {
             try {
                 context.getConnection().close();
@@ -97,9 +99,32 @@ public class ReverseEngineeringAction extends DBWizardAction<DbLoaderOptionsDial
         th.start();
     }
 
+    private DbLoaderOptionsDialog getOptionsDialog(Collection<String> catalogs, Collection<String> schemas,
+                                                   String currentCatalog, String currentSchema) {
+        final DbLoaderContext context = new DbLoaderContext(application.getMetaData());
+        context.setProjectController(getProjectController());
+
+        return new DbLoaderOptionsDialog(catalogs, schemas, currentCatalog, currentSchema, context);
+    }
+
+    private AdvancedConfigurationDialog getAdvancedConfigurationDialog(Collection<String> catalogs, Collection<String> schemas,
+                                                                       String currentCatalog, String currentSchema) {
+        final DbLoaderContext context = new DbLoaderContext(application.getMetaData());
+        context.setProjectController(getProjectController());
+
+        return new AdvancedConfigurationDialog(catalogs, schemas, currentCatalog, currentSchema, context);
+    }
+
     @Override
-    protected DbLoaderOptionsDialog createDialog(Collection<String> catalogs, Collection<String> schemas,
-                                                 String currentCatalog, String currentSchema) {
-        return new DbLoaderOptionsDialog(catalogs, schemas, currentCatalog, currentSchema);
+    protected DbActionOptionsDialog createDialog(Collection<String> catalogs, Collection<String> schemas,
+                                                 String currentCatalog, String currentSchema, int command) {
+        switch (command) {
+            case DbActionOptionsDialog.SIMPLE_CONFIG:
+                return getOptionsDialog(catalogs, schemas, currentCatalog, currentSchema);
+            case DbActionOptionsDialog.ADVANCED_CONFIG:
+                return getAdvancedConfigurationDialog(catalogs, schemas, currentCatalog, currentSchema);
+            default:
+                return null;
+        }
     }
 }

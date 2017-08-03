@@ -17,29 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dbsync.reverse.dbimport;
+package org.apache.cayenne.dbsync.xml;
 
-import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
-import org.apache.cayenne.util.XMLEncoder;
-import org.apache.cayenne.util.XMLSerializable;
+import org.apache.cayenne.configuration.xml.DataChannelMetaData;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.project.Project;
+import org.apache.cayenne.project.extension.LoaderDelegate;
+import org.apache.cayenne.project.extension.ProjectExtension;
+import org.apache.cayenne.project.extension.SaverDelegate;
 
 /**
- * @since 4.0.
+ * @since 4.1
  */
-public class ExcludeColumn extends PatternParam implements XMLSerializable {
-    public ExcludeColumn() {
-    }
+public class DbImportExtension implements ProjectExtension {
 
-    public ExcludeColumn(String pattern) {
-        super(pattern);
-    }
+    public static final String NAMESPACE = "http://cayenne.apache.org/schema/" + Project.VERSION + "/dbimport";
 
-    public ExcludeColumn(ExcludeColumn original) {
-        super(original);
+    @Inject
+    private DataChannelMetaData metaData;
+
+    @Override
+    public LoaderDelegate createLoaderDelegate() {
+        return new DbImportLoaderDelegate(metaData);
     }
 
     @Override
-    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
-        encoder.simpleTag("dbi:excludeColumn", this.getPattern());
+    public SaverDelegate createSaverDelegate() {
+        return new DbImportSaverDelegate(metaData);
     }
+
 }

@@ -19,13 +19,17 @@
 
 package org.apache.cayenne.dbsync.reverse.dbimport;
 
+import org.apache.cayenne.configuration.ConfigurationNodeVisitor;
+import org.apache.cayenne.util.XMLEncoder;
+import org.apache.cayenne.util.XMLSerializable;
+
 import java.util.Collection;
 import java.util.LinkedList;
 
 /**
  * @since 4.0.
  */
-public class IncludeTable extends PatternParam {
+public class IncludeTable extends PatternParam implements XMLSerializable {
 
     private final Collection<IncludeColumn> includeColumns = new LinkedList<>();
 
@@ -36,6 +40,16 @@ public class IncludeTable extends PatternParam {
 
     public IncludeTable(String pattern) {
         super(pattern);
+    }
+
+    public IncludeTable(IncludeTable original) {
+        super(original);
+        for (IncludeColumn includeColumn : original.getIncludeColumns()) {
+            this.addIncludeColumn(new IncludeColumn(includeColumn));
+        }
+        for (ExcludeColumn excludeColumn : original.getExcludeColumns()) {
+            this.addExcludeColumn(new ExcludeColumn(excludeColumn));
+        }
     }
 
     public Collection<IncludeColumn> getIncludeColumns() {
@@ -60,6 +74,15 @@ public class IncludeTable extends PatternParam {
 
     public void addExcludeColumn(ExcludeColumn excludeColumn) {
         this.excludeColumns.add(excludeColumn);
+    }
+
+    @Override
+    public void encodeAsXML(XMLEncoder encoder, ConfigurationNodeVisitor delegate) {
+        encoder.start("dbi:includeTable")
+            .simpleTag("dbi:name", this.getPattern())
+            .nested(this.getIncludeColumns(), delegate)
+            .nested(this.getExcludeColumns(), delegate)
+        .end();
     }
 
     @Override

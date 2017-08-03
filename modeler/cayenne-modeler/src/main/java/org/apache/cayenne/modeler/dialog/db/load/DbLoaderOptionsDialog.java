@@ -20,16 +20,21 @@
 package org.apache.cayenne.modeler.dialog.db.load;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
+import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.dialog.db.DbActionOptionsDialog;
 import org.apache.cayenne.modeler.util.NameGeneratorPreferences;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Vector;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 /**
  * Dialog for selecting database reverse-engineering parameters.
@@ -39,19 +44,24 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
     private JTextField tableIncludePatternField;
     private JTextField tableExcludePatternField;
     private JTextField meaningfulPk;
+    private JButton advancedConfigurations;
     private JTextField procNamePatternField;
     private JComboBox<String> strategyCombo;
     protected String strategy;
     private JCheckBox usePrimitives;
     private JCheckBox useJava7Types;
 
+    private DbLoaderContext context;
+
     /**
      * Creates and initializes new ChooseSchemaDialog.
      */
     public DbLoaderOptionsDialog(Collection<String> catalogs, Collection<String> schemas,
-                                 String dbCatalog, String currentSchema) {
+                                 String dbCatalog, String currentSchema, DbLoaderContext context) {
         super(Application.getFrame(), "Reengineer DB Schema: Select Options",
                 catalogs, schemas, dbCatalog, currentSchema);
+        this.context = context;
+        fillConfigFromMetaData();
     }
 
     @Override
@@ -70,6 +80,16 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
         meaningfulPk.setToolTipText("<html>Regular expression to filter tables with meaningful primary keys.<br>" +
                 "Multiple expressions divided by comma can be used.<br>" +
                 "Example: <b>^table1|^table2|^prefix.*|table_name</b></html>");
+
+        advancedConfigurations = new JButton("Advanced configuration");
+        buttons.add(advancedConfigurations);
+        advancedConfigurations.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                openAdvancedConfigDialog();
+            }
+        });
+
         strategyCombo = new JComboBox<>();
         strategyCombo.setEditable(true);
 
@@ -89,6 +109,33 @@ public class DbLoaderOptionsDialog extends DbActionOptionsDialog {
         builder.append("Tables with Meaningful PK Pattern:", meaningfulPk);
         builder.append("Use Java primitive types:", usePrimitives);
         builder.append("Use old java.util.Date type:", useJava7Types);
+    }
+
+    private void fillConfigFromMetaData() {
+        DataMap dataMap = context.getProjectController().getCurrentDataMap();
+        ReverseEngineering reverseEngineering = context.getMetaData().get(dataMap, ReverseEngineering.class);
+        if (reverseEngineering != null) {
+            useJava7Types.setSelected(reverseEngineering.isUseJava7Types());
+            usePrimitives.setSelected(reverseEngineering.isUsePrimitives());
+            if (reverseEngineering.getIncludeTables().size() == 1) {
+                IncludeTable includeTable = ((LinkedList<IncludeTable>) reverseEngineering.getIncludeTables()).get(0);
+                tableIncludePatternField.setText(includeTable.getPattern());
+            }
+            if (reverseEngineering.getExcludeTables().size() == 1) {
+                ExcludeTable excludeTable = ((LinkedList<ExcludeTable>) reverseEngineering.getExcludeTables()).get(0);
+                tableExcludePatternField.setText(excludeTable.getPattern());
+            }
+            if (reverseEngineering.getIncludeProcedures().size() == 1) {
+                IncludeProcedure includeProcedure = ((LinkedList<IncludeProcedure>) reverseEngineering.getIncludeProcedures()).get(0);
+                procNamePatternField.setText(includeProcedure.getPattern());
+            }
+            meaningfulPk.setText(reverseEngineering.getMeaningfulPkTables());
+        }
+    }
+
+    private void openAdvancedConfigDialog() {
+        choice = ADVANCED_CONFIG;
+        setVisible(false);
     }
 
     protected void initFromModel(Collection<String> catalogs, Collection<String> schemas, String currentCatalog, String currentSchema) {
