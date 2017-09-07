@@ -2,15 +2,15 @@ package org.apache.cayenne.testdo.compoundpk;
 
 import java.math.BigDecimal;
 
-import org.apache.cayenne.testdo.compoundpk.auto._Order;
+import org.apache.cayenne.testdo.compoundpk.auto._OrderPkFk;
 
-public class Order extends _Order {
+public class OrderPkFk extends _OrderPkFk {
 
     private static final long serialVersionUID = 1L;
 
-    public Payment newPayment() {
+    public PaymentPkFk newPayment() {
         Integer nextPaymentNumber = nextPaymentNumber();
-        Payment payment = getObjectContext().newObject(Payment.class);
+        PaymentPkFk payment = getObjectContext().newObject(PaymentPkFk.class);
 
         addToPayments(payment);
 
