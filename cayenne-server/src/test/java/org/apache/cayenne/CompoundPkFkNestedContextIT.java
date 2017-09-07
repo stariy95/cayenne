@@ -261,26 +261,6 @@ public class CompoundPkFkNestedContextIT extends ServerCase {
                 .prefetch(OrderPk.PAYMENTS.joint()).selectOne(context);
         assertEquals("value", orderFromDb.getValue());
         assertEquals(new BigDecimal(321), orderFromDb.getPayments().get(0).getAmount());
-
-        for(ObjEntity entity : context.getEntityResolver().getObjEntities()) {
-            DbEntity dbEntity = entity.getDbEntity();
-            Collection<DbAttribute> dbJoinAttribute = new ArrayList<>();
-            for(DbRelationship relationship : dbEntity.getRelationships()) {
-                for(DbJoin join : relationship.getJoins()) {
-                    dbJoinAttribute.add(join.getSource());
-                }
-            }
-
-            for(ObjAttribute attribute : entity.getAttributes()) {
-
-                DbAttribute dbAttribute = attribute.getDbAttribute();
-                if(dbJoinAttribute.contains(dbAttribute)) {
-                    System.out.println(entity.getName() + " (mapped on " + dbEntity.getName()
-                            + ") has attribute " + attribute.getName() + " "
-                            + "mapped on FK " + dbAttribute.getName());
-                }
-            }
-        }
     }
 
     @Test
