@@ -23,6 +23,7 @@
 	<obj-entity name="OrderPk" className="org.apache.cayenne.testdo.compoundpk.OrderPk" dbEntityName="compound_orders">
 		<obj-attribute name="orderNumber" type="java.lang.Integer" db-attribute-path="order_number"/>
 		<obj-attribute name="value" type="java.lang.String" db-attribute-path="value"/>
+		<post-load method-name="onPostLoad"/>
 	</obj-entity>
 	<obj-entity name="OrderPkFk" className="org.apache.cayenne.testdo.compoundpk.OrderPkFk" dbEntityName="compound_orders">
 		<obj-attribute name="orderNumber" type="java.lang.Integer" db-attribute-path="order_number"/>

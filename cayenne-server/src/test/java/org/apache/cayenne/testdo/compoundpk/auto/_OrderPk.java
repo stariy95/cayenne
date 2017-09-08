@@ -48,4 +48,6 @@ public abstract class _OrderPk extends CayenneDataObject {
     }
 
 
+    protected abstract void onPostLoad();
+
 }

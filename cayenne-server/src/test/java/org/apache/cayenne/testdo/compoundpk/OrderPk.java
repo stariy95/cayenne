@@ -8,13 +8,15 @@ public class OrderPk extends _OrderPk {
 
     private static final long serialVersionUID = 1L;
 
+    private int paymentsCounter;
+
     public PaymentPk newPayment() {
         Integer nextPaymentNumber = nextPaymentNumber();
         PaymentPk payment = getObjectContext().newObject(PaymentPk.class);
 
         addToPayments(payment);
 
-//        payment.setOrderNumber(getOrderNumber()); // this will be set by Cayenne
+        // payment.setOrderNumber(getOrderNumber()); // this will be set by Cayenne
         payment.setPaymentNumber(nextPaymentNumber);
         payment.setAmount(BigDecimal.ZERO);
 
@@ -23,5 +25,10 @@ public class OrderPk extends _OrderPk {
 
     private Integer nextPaymentNumber() {
         return getPayments().size() + 1;
+    }
+
+    @Override
+    protected void onPostLoad() {
+
     }
 }
