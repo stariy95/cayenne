@@ -47,6 +47,10 @@ public class InsertBatchQuery extends BatchQuery {
         add(snapshot, null);
     }
 
+    public void add(BatchQueryRow row) {
+        rows.add(row);
+    }
+
     /**
      * Adds a snapshot to batch. Optionally stores the object id for the
      * snapshot. Note that snapshot can hold either the real values or the

@@ -304,9 +304,10 @@ public class CompoundPkFkNestedContextIT extends ServerCase {
         order.setOrderNumber(12345);
         order.setValue("value");
         order.newPayment().setAmount(new BigDecimal(123));
+        order.newPayment().setAmount(new BigDecimal(654));
         context.commitChanges();
 
-        PaymentPk payment = order.getPayments().get(0);
+        PaymentPk payment = order.getPayments().get(1);
         context.deleteObject(payment);
 
         order.newPayment().setAmount(new BigDecimal(321));
@@ -314,10 +315,12 @@ public class CompoundPkFkNestedContextIT extends ServerCase {
 
         ObjectContext newContext = runtime.newContext();
         OrderPk order2 = SelectById.query(OrderPk.class, 12345).selectOne(newContext);
-        PaymentPk payment2 = order2.getPayments().get(0);
+        PaymentPk payment2 = order2.getPayments().get(1);
         newContext.deleteObject(payment2);
 
         order2.newPayment().setAmount(new BigDecimal(321));
+        order2.newPayment().setAmount(new BigDecimal(654));
+        order2.newPayment().setAmount(new BigDecimal(987));
         newContext.commitChanges();
     }
 

@@ -24,7 +24,13 @@ public class OrderPk extends _OrderPk {
     }
 
     private Integer nextPaymentNumber() {
-        return getPayments().size() + 1;
+        int maxPaymentId = 0;
+        for(PaymentPk paymentPk : getPayments()) {
+            if(paymentPk.getPaymentNumber() > maxPaymentId) {
+                maxPaymentId = paymentPk.getPaymentNumber();
+            }
+        }
+        return maxPaymentId + 1;
     }
 
     @Override
