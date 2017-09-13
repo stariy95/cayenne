@@ -132,7 +132,8 @@ final class FlattenedArcKey {
 	 * relationship. Multiple joins between the same pair of objects are
 	 * theoretically possible, so the return value is a list.
 	 */
-	List buildJoinSnapshotsForDelete(DataNode node) {
+	@SuppressWarnings("unchecked")
+	List<Map<String, Object>> buildJoinSnapshotsForDelete(DataNode node) {
 		Map<String, Object> snapshot = eagerJoinSnapshot();
 
 		DbEntity joinEntity = getJoinEntity();
@@ -194,7 +195,7 @@ final class FlattenedArcKey {
 		SQLTemplate query = new SQLTemplate(joinEntity.getDataMap(), sql.toString(), true);
 		query.setParams(snapshot);
 
-		final List[] result = new List[1];
+		final List<Map<String, Object>>[] result = new List[1];
 
 		node.performQueries(Collections.singleton((Query) query), new DefaultOperationObserver() {
 
@@ -221,7 +222,7 @@ final class FlattenedArcKey {
 					dataRows = fixedRows;
 				}
 
-				result[0] = dataRows;
+				result[0] = (List<Map<String, Object>>)dataRows;
 			}
 
 			@Override

@@ -311,12 +311,15 @@ public class CompoundPkFkNestedContextIT extends ServerCase {
         context.deleteObject(payment);
 
         order.newPayment().setAmount(new BigDecimal(321));
+        order.newPayment().setAmount(new BigDecimal(456));
         context.commitChanges();
 
         ObjectContext newContext = runtime.newContext();
         OrderPk order2 = SelectById.query(OrderPk.class, 12345).selectOne(newContext);
         PaymentPk payment2 = order2.getPayments().get(1);
         newContext.deleteObject(payment2);
+
+        order2.getPayments().get(0).setAmount(new BigDecimal(171));
 
         order2.newPayment().setAmount(new BigDecimal(321));
         order2.newPayment().setAmount(new BigDecimal(654));

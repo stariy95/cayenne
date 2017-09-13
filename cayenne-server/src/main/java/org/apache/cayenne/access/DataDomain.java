@@ -630,6 +630,9 @@ public class DataDomain implements QueryEngine, DataChannel {
 		DataDomainFlushAction action = new DataDomainFlushAction(this);
 		action.setJdbcEventLogger(jdbcEventLogger);
 
+		ExpDataDomainFlushAction action1 = new ExpDataDomainFlushAction(this);
+		action1.flush((DataContext)originatingContext, childChanges);
+
 		return action.flush((DataContext) originatingContext, childChanges);
 	}
 
