@@ -37,7 +37,7 @@ public abstract class _Table1 extends BaseDataObject {
 
     public int getCryptoInt() {
         beforePropertyRead("cryptoInt");
-        return cryptoInt;
+        return this.cryptoInt;
     }
 
     public void setCryptoString(String cryptoString) {
@@ -47,7 +47,7 @@ public abstract class _Table1 extends BaseDataObject {
 
     public String getCryptoString() {
         beforePropertyRead("cryptoString");
-        return cryptoString;
+        return this.cryptoString;
     }
 
     public void setPlainInt(int plainInt) {
@@ -57,7 +57,7 @@ public abstract class _Table1 extends BaseDataObject {
 
     public int getPlainInt() {
         beforePropertyRead("plainInt");
-        return plainInt;
+        return this.plainInt;
     }
 
     public void setPlainString(String plainString) {
@@ -67,7 +67,7 @@ public abstract class _Table1 extends BaseDataObject {
 
     public String getPlainString() {
         beforePropertyRead("plainString");
-        return plainString;
+        return this.plainString;
     }
 
     @Override
@@ -125,19 +125,19 @@ public abstract class _Table1 extends BaseDataObject {
     @Override
     protected void writeState(ObjectOutputStream out) throws IOException {
         super.writeState(out);
-        out.writeInt(cryptoInt);
-        out.writeObject(cryptoString);
-        out.writeInt(plainInt);
-        out.writeObject(plainString);
+        out.writeInt(this.cryptoInt);
+        out.writeObject(this.cryptoString);
+        out.writeInt(this.plainInt);
+        out.writeObject(this.plainString);
     }
 
     @Override
     protected void readState(ObjectInputStream in) throws IOException, ClassNotFoundException {
         super.readState(in);
-        cryptoInt = in.readInt();
-        cryptoString = (String)in.readObject();
-        plainInt = in.readInt();
-        plainString = (String)in.readObject();
+        this.cryptoInt = in.readInt();
+        this.cryptoString = (String)in.readObject();
+        this.plainInt = in.readInt();
+        this.plainString = (String)in.readObject();
     }
 
 }

@@ -131,10 +131,8 @@ class DataDomainInsertBucket extends DataDomainSyncBucket {
 
                     if (value != null) {
                         Class<?> javaClass = objAttr.getJavaClass();
-                        if (javaClass.isPrimitive() && value instanceof Number && ((Number) value).intValue() == 0) {
-                            // primitive 0 has to be treated as NULL, or
-                            // otherwise we can't generate PK for POJO's
-                        } else {
+                        // primitive 0 has to be treated as NULL, or otherwise we can't generate PK for POJO's
+                        if (!(javaClass.isPrimitive() && value instanceof Number && ((Number) value).intValue() == 0)) {
                             idMap.put(dbAttrName, value);
                             continue;
                         }
@@ -147,7 +145,7 @@ class DataDomainInsertBucket extends DataDomainSyncBucket {
                 }
 
                 // skip propagated
-                if (isPropagated(dbAttr)) {
+                if (dbAttr.isPropagated()) {
                     continue;
                 }
 
@@ -167,23 +165,5 @@ class DataDomainInsertBucket extends DataDomainSyncBucket {
                 }
             }
         }
-    }
-
-    // TODO, andrus 4/12/2006 - move to DbAttribute in 2.0+
-    boolean isPropagated(DbAttribute attribute) {
-
-        for (DbRelationship dbRel : attribute.getEntity().getRelationships()) {
-            if (!dbRel.isToMasterPK()) {
-                continue;
-            }
-
-            for (DbJoin join : dbRel.getJoins()) {
-                if (attribute.getName().equals(join.getSourceName())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }

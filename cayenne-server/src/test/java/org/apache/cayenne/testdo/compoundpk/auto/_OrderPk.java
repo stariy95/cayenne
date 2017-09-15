@@ -1,8 +1,11 @@
 package org.apache.cayenne.testdo.compoundpk.auto;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.List;
 
-import org.apache.cayenne.CayenneDataObject;
+import org.apache.cayenne.BaseDataObject;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.compoundpk.PaymentPk;
 
@@ -12,7 +15,7 @@ import org.apache.cayenne.testdo.compoundpk.PaymentPk;
  * since it may be overwritten next time code is regenerated.
  * If you need to make any customizations, please use subclass.
  */
-public abstract class _OrderPk extends CayenneDataObject {
+public abstract class _OrderPk extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
@@ -22,32 +25,110 @@ public abstract class _OrderPk extends CayenneDataObject {
     public static final Property<String> VALUE = Property.create("value", String.class);
     public static final Property<List<PaymentPk>> PAYMENTS = Property.create("payments", List.class);
 
+    protected Integer orderNumber;
+    protected String value;
+
+    protected Object payments;
+
     public void setOrderNumber(Integer orderNumber) {
-        writeProperty("orderNumber", orderNumber);
+        beforePropertyWrite("orderNumber", this.orderNumber, orderNumber);
+        if(this.objectId != null) {
+            this.objectId.getReplacementIdMap().put("order_number", orderNumber);
+        }
+        this.orderNumber = orderNumber;
     }
+
     public Integer getOrderNumber() {
-        return (Integer)readProperty("orderNumber");
+        beforePropertyRead("orderNumber");
+        return this.orderNumber;
     }
 
     public void setValue(String value) {
-        writeProperty("value", value);
+        beforePropertyWrite("value", this.value, value);
+        this.value = value;
     }
+
     public String getValue() {
-        return (String)readProperty("value");
+        beforePropertyRead("value");
+        return this.value;
     }
 
     public void addToPayments(PaymentPk obj) {
         addToManyTarget("payments", obj, true);
     }
+
     public void removeFromPayments(PaymentPk obj) {
         removeToManyTarget("payments", obj, true);
     }
+
     @SuppressWarnings("unchecked")
     public List<PaymentPk> getPayments() {
         return (List<PaymentPk>)readProperty("payments");
     }
 
-
     protected abstract void onPostLoad();
+
+    @Override
+    public Object readPropertyDirectly(String propName) {
+        if(propName == null) {
+            throw new IllegalArgumentException();
+        }
+
+        switch(propName) {
+            case "orderNumber":
+                return this.orderNumber;
+            case "value":
+                return this.value;
+            case "payments":
+                return this.payments;
+            default:
+                return super.readPropertyDirectly(propName);
+        }
+    }
+
+    @Override
+    public void writePropertyDirectly(String propName, Object val) {
+        if(propName == null) {
+            throw new IllegalArgumentException();
+        }
+
+        switch (propName) {
+            case "orderNumber":
+                this.orderNumber = (Integer)val;
+                break;
+            case "value":
+                this.value = (String)val;
+                break;
+            case "payments":
+                this.payments = val;
+                break;
+            default:
+                super.writePropertyDirectly(propName, val);
+        }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        writeSerialized(out);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        readSerialized(in);
+    }
+
+    @Override
+    protected void writeState(ObjectOutputStream out) throws IOException {
+        super.writeState(out);
+        out.writeObject(this.orderNumber);
+        out.writeObject(this.value);
+        out.writeObject(this.payments);
+    }
+
+    @Override
+    protected void readState(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        super.readState(in);
+        this.orderNumber = (Integer)in.readObject();
+        this.value = (String)in.readObject();
+        this.payments = in.readObject();
+    }
 
 }

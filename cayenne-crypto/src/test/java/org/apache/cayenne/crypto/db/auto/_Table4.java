@@ -33,7 +33,7 @@ public abstract class _Table4 extends BaseDataObject {
 
     public int getPlainInt() {
         beforePropertyRead("plainInt");
-        return plainInt;
+        return this.plainInt;
     }
 
     public void setPlainString(String plainString) {
@@ -43,7 +43,7 @@ public abstract class _Table4 extends BaseDataObject {
 
     public String getPlainString() {
         beforePropertyRead("plainString");
-        return plainString;
+        return this.plainString;
     }
 
     @Override
@@ -91,15 +91,15 @@ public abstract class _Table4 extends BaseDataObject {
     @Override
     protected void writeState(ObjectOutputStream out) throws IOException {
         super.writeState(out);
-        out.writeInt(plainInt);
-        out.writeObject(plainString);
+        out.writeInt(this.plainInt);
+        out.writeObject(this.plainString);
     }
 
     @Override
     protected void readState(ObjectInputStream in) throws IOException, ClassNotFoundException {
         super.readState(in);
-        plainInt = in.readInt();
-        plainString = (String)in.readObject();
+        this.plainInt = in.readInt();
+        this.plainString = (String)in.readObject();
     }
 
 }

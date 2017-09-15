@@ -627,13 +627,13 @@ public class DataDomain implements QueryEngine, DataChannel {
 							+ "Unsupported context: %s", originatingContext);
 		}
 
-		DataDomainFlushAction action = new DataDomainFlushAction(this);
-		action.setJdbcEventLogger(jdbcEventLogger);
+//		DataDomainFlushAction action = new DataDomainFlushAction(this);
+//		action.setJdbcEventLogger(jdbcEventLogger);
 
 		ExpDataDomainFlushAction action1 = new ExpDataDomainFlushAction(this);
-		action1.flush((DataContext)originatingContext, childChanges);
+		return action1.flush((DataContext)originatingContext, childChanges);
 
-		return action.flush((DataContext) originatingContext, childChanges);
+//		return action.flush((DataContext) originatingContext, childChanges);
 	}
 
 	@Override

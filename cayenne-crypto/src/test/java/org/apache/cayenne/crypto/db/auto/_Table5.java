@@ -35,7 +35,7 @@ public abstract class _Table5 extends BaseDataObject {
 
     public int getCryptoInt1() {
         beforePropertyRead("cryptoInt1");
-        return cryptoInt1;
+        return this.cryptoInt1;
     }
 
     public void setCryptoInt3(int cryptoInt3) {
@@ -45,7 +45,7 @@ public abstract class _Table5 extends BaseDataObject {
 
     public int getCryptoInt3() {
         beforePropertyRead("cryptoInt3");
-        return cryptoInt3;
+        return this.cryptoInt3;
     }
 
     public void setCryptoInt4(int cryptoInt4) {
@@ -55,7 +55,7 @@ public abstract class _Table5 extends BaseDataObject {
 
     public int getCryptoInt4() {
         beforePropertyRead("cryptoInt4");
-        return cryptoInt4;
+        return this.cryptoInt4;
     }
 
     @Override
@@ -108,17 +108,17 @@ public abstract class _Table5 extends BaseDataObject {
     @Override
     protected void writeState(ObjectOutputStream out) throws IOException {
         super.writeState(out);
-        out.writeInt(cryptoInt1);
-        out.writeInt(cryptoInt3);
-        out.writeInt(cryptoInt4);
+        out.writeInt(this.cryptoInt1);
+        out.writeInt(this.cryptoInt3);
+        out.writeInt(this.cryptoInt4);
     }
 
     @Override
     protected void readState(ObjectInputStream in) throws IOException, ClassNotFoundException {
         super.readState(in);
-        cryptoInt1 = in.readInt();
-        cryptoInt3 = in.readInt();
-        cryptoInt4 = in.readInt();
+        this.cryptoInt1 = in.readInt();
+        this.cryptoInt3 = in.readInt();
+        this.cryptoInt4 = in.readInt();
     }
 
 }

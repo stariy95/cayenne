@@ -281,6 +281,25 @@ public class DbAttribute extends Attribute implements ConfigurationNode {
         this.scale = scale;
     }
 
+    /**
+     * @since 4.1
+     */
+    public boolean isPropagated() {
+        for (DbRelationship dbRel : getEntity().getRelationships()) {
+            if (!dbRel.isToMasterPK()) {
+                continue;
+            }
+
+            for (DbJoin join : dbRel.getJoins()) {
+                if (getName().equals(join.getSourceName())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public String toString() {
         String res = "DbAttr: ";

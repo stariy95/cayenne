@@ -119,6 +119,11 @@ public#if("true" == "${object.isAbstract()}") abstract#end class ${subClassName}
 #if ("true" != "${object.isReadOnly()}")
     public void set${stringUtils.capitalized($attr.Name)}($importUtils.formatJavaType(${attr.Type}) $name) {
         beforePropertyWrite("${attr.Name}", this.$name, $name);
+#if (${attr.isPrimaryKey()})
+        if(this.objectId != null) {
+            this.objectId.getReplacementIdMap().put("${attr.getDbAttribute().Name}", $name);
+        }
+#end
         this.$name = $name;
     }
 

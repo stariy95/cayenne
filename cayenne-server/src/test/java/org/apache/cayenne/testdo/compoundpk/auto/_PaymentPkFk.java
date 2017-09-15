@@ -1,8 +1,11 @@
 package org.apache.cayenne.testdo.compoundpk.auto;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 
-import org.apache.cayenne.CayenneDataObject;
+import org.apache.cayenne.BaseDataObject;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.compoundpk.OrderPkFk;
 
@@ -12,7 +15,7 @@ import org.apache.cayenne.testdo.compoundpk.OrderPkFk;
  * since it may be overwritten next time code is regenerated.
  * If you need to make any customizations, please use subclass.
  */
-public abstract class _PaymentPkFk extends CayenneDataObject {
+public abstract class _PaymentPkFk extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
@@ -24,25 +27,46 @@ public abstract class _PaymentPkFk extends CayenneDataObject {
     public static final Property<Integer> PAYMENT_NUMBER = Property.create("paymentNumber", Integer.class);
     public static final Property<OrderPkFk> ORDER = Property.create("order", OrderPkFk.class);
 
+    protected BigDecimal amount;
+    protected Integer orderNumber;
+    protected Integer paymentNumber;
+
+    protected Object order;
+
     public void setAmount(BigDecimal amount) {
-        writeProperty("amount", amount);
+        beforePropertyWrite("amount", this.amount, amount);
+        this.amount = amount;
     }
+
     public BigDecimal getAmount() {
-        return (BigDecimal)readProperty("amount");
+        beforePropertyRead("amount");
+        return this.amount;
     }
 
     public void setOrderNumber(Integer orderNumber) {
-        writeProperty("orderNumber", orderNumber);
+        beforePropertyWrite("orderNumber", this.orderNumber, orderNumber);
+        if(this.objectId != null) {
+            this.objectId.getReplacementIdMap().put("order_number", orderNumber);
+        }
+        this.orderNumber = orderNumber;
     }
+
     public Integer getOrderNumber() {
-        return (Integer)readProperty("orderNumber");
+        beforePropertyRead("orderNumber");
+        return this.orderNumber;
     }
 
     public void setPaymentNumber(Integer paymentNumber) {
-        writeProperty("paymentNumber", paymentNumber);
+        beforePropertyWrite("paymentNumber", this.paymentNumber, paymentNumber);
+        if(this.objectId != null) {
+            this.objectId.getReplacementIdMap().put("payment_number", paymentNumber);
+        }
+        this.paymentNumber = paymentNumber;
     }
+
     public Integer getPaymentNumber() {
-        return (Integer)readProperty("paymentNumber");
+        beforePropertyRead("paymentNumber");
+        return this.paymentNumber;
     }
 
     public void setOrder(OrderPkFk order) {
@@ -53,5 +77,74 @@ public abstract class _PaymentPkFk extends CayenneDataObject {
         return (OrderPkFk)readProperty("order");
     }
 
+    @Override
+    public Object readPropertyDirectly(String propName) {
+        if(propName == null) {
+            throw new IllegalArgumentException();
+        }
+
+        switch(propName) {
+            case "amount":
+                return this.amount;
+            case "orderNumber":
+                return this.orderNumber;
+            case "paymentNumber":
+                return this.paymentNumber;
+            case "order":
+                return this.order;
+            default:
+                return super.readPropertyDirectly(propName);
+        }
+    }
+
+    @Override
+    public void writePropertyDirectly(String propName, Object val) {
+        if(propName == null) {
+            throw new IllegalArgumentException();
+        }
+
+        switch (propName) {
+            case "amount":
+                this.amount = (BigDecimal)val;
+                break;
+            case "orderNumber":
+                this.orderNumber = (Integer)val;
+                break;
+            case "paymentNumber":
+                this.paymentNumber = (Integer)val;
+                break;
+            case "order":
+                this.order = val;
+                break;
+            default:
+                super.writePropertyDirectly(propName, val);
+        }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        writeSerialized(out);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        readSerialized(in);
+    }
+
+    @Override
+    protected void writeState(ObjectOutputStream out) throws IOException {
+        super.writeState(out);
+        out.writeObject(this.amount);
+        out.writeObject(this.orderNumber);
+        out.writeObject(this.paymentNumber);
+        out.writeObject(this.order);
+    }
+
+    @Override
+    protected void readState(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        super.readState(in);
+        this.amount = (BigDecimal)in.readObject();
+        this.orderNumber = (Integer)in.readObject();
+        this.paymentNumber = (Integer)in.readObject();
+        this.order = in.readObject();
+    }
 
 }

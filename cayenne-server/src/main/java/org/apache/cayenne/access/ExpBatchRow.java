@@ -21,6 +21,7 @@ package org.apache.cayenne.access;
 
 import java.util.Map;
 
+import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
@@ -29,13 +30,13 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 class ExpBatchRow {
     private final int type; //
     private final ClassDescriptor descriptor; // ?
-    private final Map<String, Object> objectIdSnapshot; // or just ObjectId?
+    private final ObjectId objectId; // or just ObjectId?
     private Map<String, Object> fullSnapshot;
 
-    ExpBatchRow(int type, ClassDescriptor descriptor, Map<String, Object> objectIdSnapshot) {
+    ExpBatchRow(int type, ClassDescriptor descriptor, ObjectId objectId) {
         this.type = type;
         this.descriptor = descriptor;
-        this.objectIdSnapshot = objectIdSnapshot;
+        this.objectId = objectId;
     }
 
     void setFullSnapshot(Map<String, Object> fullSnapshot) {
@@ -54,7 +55,7 @@ class ExpBatchRow {
         return fullSnapshot;
     }
 
-    Map<String, Object> getObjectIdSnapshot() {
-        return objectIdSnapshot;
+    ObjectId getObjectId() {
+        return objectId;
     }
 }

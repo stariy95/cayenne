@@ -23,9 +23,6 @@ import java.util.Map;
 
 import javax.swing.undo.UndoableEdit;
 
-import com.sun.corba.se.impl.orbutil.graph.Graph;
-import org.apache.cayenne.configuration.DataChannelDescriptor;
-import org.apache.cayenne.configuration.xml.DataChannelLoaderListener;
 import org.apache.cayenne.configuration.xml.NamespaceAwareNestedTagHandler;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.graph.GraphBuilder;
@@ -40,8 +37,9 @@ import org.xml.sax.SAXException;
 
 /**
  * Class to load graph from XML
+ * @since 4.1
  */
-public class GraphHandler extends NamespaceAwareNestedTagHandler {
+class GraphHandler extends NamespaceAwareNestedTagHandler {
 
     static final String GRAPH_TAG = "graph";
 
@@ -55,31 +53,28 @@ public class GraphHandler extends NamespaceAwareNestedTagHandler {
             
     public GraphHandler(NamespaceAwareNestedTagHandler parent, final Application application) {
         super(parent);
-        loaderContext.addDataChannelListener(new DataChannelLoaderListener() {
-            @Override
-            public void onDataChannelLoaded(DataChannelDescriptor dataChannelDescriptor) {
-                GraphRegistry registry = application.getMetaData().get(dataChannelDescriptor, GraphRegistry.class);
-                if(registry == null) {
-                    registry = new GraphRegistry();
-                    application.getMetaData().add(dataChannelDescriptor, registry);
-                }
-
-                GraphMap map = registry.getGraphMap(dataChannelDescriptor);
-                //apply changes
-                GraphBuilder builder = map.createGraphBuilder(graphType, false);
-                builder.getGraph().setScale(scale);
-
-                // lookup
-                Map<DefaultGraphCell, Map<String, ?>> propertiesMap = new HashMap<>();
-                for(Map.Entry<String, Map<String, ?>> entry : GraphHandler.this.propertiesMap.entrySet()) {
-                    DefaultGraphCell cell = builder.getEntityCell(entry.getKey());
-                    propertiesMap.put(cell, entry.getValue());
-                }
-
-                builder.getGraph().getGraphLayoutCache().getModel().removeUndoableEditListener(builder);
-                builder.getGraph().getGraphLayoutCache().edit(propertiesMap, null, null, new UndoableEdit[0]);
-                builder.getGraph().getGraphLayoutCache().getModel().addUndoableEditListener(builder);
+        loaderContext.addDataChannelListener(dataChannelDescriptor -> {
+            GraphRegistry registry = application.getMetaData().get(dataChannelDescriptor, GraphRegistry.class);
+            if(registry == null) {
+                registry = new GraphRegistry();
+                application.getMetaData().add(dataChannelDescriptor, registry);
             }
+
+            GraphMap map = registry.getGraphMap(dataChannelDescriptor);
+            //apply changes
+            GraphBuilder builder = map.createGraphBuilder(graphType, false);
+            builder.getGraph().setScale(scale);
+
+            // lookup
+            Map<DefaultGraphCell, Map<String, ?>> propertiesMap = new HashMap<>();
+            for(Map.Entry<String, Map<String, ?>> entry : GraphHandler.this.propertiesMap.entrySet()) {
+                DefaultGraphCell cell = builder.getEntityCell(entry.getKey());
+                propertiesMap.put(cell, entry.getValue());
+            }
+
+            builder.getGraph().getGraphLayoutCache().getModel().removeUndoableEditListener(builder);
+            builder.getGraph().getGraphLayoutCache().edit(propertiesMap, null, null, new UndoableEdit[0]);
+            builder.getGraph().getGraphLayoutCache().getModel().addUndoableEditListener(builder);
         });
     }
 

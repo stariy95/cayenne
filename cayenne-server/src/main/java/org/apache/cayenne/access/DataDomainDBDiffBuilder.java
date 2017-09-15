@@ -119,14 +119,27 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
                 if (dbRelation.getSourceEntity() == dbEntity) {
                     ObjectId targetId = (ObjectId) entry.getValue();
                     for (DbJoin join : dbRelation.getJoins()) {
-                        Object value = (targetId != null) ? new PropagatedValueFactory(targetId, join.getTargetName())
-                                : null;
-
+                        Object value = getValueForFk(targetId, join.getTargetName());
                         dbDiff.put(join.getSourceName(), value);
                     }
                 }
             }
         }
+    }
+
+    private Object getValueForFk(ObjectId targetId, String attributeName) {
+        if(targetId == null) {
+            return null;
+        }
+
+        // check if value already set and use it
+        Object value = targetId.getIdSnapshot().get(attributeName);
+        if(value != null) {
+            return value;
+        }
+
+        // FK should be generated, so wait for it till insert
+        return new PropagatedValueFactory(targetId, attributeName);
     }
 
     private void appendPrimaryKeys(Map<String, Object> dbDiff) {

@@ -28,15 +28,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.dba.PkGenerator;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.EntitySorter;
 import org.apache.cayenne.query.BatchQuery;
 import org.apache.cayenne.query.DeleteBatchQuery;
 import org.apache.cayenne.query.InsertBatchQuery;
@@ -55,10 +58,10 @@ class ExpDataDomainFlushAction {
     private ObjectStoreGraphDiff sourceDiff;
     private CompoundDiff resultDiff;
     private DataDomainDBDiffBuilder diffBuilder;
+    private List<ExpBatchRow> rowList;
 
     private Map<ClassDescriptor, DbEntityClassDescriptor> dbEntityClassDescriptorMap = new HashMap<>();
     private Set<ClassDescriptor> descriptors = new TreeSet<>(Comparator.comparing(o -> o.getEntity().getClassName()));
-    private Map<ClassDescriptor, Integer> descriptorOrder = new HashMap<>();
 
     ExpDataDomainFlushAction(DataDomain domain) {
         this.domain = domain;
@@ -77,33 +80,39 @@ class ExpDataDomainFlushAction {
         this.sourceDiff = (ObjectStoreGraphDiff) changes;
         this.resultDiff = new CompoundDiff();
         this.diffBuilder = new DataDomainDBDiffBuilder();
+        this.rowList = new ArrayList<>();
 
-        List<ExpBatchRow> rowList = getBatchRows();
-        sortRows(rowList);
+        buildBatchRows();
+        sortBatchRows();
 
-//        List<Query> queries = new ArrayList<>();
-//        rowList.forEach(row -> queries.add(getQueryForRow(row)));
+        preprocess();
 
-//        runQueries(queries);
+        List<Query> queries = buildQueries();
+        runQueries(queries);
+
+        postprocess();
 
         return resultDiff;
     }
 
-    private List<ExpBatchRow> getBatchRows() {
-        List<ExpBatchRow> rowList = new ArrayList<>();
-
+    private void buildBatchRows() {
         sourceDiff.getChangesByObjectId()
-                .forEach((e, v) -> rowList.add(createBatchRow((ObjectId)e, v)));
-
-        return rowList;
+                .forEach((e, v) -> {
+                    ObjectId id = (ObjectId) e;
+                    rowList.add(createBatchRow(id, v, fetchDescriptor(id)));
+                });
     }
 
-    private ExpBatchRow createBatchRow(ObjectId id, ObjectDiff diff) {
-        Persistent object = (Persistent) context.getObjectStore().getNode(id);
+    private ClassDescriptor fetchDescriptor(ObjectId id) {
         ClassDescriptor descriptor = context.getEntityResolver().getClassDescriptor(id.getEntityName());
-        descriptors.add(descriptor); // TODO side effect; fill collection of unique descriptors here to not look up them twice
+        descriptors.add(descriptor);
+        return descriptor;
+    }
 
-        ExpBatchRow row = new ExpBatchRow(object.getPersistenceState(), descriptor, id.getIdSnapshot());
+    private ExpBatchRow createBatchRow(ObjectId id, ObjectDiff diff, ClassDescriptor descriptor) {
+        Persistent object = (Persistent) context.getObjectStore().getNode(id);
+
+        ExpBatchRow row = new ExpBatchRow(object.getPersistenceState(), descriptor, id);
         if(object.getPersistenceState() != PersistenceState.DELETED) {
             diffBuilder.reset(dbEntityClassDescriptorMap.computeIfAbsent(descriptor, DbEntityClassDescriptor::new));
             row.setFullSnapshot(diffBuilder.buildDBDiff(diff));
@@ -111,9 +120,18 @@ class ExpDataDomainFlushAction {
         return row;
     }
 
-    private void sortRows(List<ExpBatchRow> rowList) {
+    private void sortBatchRows() {
         AtomicInteger i = new AtomicInteger(0);
-        descriptors.forEach(d -> descriptorOrder.put(d, i.getAndIncrement()));
+        EntitySorter sorter = domain.getEntitySorter();
+        List<DbEntity> entities = new ArrayList<>(descriptors.size());
+        Map<DbEntity, Integer> entityOrder = new HashMap<>(descriptors.size());
+
+        descriptors.forEach(d -> {
+            entities.add(d.getEntity().getDbEntity());
+        });
+        sorter.sortDbEntities(entities, false);
+        entities.forEach(e -> entityOrder.put(e, i.getAndIncrement()));
+
         rowList.sort((o1, o2) -> {
             // default order should be INSERT(2) -> DELETE(6) -> UPDATE(4)
             int res = o1.getType() - o2.getType();
@@ -121,72 +139,181 @@ class ExpDataDomainFlushAction {
                 return res;
             }
 
-            return descriptorOrder.get(o1.getDescriptor()) - descriptorOrder.get(o2.getDescriptor());
+            return entityOrder.get(o1.getDescriptor().getEntity().getDbEntity())
+                    - entityOrder.get(o2.getDescriptor().getEntity().getDbEntity());
         });
     }
 
-    private BatchQuery getQueryForRow(ExpBatchRow row) {
-        switch (row.getType()) {
-            case PersistenceState.NEW: {
-                InsertBatchQuery insert = new InsertBatchQuery(row.getDescriptor().getEntity().getDbEntity(), 1);
-                insert.add(row.getFullSnapshot());
-                return insert;
+    private void preprocess() {
+
+        List<ExpBatchRow> changed = new ArrayList<>();
+        rowList.forEach(r -> {
+            switch (r.getType()) {
+                case PersistenceState.NEW:
+                    changed.addAll(preprocessInsert(r));
+                    break;
+                case PersistenceState.MODIFIED:
+                    changed.addAll(preprocessUpdate(r));
+                    break;
+                case PersistenceState.DELETED:
+                    changed.addAll(preprocessDelete(r));
+                    break;
+            }
+        });
+
+        rowList.removeAll(changed);
+        rowList.addAll(changed);
+    }
+
+    private void postprocess() {
+
+    }
+
+    private List<ExpBatchRow> preprocessInsert(ExpBatchRow row) {
+        ObjectId id = row.getObjectId();
+        if(id == null || !id.isTemporary()) {
+            return Collections.emptyList();
+        }
+
+        // TODO optimize to batch it (update only when row descriptor changes)
+        DbEntity entity = dbEntityClassDescriptorMap.get(row.getDescriptor()).getDbEntity();
+        DataNode node = domain.lookupDataNode(entity.getDataMap());
+        boolean supportsGeneratedKeys = node.getAdapter().supportsGeneratedKeys();
+        PkGenerator pkGenerator = node.getAdapter().getPkGenerator();
+
+        Map<String, Object> idMap = id.getReplacementIdMap();
+        boolean autoPkDone = false;
+
+        for (DbAttribute dbAttr : entity.getPrimaryKeys()) {
+            String dbAttrName = dbAttr.getName();
+            if (idMap.containsKey(dbAttrName)) {
+                continue;
+            }
+            // skip db-generated
+            if (supportsGeneratedKeys && dbAttr.isGenerated()) {
+                continue;
+            }
+            // skip propagated
+            if (dbAttr.isPropagated()) {
+                continue;
             }
 
-            case PersistenceState.MODIFIED: {
-                List<DbAttribute> qualifierAttributes = Collections.emptyList();//row.objectIdSnapshot.keySet();
-                List<DbAttribute> modifiedAttributes = Collections.emptyList();//row.fullSnapshot.keySet();
-                UpdateBatchQuery update = new UpdateBatchQuery(
-                        row.getDescriptor().getEntity().getDbEntity(),
-                        qualifierAttributes,
-                        modifiedAttributes,
-                        Collections.emptySet(),
-                        1);
-                update.add(row.getObjectIdSnapshot(), row.getFullSnapshot());
-                return update;
+            // TODO handle meaningful PK ... should be done in place via code generation in setter...
+
+            // only a single key can be generated from DB... if this is done
+            // already in this loop, we must bail out.
+            if (autoPkDone) {
+                throw new CayenneRuntimeException("Primary Key autogeneration only works for a single attribute.");
             }
 
-            case PersistenceState.DELETED: {
-                List<DbAttribute> qualifierAttributes = Collections.emptyList();//row.objectIdSnapshot.keySet();
-                DeleteBatchQuery delete = new DeleteBatchQuery(
-                        row.getDescriptor().getEntity().getDbEntity(),
-                        qualifierAttributes,
-                        Collections.emptySet(),
-                        1);
-                delete.add(row.getObjectIdSnapshot());
-                return delete;
+            // finally, use database generation mechanism
+            autoPkDone = true;
+            try {
+                idMap.put(dbAttrName, pkGenerator.generatePk(node, dbAttr));
+            } catch (Exception ex) {
+                throw new CayenneRuntimeException("Error generating PK: %s", ex,  ex.getMessage());
             }
         }
 
-        throw new CayenneRuntimeException("Invalid object state in flush action: %d; " +
-                "only NEW(2), MODIFIED(4) and DELETED(6) are allowed", row.getType());
+        return Collections.emptyList();
+    }
+
+    private List<ExpBatchRow> preprocessUpdate(ExpBatchRow row) {
+        return Collections.emptyList();
+    }
+
+    private List<ExpBatchRow> preprocessDelete(ExpBatchRow row) {
+        return rowList.stream()
+                .filter(r -> r != row
+                        && r.getObjectId().getIdSnapshot().equals(row.getObjectId().getIdSnapshot())
+                        && r.getType() == PersistenceState.NEW)
+                .collect(Collectors.toList());
+    }
+
+    private InsertBatchQuery newInsertQuery(ExpBatchRow row) {
+        return new InsertBatchQuery(row.getDescriptor().getEntity().getDbEntity(), 16);
+    }
+
+    private UpdateBatchQuery newUpdateQuery(ExpBatchRow row) {
+        DbEntity dbEntity = row.getDescriptor().getEntity().getDbEntity();
+        List<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
+        List<DbAttribute> modifiedAttributes = Collections.emptyList();//row.fullSnapshot.keySet();
+        return new UpdateBatchQuery(dbEntity, qualifierAttributes, modifiedAttributes, Collections.emptySet(), 16);
+    }
+
+    private DeleteBatchQuery newDeleteQuery(ExpBatchRow row) {
+        DbEntity dbEntity = row.getDescriptor().getEntity().getDbEntity();
+        List<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
+        return new DeleteBatchQuery(dbEntity, qualifierAttributes, Collections.emptySet(), 16);
+    }
+
+    private List<Query> buildQueries() {
+
+        InsertBatchQuery insertQuery = null;
+        UpdateBatchQuery updateQuery = null;
+        DeleteBatchQuery deleteQuery = null;
+        ClassDescriptor lastDescriptor = null;
+        int lastType = -1;
+        boolean newQuery = false;
+        List<Query> queries = new ArrayList<>();
+
+        for(ExpBatchRow r : rowList) {
+            if(r.getDescriptor() != lastDescriptor || lastType != r.getType()) {
+                lastDescriptor = r.getDescriptor();
+                lastType = r.getType();
+                newQuery = true;
+            }
+
+            switch (r.getType()) {
+                case PersistenceState.NEW:
+                    if(newQuery) {
+                        insertQuery = newInsertQuery(r);
+                        queries.add(insertQuery);
+                    }
+                    insertQuery.add(r.getFullSnapshot(), r.getObjectId());
+                    break;
+
+                case PersistenceState.MODIFIED:
+                    if(r.getFullSnapshot() == null || r.getFullSnapshot().isEmpty()) {
+                        continue; // skip empty change
+                    }
+                    if(newQuery) {
+                        updateQuery = newUpdateQuery(r);
+                        queries.add(updateQuery);
+                    }
+                    updateQuery.add(r.getObjectId().getIdSnapshot(), r.getFullSnapshot());
+                    break;
+
+                case PersistenceState.DELETED:
+                    if(newQuery) {
+                        deleteQuery = newDeleteQuery(r);
+                        queries.add(deleteQuery);
+                    }
+                    deleteQuery.add(r.getObjectId().getIdSnapshot());
+                    break;
+            }
+
+            newQuery = false;
+        }
+
+        return queries;
     }
 
     private void runQueries(List<Query> queries) {
-        DataDomainFlushObserver observer = new DataDomainFlushObserver(
-                domain.getJdbcEventLogger());
-
-        // split query list by spanned nodes and run each single node range individually.
-        // Since connections are reused per node within an open transaction, there should
-        // not be much overhead in accessing the same node multiple times (may happen due
-        // to imperfect sorting)
+        DataDomainFlushObserver observer = new DataDomainFlushObserver(domain.getJdbcEventLogger());
+        DataNode lastNode = null;
+        DbEntity lastEntity = null;
+        int rangeStart = 0;
+        int len = queries.size();
 
         try {
-
-            DataNode lastNode = null;
-            DbEntity lastEntity = null;
-            int rangeStart = 0;
-            int len = queries.size();
-
             for (int i = 0; i < len; i++) {
-
                 BatchQuery query = (BatchQuery) queries.get(i);
                 if (query.getDbEntity() != lastEntity) {
                     lastEntity = query.getDbEntity();
 
                     DataNode node = domain.lookupDataNode(lastEntity.getDataMap());
                     if (node != lastNode) {
-
                         if (i - rangeStart > 0) {
                             lastNode.performQueries(queries.subList(rangeStart, i), observer);
                         }
