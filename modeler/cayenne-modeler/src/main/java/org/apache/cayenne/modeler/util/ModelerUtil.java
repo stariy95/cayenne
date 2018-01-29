@@ -33,10 +33,19 @@ import org.apache.cayenne.util.CayenneMapEntry;
 
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.image.ImageObserver;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
@@ -48,7 +57,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -88,9 +96,69 @@ public final class ModelerUtil {
      * folder for the modeler.
      */
     public static ImageIcon buildIcon(String path) {
-        ClassLoader cl = ModelerUtil.class.getClassLoader();
-        URL url = cl.getResource(ModelerConstants.RESOURCE_PATH + path);
-        return new ImageIcon(url);
+        if (isRetina()) {
+            String hdpiPath = getHiDPIResource(path);
+            URL hdpiUrl = ModelerUtil.class.getClassLoader().getResource(ModelerConstants.RESOURCE_PATH + hdpiPath);
+            if(hdpiUrl != null) {
+                return new RetinaIcon(Toolkit.getDefaultToolkit().createImage(hdpiUrl));
+            }
+        }
+
+        URL url = ModelerUtil.class.getClassLoader().getResource(ModelerConstants.RESOURCE_PATH + path);
+        return new ImageIcon(Toolkit.getDefaultToolkit().createImage(url));
+    }
+
+    private static String getHiDPIResource(String path) {
+        int dotPosition = path.lastIndexOf('.');
+        if(dotPosition == -1) {
+            return path + "@2x";
+        }
+
+        return path.substring(0, dotPosition) + "@2x" + path.substring(dotPosition);
+    }
+
+    /**
+     * Idea from http://bulenkov.com/2013/06/23/retina-support-in-oracle-jdk-1-7/
+     */
+    public static boolean isRetina() {
+        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice();
+        try {
+            Field field = device.getClass().getDeclaredField("scale");
+            field.setAccessible(true);
+            Object scale = field.get(device);
+            if (scale instanceof Integer && (Integer) scale == 2) {
+                return true;
+            }
+        } catch (Exception ignore) {
+        }
+
+        return true;
+    }
+
+    private static final class RetinaIcon extends ImageIcon {
+
+        public RetinaIcon(final Image image) {
+            super(image);
+        }
+
+        public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+            ImageObserver observer = getImageObserver();
+
+            if (observer == null) {
+                observer = c;
+            }
+
+            Image image = getImage();
+            int width = image.getWidth(observer);
+            int height = image.getHeight(observer);
+            final Graphics2D g2d = (Graphics2D)g.create(x, y, width, height);
+
+            g2d.scale(0.5, 0.5);
+            g2d.drawImage(image, width / 2, height / 2, observer);
+            g2d.scale(1, 1);
+            g2d.dispose();
+        }
     }
 
     /**
