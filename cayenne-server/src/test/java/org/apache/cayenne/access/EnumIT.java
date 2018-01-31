@@ -29,6 +29,7 @@ import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.enum_test.Enum1;
 import org.apache.cayenne.testdo.enum_test.EnumEntity;
 import org.apache.cayenne.testdo.enum_test.EnumEntity2;
+import org.apache.cayenne.testdo.enum_test.EnumEntity3;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
@@ -91,8 +92,16 @@ public class EnumIT extends ServerCase {
     @Test
     public void createObjectWithEnumQualifier() {
         EnumEntity2 test = context.newObject(EnumEntity2.class);
-        context.commitChanges();
-
         assertEquals(Enum1.two, test.getEnumAttribute());
+
+        context.commitChanges();
+    }
+
+    @Test
+    public void createObjectWithStringQualifier() {
+        EnumEntity3 test = context.newObject(EnumEntity3.class);
+        assertEquals(Enum1.two, test.getEnumAttribute());
+
+        context.commitChanges();
     }
 }

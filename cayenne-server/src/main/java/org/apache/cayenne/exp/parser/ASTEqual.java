@@ -21,8 +21,14 @@ package org.apache.cayenne.exp.parser;
 
 import java.util.Collection;
 
+import org.apache.cayenne.DataObject;
+import org.apache.cayenne.ObjectContext;
+import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ValueInjector;
+import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjEntity;
+import org.apache.cayenne.util.CayenneMapEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,10 +146,36 @@ public class ASTEqual extends ConditionNode implements ValueInjector {
 			// inject
 			ASTObjPath path = (ASTObjPath) args[1 - scalarIndex];
 			try {
-				path.injectValue(o, evaluateChild(scalarIndex, o));
+				Object value = evaluateChild(scalarIndex, o);
+				value = dynamicCastValue(o, path, value);
+				path.injectValue(o, value);
 			} catch (Exception ex) {
 				LOGGER.warn("Failed to inject value " + " on path " + path.getPath() + " to " + o, ex);
 			}
 		}
+	}
+
+	/**
+	 * Try to cast value to attribute type.
+	 * For now it can only cast String into Enum value.
+	 * TODO: can we cast some other types here, like String to Number?
+	 */
+	@SuppressWarnings("unchecked")
+	private Object dynamicCastValue(Object object, ASTObjPath path, Object value) {
+		if(object instanceof DataObject) {
+            ObjectContext context = ((DataObject) object).getObjectContext();
+            ObjectId objectId = ((DataObject) object).getObjectId();
+            if(context != null && objectId != null) {
+                ObjEntity entity = context.getEntityResolver().getObjEntity(objectId.getEntityName());
+                CayenneMapEntry entry = path.evaluateEntityNode(entity);
+                if(entry instanceof ObjAttribute
+						&& ((ObjAttribute) entry).getJavaClass().isEnum()
+						&& value instanceof String) {
+					// finally...
+					value = Enum.valueOf((Class<Enum>)((ObjAttribute) entry).getJavaClass(), (String)value);
+                }
+            }
+        }
+		return value;
 	}
 }

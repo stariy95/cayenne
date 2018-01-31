@@ -20,6 +20,7 @@
 package org.apache.cayenne.exp.parser;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -92,16 +93,21 @@ public class ASTEnum extends ASTScalar {
         return (EnumValue)value;
     }
 
-    static final class EnumValue {
-        String className;
-        String enumName;
+    /**
+     * Value object to store deferred enum value.
+     */
+    static final class EnumValue implements Serializable {
+        private static final long serialVersionUID = -5474786448129251537L;
 
-        EnumValue(String className, String enumName) {
+        private final String className;
+        private final String enumName;
+
+        private EnumValue(String className, String enumName) {
             this.className = Objects.requireNonNull(className);
             this.enumName = Objects.requireNonNull(enumName);
         }
 
-        Enum<?> resolve() {
+        private Enum<?> resolve() {
             Class enumClass;
             try {
                 enumClass = Util.getJavaClass(className);

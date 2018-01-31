@@ -20,11 +20,14 @@ package org.apache.cayenne.exp.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 
+import org.apache.cayenne.testdo.enum_test.Enum1;
+import org.apache.cayenne.testdo.enum_test.EnumEntity;
 import org.apache.cayenne.testdo.testmap.Artist;
 import org.apache.cayenne.testdo.testmap.Painting;
 import org.junit.Test;
@@ -119,4 +122,29 @@ public class ASTEqualTest {
 		assertFalse(equalToSimple.match(matchFull));
 		assertTrue(equalToFull.match(matchFull));
 	}
+
+	@Test
+	public void testInjectStringValue() {
+		ASTEqual equal = new ASTEqual(new ASTObjPath("artistName"), "abc");
+		Artist artist = new Artist();
+
+		assertEquals(null, artist.getArtistName());
+
+		equal.injectValue(artist);
+
+		assertEquals("abc", artist.getArtistName());
+	}
+
+	@Test
+	public void testInjectEnumValue() {
+		ASTEqual equal = new ASTEqual(new ASTObjPath("enumAttribute"), Enum1.one);
+
+		EnumEntity enumEntity = new EnumEntity();
+		assertNull(enumEntity.getEnumAttribute());
+
+		equal.injectValue(enumEntity);
+
+		assertEquals(Enum1.one, enumEntity.getEnumAttribute());
+	}
+
 }
