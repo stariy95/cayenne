@@ -272,6 +272,11 @@ public class DbImporterMojoTest extends AbstractMojoTestCase {
     }
 
     @Test
+    public void testMultipleRelationship() throws Exception {
+        test("testMultipleRelationship");
+    }
+
+    @Test
     public void testFilteringConfig() throws Exception {
         DbImporterMojo cdbImport = getCdbImport("config/pom-01.xml");
 
