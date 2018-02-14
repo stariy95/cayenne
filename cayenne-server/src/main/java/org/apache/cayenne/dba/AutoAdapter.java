@@ -23,6 +23,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
+import org.apache.cayenne.access.translator.select.OrderingTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
@@ -113,6 +114,11 @@ public class AutoAdapter implements DbAdapter {
 	@Override
 	public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
 		return getAdapter().getQualifierTranslator(queryAssembler);
+	}
+
+	@Override
+	public OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler) {
+		return getAdapter().getOrderingTranslator(queryAssembler);
 	}
 
 	@Override

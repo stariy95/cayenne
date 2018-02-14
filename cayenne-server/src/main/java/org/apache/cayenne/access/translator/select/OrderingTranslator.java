@@ -36,8 +36,13 @@ public class OrderingTranslator extends QueryAssemblerHelper {
 
 	protected List<String> orderByColumnList = new ArrayList<>();
 
-	public OrderingTranslator(QueryAssembler queryAssembler) {
+	protected boolean supportsNullsOrdering;
+
+	protected StringBuilder mainBuffer;
+
+	public OrderingTranslator(QueryAssembler queryAssembler, boolean supportsNullsOrdering) {
 		super(queryAssembler);
+		this.supportsNullsOrdering = supportsNullsOrdering;
 	}
 
 	/**
@@ -60,15 +65,14 @@ public class OrderingTranslator extends QueryAssemblerHelper {
 
 		Iterator<Ordering> it = ((SelectQuery<?>) q).getOrderings().iterator();
 
-		StringBuilder mainBuffer = this.out;
+		mainBuffer = out;
 
 		try {
 			while (it.hasNext()) {
 				Ordering ord = it.next();
 
-				// reset buffer to collect SQL for the single column, that we'll
-				// be reusing
-				this.out = new StringBuilder();
+				// reset buffer to collect SQL for the single column, that we'll be reusing
+				out = new StringBuilder();
 
 				if (ord.isCaseInsensitive()) {
 					out.append("UPPER(");
@@ -91,21 +95,39 @@ public class OrderingTranslator extends QueryAssemblerHelper {
 					out.append(")");
 				}
 
-				String columnSQL = out.toString();
-				mainBuffer.append(columnSQL);
-				orderByColumnList.add(columnSQL);
-
-				// "ASC" is a noop, omit it from the query
-				if (!ord.isAscending()) {
-					mainBuffer.append(" DESC");
-				}
+				appendColumn(ord, out.toString());
+				appendDirection(ord);
+				appendNullsOrdering(ord);
 
 				if (it.hasNext()) {
 					mainBuffer.append(", ");
 				}
 			}
 		} finally {
-			this.out = mainBuffer;
+			out = mainBuffer;
+		}
+	}
+
+	protected void appendColumn(Ordering ordering, String columnSQL) {
+		mainBuffer.append(columnSQL);
+		orderByColumnList.add(columnSQL);
+	}
+
+
+	protected void appendDirection(Ordering ordering) {
+		// "ASC" is a noop, omit it from the query
+		if (!ordering.isAscending()) {
+			mainBuffer.append(" DESC");
+		}
+	}
+
+	protected void appendNullsOrdering(Ordering ordering) {
+		if(supportsNullsOrdering) {
+			if (ordering.isNullSortedFirst()) {
+				mainBuffer.append(" NULLS FIRST");
+			} else {
+				mainBuffer.append(" NULLS LAST");
+			}
 		}
 	}
 

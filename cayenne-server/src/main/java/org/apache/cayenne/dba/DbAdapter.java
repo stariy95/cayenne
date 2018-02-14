@@ -21,6 +21,7 @@ package org.apache.cayenne.dba;
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
+import org.apache.cayenne.access.translator.select.OrderingTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
@@ -61,6 +62,13 @@ public interface DbAdapter {
 	SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver);
 
 	QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler);
+
+	/**
+	 * Returns ordering translator
+	 *
+	 * @since 4.1
+	 */
+	OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler);
 
 	/**
 	 * Returns an instance of SQLAction that should handle the query.

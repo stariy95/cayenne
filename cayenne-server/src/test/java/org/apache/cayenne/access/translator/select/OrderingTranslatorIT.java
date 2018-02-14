@@ -122,14 +122,28 @@ public class OrderingTranslatorIT extends ServerCase {
 		doTestAppendPart("TRUE AND FALSE", o1);
 	}
 
+	@Test
+	public void testAppendNullsOrder() {
+		Ordering o1 = new Ordering(FunctionExpressionFactory.countExp(ExpressionFactory.pathExp("dateOfBirth")), SortOrder.ASCENDING_INSENSITIVE);
+		Ordering o2 = new Ordering(FunctionExpressionFactory.sqrtExp("paintingArray.estimatedPrice"), SortOrder.DESCENDING);
+		o1.setNullSortedFirst(true);
+		o2.setNullSortedFirst(false);
+
+		doTestAppendPart("UPPER(COUNT(ta.DATE_OF_BIRTH)) NULLS FIRST, SQRT(ta.ESTIMATED_PRICE) DESC NULLS LAST", true, o1, o2);
+	}
+
 	private void doTestAppendPart(String expectedSQL, Ordering... orderings) {
+		doTestAppendPart(expectedSQL, false, orderings);
+	}
+
+	private void doTestAppendPart(String expectedSQL, boolean nullOrdering, Ordering... orderings) {
 
 		SelectQuery<Artist> q = SelectQuery.query(Artist.class);
 		q.addOrderings(Arrays.asList(orderings));
 
 		TstQueryAssembler assembler = new TstQueryAssembler(q, node.getAdapter(), node.getEntityResolver());
 		StringBuilder out = new StringBuilder();
-		String translated = new OrderingTranslator(assembler).appendPart(out).toString();
+		String translated = new OrderingTranslator(assembler, nullOrdering).appendPart(out).toString();
 
 		assertEquals(expectedSQL, translated);
 	}

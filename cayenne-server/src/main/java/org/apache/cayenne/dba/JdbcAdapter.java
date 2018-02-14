@@ -26,6 +26,7 @@ import org.apache.cayenne.access.translator.batch.BatchTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
+import org.apache.cayenne.access.translator.select.OrderingTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
@@ -521,6 +522,11 @@ public class JdbcAdapter implements DbAdapter {
 		QualifierTranslator translator = new QualifierTranslator(queryAssembler);
 		translator.setCaseInsensitive(caseInsensitiveCollations);
 		return translator;
+	}
+
+	@Override
+	public OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler) {
+		return new OrderingTranslator(queryAssembler, true);
 	}
 
 	/**

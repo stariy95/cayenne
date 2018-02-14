@@ -19,6 +19,7 @@
 package org.apache.cayenne.dba.sqlite;
 
 import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.translator.select.OrderingTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.types.ExtendedType;
@@ -92,6 +93,14 @@ public class SQLiteAdapter extends JdbcAdapter {
     @Override
     public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
         return new SQLiteQualifierTranslator(queryAssembler);
+    }
+
+    /**
+     * @since 4.1
+     */
+    @Override
+    public OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler) {
+        return new OrderingTranslator(queryAssembler, false);
     }
 
     @Override

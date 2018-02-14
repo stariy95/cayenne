@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
+import org.apache.cayenne.access.translator.select.OrderingTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
@@ -93,6 +94,14 @@ public class SybaseAdapter extends JdbcAdapter {
     @Override
     public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
         return new SybaseQualifierTranslator(queryAssembler);
+    }
+
+    /**
+     * @since 4.1
+     */
+    @Override
+    public OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler) {
+        return new OrderingTranslator(queryAssembler, false);
     }
 
     /**

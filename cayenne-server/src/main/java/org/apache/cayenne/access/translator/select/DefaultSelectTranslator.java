@@ -159,7 +159,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		}
 
 		// build ORDER BY
-		OrderingTranslator orderingTranslator = new OrderingTranslator(this);
+		OrderingTranslator orderingTranslator = adapter.getOrderingTranslator(this);
 		StringBuilder orderingBuffer = orderingTranslator.appendPart(new StringBuilder());
 
 		// assemble

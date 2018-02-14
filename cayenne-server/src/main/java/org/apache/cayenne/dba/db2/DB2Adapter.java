@@ -28,6 +28,7 @@ import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
+import org.apache.cayenne.access.translator.select.OrderingTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.types.BooleanType;
@@ -152,6 +153,14 @@ public class DB2Adapter extends JdbcAdapter {
         QualifierTranslator translator = new DB2QualifierTranslator(queryAssembler, TRIM_FUNCTION);
         translator.setCaseInsensitive(caseInsensitiveCollations);
         return translator;
+    }
+
+    /**
+     * @since 4.1
+     */
+    @Override
+    public OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler) {
+        return new OrderingTranslator(queryAssembler, false);
     }
 
     /**
