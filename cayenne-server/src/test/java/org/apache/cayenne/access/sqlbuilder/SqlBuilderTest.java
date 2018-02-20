@@ -76,11 +76,12 @@ public class SqlBuilderTest {
                 "a.ARTIST_ID AS a_id " +
                 "COUNT p.PAINTING_TITLE AS p_count " +
                 "FROM ARTIST AS a " +
-                "JOIN PAINTING AS p ON a.ARTIST_ID =  p.ARTIST_ID  AND   p.ESTIMATED_PRICE >  10  " +
-                "WHERE a.ARTIST_NAME =  'Picasso'  " +
+                "LEFT JOIN PAINTING AS p ON a.ARTIST_ID =  p.ARTIST_ID  AND   p.ESTIMATED_PRICE >  10  " +
+                "WHERE a.ARTIST_NAME =  'Picasso'  AND  " +
+                "EXISTS SELECT* FROM GALLERY AS g WHERE g.GALLERY_ID =  p.GALLERY_ID  " +
+                "AND   1 =  1  OR  false  " +
                 "GROUP BY a.ARTIST_ID " +
                 "ORDER BY p_count DESC ", visitor.getString());
-
 
     }
 }
