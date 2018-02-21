@@ -36,4 +36,20 @@ class MySQLSelectTranslator extends DefaultSelectTranslator {
 		super(query, adapter, entityResolver);
 	}
 
+
+	@Override
+	protected void appendLimitAndOffsetClauses() {
+		int offset = queryMetadata.getFetchOffset();
+		int limit = queryMetadata.getFetchLimit();
+
+		if (offset > 0 || limit > 0) {
+			// both OFFSET and LIMIT must be present, so come up with defaults
+			// if one of them is not set by the user
+			if (limit == 0) {
+				limit = Integer.MAX_VALUE;
+			}
+
+			selectBuilder.limit(limit).offset(offset);
+		}
+	}
 }

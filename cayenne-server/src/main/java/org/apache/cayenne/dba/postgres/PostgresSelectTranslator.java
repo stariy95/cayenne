@@ -36,4 +36,17 @@ class PostgresSelectTranslator extends DefaultSelectTranslator {
 		super(query, adapter, entityResolver);
 	}
 
+	@Override
+	protected void appendLimitAndOffsetClauses() {
+		// limit results
+		int limit = queryMetadata.getFetchLimit();
+		if (limit > 0) {
+			selectBuilder.limit(limit);
+		}
+
+		int offset = queryMetadata.getFetchOffset();
+		if (offset > 0) {
+			selectBuilder.offset(offset);
+		}
+	}
 }
