@@ -17,16 +17,14 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder;
-
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
 /**
  * @since 4.1
  */
-@FunctionalInterface
-public interface NodeBuilder {
-
-    Node buildNode();
-
+public class HavingNode extends Node {
+    @Override
+    public void append(StringBuilder buffer) {
+        buffer.append("HAVING");
+    }
 }

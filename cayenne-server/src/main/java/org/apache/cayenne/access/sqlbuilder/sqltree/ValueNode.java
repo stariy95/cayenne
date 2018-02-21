@@ -17,16 +17,27 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder;
-
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
 /**
  * @since 4.1
  */
-@FunctionalInterface
-public interface NodeBuilder {
+public class ValueNode extends Node {
 
-    Node buildNode();
+    private final Object value;
 
+    public ValueNode(Object value) {
+        this.value = value;
+    }
+
+    @Override
+    public void append(StringBuilder buffer) {
+        if (value instanceof CharSequence) {
+            buffer.append('\'');
+        }
+        buffer.append(String.valueOf(value));
+        if (value instanceof CharSequence) {
+            buffer.append('\'');
+        }
+    }
 }

@@ -20,12 +20,13 @@
 package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
  * @since 4.1
  */
-public class ExpressionNodeBuilder implements NodeBuilder {
+public class ExpressionNodeBuilder implements ExpressionTrait {
 
     private final NodeBuilder left;
 
@@ -41,30 +42,47 @@ public class ExpressionNodeBuilder implements NodeBuilder {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "OR"));
     }
 
+    @Override
     public ExpressionNodeBuilder plus(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "+"));
     }
 
+    @Override
     public ExpressionNodeBuilder minus(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "-"));
     }
 
+    @Override
+    public ExpressionNodeBuilder mul(NodeBuilder operand) {
+        return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "*"));
+    }
+
+    @Override
+    public ExpressionNodeBuilder div(NodeBuilder operand) {
+        return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "/"));
+    }
+
+    @Override
     public ExpressionNodeBuilder eq(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "="));
     }
 
+    @Override
     public ExpressionNodeBuilder lt(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "<"));
     }
 
+    @Override
     public ExpressionNodeBuilder gt(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, ">"));
     }
 
+    @Override
     public ExpressionNodeBuilder lte(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, "<="));
     }
 
+    @Override
     public ExpressionNodeBuilder gte(NodeBuilder operand) {
         return new ExpressionNodeBuilder(new ExpNodeBuilder(operand, ">="));
     }
@@ -100,7 +118,7 @@ public class ExpressionNodeBuilder implements NodeBuilder {
 
         @Override
         public Node buildNode() {
-            Node node = new EmptyNode();
+            Node node = new ExpressionNode();
             node.addChild(left.buildNode())
                     .addChild(new Node() {
                         @Override

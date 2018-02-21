@@ -21,13 +21,12 @@ package org.apache.cayenne.access.sqlbuilder;
 
 import java.util.Objects;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
  * @since 4.1
  */
-public class ColumnNodeBuilder implements NodeBuilder {
+public class ColumnNodeBuilder implements ExpressionTrait {
 
     private final String table;
 
@@ -45,45 +44,12 @@ public class ColumnNodeBuilder implements NodeBuilder {
         return this;
     }
 
-    public ExpressionNodeBuilder eq(NodeBuilder nodeBuilder) {
-        return new ExpressionNodeBuilder(this).eq(nodeBuilder);
-    }
-
-    public ExpressionNodeBuilder gt(NodeBuilder nodeBuilder) {
-        return new ExpressionNodeBuilder(this).gt(nodeBuilder);
-    }
-
-    public ExpressionNodeBuilder lt(NodeBuilder nodeBuilder) {
-        return new ExpressionNodeBuilder(this).lt(nodeBuilder);
-    }
-
-
     public NodeBuilder desc() {
-        return () -> {
-            Node node = new EmptyNode();
-            node.addChild(ColumnNodeBuilder.this.buildNode());
-            node.addChild(new Node() {
-                @Override
-                public void append(StringBuilder buffer) {
-                    buffer.append("DESC");
-                }
-            });
-            return node;
-        };
+        return new OrderingNodeBuilder(this, "DESC");
     }
 
     public NodeBuilder asc() {
-        return () -> {
-            Node node = new EmptyNode();
-            node.addChild(ColumnNodeBuilder.this.buildNode());
-            node.addChild(new Node() {
-                @Override
-                public void append(StringBuilder buffer) {
-                    buffer.append("ASC");
-                }
-            });
-            return node;
-        };
+        return new OrderingNodeBuilder(this, "ASC");
     }
 
     @Override
@@ -101,4 +67,5 @@ public class ColumnNodeBuilder implements NodeBuilder {
             }
         };
     }
+
 }

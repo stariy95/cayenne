@@ -17,16 +17,28 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder;
-
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
 /**
  * @since 4.1
  */
-@FunctionalInterface
-public interface NodeBuilder {
+public class ExpressionNode extends Node {
+    @Override
+    public void append(StringBuilder buffer) {
+    }
 
-    Node buildNode();
+    @Override
+    public void appendChildrenStart(StringBuilder builder) {
+        builder.append('(');
+    }
 
+    @Override
+    public void appendChildrenEnd(StringBuilder builder) {
+        builder.append(')');
+    }
+
+    @Override
+    public String toString() {
+        return "{ExpressionNode}";
+    }
 }

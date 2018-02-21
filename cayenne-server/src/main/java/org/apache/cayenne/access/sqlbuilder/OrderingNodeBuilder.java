@@ -19,58 +19,33 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import java.util.Objects;
-
+import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
  * @since 4.1
  */
-public class JoinNodeBuilder implements NodeBuilder {
+class OrderingNodeBuilder implements NodeBuilder {
 
-    private final String joinType;
+    private final NodeBuilder column;
 
-    private final TableNodeBuilder table;
+    private final String direction;
 
-    private NodeBuilder joinExp;
-
-    public JoinNodeBuilder(String joinType, TableNodeBuilder table) {
-        this.joinType = Objects.requireNonNull(joinType);
-        this.table = Objects.requireNonNull(table);
-    }
-
-    public JoinNodeBuilder on(NodeBuilder joinExp) {
-        this.joinExp = Objects.requireNonNull(joinExp);
-        return this;
+    public OrderingNodeBuilder(NodeBuilder column, String direction) {
+        this.column = column;
+        this.direction = direction;
     }
 
     @Override
     public Node buildNode() {
-        Node node = new Node() {
+        Node node = new EmptyNode();
+        node.addChild(column.buildNode());
+        node.addChild(new Node() {
             @Override
             public void append(StringBuilder buffer) {
-                buffer.append(joinType);
+                buffer.append(direction);
             }
-        };
-        node.addChild(table.buildNode());
-        Node onNode = new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                buffer.append("ON");
-            }
-
-            @Override
-            public void appendChildrenStart(StringBuilder builder) {
-                builder.append('(');
-            }
-
-            @Override
-            public void appendChildrenEnd(StringBuilder builder) {
-                builder.append(')');
-            }
-        };
-        onNode.addChild(joinExp.buildNode());
-        node.addChild(onNode);
+        });
         return node;
     }
 }

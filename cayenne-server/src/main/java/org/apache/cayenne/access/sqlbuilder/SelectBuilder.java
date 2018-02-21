@@ -19,17 +19,18 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.DistinctNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FromNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.GroupByNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.HavingNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.OffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.OrderByNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.SelectNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.SelectResultNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.WhereNode;
 import org.apache.cayenne.di.Provider;
-import org.apache.cayenne.query.Ordering;
 
 /**
  * @since 4.1
@@ -60,22 +61,27 @@ public class SelectBuilder implements NodeBuilder {
     public SelectBuilder(NodeBuilder... selectExpressions) {
         root = new SelectNode();
         for(NodeBuilder exp : selectExpressions) {
-            node(SELECT_NODE, EmptyNode::new).addChild(exp.buildNode());
+            node(SELECT_NODE, SelectResultNode::new).addChild(exp.buildNode());
         }
     }
 
     public SelectBuilder distinct() {
+        root.addChild(new DistinctNode());
+        return this;
+    }
+
+    public SelectBuilder top(int count) {
         root.addChild(new Node() {
             @Override
             public void append(StringBuilder buffer) {
-                buffer.append("DISTINCT");
+                buffer.append("TOP ").append(count);
             }
         });
         return this;
     }
 
     public SelectBuilder result(NodeBuilder selectExpression) {
-        node(SELECT_NODE, EmptyNode::new).addChild(selectExpression.buildNode());
+        node(SELECT_NODE, SelectResultNode::new).addChild(selectExpression.buildNode());
         return this;
     }
 
@@ -113,6 +119,9 @@ public class SelectBuilder implements NodeBuilder {
     }
 
     public SelectBuilder having(NodeBuilder... params) {
+        for(NodeBuilder next : params) {
+            node(HAVING_NODE, HavingNode::new).addChild(next.buildNode());
+        }
         return this;
     }
 

@@ -33,7 +33,7 @@ public class ToStringVisitor implements NodeTreeVisitor {
 
     private StringBuilder builder;
 
-    private boolean end = false;
+    private int level = 0;
 
     public ToStringVisitor() {
         builder = new StringBuilder();
@@ -41,24 +41,28 @@ public class ToStringVisitor implements NodeTreeVisitor {
 
     @Override
     public void onNodeStart(Node node) {
-        logger.info("Start node " + node);
-        node.append(builder);
-        if(!end) {
-            builder.append(' ');
-            end = true;
+        StringBuilder msg = new StringBuilder();
+        for(int i=0; i<level; i++) {
+            msg.append('\t');
         }
+        msg.append("start node {}");
+        logger.info(msg.toString(), node);
+        level++;
+        node.append(builder);
+        node.appendChildrenStart(builder);
     }
 
     @Override
     public void onChildNodeEnd(Node node, int index, boolean hasMore) {
-        if(hasMore) {
-            builder.append(' ');
+        if(hasMore && node.getParent() != null) {
+            node.getParent().appendChildSeparator(builder);
         }
     }
 
     @Override
     public void onNodeEnd(Node node) {
-        end = false;
+        node.appendChildrenEnd(builder);
+        level--;
     }
 
     public String getString() {

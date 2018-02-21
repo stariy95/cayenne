@@ -37,6 +37,7 @@ public abstract class Node {
 
     public Node addChild(Node node) {
         children.add(node);
+        node.setParent(this);
         return this;
     }
 
@@ -62,7 +63,7 @@ public abstract class Node {
         for(int i=0; i<count; i++) {
             Node child = getChild(i);
             child.visit(visitor);
-            visitor.onChildNodeEnd(child, i, i != (count - 1));
+            visitor.onChildNodeEnd(child, i, i < (count - 1));
         }
         visitor.onNodeEnd(this);
     }
@@ -75,4 +76,15 @@ public abstract class Node {
     }
 
     public abstract void append(StringBuilder buffer);
+
+    public void appendChildSeparator(StringBuilder builder) {
+        builder.append(' ');
+    }
+
+    public void appendChildrenStart(StringBuilder builder) {
+        builder.append(' ');
+    }
+
+    public void appendChildrenEnd(StringBuilder builder) {
+    }
 }

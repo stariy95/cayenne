@@ -19,29 +19,17 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import java.util.Objects;
-
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
  * @since 4.1
  */
-public class JoinNodeBuilder implements NodeBuilder {
+class ExistsNodeBuilder implements NodeBuilder {
 
-    private final String joinType;
+    private final NodeBuilder builder;
 
-    private final TableNodeBuilder table;
-
-    private NodeBuilder joinExp;
-
-    public JoinNodeBuilder(String joinType, TableNodeBuilder table) {
-        this.joinType = Objects.requireNonNull(joinType);
-        this.table = Objects.requireNonNull(table);
-    }
-
-    public JoinNodeBuilder on(NodeBuilder joinExp) {
-        this.joinExp = Objects.requireNonNull(joinExp);
-        return this;
+    public ExistsNodeBuilder(NodeBuilder builder) {
+        this.builder = builder;
     }
 
     @Override
@@ -49,14 +37,7 @@ public class JoinNodeBuilder implements NodeBuilder {
         Node node = new Node() {
             @Override
             public void append(StringBuilder buffer) {
-                buffer.append(joinType);
-            }
-        };
-        node.addChild(table.buildNode());
-        Node onNode = new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                buffer.append("ON");
+                buffer.append("EXISTS");
             }
 
             @Override
@@ -69,8 +50,7 @@ public class JoinNodeBuilder implements NodeBuilder {
                 builder.append(')');
             }
         };
-        onNode.addChild(joinExp.buildNode());
-        node.addChild(onNode);
+        node.addChild(builder.buildNode());
         return node;
     }
 }

@@ -19,7 +19,7 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 
 /**
  * @since 4.1
@@ -54,41 +54,52 @@ public final class SqlBuilder {
         return new JoinNodeBuilder("LEFT JOIN", table);
     }
 
+    public static JoinNodeBuilder rightJoin(TableNodeBuilder table) {
+        return new JoinNodeBuilder("RIGHT JOIN", table);
+    }
+
+    public static JoinNodeBuilder innerJoin(TableNodeBuilder table) {
+        return new JoinNodeBuilder("INNER JOIN", table);
+    }
+
+    public static JoinNodeBuilder outerJoin(TableNodeBuilder table) {
+        return new JoinNodeBuilder("OUTER JOIN", table);
+    }
+
     public static ExpressionNodeBuilder exists(NodeBuilder builder) {
-        return new ExpressionNodeBuilder(() -> {
-            Node node = new Node() {
-                @Override
-                public void append(StringBuilder buffer) {
-                    buffer.append("EXISTS");
-                }
-            };
-            node.addChild(builder.buildNode());
-            return node;
-        });
+        return new ExpressionNodeBuilder(new ExistsNodeBuilder(builder));
     }
 
     public static ExpressionNodeBuilder value(Object value) {
-        return new ExpressionNodeBuilder(() -> new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                if(value instanceof CharSequence) {
-                    buffer.append('\'');
-                }
-                buffer.append(String.valueOf(value));
-                if(value instanceof CharSequence) {
-                    buffer.append('\'');
-                }
-            }
-        });
+        return new ExpressionNodeBuilder(() -> new ValueNode(value));
     }
 
-    public static NodeBuilder count(NodeBuilder value) {
-        return () -> new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                buffer.append("COUNT");
-            }
-        }.addChild(value.buildNode());
+    public static ExpressionNodeBuilder not(NodeBuilder value) {
+        return new ExpressionNodeBuilder(value).not();
+    }
+
+    public static FunctionNodeBuilder count(NodeBuilder value) {
+        return function("COUNT", value);
+    }
+
+    public static FunctionNodeBuilder count() {
+        return function("COUNT", value('*'));
+    }
+
+    public static FunctionNodeBuilder avg(NodeBuilder value) {
+        return function("AVG", value);
+    }
+
+    public static FunctionNodeBuilder min(NodeBuilder value) {
+        return function("MIN", value);
+    }
+
+    public static FunctionNodeBuilder max(NodeBuilder value) {
+        return function("MAX", value);
+    }
+
+    public static FunctionNodeBuilder function(String function, NodeBuilder... values) {
+        return new FunctionNodeBuilder(function, values);
     }
 
     private SqlBuilder() {

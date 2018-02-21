@@ -17,16 +17,21 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder;
-
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
 /**
  * @since 4.1
  */
-@FunctionalInterface
-public interface NodeBuilder {
+public class TextNode extends Node {
 
-    Node buildNode();
+    private final CharSequence text;
 
+    public TextNode(CharSequence text) {
+        this.text = text;
+    }
+
+    @Override
+    public void append(StringBuilder buffer) {
+        buffer.append(text);
+    }
 }

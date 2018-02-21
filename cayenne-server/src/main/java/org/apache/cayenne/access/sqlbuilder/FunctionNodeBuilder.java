@@ -19,44 +19,35 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import java.util.Objects;
-
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
  * @since 4.1
  */
-public class JoinNodeBuilder implements NodeBuilder {
+public class FunctionNodeBuilder implements ExpressionTrait {
 
-    private final String joinType;
+    private final String functionName;
 
-    private final TableNodeBuilder table;
+    private final NodeBuilder[] args;
 
-    private NodeBuilder joinExp;
+    private String alias;
 
-    public JoinNodeBuilder(String joinType, TableNodeBuilder table) {
-        this.joinType = Objects.requireNonNull(joinType);
-        this.table = Objects.requireNonNull(table);
+    public FunctionNodeBuilder(String functionName, NodeBuilder... args) {
+        this.functionName = functionName;
+        this.args = args;
     }
 
-    public JoinNodeBuilder on(NodeBuilder joinExp) {
-        this.joinExp = Objects.requireNonNull(joinExp);
+    public FunctionNodeBuilder as(String alias) {
+        this.alias = alias;
         return this;
     }
 
     @Override
     public Node buildNode() {
-        Node node = new Node() {
+        Node functionNode = new Node() {
             @Override
             public void append(StringBuilder buffer) {
-                buffer.append(joinType);
-            }
-        };
-        node.addChild(table.buildNode());
-        Node onNode = new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                buffer.append("ON");
+                buffer.append(functionName);
             }
 
             @Override
@@ -67,10 +58,21 @@ public class JoinNodeBuilder implements NodeBuilder {
             @Override
             public void appendChildrenEnd(StringBuilder builder) {
                 builder.append(')');
+                if(alias != null) {
+                    builder.append(" AS ").append(alias).append(' ');
+                }
+            }
+
+            @Override
+            public void appendChildSeparator(StringBuilder builder) {
+                builder.append(',');
             }
         };
-        onNode.addChild(joinExp.buildNode());
-        node.addChild(onNode);
-        return node;
+
+        for(NodeBuilder arg : args) {
+            functionNode.addChild(arg.buildNode());
+        }
+
+        return functionNode;
     }
 }
