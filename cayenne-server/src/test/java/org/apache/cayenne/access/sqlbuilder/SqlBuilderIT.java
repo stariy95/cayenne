@@ -37,7 +37,7 @@ import static org.junit.Assert.*;
  * @since 4.1
  */
 @UseServerRuntime(CayenneProjects.TESTMAP_PROJECT)
-public class SqlBuilderTest extends ServerCase {
+public class SqlBuilderIT extends ServerCase {
 
     @Inject
     DataContext context;
