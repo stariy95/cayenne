@@ -284,13 +284,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	 * @since 3.0
 	 */
 	protected void appendLimitAndOffsetClauses() {
-		if(queryMetadata.getFetchLimit() > 0) {
-			selectBuilder.limit(queryMetadata.getFetchLimit());
-		}
 
-		if(queryMetadata.getFetchOffset() > 0) {
-		    selectBuilder.offset(queryMetadata.getFetchOffset());
-        }
 	}
 
 	@Override

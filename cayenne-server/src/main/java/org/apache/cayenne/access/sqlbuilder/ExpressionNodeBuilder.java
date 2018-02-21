@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
