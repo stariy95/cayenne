@@ -62,7 +62,7 @@ public class ColumnNodeBuilder implements ExpressionTrait {
                 }
                 buffer.append(field);
                 if(alias != null) {
-                    buffer.append(" AS ").append(alias);
+                    buffer.append(' ').append(alias);
                 }
             }
         };

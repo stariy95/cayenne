@@ -33,17 +33,18 @@ public class IngresSelectTranslator extends DefaultSelectTranslator {
     }
 
     @Override
-    protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
+    protected void appendLimitAndOffsetClauses() {
         // limit results
         int offset = queryMetadata.getFetchOffset();
         int limit = queryMetadata.getFetchLimit();
 
         if (offset > 0) {
-            buffer.append(" OFFSET ").append(offset);
+//            buffer.append(" OFFSET ").append(offset);
         }
-        
+
+        // TODO: limit
         if (limit > 0) {
-            buffer.append(" FETCH NEXT ").append(limit).append(" ROWS ONLY ");
+//            buffer.append(" FETCH NEXT ").append(limit).append(" ROWS ONLY ");
         }
     }
 }

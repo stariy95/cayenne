@@ -28,4 +28,9 @@ public class GroupByNode extends Node {
     public void append(StringBuilder buffer) {
         buffer.append("GROUP BY");
     }
+
+    @Override
+    public void appendChildSeparator(StringBuilder builder) {
+        builder.append(',');
+    }
 }

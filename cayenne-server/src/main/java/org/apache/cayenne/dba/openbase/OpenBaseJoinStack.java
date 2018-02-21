@@ -24,10 +24,11 @@ import org.apache.cayenne.access.translator.select.JoinStack;
 import org.apache.cayenne.access.translator.select.JoinTreeNode;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.dba.DbAdapter;
-import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
+
+import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.table;
 
 /**
  * OpenBase does not support standard JOIN keyword and have strange syntax for
@@ -44,7 +45,7 @@ class OpenBaseJoinStack extends JoinStack {
 	}
 
 	@Override
-	protected void appendJoinSubtree(StringBuilder out, JoinTreeNode node) {
+	protected void appendJoinsToBuilder(JoinTreeNode node) {
 		DbRelationship relationship = node.getRelationship();
 
 		if (relationship == null) {
@@ -54,10 +55,10 @@ class OpenBaseJoinStack extends JoinStack {
 		DbEntity targetEntity = relationship.getTargetEntity();
 		String targetAlias = node.getTargetTableAlias();
 
-		out.append(", ").append(targetEntity.getFullyQualifiedName()).append(' ').append(targetAlias);
+		selectBuilder.from(table(targetEntity.getFullyQualifiedName()).as(targetAlias));
 
 		for (JoinTreeNode child : node.getChildren()) {
-			appendJoinSubtree(out, child);
+			appendJoinsToBuilder(child);
 		}
 	}
 

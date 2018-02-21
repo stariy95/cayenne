@@ -29,8 +29,6 @@ import org.apache.cayenne.query.Query;
  */
 class FrontBaseSelectTranslator extends DefaultSelectTranslator {
 
-	static final String SELECT_PREFIX = "SELECT";
-
 	/**
 	 * @since 4.0
 	 */
@@ -39,14 +37,10 @@ class FrontBaseSelectTranslator extends DefaultSelectTranslator {
 	}
 
 	@Override
-	protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
-
+	protected void appendLimitAndOffsetClauses() {
 		int limit = queryMetadata.getFetchLimit();
-		if (limit > 0 && buffer.length() > SELECT_PREFIX.length()) {
-
-			if (SELECT_PREFIX.equals(buffer.substring(0, SELECT_PREFIX.length()))) {
-				buffer.insert(SELECT_PREFIX.length(), " TOP " + limit);
-			}
+		if (limit > 0) {
+			selectBuilder.top(limit);
 		}
 	}
 }

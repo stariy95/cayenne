@@ -21,6 +21,11 @@ package org.apache.cayenne.access.translator.select;
 import java.util.List;
 import java.util.function.Function;
 
+import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.JoinNodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.QuotingStrategy;
 import org.apache.cayenne.exp.Expression;
@@ -33,6 +38,8 @@ import org.apache.cayenne.map.Entity;
 import org.apache.cayenne.map.JoinType;
 import org.apache.cayenne.map.ObjEntity;
 
+import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
+
 /**
  * Encapsulates join reuse/split logic used in SelectQuery processing. All
  * expression path's that exist in the query (in the qualifier, etc.) are
@@ -44,14 +51,16 @@ public class JoinStack {
 
 	protected JoinTreeNode rootNode;
 	protected JoinTreeNode topNode;
-	private QuotingStrategy quotingStrategy;
+	protected QuotingStrategy quotingStrategy;
 
-	private int aliasCounter;
+	protected int aliasCounter;
 
 	/**
 	 * Helper class to process DbEntity qualifiers
 	 */
-	private QualifierTranslator qualifierTranslator;
+	protected QualifierTranslator qualifierTranslator;
+
+	protected SelectBuilder selectBuilder;
 
 	protected JoinStack(DbAdapter dbAdapter, QueryAssembler assembler) {
 		this.rootNode = new JoinTreeNode(this);
@@ -59,6 +68,7 @@ public class JoinStack {
 
 		this.quotingStrategy = dbAdapter.getQuotingStrategy();
 		this.qualifierTranslator = dbAdapter.getQualifierTranslator(assembler);
+		this.selectBuilder = assembler.getSelectBuilder();
 
 		resetStack();
 	}
@@ -75,61 +85,56 @@ public class JoinStack {
 		return rootNode.size() - 1;
 	}
 
-	void appendRootWithQuoteSqlIdentifiers(StringBuilder out, DbEntity rootEntity) {
-
-		out.append(quotingStrategy.quotedFullyQualifiedName(rootEntity));
-		out.append(' ');
-		out.append(quotingStrategy.quotedIdentifier(rootEntity, rootNode.getTargetTableAlias()));
+	void appendRootWithQuoteSqlIdentifiers(DbEntity rootEntity) {
+		selectBuilder.from(table(quotingStrategy.quotedFullyQualifiedName(rootEntity))
+				.as(quotingStrategy.quotedIdentifier(rootEntity, rootNode.getTargetTableAlias())));
 	}
 
 	/**
 	 * Appends all configured joins to the provided output object.
 	 */
-	protected void appendJoins(StringBuilder out) {
-
+	protected void appendJoins() {
 		// skip root, recursively append its children
 		for (JoinTreeNode child : rootNode.getChildren()) {
-			appendJoinSubtree(out, child);
+			appendJoinsToBuilder(child);
 		}
 	}
 
-	protected void appendJoinSubtree(StringBuilder out, JoinTreeNode node) {
-
+	protected void appendJoinsToBuilder(JoinTreeNode node) {
 		DbRelationship relationship = node.getRelationship();
 
 		DbEntity targetEntity = relationship.getTargetEntity();
 		String srcAlias = node.getSourceTableAlias();
 		String targetAlias = node.getTargetTableAlias();
 
+		String name = quotingStrategy.quotedFullyQualifiedName(targetEntity);
+		String alias = quotingStrategy.quotedIdentifier(targetEntity, targetAlias);
+
+		JoinNodeBuilder join;
+
 		switch (node.getJoinType()) {
-		case INNER:
-			out.append(" JOIN");
-			break;
-		case LEFT_OUTER:
-			out.append(" LEFT JOIN");
-			break;
-		default:
-			throw new IllegalArgumentException("Unsupported join type: " + node.getJoinType());
+			case INNER:
+				join = join(table(name).as(alias));
+				break;
+			case LEFT_OUTER:
+				join = leftJoin(table(name).as(alias));
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported join type: " + node.getJoinType());
 		}
 
-		out.append(' ');
-		out.append(quotingStrategy.quotedFullyQualifiedName(targetEntity));
-
-		out.append(' ');
-		out.append(quotingStrategy.quotedIdentifier(targetEntity, targetAlias));
-		out.append(" ON (");
-
 		List<DbJoin> joins = relationship.getJoins();
-		int len = joins.size();
-		for (int i = 0; i < len; i++) {
-			DbJoin join = joins.get(i);
-			if (i > 0) {
-				out.append(" AND ");
-			}
 
-			out.append(quotingStrategy.quotedIdentifier(relationship.getSourceEntity(), srcAlias, join.getSourceName()));
-			out.append(" = ");
-			out.append(quotingStrategy.quotedIdentifier(targetEntity, targetAlias, join.getTargetName()));
+		ExpressionNodeBuilder expressionNodeBuilder = null;
+		for (DbJoin dbJoin : joins) {
+			String srcColumn = quotingStrategy.quotedIdentifier(relationship.getSourceEntity(), srcAlias, dbJoin.getSourceName());
+			String dstColumn = quotingStrategy.quotedIdentifier(targetEntity, targetAlias, dbJoin.getTargetName());
+
+			if (expressionNodeBuilder != null) {
+				expressionNodeBuilder.and(column(srcColumn).eq(column(dstColumn)));
+			} else {
+				expressionNodeBuilder = column(srcColumn).eq(column(dstColumn));
+			}
 		}
 
 		/*
@@ -138,18 +143,23 @@ public class JoinStack {
 		Expression dbQualifier = targetEntity.getQualifier();
 		if (dbQualifier != null) {
 			dbQualifier = dbQualifier.transform(new JoinedDbEntityQualifierTransformer(node));
-
-			if (len > 0) {
-				out.append(" AND ");
-			}
-			qualifierTranslator.setOut(out);
+			StringBuilder sb = new StringBuilder();
+			qualifierTranslator.setOut(sb);
 			qualifierTranslator.doAppendPart(dbQualifier);
+
+			NodeBuilder qualifierNode = () -> new TextNode(sb);
+			if(expressionNodeBuilder == null) {
+				expressionNodeBuilder = new ExpressionNodeBuilder(qualifierNode);
+			} else {
+				expressionNodeBuilder = expressionNodeBuilder.and(qualifierNode);
+			}
 		}
 
-		out.append(')');
+		join.on(expressionNodeBuilder);
+		selectBuilder.from(join);
 
 		for (JoinTreeNode child : node.getChildren()) {
-			appendJoinSubtree(out, child);
+			appendJoinsToBuilder(child);
 		}
 	}
 

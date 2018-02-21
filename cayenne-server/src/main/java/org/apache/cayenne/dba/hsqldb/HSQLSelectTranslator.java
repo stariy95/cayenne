@@ -37,21 +37,18 @@ class HSQLSelectTranslator extends DefaultSelectTranslator {
 	}
 
 	@Override
-	protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
+	protected void appendLimitAndOffsetClauses() {
 		int offset = queryMetadata.getFetchOffset();
 		int limit = queryMetadata.getFetchLimit();
 
 		if (offset > 0 || limit > 0) {
-			buffer.append(" LIMIT ");
-
 			// both OFFSET and LIMIT must be present, so come up with defaults
-			// if one of
-			// them is not set by the user
+			// if one of them is not set by the user
 			if (limit == 0) {
 				limit = Integer.MAX_VALUE;
 			}
 
-			buffer.append(limit).append(" OFFSET ").append(offset);
+			selectBuilder.limit(limit).offset(offset);
 		}
 	}
 }

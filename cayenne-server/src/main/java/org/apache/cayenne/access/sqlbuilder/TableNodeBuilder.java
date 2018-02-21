@@ -58,7 +58,7 @@ public class TableNodeBuilder implements NodeBuilder {
             public void append(StringBuilder buffer) {
                 buffer.append(tableName);
                 if(alias != null) {
-                    buffer.append(" AS ").append(alias);
+                    buffer.append(' ').append(alias);
                 }
             }
         };

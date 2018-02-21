@@ -21,15 +21,15 @@ package org.apache.cayenne.dba.oracle;
 
 import java.util.List;
 
-import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.Query;
 
+import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
+
 /**
  * Select translator that implements Oracle-specific optimizations.
- * 
  */
 class OracleSelectTranslator extends DefaultSelectTranslator {
 
@@ -41,19 +41,24 @@ class OracleSelectTranslator extends DefaultSelectTranslator {
 	}
 
 	@Override
-	protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
+	protected void appendLimitAndOffsetClauses() {
 		int offset = queryMetadata.getFetchOffset();
 		int limit = queryMetadata.getFetchLimit();
 
 		if (limit > 0 || offset > 0) {
 			int max = (limit <= 0) ? Integer.MAX_VALUE : limit + offset;
 
-			buffer.insert(0, "select * from ( select tid.*, ROWNUM rnum from (");
-			buffer.append(") tid where ROWNUM <=").append(max).append(") where rnum  > ").append(offset);
+			selectBuilder = select(value('*'))
+					.from(
+							select(
+									table("tid").column("*"),
+									column("ROWNUM").as("rnum"))
+							.from(selectBuilder).where(column("ROWNUM").lte(value(max)))
+					).where(column("rnum").gt(value(offset)));
 		}
 	}
 
-	@Override
+	// TODO: reimplement this for SQL builder version
 	protected void appendSelectColumns(StringBuilder buffer, List<String> selectColumnExpList) {
 
 		// we need to add aliases to all columns to make fetch

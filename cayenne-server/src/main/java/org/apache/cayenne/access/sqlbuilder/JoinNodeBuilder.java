@@ -56,7 +56,7 @@ public class JoinNodeBuilder implements NodeBuilder {
         Node onNode = new Node() {
             @Override
             public void append(StringBuilder buffer) {
-                buffer.append("ON");
+                buffer.append("ON ");
             }
 
             @Override

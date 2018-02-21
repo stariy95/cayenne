@@ -33,21 +33,13 @@ public class SQLServerSelectTranslator extends DefaultSelectTranslator {
 	}
 
 	@Override
-	protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
+	protected void appendLimitAndOffsetClauses() {
 
 		int limit = queryMetadata.getFetchLimit();
 		int offset = queryMetadata.getFetchOffset();
 
 		if (limit > 0) {
-			String sql = buffer.toString();
-
-			// If contains distinct insert top limit after
-			if (sql.startsWith("SELECT DISTINCT ")) {
-				buffer.replace(0, 15, "SELECT DISTINCT TOP " + (offset + limit));
-
-			} else {
-				buffer.replace(0, 6, "SELECT TOP " + (offset + limit));
-			}
+			selectBuilder.top(offset + limit);
 		}
 	}
 

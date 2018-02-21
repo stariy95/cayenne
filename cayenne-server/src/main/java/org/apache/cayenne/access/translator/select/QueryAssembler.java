@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
+import org.apache.cayenne.access.sqlbuilder.SqlBuilder;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.dba.DbAdapter;
@@ -52,6 +54,11 @@ public abstract class QueryAssembler {
 	protected AddBindingListener addBindingListener;
 
 	/**
+	 * @since 4.1
+	 */
+	protected SelectBuilder selectBuilder;
+
+	/**
 	 * @since 4.0
 	 */
 	public QueryAssembler(Query query, DbAdapter adapter, EntityResolver entityResolver) {
@@ -60,6 +67,7 @@ public abstract class QueryAssembler {
 		this.query = query;
 		this.queryMetadata = query.getMetaData(entityResolver);
 		this.bindings = new ArrayList<>();
+		this.selectBuilder = SqlBuilder.select();
 	}
 
 	/**
@@ -193,5 +201,12 @@ public abstract class QueryAssembler {
 	 */
 	protected interface AddBindingListener {
 		void onAdd(DbAttributeBinding binding);
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	public SelectBuilder getSelectBuilder() {
+		return selectBuilder;
 	}
 }

@@ -19,13 +19,8 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import java.io.IOException;
-
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.di.Inject;
-import org.apache.cayenne.exp.Expression;
-import org.apache.cayenne.exp.TraversalHandler;
-import org.apache.cayenne.query.QueryMetadata;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.testdo.testmap.Artist;
 import org.apache.cayenne.testdo.testmap.Painting;

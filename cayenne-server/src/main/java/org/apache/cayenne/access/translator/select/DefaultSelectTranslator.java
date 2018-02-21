@@ -21,6 +21,9 @@ package org.apache.cayenne.access.translator.select;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.access.sqlbuilder.ToStringVisitor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.QuotingStrategy;
@@ -66,6 +69,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
 
 /**
  * @since 4.0
@@ -144,15 +149,22 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 
 		// build having qualifier
 		Expression havingQualifier = getSelectQuery().getHavingQualifier();
-		StringBuilder havingQualifierBuffer = null;
-		if(havingQualifier != null) {
+		if (havingQualifier != null) {
 			haveAggregate = true;
 			QualifierTranslator havingQualifierTranslator = adapter.getQualifierTranslator(this);
 			havingQualifierTranslator.setQualifier(havingQualifier);
-			havingQualifierBuffer = havingQualifierTranslator.appendPart(new StringBuilder());
+			StringBuilder havingQualifierBuffer = havingQualifierTranslator.appendPart(new StringBuilder());
+			selectBuilder.having(
+					() -> new Node() {
+						@Override
+						public void append(StringBuilder buffer) {
+							buffer.append(havingQualifierBuffer);
+						}
+					}
+			);
 		}
 
-		if(!haveAggregate && groupByColumns != null) {
+		if (!haveAggregate && groupByColumns != null) {
 			// if no expression with aggregation function found
 			// in select columns and there is no having clause
 			groupByColumns.clear();
@@ -162,15 +174,11 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		OrderingTranslator orderingTranslator = new OrderingTranslator(this);
 		StringBuilder orderingBuffer = orderingTranslator.appendPart(new StringBuilder());
 
-		// assemble
-		StringBuilder queryBuf = new StringBuilder();
-		queryBuf.append("SELECT ");
-
 		// check if DISTINCT is appropriate
 		// side effect: "suppressingDistinct" flag may end up being flipped here
 		if (forcingDistinct || getSelectQuery().isDistinct()) {
 			suppressingDistinct = queryMetadata.isSuppressingDistinct();
-			if(!suppressingDistinct) {
+			if (!suppressingDistinct) {
 				for (ColumnDescriptor column : resultColumns) {
 					if (isUnsupportedForDistinct(column.getJdbcType())) {
 						suppressingDistinct = true;
@@ -180,7 +188,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			}
 
 			if (!suppressingDistinct) {
-				queryBuf.append(buildDistinctStatement()).append(" ");
+				selectBuilder.distinct();
 			}
 		}
 
@@ -188,12 +196,13 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		List<String> selectColumnExpList = new ArrayList<>();
 		for (ColumnDescriptor column : resultColumns) {
 			String fullName;
-			if(column.isExpression()) {
+			if (column.isExpression()) {
 				fullName = column.getName();
 			} else {
 				fullName = strategy.quotedIdentifier(dataMap, column.getNamePrefix(), column.getName());
 			}
 			selectColumnExpList.add(fullName);
+			selectBuilder.result(column(fullName));
 		}
 
 		// append any column expressions used in the order by if this query
@@ -204,112 +213,66 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 				// Convert to ColumnDescriptors??
 				if (!selectColumnExpList.contains(orderByColumnExp)) {
 					selectColumnExpList.add(orderByColumnExp);
+					selectBuilder.result(column(orderByColumnExp));
 				}
 			}
 		}
 
-		appendSelectColumns(queryBuf, selectColumnExpList);
-
-		// append from clause
-		queryBuf.append(" FROM ");
-
 		// append tables and joins
-		joins.appendRootWithQuoteSqlIdentifiers(queryBuf, getQueryMetadata().getDbEntity());
-
-		joins.appendJoins(queryBuf);
+		joins.appendRootWithQuoteSqlIdentifiers(getQueryMetadata().getDbEntity());
+		joins.appendJoins();
 		joins.appendQualifier(whereQualifierBuffer, whereQualifierBuffer.length() == 0);
 
 		// append qualifier
 		if (whereQualifierBuffer.length() > 0) {
-			queryBuf.append(" WHERE ");
-			queryBuf.append(whereQualifierBuffer);
+			selectBuilder.where(() -> new TextNode(whereQualifierBuffer));
 		}
 
-		if(groupByColumns != null && !groupByColumns.isEmpty()) {
-			queryBuf.append(" GROUP BY ");
-			appendGroupByColumns(queryBuf, groupByColumns);
-		}
-
-		// append HAVING qualifier
-		if(havingQualifierBuffer != null && havingQualifierBuffer.length() > 0) {
-			queryBuf.append(" HAVING ");
-			queryBuf.append(havingQualifierBuffer);
+		if (groupByColumns != null && !groupByColumns.isEmpty()) {
+			appendGroupByColumns(groupByColumns);
 		}
 
 		// append prebuilt ordering
 		if (orderingBuffer.length() > 0) {
-			queryBuf.append(" ORDER BY ").append(orderingBuffer);
+			selectBuilder.orderBy(() -> new TextNode(orderingBuffer));
 		}
 
 		if (!isSuppressingDistinct()) {
-			appendLimitAndOffsetClauses(queryBuf);
+			appendLimitAndOffsetClauses();
 		}
 
-		this.sql = queryBuf.toString();
-	}
+		ToStringVisitor visitor = new ToStringVisitor();
+		selectBuilder.buildNode().visit(visitor);
 
-	/**
-	 * Allows subclasses to insert their own dialect of DISTINCT statement to
-	 * improve performance.
-	 *
-	 * @return string representing the DISTINCT statement
-	 * @since 4.0
-	 */
-	protected String buildDistinctStatement() {
-		return "DISTINCT";
-	}
-
-	/**
-	 * @since 3.1
-	 */
-	protected void appendSelectColumns(StringBuilder buffer, List<String> selectColumnExpList) {
-
-		// append columns (unroll the loop's first element)
-		int columnCount = selectColumnExpList.size();
-		buffer.append(selectColumnExpList.get(0));
-
-		// assume there is at least 1 element
-		for (int i = 1; i < columnCount; i++) {
-			buffer.append(", ");
-			buffer.append(selectColumnExpList.get(i));
-		}
+		this.sql = visitor.getString();
 	}
 
 	/**
 	 * Append columns to GROUP BY clause
 	 * @since 4.0
 	 */
-	protected void appendGroupByColumns(StringBuilder buffer, Map<ColumnDescriptor, List<DbAttributeBinding>>  groupByColumns) {
+	protected void appendGroupByColumns(Map<ColumnDescriptor, List<DbAttributeBinding>>  groupByColumns) {
 		Iterator<Map.Entry<ColumnDescriptor, List<DbAttributeBinding>>> it = groupByColumns.entrySet().iterator();
-		Map.Entry<ColumnDescriptor, List<DbAttributeBinding>> entry = it.next();
-		appendGroupByColumn(buffer, entry);
+		Map.Entry<ColumnDescriptor, List<DbAttributeBinding>> entry;
 		while(it.hasNext()) {
 			entry = it.next();
-			buffer.append(", ");
-			appendGroupByColumn(buffer, entry);
-		}
-	}
-
-	/**
-	 * Append single column to GROUP BY clause
-	 * @since 4.0
-	 */
-	protected void appendGroupByColumn(StringBuilder buffer, Map.Entry<ColumnDescriptor, List<DbAttributeBinding>> entry) {
-		String fullName;
-		if(entry.getKey().isExpression()) {
-			fullName = entry.getKey().getDataRowKey();
-		} else {
-			QuotingStrategy strategy = getAdapter().getQuotingStrategy();
-			fullName = strategy.quotedIdentifier(queryMetadata.getDataMap(),
-					entry.getKey().getNamePrefix(), entry.getKey().getName());
-		}
-
-		buffer.append(fullName);
-
-		if(entry.getKey().getDataRowKey().equals(entry.getKey().getName())) {
-			for (DbAttributeBinding binding : entry.getValue()) {
-				addToParamList(binding.getAttribute(), binding.getValue());
+			if(entry.getKey().getDataRowKey().equals(entry.getKey().getName())) {
+				for (DbAttributeBinding binding : entry.getValue()) {
+					addToParamList(binding.getAttribute(), binding.getValue());
+				}
 			}
+		}
+
+		for(ColumnDescriptor next : groupByColumns.keySet()) {
+			String fullName;
+			if(next.isExpression()) {
+				fullName = next.getDataRowKey();
+			} else {
+				QuotingStrategy strategy = getAdapter().getQuotingStrategy();
+				fullName = strategy.quotedIdentifier(queryMetadata.getDataMap(), next.getNamePrefix(), next.getName());
+			}
+
+			selectBuilder.groupBy(column(fullName));
 		}
 	}
 
@@ -320,8 +283,14 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	 * 
 	 * @since 3.0
 	 */
-	protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
+	protected void appendLimitAndOffsetClauses() {
+		if(queryMetadata.getFetchLimit() > 0) {
+			selectBuilder.limit(queryMetadata.getFetchLimit());
+		}
 
+		if(queryMetadata.getFetchOffset() > 0) {
+		    selectBuilder.offset(queryMetadata.getFetchOffset());
+        }
 	}
 
 	@Override

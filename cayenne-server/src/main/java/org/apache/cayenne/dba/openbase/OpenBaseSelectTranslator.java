@@ -43,10 +43,10 @@ class OpenBaseSelectTranslator extends DefaultSelectTranslator {
 	}
 
 	@Override
-	protected void appendLimitAndOffsetClauses(StringBuilder buffer) {
+	protected void appendLimitAndOffsetClauses() {
 		int limit = queryMetadata.getFetchLimit();
 		if (limit > 0) {
-			buffer.append(" RETURN RESULTS ").append(limit);
+			// TODO: buffer.append(" RETURN RESULTS ").append(limit);
 		}
 	}
 
