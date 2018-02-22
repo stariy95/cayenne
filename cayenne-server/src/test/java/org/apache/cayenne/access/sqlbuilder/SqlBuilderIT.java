@@ -29,7 +29,7 @@ import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
 import org.junit.Test;
 
-import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 
 
 /**

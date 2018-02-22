@@ -28,7 +28,7 @@ import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
 
-import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.table;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
 
 /**
  * OpenBase does not support standard JOIN keyword and have strange syntax for

@@ -38,7 +38,7 @@ import org.apache.cayenne.map.Entity;
 import org.apache.cayenne.map.JoinType;
 import org.apache.cayenne.map.ObjEntity;
 
-import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 
 /**
  * Encapsulates join reuse/split logic used in SelectQuery processing. All

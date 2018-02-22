@@ -69,7 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 
 /**
  * @since 4.0
@@ -145,26 +145,25 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		// build qualifier
 		QualifierTranslator qualifierTranslator = adapter.getQualifierTranslator(this);
 
-		// 1. HAVING AND GROUP BY //
+		// WHERE   //
+		StringBuilder whereQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
 
-		// build having qualifier
-		Expression havingQualifier = getSelectQuery().getHavingQualifier();
-		if (havingQualifier != null) {
-			haveAggregate = true;
-			qualifierTranslator.setQualifier(havingQualifier);
-			StringBuilder havingQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
-			selectBuilder.having(() -> new TextNode(havingQualifierBuffer));
+		// RESULT SET //
+
+		// convert ColumnDescriptors to column names
+		List<String> selectColumnExpList = new ArrayList<>();
+		for (ColumnDescriptor column : resultColumns) {
+			String fullName;
+			if (column.isExpression()) {
+				fullName = column.getName();
+			} else {
+				fullName = strategy.quotedIdentifier(dataMap, column.getNamePrefix(), column.getName());
+			}
+			selectColumnExpList.add(fullName);
+			selectBuilder.result(column(fullName));
 		}
 
-		if (!haveAggregate && groupByColumns != null) {
-			// if no expression with aggregation function found
-			// in select columns and there is no having clause
-			groupByColumns.clear();
-		} else {
-			appendGroupByColumns();
-		}
-
-		// 2. DISTINCT //
+		// DISTINCT  //
 
 		// check if DISTINCT is appropriate
 		// side effect: "suppressingDistinct" flag may end up being flipped here
@@ -184,22 +183,26 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			}
 		}
 
-		// 3. RESULT SET //
+		// HAVING AND GROUP BY //
 
-		// convert ColumnDescriptors to column names
-		List<String> selectColumnExpList = new ArrayList<>();
-		for (ColumnDescriptor column : resultColumns) {
-			String fullName;
-			if (column.isExpression()) {
-				fullName = column.getName();
-			} else {
-				fullName = strategy.quotedIdentifier(dataMap, column.getNamePrefix(), column.getName());
-			}
-			selectColumnExpList.add(fullName);
-			selectBuilder.result(column(fullName));
+		// build having qualifier
+		Expression havingQualifier = getSelectQuery().getHavingQualifier();
+		if (havingQualifier != null) {
+			haveAggregate = true;
+			qualifierTranslator.setQualifier(havingQualifier);
+			StringBuilder havingQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
+			selectBuilder.having(() -> new TextNode(havingQualifierBuffer));
 		}
 
-		// 4. ORDER BY //
+		if (!haveAggregate && groupByColumns != null) {
+			// if no expression with aggregation function found
+			// in select columns and there is no having clause
+			groupByColumns.clear();
+		} else {
+			appendGroupByColumns();
+		}
+
+		// ORDER BY //
 		if(getSelectQuery().getOrderings().size() > 0) {
 			OrderingTranslator orderingTranslator = new OrderingTranslator(this);
 			StringBuilder orderingBuffer = orderingTranslator.appendPart(new StringBuilder());
@@ -219,22 +222,19 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			}
 		}
 
-		// 5. WHERE  //
-		StringBuilder whereQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
-
-		// 6. FROM   //
+		// FROM      //
 		// append tables and joins
 		joins.appendRootWithQuoteSqlIdentifiers(getQueryMetadata().getDbEntity());
 		joins.appendJoins();
 		joins.appendQualifier(whereQualifierBuffer, whereQualifierBuffer.length() == 0);
 
-		// 5. WHERE  //
+		// WHERE   //
 		// append qualifier
 		if (whereQualifierBuffer.length() > 0) {
 			selectBuilder.where(() -> new TextNode(whereQualifierBuffer));
 		}
 
-		// 6. LIMIT / OFFSET
+		// LIMIT / OFFSET //
 		if (!isSuppressingDistinct()) {
 			appendLimitAndOffsetClauses();
 		}
@@ -405,7 +405,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 				}
 				for(ColumnDescriptor descriptor : classColumns) {
 					columns.add(descriptor);
-					groupByColumns.put(descriptor, Collections.<DbAttributeBinding>emptyList());
+					groupByColumns.put(descriptor, Collections.emptyList());
 				}
 			} else {
 				// This property will go as scalar value

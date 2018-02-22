@@ -24,7 +24,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 /**
  * @since 4.1
  */
-public final class SqlBuilder {
+public final class SQLBuilder {
 
     public static SelectBuilder select(NodeBuilder... params) {
         return new SelectBuilder(params);
@@ -102,7 +102,7 @@ public final class SqlBuilder {
         return new FunctionNodeBuilder(function, values);
     }
 
-    private SqlBuilder() {
+    private SQLBuilder() {
     }
 
 }

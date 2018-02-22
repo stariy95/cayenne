@@ -26,7 +26,7 @@ import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.Query;
 
-import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 
 /**
  * Select translator that implements Oracle-specific optimizations.
