@@ -143,9 +143,8 @@ public class JoinStack {
 		Expression dbQualifier = targetEntity.getQualifier();
 		if (dbQualifier != null) {
 			dbQualifier = dbQualifier.transform(new JoinedDbEntityQualifierTransformer(node));
-			StringBuilder sb = new StringBuilder();
-			qualifierTranslator.setOut(sb);
-			qualifierTranslator.doAppendPart(dbQualifier);
+			qualifierTranslator.setQualifier(dbQualifier);
+			StringBuilder sb = qualifierTranslator.appendPart(new StringBuilder());
 
 			NodeBuilder qualifierNode = () -> new TextNode(sb);
 			if(expressionNodeBuilder == null) {

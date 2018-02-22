@@ -33,7 +33,7 @@ class ExistsNodeBuilder implements NodeBuilder {
     }
 
     @Override
-    public Node buildNode() {
+    public Node build() {
         Node node = new Node() {
             @Override
             public void append(StringBuilder buffer) {
@@ -50,7 +50,7 @@ class ExistsNodeBuilder implements NodeBuilder {
                 builder.append(')');
             }
         };
-        node.addChild(builder.buildNode());
+        node.addChild(builder.build());
         return node;
     }
 }

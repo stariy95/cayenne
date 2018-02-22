@@ -30,7 +30,6 @@ import org.apache.cayenne.unit.di.server.UseServerRuntime;
 import org.junit.Test;
 
 import static org.apache.cayenne.access.sqlbuilder.SqlBuilder.*;
-import static org.junit.Assert.*;
 
 
 /**
@@ -87,7 +86,7 @@ public class SqlBuilderIT extends ServerCase {
                 .groupBy(table("a").column("ARTIST_ID"))
                 .having(not(count(table("p").column("PAINTING_TITLE")).gt(value(3))))
                 .orderBy(column("p_count").desc())
-                .buildNode()
+                .build()
                 .visit(visitor);
 
 //        assertEquals("SELECT DISTINCT   a.ARTIST_ID AS a_id ," +

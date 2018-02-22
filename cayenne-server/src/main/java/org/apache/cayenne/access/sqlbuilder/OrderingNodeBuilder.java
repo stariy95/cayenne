@@ -37,9 +37,9 @@ class OrderingNodeBuilder implements NodeBuilder {
     }
 
     @Override
-    public Node buildNode() {
+    public Node build() {
         Node node = new EmptyNode();
-        node.addChild(column.buildNode());
+        node.addChild(column.build());
         node.addChild(new Node() {
             @Override
             public void append(StringBuilder buffer) {

@@ -43,7 +43,7 @@ public class FunctionNodeBuilder implements ExpressionTrait {
     }
 
     @Override
-    public Node buildNode() {
+    public Node build() {
         Node functionNode = new Node() {
             @Override
             public void append(StringBuilder buffer) {
@@ -70,7 +70,7 @@ public class FunctionNodeBuilder implements ExpressionTrait {
         };
 
         for(NodeBuilder arg : args) {
-            functionNode.addChild(arg.buildNode());
+            functionNode.addChild(arg.build());
         }
 
         return functionNode;

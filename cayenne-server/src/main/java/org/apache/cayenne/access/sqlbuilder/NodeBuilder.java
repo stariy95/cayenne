@@ -27,6 +27,6 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 @FunctionalInterface
 public interface NodeBuilder {
 
-    Node buildNode();
+    Node build();
 
 }

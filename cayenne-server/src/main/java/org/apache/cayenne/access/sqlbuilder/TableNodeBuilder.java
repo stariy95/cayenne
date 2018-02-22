@@ -52,7 +52,7 @@ public class TableNodeBuilder implements NodeBuilder {
     }
 
     @Override
-    public Node buildNode() {
+    public Node build() {
         return new Node() {
             @Override
             public void append(StringBuilder buffer) {

@@ -94,14 +94,14 @@ public class ExpressionNodeBuilder implements ExpressionTrait {
                     buffer.append("NOT ");
                 }
             };
-            and.addChild(left.buildNode());
+            and.addChild(left.build());
             return and;
         });
     }
 
     @Override
-    public Node buildNode() {
-        return left.buildNode();
+    public Node build() {
+        return left.build();
     }
 
     private class ExpNodeBuilder implements NodeBuilder {
@@ -116,16 +116,16 @@ public class ExpressionNodeBuilder implements ExpressionTrait {
         }
 
         @Override
-        public Node buildNode() {
+        public Node build() {
             Node node = new ExpressionNode();
-            node.addChild(left.buildNode())
+            node.addChild(left.build())
                     .addChild(new Node() {
                         @Override
                         public void append(StringBuilder buffer) {
                             buffer.append(operation);
                         }
                     })
-                    .addChild(operand.buildNode());
+                    .addChild(operand.build());
             return node;
         }
     }

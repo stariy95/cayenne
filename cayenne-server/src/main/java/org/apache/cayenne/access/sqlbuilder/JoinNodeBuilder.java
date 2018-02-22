@@ -45,14 +45,14 @@ public class JoinNodeBuilder implements NodeBuilder {
     }
 
     @Override
-    public Node buildNode() {
+    public Node build() {
         Node node = new Node() {
             @Override
             public void append(StringBuilder buffer) {
                 buffer.append(joinType);
             }
         };
-        node.addChild(table.buildNode());
+        node.addChild(table.build());
         Node onNode = new Node() {
             @Override
             public void append(StringBuilder buffer) {
@@ -69,7 +69,7 @@ public class JoinNodeBuilder implements NodeBuilder {
                 builder.append(')');
             }
         };
-        onNode.addChild(joinExp.buildNode());
+        onNode.addChild(joinExp.build());
         node.addChild(onNode);
         return node;
     }

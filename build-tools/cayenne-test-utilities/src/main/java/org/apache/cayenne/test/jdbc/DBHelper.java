@@ -141,14 +141,16 @@ public class DBHelper {
 		}
 		sql.append(")");
 
-		try (Connection c = getConnection();) {
+		try (Connection c = getConnection()) {
 
 			String sqlString = sql.toString();
-			UtilityLogger.log(sqlString);
 
 			ParameterMetaData parameters = null;
-			try (PreparedStatement st = c.prepareStatement(sqlString);) {
+			try (PreparedStatement st = c.prepareStatement(sqlString)) {
+				sql.append(" [");
 				for (int i = 0; i < values.length; i++) {
+
+					sql.append(values[i]).append(',');
 
 					if (values[i] == null) {
 
@@ -176,6 +178,8 @@ public class DBHelper {
 					}
 				}
 
+				sql.append("]");
+				UtilityLogger.log(sql.toString());
 				st.executeUpdate();
 			}
 			c.commit();

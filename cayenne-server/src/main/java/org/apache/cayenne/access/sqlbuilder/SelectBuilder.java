@@ -61,7 +61,7 @@ public class SelectBuilder implements NodeBuilder {
     public SelectBuilder(NodeBuilder... selectExpressions) {
         root = new SelectNode();
         for(NodeBuilder exp : selectExpressions) {
-            node(SELECT_NODE, SelectResultNode::new).addChild(exp.buildNode());
+            node(SELECT_NODE, SelectResultNode::new).addChild(exp.build());
         }
     }
 
@@ -81,46 +81,46 @@ public class SelectBuilder implements NodeBuilder {
     }
 
     public SelectBuilder result(NodeBuilder selectExpression) {
-        node(SELECT_NODE, SelectResultNode::new).addChild(selectExpression.buildNode());
+        node(SELECT_NODE, SelectResultNode::new).addChild(selectExpression.build());
         return this;
     }
 
     public SelectBuilder from(NodeBuilder table) {
-        node(FROM_NODE, FromNode::new).addChild(table.buildNode());
+        node(FROM_NODE, FromNode::new).addChild(table.build());
         return this;
     }
 
     public SelectBuilder from(NodeBuilder... tables) {
         for(NodeBuilder next : tables) {
-            node(FROM_NODE, FromNode::new).addChild(next.buildNode());
+            node(FROM_NODE, FromNode::new).addChild(next.build());
         }
         return this;
     }
 
     public SelectBuilder where(NodeBuilder... params) {
         for(NodeBuilder next : params) {
-            node(WHERE_NODE, WhereNode::new).addChild(next.buildNode());
+            node(WHERE_NODE, WhereNode::new).addChild(next.build());
         }
         return this;
     }
 
     public SelectBuilder orderBy(NodeBuilder... params) {
         for(NodeBuilder next : params) {
-            node(ORDERBY_NODE, OrderByNode::new).addChild(next.buildNode());
+            node(ORDERBY_NODE, OrderByNode::new).addChild(next.build());
         }
         return this;
     }
 
     public SelectBuilder groupBy(NodeBuilder... params) {
         for(NodeBuilder next : params) {
-            node(GROUPBY_NODE, GroupByNode::new).addChild(next.buildNode());
+            node(GROUPBY_NODE, GroupByNode::new).addChild(next.build());
         }
         return this;
     }
 
     public SelectBuilder having(NodeBuilder... params) {
         for(NodeBuilder next : params) {
-            node(HAVING_NODE, HavingNode::new).addChild(next.buildNode());
+            node(HAVING_NODE, HavingNode::new).addChild(next.build());
         }
         return this;
     }
@@ -136,7 +136,7 @@ public class SelectBuilder implements NodeBuilder {
     }
 
     @Override
-    public Node buildNode() {
+    public Node build() {
         for(Node next : nodes) {
             if(next != null) {
                 root.addChild(next);

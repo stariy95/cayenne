@@ -22,7 +22,6 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.ToStringVisitor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
@@ -145,34 +144,27 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 
 		// build qualifier
 		QualifierTranslator qualifierTranslator = adapter.getQualifierTranslator(this);
-		StringBuilder whereQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
+
+		// 1. HAVING AND GROUP BY //
 
 		// build having qualifier
 		Expression havingQualifier = getSelectQuery().getHavingQualifier();
 		if (havingQualifier != null) {
 			haveAggregate = true;
-			QualifierTranslator havingQualifierTranslator = adapter.getQualifierTranslator(this);
-			havingQualifierTranslator.setQualifier(havingQualifier);
-			StringBuilder havingQualifierBuffer = havingQualifierTranslator.appendPart(new StringBuilder());
-			selectBuilder.having(
-					() -> new Node() {
-						@Override
-						public void append(StringBuilder buffer) {
-							buffer.append(havingQualifierBuffer);
-						}
-					}
-			);
+			qualifierTranslator.setQualifier(havingQualifier);
+			StringBuilder havingQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
+			selectBuilder.having(() -> new TextNode(havingQualifierBuffer));
 		}
 
 		if (!haveAggregate && groupByColumns != null) {
 			// if no expression with aggregation function found
 			// in select columns and there is no having clause
 			groupByColumns.clear();
+		} else {
+			appendGroupByColumns();
 		}
 
-		// build ORDER BY
-		OrderingTranslator orderingTranslator = new OrderingTranslator(this);
-		StringBuilder orderingBuffer = orderingTranslator.appendPart(new StringBuilder());
+		// 2. DISTINCT //
 
 		// check if DISTINCT is appropriate
 		// side effect: "suppressingDistinct" flag may end up being flipped here
@@ -192,6 +184,8 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			}
 		}
 
+		// 3. RESULT SET //
+
 		// convert ColumnDescriptors to column names
 		List<String> selectColumnExpList = new ArrayList<>();
 		for (ColumnDescriptor column : resultColumns) {
@@ -205,44 +199,48 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			selectBuilder.result(column(fullName));
 		}
 
-		// append any column expressions used in the order by if this query
-		// uses the DISTINCT modifier
-		if (forcingDistinct || getSelectQuery().isDistinct()) {
-			List<String> orderByColumnList = orderingTranslator.getOrderByColumnList();
-			for (String orderByColumnExp : orderByColumnList) {
-				// Convert to ColumnDescriptors??
-				if (!selectColumnExpList.contains(orderByColumnExp)) {
-					selectColumnExpList.add(orderByColumnExp);
-					selectBuilder.result(column(orderByColumnExp));
+		// 4. ORDER BY //
+		if(getSelectQuery().getOrderings().size() > 0) {
+			OrderingTranslator orderingTranslator = new OrderingTranslator(this);
+			StringBuilder orderingBuffer = orderingTranslator.appendPart(new StringBuilder());
+			selectBuilder.orderBy(() -> new TextNode(orderingBuffer));
+
+			// append any column expressions used in the order by if this query
+			// uses the DISTINCT modifier
+			if (forcingDistinct || getSelectQuery().isDistinct()) {
+				List<String> orderByColumnList = orderingTranslator.getOrderByColumnList();
+				for (String orderByColumnExp : orderByColumnList) {
+					// Convert to ColumnDescriptors??
+					if (!selectColumnExpList.contains(orderByColumnExp)) {
+						selectColumnExpList.add(orderByColumnExp);
+						selectBuilder.result(column(orderByColumnExp));
+					}
 				}
 			}
 		}
 
+		// 5. WHERE  //
+		StringBuilder whereQualifierBuffer = qualifierTranslator.appendPart(new StringBuilder());
+
+		// 6. FROM   //
 		// append tables and joins
 		joins.appendRootWithQuoteSqlIdentifiers(getQueryMetadata().getDbEntity());
 		joins.appendJoins();
 		joins.appendQualifier(whereQualifierBuffer, whereQualifierBuffer.length() == 0);
 
+		// 5. WHERE  //
 		// append qualifier
 		if (whereQualifierBuffer.length() > 0) {
 			selectBuilder.where(() -> new TextNode(whereQualifierBuffer));
 		}
 
-		if (groupByColumns != null && !groupByColumns.isEmpty()) {
-			appendGroupByColumns(groupByColumns);
-		}
-
-		// append prebuilt ordering
-		if (orderingBuffer.length() > 0) {
-			selectBuilder.orderBy(() -> new TextNode(orderingBuffer));
-		}
-
+		// 6. LIMIT / OFFSET
 		if (!isSuppressingDistinct()) {
 			appendLimitAndOffsetClauses();
 		}
 
 		ToStringVisitor visitor = new ToStringVisitor();
-		selectBuilder.buildNode().visit(visitor);
+		selectBuilder.build().visit(visitor);
 
 		this.sql = visitor.getString();
 	}
@@ -251,20 +249,21 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 	 * Append columns to GROUP BY clause
 	 * @since 4.0
 	 */
-	protected void appendGroupByColumns(Map<ColumnDescriptor, List<DbAttributeBinding>>  groupByColumns) {
-		Iterator<Map.Entry<ColumnDescriptor, List<DbAttributeBinding>>> it = groupByColumns.entrySet().iterator();
-		Map.Entry<ColumnDescriptor, List<DbAttributeBinding>> entry;
-		while(it.hasNext()) {
-			entry = it.next();
+	protected void appendGroupByColumns() {
+		if(groupByColumns == null) {
+			return;
+		}
+
+		for(Map.Entry<ColumnDescriptor, List<DbAttributeBinding>> entry : groupByColumns.entrySet()) {
 			if(entry.getKey().getDataRowKey().equals(entry.getKey().getName())) {
 				for (DbAttributeBinding binding : entry.getValue()) {
 					addToParamList(binding.getAttribute(), binding.getValue());
 				}
 			}
-		}
 
-		for(ColumnDescriptor next : groupByColumns.keySet()) {
+			ColumnDescriptor next = entry.getKey();
 			String fullName;
+
 			if(next.isExpression()) {
 				fullName = next.getDataRowKey();
 			} else {
