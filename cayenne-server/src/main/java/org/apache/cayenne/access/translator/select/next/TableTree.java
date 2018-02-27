@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
+import org.apache.cayenne.map.JoinType;
 
 /**
  * @since 4.1
@@ -56,32 +57,19 @@ class TableTree {
         rootNode.tableAlias = nextTableAlias();
     }
 
-    void addJoinTable(String attributePath, DbRelationship relationship, String joinType) {
-        if (tableNodes.get(attributePath) != null) {
+    void addJoinTable(String path, DbRelationship relationship, JoinType joinType) {
+        if (tableNodes.get(path) != null) {
             return;
         }
 
         TableTreeNode node = new TableTreeNode();
-        node.attributePath = attributePath;
+        node.attributePath = path;
         node.entity = relationship.getTargetEntity();
         node.tableAlias = nextTableAlias();
         node.relationship = relationship;
         node.joinType = joinType;
 
-        int lastSeparator = attributePath.lastIndexOf('.');
-        if (lastSeparator == -1) {
-            throw new CayenneRuntimeException("Wrong path '%s', seems like it is a root", attributePath);
-        }
-
-        String parentPath = attributePath.substring(0, lastSeparator);
-        TableTreeNode parent = tableNodes.get(parentPath);
-        if (parent == null) {
-            throw new CayenneRuntimeException("Something gone wrong. No TableTreeNode for path '%s' found", parentPath);
-        }
-
-//            parent.children.add(node);
-//            node.parent = parent;
-        tableNodes.put(attributePath, node);
+        tableNodes.put(path, node);
     }
 
     String aliasForAttributePath(String attributePath) {

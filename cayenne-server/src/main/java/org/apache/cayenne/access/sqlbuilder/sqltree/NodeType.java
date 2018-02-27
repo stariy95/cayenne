@@ -22,15 +22,10 @@ package org.apache.cayenne.access.sqlbuilder.sqltree;
 /**
  * @since 4.1
  */
-public class GroupByNode extends Node {
+public enum NodeType {
 
-    @Override
-    public void append(StringBuilder buffer) {
-        buffer.append("GROUP BY");
-    }
+    UNDEFINED,
+    VALUE,
 
-    @Override
-    public void appendChildSeparator(StringBuilder builder, int childIdx) {
-        builder.append(',');
-    }
+
 }

@@ -391,7 +391,7 @@ public class ExpressionEvaluationIT extends ServerCase {
         List<Artist> filteredInSQL = ObjectSelect.query(Artist.class, exp).orderBy(ordering).select(context);
         // apply exp to in-memory collection
         List<Artist> filteredInMemory = exp.filterObjects(
-                ObjectSelect.query(Artist.class).prefetch(Artist.PAINTING_ARRAY.disjoint()).select(context)
+                ObjectSelect.query(Artist.class).prefetch(Artist.PAINTING_ARRAY.joint()).select(context)
         );
         ordering.orderList(filteredInMemory);
 

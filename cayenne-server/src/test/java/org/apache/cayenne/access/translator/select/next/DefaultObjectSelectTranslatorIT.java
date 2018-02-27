@@ -20,8 +20,9 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.access.DataContext;
+import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.di.Inject;
-import org.apache.cayenne.query.ObjectSelect;
+import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.testdo.testmap.Artist;
 import org.apache.cayenne.testdo.testmap.Painting;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
@@ -40,10 +41,14 @@ public class DefaultObjectSelectTranslatorIT extends ServerCase {
     @Inject
     DataContext context;
 
+    @Inject
+    DbAdapter adapter;
+
     @Test
     public void simpleSql() throws Exception {
-        ObjectSelect<Artist> select = ObjectSelect.query(Artist.class);
-        DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, context.getEntityResolver());
+//        ObjectSelect<Artist> select = ObjectSelect.query(Artist.class);
+        SelectQuery<Artist> select = SelectQuery.query(Artist.class);
+        DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, adapter, context.getEntityResolver());
 
         String sql = translator.getSql();
         assertEquals("SELECT  t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  FROM ARTIST t0 ", sql);
@@ -51,13 +56,27 @@ public class DefaultObjectSelectTranslatorIT extends ServerCase {
 
     @Test
     public void sqlWhere() throws Exception {
-        ObjectSelect<Artist> select = ObjectSelect.query(Artist.class)
-                .where(Artist.ARTIST_NAME.eq("artist"))
-                .and(Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE).eq("painting"));
-        DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, context.getEntityResolver());
+//        ObjectSelect<Artist> select = ObjectSelect.query(Artist.class)
+//                .where(Artist.ARTIST_NAME.eq("artist"))
+//                .and(Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE).eq("painting"));
+        SelectQuery<Artist> select = SelectQuery.query(Artist.class, Artist.ARTIST_NAME.eq("artist")
+                .andExp(Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE).eq("painting")));
+
+        DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, adapter, context.getEntityResolver());
 
         String sql = translator.getSql();
-//        assertEquals("SELECT  t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  FROM ARTIST t0 WHERE ARTIST_NAME = ?", sql);
+        assertEquals("SELECT  t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  " +
+                "FROM ARTIST t0  JOIN PAINTING t1  ON ((t0.ARTIST_ID  =  t1.ARTIST_ID )) " +
+                "WHERE  ((t0.ARTIST_NAME  = 'artist' ) AND (t1.PAINTING_TITLE  = 'painting' ))", sql);
     }
 
+    @Test
+    public void sqlWithToOneResult() throws Exception {
+        SelectQuery<Painting> select = SelectQuery.query(Painting.class);
+
+        DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, adapter, context.getEntityResolver());
+
+        String sql = translator.getSql();
+        assertEquals("SELECT  t0.ESTIMATED_PRICE ,t0.PAINTING_DESCRIPTION ,t0.PAINTING_TITLE ,t0.ARTIST_ID ,t0.GALLERY_ID ,t0.PAINTING_ID  FROM PAINTING t0 ", sql);
+    }
 }

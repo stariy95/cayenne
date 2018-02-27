@@ -30,11 +30,11 @@ public class JoinNodeBuilder implements NodeBuilder {
 
     private final String joinType;
 
-    private final TableNodeBuilder table;
+    private final NodeBuilder table;
 
     private NodeBuilder joinExp;
 
-    public JoinNodeBuilder(String joinType, TableNodeBuilder table) {
+    public JoinNodeBuilder(String joinType, NodeBuilder table) {
         this.joinType = Objects.requireNonNull(joinType);
         this.table = Objects.requireNonNull(table);
     }

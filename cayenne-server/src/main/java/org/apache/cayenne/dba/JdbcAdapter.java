@@ -25,10 +25,10 @@ import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.batch.BatchTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
-import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
+import org.apache.cayenne.access.translator.select.next.DefaultObjectSelectTranslator;
 import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.access.types.ExtendedTypeFactory;
 import org.apache.cayenne.access.types.ExtendedTypeMap;
@@ -535,7 +535,8 @@ public class JdbcAdapter implements DbAdapter {
 
 	@Override
 	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new DefaultSelectTranslator(query, this, entityResolver);
+//		return new DefaultSelectTranslator(query, this, entityResolver);
+		return new DefaultObjectSelectTranslator(query, this, entityResolver);
 	}
 
 	@Override
@@ -602,7 +603,6 @@ public class JdbcAdapter implements DbAdapter {
 	}
 
 	/**
-	 * @return
 	 * @since 4.0
 	 */
 	protected QuotingStrategy createQuotingStrategy() {

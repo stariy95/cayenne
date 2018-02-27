@@ -111,6 +111,14 @@ public class DataContextJoinAliasesIT extends ServerCase {
 
         assertEquals(1, galleries.size());
         assertEquals("G1", galleries.get(0).getGalleryName());
+
+        // SELECT DISTINCT   t0.GALLERY_NAME ,t0.GALLERY_ID
+        // FROM GALLERY t0
+        // JOIN EXHIBIT t1  ON ((t0.GALLERY_ID  =  t1.GALLERY_ID ))
+        // JOIN ARTIST_EXHIBIT t2  ON ((t1.EXHIBIT_ID  =  t2.EXHIBIT_ID ))
+        // JOIN EXHIBIT t3  ON ((t0.GALLERY_ID  =  t3.GALLERY_ID ))
+        // JOIN ARTIST_EXHIBIT t4  ON ((t3.EXHIBIT_ID  =  t4.EXHIBIT_ID ))
+        // WHERE (t2.ARTIST_ID = ?) AND (t4.ARTIST_ID = ?)  [bind: 1->ARTIST_ID:1, 2->ARTIST_ID:2]
     }
 
 }

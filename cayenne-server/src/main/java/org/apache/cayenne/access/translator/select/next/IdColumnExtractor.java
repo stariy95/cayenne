@@ -35,7 +35,7 @@ class IdColumnExtractor implements ColumnExtractor {
     }
 
     @Override
-    public void extract() {
+    public void extract(String prefix) {
 
     }
 }

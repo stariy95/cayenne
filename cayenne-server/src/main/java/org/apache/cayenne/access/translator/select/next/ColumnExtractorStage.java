@@ -31,14 +31,16 @@ class ColumnExtractorStage extends TranslationStage {
     void perform() {
         ColumnExtractor extractor;
 
+        context.getTableTree().addRootTable(context.getMetadata().getDbEntity());
+
         if (context.getMetadata().getClassDescriptor() != null) {
-            extractor = new DescriptorColumnExtractor(context);
+            extractor = new DescriptorColumnExtractor(context, context.getMetadata().getClassDescriptor());
         } else if (context.getMetadata().getPageSize() > 0) {
             extractor = new IdColumnExtractor(context);
         } else {
             extractor = new DbEntityColumnExtractor(context);
         }
 
-        extractor.extract();
+        extractor.extract(null);
     }
 }

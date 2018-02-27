@@ -41,7 +41,7 @@ class QualifierTranslationStage extends TranslationStage {
     void perform() {
         QualifierTranslator translator = new QualifierTranslator(context);
 
-        Expression expression = context.getQuery().getWhere();
+        Expression expression = context.getQuery().getQualifier();
 
         ObjEntity entity = context.getMetadata().getObjEntity();
         if (entity != null) {

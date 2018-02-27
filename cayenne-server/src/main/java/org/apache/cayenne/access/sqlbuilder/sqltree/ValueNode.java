@@ -28,16 +28,162 @@ public class ValueNode extends Node {
 
     public ValueNode(Object value) {
         this.value = value;
+        this.type = NodeType.VALUE;
+    }
+
+    public Object getValue() {
+        return value;
     }
 
     @Override
     public void append(StringBuilder buffer) {
-        if (value instanceof CharSequence) {
-            buffer.append('\'');
+        appendValue(value, buffer);
+    }
+
+    private void appendValue(Object val, StringBuilder buffer) {
+        if(val == null) {
+            return;
         }
-        buffer.append(String.valueOf(value));
-        if (value instanceof CharSequence) {
-            buffer.append('\'');
+
+        boolean isString = val instanceof CharSequence;
+        boolean isArray = val.getClass().isArray();
+
+        if(isArray) {
+            if(val instanceof byte[]) {
+                appendValue((byte[])val, buffer);
+            } else if(val instanceof short[]) {
+                appendValue((short[])val, buffer);
+            } else if(val instanceof char[]) {
+                appendValue((char[])val, buffer);
+            } else if(val instanceof int[]) {
+                appendValue((int[])val, buffer);
+            } else if(val instanceof long[]) {
+                appendValue((long[])val, buffer);
+            } else if(val instanceof float[]) {
+                appendValue((float[])val, buffer);
+            } else if(val instanceof double[]) {
+                appendValue((double[])val, buffer);
+            } else if(val instanceof boolean[]) {
+                appendValue((boolean[])val, buffer);
+            } else if(val instanceof Object[]) {
+                appendValue((Object[])val, buffer);
+            }
+        } else {
+            if (isString) {
+                buffer.append('\'');
+            }
+            buffer.append(String.valueOf(val));
+            if (isString) {
+                buffer.append('\'');
+            }
+        }
+    }
+
+    private void appendValue(byte[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(byte i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(short[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(short i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(char[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(char i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(int[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(int i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(long[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(long i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(float[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(float i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(double[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(double i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(boolean[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(boolean i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
+        }
+    }
+
+    private void appendValue(Object[] val, StringBuilder buffer) {
+        boolean first = true;
+        for(Object i : val) {
+            if(first) {
+                first = false;
+            } else {
+                buffer.append(',');
+            }
+            appendValue(i, buffer);
         }
     }
 }

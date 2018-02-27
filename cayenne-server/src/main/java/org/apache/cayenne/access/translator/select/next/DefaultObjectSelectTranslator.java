@@ -20,17 +20,18 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
-import org.apache.cayenne.access.sqlbuilder.ToStringVisitor;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
+import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjAttribute;
-import org.apache.cayenne.query.ObjectSelect;
+import org.apache.cayenne.query.SelectQuery;
 
 /**
  * @since 4.1
@@ -39,18 +40,19 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
 
     private TranslatorContext context;
 
-    public DefaultObjectSelectTranslator(ObjectSelect<?> query, EntityResolver entityResolver, DefaultObjectSelectTranslator parent) {
-        this.context = new TranslatorContext(query, entityResolver, parent == null ? null : parent.context);
+    public DefaultObjectSelectTranslator(SelectQuery<?> query, DbAdapter adapter, EntityResolver entityResolver, DefaultObjectSelectTranslator parent) {
+        this.context = new TranslatorContext(query, adapter, entityResolver, parent == null ? null : parent.context);
     }
 
-    public DefaultObjectSelectTranslator(ObjectSelect<?> query, EntityResolver entityResolver) {
-        this(query, entityResolver, null);
+    public DefaultObjectSelectTranslator(SelectQuery<?> query, DbAdapter adapter, EntityResolver entityResolver) {
+        this(query, adapter, entityResolver, null);
     }
 
     @Override
     public String getSql() throws Exception {
         List<Function<TranslatorContext, TranslationStage>> stageProducers = Arrays.asList(
                 ColumnExtractorStage::new,
+                PrefetchNodeStage::new,
                 QualifierTranslationStage::new,
                 SqlGenerationStage::new
         );
@@ -63,7 +65,7 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
     }
 
     protected String generateSql() {
-        ToStringVisitor visitor = new ToStringVisitor();
+        SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
         context.getSelectBuilder().build().visit(visitor);
         return visitor.getString();
     }
@@ -75,7 +77,7 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
 
     @Override
     public Map<ObjAttribute, ColumnDescriptor> getAttributeOverrides() {
-        return null;
+        return Collections.emptyMap();
     }
 
     @Override

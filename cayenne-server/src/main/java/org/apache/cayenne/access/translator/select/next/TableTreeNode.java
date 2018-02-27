@@ -21,6 +21,7 @@ package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
+import org.apache.cayenne.map.JoinType;
 
 /**
  * @since 4.1
@@ -30,7 +31,7 @@ class TableTreeNode {
     String attributePath; // path that spawned this node
     DbEntity entity;      // entity
     String tableAlias;    // table alias
-    String joinType;
+    JoinType joinType;
 
     // relationship that connects this node with parent (or null if this is root)
     DbRelationship relationship;

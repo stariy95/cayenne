@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.DataContext;
+import org.apache.cayenne.access.translator.select.next.SQLGenerationVisitor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.testdo.testmap.Artist;
@@ -65,7 +66,7 @@ public class SqlBuilderIT extends ServerCase {
         // GROUP BY a.ARTIST_ID
         // ORDER BY p_count DESC
 
-        ToStringVisitor visitor = new ToStringVisitor();
+        SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
 
         select(table("a").column("ARTIST_ID").as("a_id"),
                 count(table("p").column("PAINTING_TITLE")).as("p_count"))

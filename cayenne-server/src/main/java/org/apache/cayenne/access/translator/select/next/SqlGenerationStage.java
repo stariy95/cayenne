@@ -20,11 +20,15 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.JoinNodeBuilder;
-import org.apache.cayenne.access.sqlbuilder.TableNodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
+import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.parser.ASTDbPath;
+import org.apache.cayenne.exp.parser.ASTPath;
 import org.apache.cayenne.map.DbJoin;
 
 import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
@@ -42,6 +46,7 @@ class SqlGenerationStage extends TranslationStage {
     void perform() {
         addResult();
         addFrom();
+        context.getSelectBuilder().distinct();
     }
 
     private void addResult() {
@@ -52,62 +57,78 @@ class SqlGenerationStage extends TranslationStage {
 
     private void addFrom() {
         context.getTableTree().visit(node -> {
-            if(node.relationship == null) {
-                context.getSelectBuilder().from(table(node.entity.getFullyQualifiedName()).as(node.tableAlias));
-            } else {
-                JoinNodeBuilder join;
-                TableNodeBuilder tableNode = table(node.entity.getFullyQualifiedName()).as(node.tableAlias);
-
-                switch (node.joinType) {
-                    case "inner":
-                        join = join(tableNode);
-                        break;
-                    case "left":
-                        join = leftJoin(tableNode);
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Unsupported join type: " + node.joinType);
-                }
-
-                List<DbJoin> joins = node.relationship.getJoins();
-
-                ExpressionNodeBuilder expressionNodeBuilder = null;
-                String sourceAlias = context.getTableTree()
-                        .aliasForAttributePath(node.attributePath.substring(0, node.attributePath.lastIndexOf('.')));
-                for (DbJoin dbJoin : joins) {
-                    String srcColumn = dbJoin.getSourceName();
-                    String dstColumn = dbJoin.getTargetName();
-                    ExpressionNodeBuilder joinExp = table(sourceAlias).column(srcColumn)
-                            .eq(table(node.tableAlias).column(dstColumn));
-
-                    if (expressionNodeBuilder != null) {
-                        expressionNodeBuilder.and(joinExp);
-                    } else {
-                        expressionNodeBuilder = joinExp;
-                    }
-                }
-
-                /*
-                 * Attaching root Db entity's qualifier
-                 */
-//                Expression dbQualifier = node.relationship.getTargetEntity().getQualifier();
-//                if (dbQualifier != null) {
-//                    dbQualifier = dbQualifier.transform(new JoinStack.JoinedDbEntityQualifierTransformer(node));
-//                    qualifierTranslator.setQualifier(dbQualifier);
-//                    StringBuilder sb = qualifierTranslator.appendPart(new StringBuilder());
-//
-//                    NodeBuilder qualifierNode = () -> new TextNode(sb);
-//                    if(expressionNodeBuilder == null) {
-//                        expressionNodeBuilder = new ExpressionNodeBuilder(qualifierNode);
-//                    } else {
-//                        expressionNodeBuilder = expressionNodeBuilder.and(qualifierNode);
-//                    }
-//                }
-
-                context.getSelectBuilder().from(join.on(expressionNodeBuilder));
+            NodeBuilder table = table(node.entity.getFullyQualifiedName()).as(node.tableAlias);
+            if(node.relationship != null) {
+                table = getJoin(node, table).on(getJoinExpression(node));
             }
+
+            context.getSelectBuilder().from(table);
         });
     }
 
+    private JoinNodeBuilder getJoin(TableTreeNode node, NodeBuilder table) {
+        switch (node.joinType) {
+            case INNER:
+                return join(table);
+            case LEFT_OUTER:
+                return leftJoin(table);
+            default:
+                throw new IllegalArgumentException("Unsupported join type: " + node.joinType);
+        }
+    }
 
+    private NodeBuilder getJoinExpression(TableTreeNode node) {
+        List<DbJoin> joins = node.relationship.getJoins();
+
+        ExpressionNodeBuilder expressionNodeBuilder = null;
+        String sourceAlias = context.getTableTree().aliasForAttributePath(node.attributePath);
+        for (DbJoin dbJoin : joins) {
+            String srcColumn = dbJoin.getSourceName();
+            String dstColumn = dbJoin.getTargetName();
+            ExpressionNodeBuilder joinExp = table(sourceAlias).column(srcColumn)
+                    .eq(table(node.tableAlias).column(dstColumn));
+
+            if (expressionNodeBuilder != null) {
+                expressionNodeBuilder.and(joinExp);
+            } else {
+                expressionNodeBuilder = joinExp;
+            }
+        }
+
+        expressionNodeBuilder = attachTargetQualifier(node, expressionNodeBuilder);
+
+        return expressionNodeBuilder;
+    }
+
+    private ExpressionNodeBuilder attachTargetQualifier(TableTreeNode node, ExpressionNodeBuilder expressionNodeBuilder) {
+        Expression dbQualifier = node.relationship.getTargetEntity().getQualifier();
+        if (dbQualifier != null) {
+            QualifierTranslator translator = new QualifierTranslator(context);
+            dbQualifier = dbQualifier.transform(new JoinedDbEntityQualifierTransformer(node));
+            NodeBuilder translatedQualifier = translator.translate(dbQualifier);
+            if (expressionNodeBuilder != null) {
+                expressionNodeBuilder.and(translatedQualifier);
+            } else {
+                expressionNodeBuilder = new ExpressionNodeBuilder(translatedQualifier);
+            }
+        }
+        return expressionNodeBuilder;
+    }
+
+
+    static class JoinedDbEntityQualifierTransformer implements Function<Object, Object> {
+
+        String pathToRoot;
+
+        JoinedDbEntityQualifierTransformer(TableTreeNode node) {
+            pathToRoot = node.attributePath;
+        }
+
+        public Object apply(Object input) {
+            if (input instanceof ASTPath) {
+                return new ASTDbPath(pathToRoot + ((ASTPath) input).getPath());
+            }
+            return input;
+        }
+    }
 }

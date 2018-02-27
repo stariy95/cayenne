@@ -28,7 +28,7 @@ public class SelectResultNode extends Node {
     }
 
     @Override
-    public void appendChildSeparator(StringBuilder builder) {
+    public void appendChildSeparator(StringBuilder builder, int childIdx) {
         builder.append(',');
     }
 

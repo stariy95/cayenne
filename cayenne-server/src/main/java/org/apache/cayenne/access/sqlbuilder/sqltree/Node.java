@@ -31,6 +31,8 @@ public abstract class Node {
 
     protected List<Node> children;
 
+    protected NodeType type = NodeType.UNDEFINED;
+
     public Node() {
         this.children = new ArrayList<>(2);
     }
@@ -75,9 +77,13 @@ public abstract class Node {
         return "Node {" + sb.toString() + "}";
     }
 
+    public NodeType getType() {
+        return type;
+    }
+
     public abstract void append(StringBuilder buffer);
 
-    public void appendChildSeparator(StringBuilder builder) {
+    public void appendChildSeparator(StringBuilder builder, int childInd) {
         builder.append(' ');
     }
 

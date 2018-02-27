@@ -26,16 +26,18 @@ import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
 import org.apache.cayenne.access.sqlbuilder.SQLBuilder;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
+import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.QueryMetadata;
+import org.apache.cayenne.query.SelectQuery;
 
 /**
  * @since 4.1
  */
 class TranslatorContext {
 
-    private TableTree tableTree;
+    private final TableTree tableTree;
 
     /**
      * Result columns, can be following:
@@ -45,7 +47,7 @@ class TranslatorContext {
      * - prefetched objects attributes and additional db attributes (PKs and FKs)
      * - order by expressions if query is distinct?
      */
-    private List<ColumnDescriptor> columnDescriptors;
+    private final List<ColumnDescriptor> columnDescriptors;
 
     /**
      * Scalar values bindings in order of appearance in final SQL,
@@ -56,18 +58,21 @@ class TranslatorContext {
      * - order by expressions
      * - where expression (including qualifiers from all used DbEntities and ObjEntities)
      */
-    private List<DbAttributeBinding> bindings;
+    private final List<DbAttributeBinding> bindings;
 
-    private SelectBuilder selectBuilder;
+    private final SelectBuilder selectBuilder;
 
-    private ObjectSelect<?> query;
+    private final SelectQuery<?> query;
 
-    private QueryMetadata metadata;
+    private final QueryMetadata metadata;
 
-    private EntityResolver resolver;
+    private final EntityResolver resolver;
 
-    TranslatorContext(ObjectSelect<?> query, EntityResolver resolver, TranslatorContext parentContext) {
+    private final DbAdapter adapter;
+
+    TranslatorContext(SelectQuery<?> query, DbAdapter adapter, EntityResolver resolver, TranslatorContext parentContext) {
         this.query = query;
+        this.adapter = adapter;
         this.resolver = resolver;
         this.metadata = query.getMetaData(resolver);
         this.tableTree = new TableTree(parentContext == null ? 0 : parentContext.getTableCount());
@@ -96,7 +101,7 @@ class TranslatorContext {
         return tableTree.getNodeCount();
     }
 
-    public ObjectSelect<?> getQuery() {
+    public SelectQuery<?> getQuery() {
         return query;
     }
 
@@ -106,5 +111,9 @@ class TranslatorContext {
 
     public EntityResolver getResolver() {
         return resolver;
+    }
+
+    public DbAdapter getAdapter() {
+        return adapter;
     }
 }

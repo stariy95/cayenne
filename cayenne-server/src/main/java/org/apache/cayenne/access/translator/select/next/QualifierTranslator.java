@@ -19,26 +19,15 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.Collections;
-import java.util.Iterator;
-
-import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.TraversalHandler;
-import org.apache.cayenne.exp.parser.ASTObjPath;
 import org.apache.cayenne.map.DbAttribute;
-import org.apache.cayenne.map.DbRelationship;
-import org.apache.cayenne.map.JoinType;
-import org.apache.cayenne.map.ObjAttribute;
-import org.apache.cayenne.map.ObjRelationship;
-import org.apache.cayenne.map.PathComponent;
-import org.apache.cayenne.util.CayenneMapEntry;
 
-import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.value;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 import static org.apache.cayenne.exp.Expression.*;
 
 /**
@@ -47,15 +36,16 @@ import static org.apache.cayenne.exp.Expression.*;
 public class QualifierTranslator implements TraversalHandler {
 
     private final TranslatorContext context;
+    private final PathTranslator pathTranslator;
 
     private Node rootNode;
-
     private Node currentNode;
 
     public QualifierTranslator(TranslatorContext context) {
         this.context = context;
-        rootNode = new EmptyNode();
-        currentNode = rootNode;
+        this.pathTranslator = new PathTranslator(context);
+        this.rootNode = new EmptyNode();
+        this.currentNode = rootNode;
     }
 
     NodeBuilder translate(Expression qualifier) {
@@ -68,11 +58,6 @@ public class QualifierTranslator implements TraversalHandler {
     }
 
     @Override
-    public void finishedChild(Expression node, int childIndex, boolean hasMoreChildren) {
-
-    }
-
-    @Override
     public void startNode(Expression node, Expression parentNode) {
         Node nextNode = expressionNodeToSqlNode(node);
         currentNode.addChild(nextNode);
@@ -82,19 +67,36 @@ public class QualifierTranslator implements TraversalHandler {
 
     private Node expressionNodeToSqlNode(Expression node) {
         switch (node.getType()) {
-            case ADD:
-            case SUBTRACT:
-            case MULTIPLY:
-            case DIVIDE:
-            case NEGATIVE:
-            case OR:
-            case AND:
+            case NOT_IN:
             case IN:
+                return new Node() {
+                    @Override
+                    public void append(StringBuilder buffer) {
+                    }
+
+                    @Override
+                    public void appendChildSeparator(StringBuilder builder, int childInd) {
+                        if(childInd == 0) {
+                            builder.append(' ').append(expToStr(node.getType())).append(" (");
+                        }
+                    }
+
+                    @Override
+                    public void appendChildrenEnd(StringBuilder builder) {
+                        builder.append(')');
+                    }
+                };
+
+            case NOT_BETWEEN:
             case BETWEEN:
                 return new ExpressionNode() {
                     @Override
-                    public void appendChildSeparator(StringBuilder builder) {
-                        builder.append(' ').append(expToStr(node.getType())).append(' ');
+                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                        if(childIdx == 0) {
+                            builder.append(expToStr(node.getType())).append(' ');
+                        } else {
+                            builder.append(" AND ");
+                        }
                     }
                 };
 
@@ -107,77 +109,97 @@ public class QualifierTranslator implements TraversalHandler {
                 };
 
             case EQUAL_TO:
+                return new ExpressionNode() {
+                    @Override
+                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                        String expStr = " = ";
+                        if(node.getOperand(1) == null) {
+                            expStr = " IS NULL";
+                        }
+                        builder.append(expStr);
+                    }
+                };
             case NOT_EQUAL_TO:
+                return new ExpressionNode() {
+                    @Override
+                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                        String expStr = " <> ";
+                        if(node.getOperand(1) == null) {
+                            expStr = " IS NOT NULL";
+                        }
+                        builder.append(expStr);
+                    }
+                };
+
+            case ADD:
+            case SUBTRACT:
+            case MULTIPLY:
+            case DIVIDE:
+            case NEGATIVE:
+            case OR:
+            case AND:
             case LESS_THAN:
             case LESS_THAN_EQUAL_TO:
             case GREATER_THAN:
             case GREATER_THAN_EQUAL_TO:
             case LIKE:
-            case LIKE_IGNORE_CASE:
             case NOT_LIKE:
-            case NOT_LIKE_IGNORE_CASE:
                 return new ExpressionNode() {
                     @Override
-                    public void appendChildSeparator(StringBuilder builder) {
+                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
                         builder.append(' ').append(expToStr(node.getType())).append(' ');
                     }
                 };
 
-            case OBJ_PATH:
-                return new Node() {
+
+            case LIKE_IGNORE_CASE:
+            case NOT_LIKE_IGNORE_CASE:
+                return new ExpressionNode() {
                     @Override
                     public void append(StringBuilder buffer) {
-                        ASTObjPath pathNode = (ASTObjPath)node;
-                        for (PathComponent<ObjAttribute, ObjRelationship> component
-                                : context.getMetadata().getObjEntity().resolvePath(pathNode, Collections.emptyMap())) {
-                            ObjRelationship relationship = component.getRelationship();
-                            ObjAttribute attribute = component.getAttribute();
+                    }
 
-                            if (relationship != null) {
-                                // if this is a last relationship in the path, it needs special handling
-                                if (component.isLast()) {
-//                                    processRelTermination(relationship, component.getJoinType(), joinSplitAlias);
-                                } else {
-                                    // find and add joins ....
-                                    for (DbRelationship dbRel : relationship.getDbRelationships()) {
-//                                        queryAssembler.dbRelationshipAdded(dbRel, component.getJoinType(), joinSplitAlias);
-                                    }
-                                }
-                            } else {
-                                Iterator<CayenneMapEntry> dbPathIterator = attribute.getDbPathIterator();
-                                while (dbPathIterator.hasNext()) {
-                                    Object pathPart = dbPathIterator.next();
+                    @Override
+                    public void appendChildrenStart(StringBuilder builder) {
+                        builder.append("UPPER(");
+                    }
 
-                                    if (pathPart == null) {
-                                        throw new CayenneRuntimeException("ObjAttribute has no component: %s", attribute.getName());
-                                    } else if (pathPart instanceof DbRelationship) {
-//                                        queryAssembler.dbRelationshipAdded((DbRelationship) pathPart, JoinType.INNER, joinSplitAlias);
-                                    } else if (pathPart instanceof DbAttribute) {
-//                                        processColumnWithQuoteSqlIdentifiers((DbAttribute) pathPart, pathExp);
-                                    }
-                                }
+                    @Override
+                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                        builder.append(") ").append(expToStr(node.getType())).append(" UPPER(");
+                    }
 
-                            }
-                        }
-                        buffer.append(node.getOperand(0));
+                    @Override
+                    public void appendChildrenEnd(StringBuilder builder) {
+                        builder.append(")");
                     }
                 };
+
+            case OBJ_PATH:
+                String path = (String)node.getOperand(0);
+                PathTranslator.PathTranslationResult result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), path);
+                DbAttribute lastAttribute = result.getDbAttributes().get(result.getDbAttributes().size() - 1);
+                return table(context.getTableTree().aliasForAttributePath(path)).column(lastAttribute.getName()).build();
 
             case DB_PATH:
+                // TODO proper db path translation
+                String dbPath = (String)node.getOperand(0);
+                String attr = dbPath;
+                return table(context.getTableTree().aliasForAttributePath(dbPath)).column(attr).build();
+
+            case TRUE:
+            case FALSE:
                 return new Node() {
                     @Override
                     public void append(StringBuilder buffer) {
-                        buffer.append(node.getOperand(0));
+                        buffer.append(expToStr(node.getType()));
                     }
                 };
+
+
         }
 
-        return new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-
-            }
-        };
+        return new EmptyNode();
     }
 
     @Override
@@ -195,6 +217,10 @@ public class QualifierTranslator implements TraversalHandler {
         Node nextNode = value(leaf).build();
         currentNode.addChild(nextNode);
         nextNode.setParent(currentNode);
+    }
+
+    @Override
+    public void finishedChild(Expression node, int childIndex, boolean hasMoreChildren) {
     }
 
     private String expToStr(int type) {
@@ -224,7 +250,7 @@ public class QualifierTranslator implements TraversalHandler {
             case LIKE:
                 return "LIKE";
             case LIKE_IGNORE_CASE:
-                return "LIKE_IGNORE_CASE";
+                return "LIKE";
             case NOT_BETWEEN:
                 return "NOT BETWEEN";
             case NOT_IN:
@@ -232,7 +258,7 @@ public class QualifierTranslator implements TraversalHandler {
             case NOT_LIKE:
                 return "NOT LIKE";
             case NOT_LIKE_IGNORE_CASE:
-                return "NOT LIKE IGNORE CASE";
+                return "NOT LIKE";
             case ADD:
                 return "+";
             case SUBTRACT:
@@ -243,6 +269,10 @@ public class QualifierTranslator implements TraversalHandler {
                 return "/";
             case NEGATIVE:
                 return "-";
+            case TRUE:
+                return "1=1";
+            case FALSE:
+                return "1=0";
             default:
                 return "{other}";
         }

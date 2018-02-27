@@ -46,23 +46,23 @@ public final class SQLBuilder {
         return new ColumnNodeBuilder(null, column);
     }
 
-    public static JoinNodeBuilder join(TableNodeBuilder table) {
+    public static JoinNodeBuilder join(NodeBuilder table) {
         return new JoinNodeBuilder("JOIN", table);
     }
 
-    public static JoinNodeBuilder leftJoin(TableNodeBuilder table) {
+    public static JoinNodeBuilder leftJoin(NodeBuilder table) {
         return new JoinNodeBuilder("LEFT JOIN", table);
     }
 
-    public static JoinNodeBuilder rightJoin(TableNodeBuilder table) {
+    public static JoinNodeBuilder rightJoin(NodeBuilder table) {
         return new JoinNodeBuilder("RIGHT JOIN", table);
     }
 
-    public static JoinNodeBuilder innerJoin(TableNodeBuilder table) {
+    public static JoinNodeBuilder innerJoin(NodeBuilder table) {
         return new JoinNodeBuilder("INNER JOIN", table);
     }
 
-    public static JoinNodeBuilder outerJoin(TableNodeBuilder table) {
+    public static JoinNodeBuilder outerJoin(NodeBuilder table) {
         return new JoinNodeBuilder("OUTER JOIN", table);
     }
 

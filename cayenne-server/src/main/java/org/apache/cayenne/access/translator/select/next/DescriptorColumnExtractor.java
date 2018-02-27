@@ -19,24 +19,16 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.map.DbJoin;
-import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjRelationship;
-import org.apache.cayenne.reflect.ArcProperty;
 import org.apache.cayenne.reflect.AttributeProperty;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.reflect.PropertyVisitor;
 import org.apache.cayenne.reflect.ToManyProperty;
 import org.apache.cayenne.reflect.ToOneProperty;
-import org.apache.cayenne.util.CayenneMapEntry;
 
 /**
  * @since 4.1
@@ -45,62 +37,85 @@ class DescriptorColumnExtractor implements PropertyVisitor, ColumnExtractor {
 
     private final TranslatorContext context;
     private final ClassDescriptor descriptor;
+    private final PathTranslator pathTranslator;
+    private String prefix;
 
-    DescriptorColumnExtractor(TranslatorContext context) {
+    DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor) {
         this.context = context;
-        this.descriptor = context.getMetadata().getClassDescriptor();
+        this.descriptor = descriptor;
+        this.pathTranslator = new PathTranslator(context);
     }
 
-    public void extract() {
-        context.getTableTree().addRootTable(descriptor.getEntity().getDbEntity());
+    public void extract(String prefix) {
+        this.prefix = prefix;
+
         descriptor.visitAllProperties(this);
 
         // add remaining needed attrs from DbEntity
         DbEntity table = descriptor.getEntity().getDbEntity();
         for (DbAttribute dba : table.getPrimaryKeys()) {
-            String alias = context.getTableTree().aliasForAttributePath(dba.getName());
-            ColumnDescriptor column = new ColumnDescriptor(dba, alias);
-            context.getColumnDescriptors().add(column);
+            addDbAttribute(prefix, dba);
         }
     }
 
+    private void addDbAttribute(String prefix, DbAttribute dba) {
+        String path = dba.getName();
+        if(prefix != null) {
+            path = prefix + '.' + path;
+        }
+        String alias = context.getTableTree().aliasForAttributePath(path);
+        ColumnDescriptor column = new ColumnDescriptor(dba, alias);
+        column.setDataRowKey(path);
+        context.getColumnDescriptors().add(column);
+    }
+
+    @Override
     public boolean visitAttribute(AttributeProperty property) {
         ObjAttribute oa = property.getAttribute();
-        Iterator<CayenneMapEntry> dbPathIterator = oa.getDbPathIterator();
-        StringBuilder sb = new StringBuilder();
-        while (dbPathIterator.hasNext()) {
-            Object pathPart = dbPathIterator.next();
-            sb.append(pathPart);
-
-            if (pathPart == null) {
-                throw new CayenneRuntimeException("ObjAttribute has no component: %s", oa.getName());
-            } else if (pathPart instanceof DbRelationship) {
-                DbRelationship rel = (DbRelationship) pathPart;
-                context.getTableTree().addJoinTable(sb.toString(), rel, "left");
-            } else if (pathPart instanceof DbAttribute) {
-                DbAttribute dbAttr = (DbAttribute) pathPart;
-                String alias = context.getTableTree().aliasForAttributePath(oa.getDbAttributePath());
-                ColumnDescriptor column = new ColumnDescriptor(oa, dbAttr, alias);
-                context.getColumnDescriptors().add(column);
-            }
+        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(descriptor.getEntity(), property.getName());
+        String path = oa.getDbAttributePath();
+        if(prefix != null) {
+            path = prefix + '.' + path;
         }
+        String alias = context.getTableTree().aliasForAttributePath(path);
+
+        DbAttribute attribute = result.getDbAttributes().get(result.getDbAttributes().size() - 1);
+        ColumnDescriptor column = new ColumnDescriptor(oa, attribute, alias);
+        if(prefix != null) {
+            column.setDataRowKey(prefix + '.' + attribute.getName());
+        }
+        context.getColumnDescriptors().add(column);
+
         return true;
     }
 
+    @Override
     public boolean visitToOne(ToOneProperty property) {
         ObjRelationship rel = property.getRelationship();
-        DbRelationship dbRel = rel.getDbRelationships().get(0);
+        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(descriptor.getEntity(), property.getName());
 
-        List<DbJoin> joins = dbRel.getJoins();
-        for (DbJoin join : joins) {
-            DbAttribute src = join.getSource();
-            String alias = context.getTableTree().aliasForAttributePath(rel.getDbRelationshipPath());
-            ColumnDescriptor column = new ColumnDescriptor(src, alias);
+        String path = rel.getDbRelationshipPath();
+        if(prefix != null) {
+            path = prefix + '.' + path;
+        }
+        String alias = context.getTableTree().aliasForAttributePath(path);
+
+        for(DbAttribute attribute : result.getDbAttributes()) {
+            if(attribute.isPrimaryKey()) {
+                // PK will be added explicitly
+                continue;
+            }
+            ColumnDescriptor column = new ColumnDescriptor(attribute, alias);
+            if(prefix != null) {
+                column.setDataRowKey(prefix + '.' + attribute.getName());
+            }
             context.getColumnDescriptors().add(column);
         }
+
         return true;
     }
 
+    @Override
     public boolean visitToMany(ToManyProperty property) {
         return true;
     }

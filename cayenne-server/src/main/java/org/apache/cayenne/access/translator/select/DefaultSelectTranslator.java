@@ -21,7 +21,7 @@ package org.apache.cayenne.access.translator.select;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
-import org.apache.cayenne.access.sqlbuilder.ToStringVisitor;
+import org.apache.cayenne.access.translator.select.next.SQLGenerationVisitor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
@@ -239,7 +239,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 			appendLimitAndOffsetClauses();
 		}
 
-		ToStringVisitor visitor = new ToStringVisitor();
+		SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
 		selectBuilder.build().visit(visitor);
 
 		this.sql = visitor.getString();
