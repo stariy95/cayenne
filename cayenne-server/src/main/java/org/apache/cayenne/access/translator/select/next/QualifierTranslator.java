@@ -19,13 +19,31 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import java.sql.Types;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.TraversalHandler;
+import org.apache.cayenne.exp.parser.ASTDbPath;
+import org.apache.cayenne.exp.parser.ASTList;
+import org.apache.cayenne.exp.parser.ASTObjPath;
+import org.apache.cayenne.exp.parser.SimpleNode;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbJoin;
+import org.apache.cayenne.map.DbRelationship;
+import org.apache.cayenne.map.JoinType;
 
 import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 import static org.apache.cayenne.exp.Expression.*;
@@ -38,14 +56,14 @@ public class QualifierTranslator implements TraversalHandler {
     private final TranslatorContext context;
     private final PathTranslator pathTranslator;
 
+    private Set<Object> expressionsToSkip;
     private Node rootNode;
     private Node currentNode;
+
 
     public QualifierTranslator(TranslatorContext context) {
         this.context = context;
         this.pathTranslator = new PathTranslator(context);
-        this.rootNode = new EmptyNode();
-        this.currentNode = rootNode;
     }
 
     NodeBuilder translate(Expression qualifier) {
@@ -53,19 +71,26 @@ public class QualifierTranslator implements TraversalHandler {
             return null;
         }
 
+        rootNode = new EmptyNode();
+        this.currentNode = rootNode;
+        this.expressionsToSkip = new HashSet<>();
+
         qualifier.traverse(this);
         return () -> rootNode;
     }
 
     @Override
     public void startNode(Expression node, Expression parentNode) {
-        Node nextNode = expressionNodeToSqlNode(node);
+        if(expressionsToSkip.contains(node) || expressionsToSkip.contains(parentNode)) {
+            return;
+        }
+        Node nextNode = expressionNodeToSqlNode(node, parentNode);
         currentNode.addChild(nextNode);
         nextNode.setParent(currentNode);
         currentNode = nextNode;
     }
 
-    private Node expressionNodeToSqlNode(Expression node) {
+    private Node expressionNodeToSqlNode(Expression node, Expression parentNode) {
         switch (node.getType()) {
             case NOT_IN:
             case IN:
@@ -178,14 +203,12 @@ public class QualifierTranslator implements TraversalHandler {
             case OBJ_PATH:
                 String path = (String)node.getOperand(0);
                 PathTranslator.PathTranslationResult result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), path);
-                DbAttribute lastAttribute = result.getDbAttributes().get(result.getDbAttributes().size() - 1);
-                return table(context.getTableTree().aliasForAttributePath(path)).column(lastAttribute.getName()).build();
+                return processPathTranslationResult(node, parentNode, result);
 
             case DB_PATH:
-                // TODO proper db path translation
                 String dbPath = (String)node.getOperand(0);
-                String attr = dbPath;
-                return table(context.getTableTree().aliasForAttributePath(dbPath)).column(attr).build();
+                PathTranslator.PathTranslationResult dbResult = pathTranslator.translatePath(context.getMetadata().getDbEntity(), dbPath);
+                return processPathTranslationResult(node, parentNode, dbResult);
 
             case TRUE:
             case FALSE:
@@ -196,10 +219,95 @@ public class QualifierTranslator implements TraversalHandler {
                     }
                 };
 
-
         }
 
         return new EmptyNode();
+    }
+
+    private Node processPathTranslationResult(Expression node, Expression parentNode, PathTranslator.PathTranslationResult result) {
+        StringBuilder path = new StringBuilder(result.getFinalPath());
+        DbAttribute[] lastDbAttribute = new DbAttribute[]{result.getLastAttribute()};
+        result.getDbRelationship().ifPresent(r -> {
+            context.getTableTree().addJoinTable(path.toString(), r, JoinType.LEFT_OUTER);
+            if(!r.isToMany()) {
+                lastDbAttribute[0] = r.getJoins().get(0).getTarget();
+            }
+            path.append('.').append(lastDbAttribute[0].getName());
+        });
+
+        if(result.getDbAttributes().size() > 1) {
+            return createMultiAttributeMatch(node, parentNode, result);
+        } else if(result.getDbAttributes().isEmpty()) {
+            return new EmptyNode();
+        } else {
+            NodeBuilder column = table(context.getTableTree().aliasForAttributePath(path.toString()))
+                    .column(lastDbAttribute[0].getName());
+            if(lastDbAttribute[0].getType() == Types.CHAR) {
+                column = function("RTRIM", column);
+            }
+            return column.build();
+        }
+    }
+
+    private Node createMultiAttributeMatch(Expression node, Expression parentNode, PathTranslator.PathTranslationResult result) {
+        DbRelationship relationship = result.getDbRelationship().orElseThrow(() -> new CayenneRuntimeException("No relationship found"));
+        ObjectId objectId = null;
+        expressionsToSkip.add(node);
+        expressionsToSkip.add(parentNode);
+
+        int siblings = parentNode.getOperandCount();
+        for(int i=0; i<siblings; i++) {
+            Object operand = parentNode.getOperand(i);
+            if(node == operand) {
+                continue;
+            }
+
+            if(operand instanceof Persistent) {
+                objectId = ((Persistent) operand).getObjectId();
+                break;
+            } else if(operand instanceof ObjectId) {
+                objectId = (ObjectId)operand;
+                break;
+            } else if(operand instanceof ASTObjPath) {
+                // TODO: support comparision of multi attribute ObjPath with other multi attribute ObjPath
+                throw new UnsupportedOperationException("Comparision of multiple attributes not supported for ObjPath");
+            }
+        }
+
+        if(objectId == null) {
+            throw new CayenneRuntimeException("Multi attribute ObjPath isn't matched with valid value. " +
+                    "List or Persistent object required.");
+        }
+
+        ExpressionNodeBuilder expressionNodeBuilder = null;
+        ExpressionNodeBuilder eq;
+
+        if(relationship.isToMany()) {
+            String alias = context.getTableTree().aliasForAttributePath(relationship.getName() + "." + "dummy");
+            for (DbAttribute attribute : relationship.getTargetEntity().getPrimaryKeys()) {
+                Object nextValue = objectId.getIdSnapshot().get(attribute.getName());
+                eq = table(alias).column(attribute.getName()).eq(value(nextValue));
+                if (expressionNodeBuilder == null) {
+                    expressionNodeBuilder = eq;
+                } else {
+                    expressionNodeBuilder = expressionNodeBuilder.and(eq);
+                }
+            }
+        } else {
+            String path = (String)node.getOperand(0);
+            String alias = context.getTableTree().aliasForAttributePath(path);
+            for (DbJoin join : relationship.getJoins()) {
+                Object nextValue = objectId.getIdSnapshot().get(join.getTargetName());
+                eq = table(alias).column(join.getSourceName()).eq(value(nextValue));
+                if (expressionNodeBuilder == null) {
+                    expressionNodeBuilder = eq;
+                } else {
+                    expressionNodeBuilder = expressionNodeBuilder.and(eq);
+                }
+            }
+        }
+
+        return expressionNodeBuilder.build();
     }
 
     @Override
@@ -211,12 +319,48 @@ public class QualifierTranslator implements TraversalHandler {
 
     @Override
     public void objectNode(Object leaf, Expression parentNode) {
+        if(expressionsToSkip.contains(parentNode)) {
+            return;
+        }
         if(parentNode.getType() == Expression.OBJ_PATH || parentNode.getType() == Expression.DB_PATH) {
             return;
         }
-        Node nextNode = value(leaf).build();
+
+        Node nextNode = value(leaf).attribute(findDbAttribute(parentNode)).build();
         currentNode.addChild(nextNode);
         nextNode.setParent(currentNode);
+    }
+
+    protected DbAttribute findDbAttribute(Expression node) {
+        int len = node.getOperandCount();
+        if (len < 2) {
+            if (node instanceof SimpleNode) {
+                Expression parent = (Expression) ((SimpleNode) node).jjtGetParent();
+                if (parent != null) {
+                    node = parent;
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        PathTranslator.PathTranslationResult result = null;
+        for(int i=0; i<node.getOperandCount(); i++) {
+            Object op = node.getOperand(i);
+            if(op instanceof ASTObjPath) {
+                result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), ((ASTObjPath) op).getPath());
+                break;
+            } else if(op instanceof ASTDbPath) {
+                result = pathTranslator.translatePath(context.getMetadata().getDbEntity(), ((ASTDbPath) op).getPath());
+                break;
+            }
+        }
+
+        if(result == null) {
+            return null;
+        }
+
+        return result.getLastAttribute();
     }
 
     @Override

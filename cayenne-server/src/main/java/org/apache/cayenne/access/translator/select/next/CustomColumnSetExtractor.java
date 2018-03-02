@@ -19,30 +19,33 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import java.util.Collection;
+
+import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
+import org.apache.cayenne.exp.Property;
+
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.column;
+
 /**
  * @since 4.1
  */
-class ColumnExtractorStage extends TranslationStage {
+public class CustomColumnSetExtractor implements ColumnExtractor {
 
-    ColumnExtractorStage(TranslatorContext context) {
-        super(context);
+    private final TranslatorContext context;
+    private final Collection<Property<?>> columns;
+
+    public CustomColumnSetExtractor(TranslatorContext context, Collection<Property<?>> columns) {
+        this.context = context;
+        this.columns = columns;
     }
 
-    void perform() {
-        ColumnExtractor extractor;
+    @Override
+    public void extract(String prefix) {
+        QualifierTranslator translator = new QualifierTranslator(context);
 
-        context.getTableTree().addRootTable(context.getMetadata().getDbEntity());
-
-        if(context.getQuery().getColumns() != null && !context.getQuery().getColumns().isEmpty()) {
-            extractor = new CustomColumnSetExtractor(context, context.getQuery().getColumns());
-        } else if (context.getMetadata().getClassDescriptor() != null) {
-            extractor = new DescriptorColumnExtractor(context, context.getMetadata().getClassDescriptor());
-        } else if (context.getMetadata().getPageSize() > 0) {
-            extractor = new IdColumnExtractor(context);
-        } else {
-            extractor = new DbEntityColumnExtractor(context);
+        for(Property<?> property : columns) {
+            NodeBuilder nextNode = translator.translate(property.getExpression());
+            context.getSelectBuilder().result(nextNode);
         }
-
-        extractor.extract(null);
     }
 }

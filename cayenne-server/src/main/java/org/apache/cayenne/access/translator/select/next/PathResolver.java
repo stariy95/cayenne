@@ -22,27 +22,5 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-class ColumnExtractorStage extends TranslationStage {
-
-    ColumnExtractorStage(TranslatorContext context) {
-        super(context);
-    }
-
-    void perform() {
-        ColumnExtractor extractor;
-
-        context.getTableTree().addRootTable(context.getMetadata().getDbEntity());
-
-        if(context.getQuery().getColumns() != null && !context.getQuery().getColumns().isEmpty()) {
-            extractor = new CustomColumnSetExtractor(context, context.getQuery().getColumns());
-        } else if (context.getMetadata().getClassDescriptor() != null) {
-            extractor = new DescriptorColumnExtractor(context, context.getMetadata().getClassDescriptor());
-        } else if (context.getMetadata().getPageSize() > 0) {
-            extractor = new IdColumnExtractor(context);
-        } else {
-            extractor = new DbEntityColumnExtractor(context);
-        }
-
-        extractor.extract(null);
-    }
+public class PathResolver {
 }

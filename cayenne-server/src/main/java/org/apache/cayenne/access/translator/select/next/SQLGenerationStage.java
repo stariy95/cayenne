@@ -36,9 +36,9 @@ import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 /**
  * @since 4.1
  */
-class SqlGenerationStage extends TranslationStage {
+class SQLGenerationStage extends TranslationStage {
 
-    SqlGenerationStage(TranslatorContext context) {
+    SQLGenerationStage(TranslatorContext context) {
         super(context);
     }
 
@@ -46,7 +46,7 @@ class SqlGenerationStage extends TranslationStage {
     void perform() {
         addResult();
         addFrom();
-        context.getSelectBuilder().distinct();
+        addDistinct();
     }
 
     private void addResult() {
@@ -66,6 +66,10 @@ class SqlGenerationStage extends TranslationStage {
         });
     }
 
+    private void addDistinct() {
+        context.getSelectBuilder().distinct();
+    }
+
     private JoinNodeBuilder getJoin(TableTreeNode node, NodeBuilder table) {
         switch (node.joinType) {
             case INNER:
@@ -81,7 +85,7 @@ class SqlGenerationStage extends TranslationStage {
         List<DbJoin> joins = node.relationship.getJoins();
 
         ExpressionNodeBuilder expressionNodeBuilder = null;
-        String sourceAlias = context.getTableTree().aliasForAttributePath(node.attributePath);
+        String sourceAlias = context.getTableTree().aliasForAttributePath(node.attributePath.getPath());
         for (DbJoin dbJoin : joins) {
             String srcColumn = dbJoin.getSourceName();
             String dstColumn = dbJoin.getTargetName();
@@ -89,7 +93,7 @@ class SqlGenerationStage extends TranslationStage {
                     .eq(table(node.tableAlias).column(dstColumn));
 
             if (expressionNodeBuilder != null) {
-                expressionNodeBuilder.and(joinExp);
+                expressionNodeBuilder = expressionNodeBuilder.and(joinExp);
             } else {
                 expressionNodeBuilder = joinExp;
             }
@@ -107,7 +111,7 @@ class SqlGenerationStage extends TranslationStage {
             dbQualifier = dbQualifier.transform(new JoinedDbEntityQualifierTransformer(node));
             NodeBuilder translatedQualifier = translator.translate(dbQualifier);
             if (expressionNodeBuilder != null) {
-                expressionNodeBuilder.and(translatedQualifier);
+                expressionNodeBuilder = expressionNodeBuilder.and(translatedQualifier);
             } else {
                 expressionNodeBuilder = new ExpressionNodeBuilder(translatedQualifier);
             }
@@ -121,12 +125,12 @@ class SqlGenerationStage extends TranslationStage {
         String pathToRoot;
 
         JoinedDbEntityQualifierTransformer(TableTreeNode node) {
-            pathToRoot = node.attributePath;
+            pathToRoot = node.attributePath.getPath();
         }
 
         public Object apply(Object input) {
             if (input instanceof ASTPath) {
-                return new ASTDbPath(pathToRoot + ((ASTPath) input).getPath());
+                return new ASTDbPath(pathToRoot + '.' + ((ASTPath) input).getPath());
             }
             return input;
         }

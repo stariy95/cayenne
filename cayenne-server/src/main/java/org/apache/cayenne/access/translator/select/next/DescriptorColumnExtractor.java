@@ -72,8 +72,8 @@ class DescriptorColumnExtractor implements PropertyVisitor, ColumnExtractor {
     @Override
     public boolean visitAttribute(AttributeProperty property) {
         ObjAttribute oa = property.getAttribute();
-        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(descriptor.getEntity(), property.getName());
-        String path = oa.getDbAttributePath();
+        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(oa.getEntity(), property.getName());
+        String path = result.getFinalPath();
         if(prefix != null) {
             path = prefix + '.' + path;
         }
@@ -92,7 +92,7 @@ class DescriptorColumnExtractor implements PropertyVisitor, ColumnExtractor {
     @Override
     public boolean visitToOne(ToOneProperty property) {
         ObjRelationship rel = property.getRelationship();
-        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(descriptor.getEntity(), property.getName());
+        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(rel.getSourceEntity(), property.getName());
 
         String path = rel.getDbRelationshipPath();
         if(prefix != null) {
@@ -101,10 +101,6 @@ class DescriptorColumnExtractor implements PropertyVisitor, ColumnExtractor {
         String alias = context.getTableTree().aliasForAttributePath(path);
 
         for(DbAttribute attribute : result.getDbAttributes()) {
-            if(attribute.isPrimaryKey()) {
-                // PK will be added explicitly
-                continue;
-            }
             ColumnDescriptor column = new ColumnDescriptor(attribute, alias);
             if(prefix != null) {
                 column.setDataRowKey(prefix + '.' + attribute.getName());

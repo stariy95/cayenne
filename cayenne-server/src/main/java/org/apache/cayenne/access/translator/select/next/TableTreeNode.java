@@ -28,7 +28,7 @@ import org.apache.cayenne.map.JoinType;
  */
 class TableTreeNode {
 
-    String attributePath; // path that spawned this node
+    PathComponents attributePath; // path that spawned this node
     DbEntity entity;      // entity
     String tableAlias;    // table alias
     JoinType joinType;

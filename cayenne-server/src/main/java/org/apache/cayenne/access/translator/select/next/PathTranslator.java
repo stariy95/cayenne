@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 
@@ -33,12 +35,16 @@ import org.apache.cayenne.map.ObjEntity;
 class PathTranslator {
 
     static class PathTranslationResult {
+        private final String finalPath;
         private final List<DbAttribute> dbAttributes;
         private final ObjAttribute objAttribute;
+        private final DbRelationship dbRelationship;
 
-        PathTranslationResult(List<DbAttribute> dbAttributes, ObjAttribute objAttribute) {
+        PathTranslationResult(String finalPath, List<DbAttribute> dbAttributes, ObjAttribute objAttribute, DbRelationship dbRelationship) {
+            this.finalPath = finalPath;
             this.dbAttributes = dbAttributes;
             this.objAttribute = objAttribute;
+            this.dbRelationship = dbRelationship;
         }
 
         Optional<ObjAttribute> getObjAttribute() {
@@ -48,8 +54,23 @@ class PathTranslator {
             return Optional.of(objAttribute);
         }
 
+        Optional<DbRelationship> getDbRelationship() {
+            if(dbRelationship == null) {
+                return Optional.empty();
+            }
+            return Optional.of(dbRelationship);
+        }
+
         List<DbAttribute> getDbAttributes() {
             return dbAttributes;
+        }
+
+        DbAttribute getLastAttribute() {
+            return dbAttributes.get(dbAttributes.size() - 1);
+        }
+
+        public String getFinalPath() {
+            return finalPath;
         }
     }
 
@@ -60,12 +81,21 @@ class PathTranslator {
     }
 
     PathTranslationResult translatePath(ObjEntity entity, String path) {
-        ObjPathIterator iterator = new ObjPathIterator(context, entity, path, Collections.emptyMap());
-        while(iterator.hasNext()) {
-            iterator.next();
+        ObjPathIterator it = new ObjPathIterator(context, entity, path, Collections.emptyMap());
+        while(it.hasNext()) {
+            it.next();
         }
 
-        return new PathTranslationResult(iterator.getDbAttributeList(), iterator.getAttribute());
+        return new PathTranslationResult(it.getFinalPath(), it.getDbAttributeList(), it.getAttribute(), it.getRelationship());
+    }
+
+    PathTranslationResult translatePath(DbEntity entity, String path) {
+        DbPathIterator it = new DbPathIterator(context, entity, path, Collections.emptyMap());
+        while(it.hasNext()) {
+            it.next();
+        }
+
+        return new PathTranslationResult(it.getFinalPath(), it.getDbAttributeList(), null, it.getRelationship());
     }
 
 }

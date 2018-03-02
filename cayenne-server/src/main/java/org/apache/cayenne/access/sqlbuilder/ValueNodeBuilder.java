@@ -19,53 +19,29 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import java.util.Objects;
-
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
+import org.apache.cayenne.map.DbAttribute;
 
 /**
  * @since 4.1
  */
-public class ColumnNodeBuilder implements ExpressionTrait {
+public class ValueNodeBuilder implements NodeBuilder, ExpressionTrait {
 
-    private final String table;
+    private final Object value;
+    private DbAttribute attribute;
 
-    private final String field;
-
-    private String alias;
-
-    public ColumnNodeBuilder(String table, String field) {
-        this.table = table;
-        this.field = Objects.requireNonNull(field);
+    public ValueNodeBuilder(Object value) {
+        this.value = value;
     }
 
-    public ColumnNodeBuilder as(String alias) {
-        this.alias = alias;
+    public ValueNodeBuilder attribute(DbAttribute attribute) {
+        this.attribute = attribute;
         return this;
-    }
-
-    public OrderingNodeBuilder desc() {
-        return new OrderingNodeBuilder(this).desc();
-    }
-
-    public OrderingNodeBuilder asc() {
-        return new OrderingNodeBuilder(this).asc();
     }
 
     @Override
     public Node build() {
-        return new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                if(table != null) {
-                    buffer.append(table).append('.');
-                }
-                buffer.append(field);
-                if(alias != null) {
-                    buffer.append(' ').append(alias);
-                }
-            }
-        };
+        return new ValueNode(value, attribute);
     }
-
 }

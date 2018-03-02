@@ -22,27 +22,38 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-class ColumnExtractorStage extends TranslationStage {
+public class PathComponents {
 
-    ColumnExtractorStage(TranslatorContext context) {
-        super(context);
-    }
+    private final String path;
+    private final String parent;
+    private final String[] pathComponents;
 
-    void perform() {
-        ColumnExtractor extractor;
-
-        context.getTableTree().addRootTable(context.getMetadata().getDbEntity());
-
-        if(context.getQuery().getColumns() != null && !context.getQuery().getColumns().isEmpty()) {
-            extractor = new CustomColumnSetExtractor(context, context.getQuery().getColumns());
-        } else if (context.getMetadata().getClassDescriptor() != null) {
-            extractor = new DescriptorColumnExtractor(context, context.getMetadata().getClassDescriptor());
-        } else if (context.getMetadata().getPageSize() > 0) {
-            extractor = new IdColumnExtractor(context);
+    PathComponents(String path) {
+        this.path = path;
+        int lastDot = path.lastIndexOf('.');
+        if(lastDot == -1) {
+            pathComponents = new String[]{path};
+            parent = "";
         } else {
-            extractor = new DbEntityColumnExtractor(context);
+            pathComponents = path.split("\\.");
+            parent = path.substring(0, lastDot);
         }
-
-        extractor.extract(null);
     }
+
+    String getLast() {
+        return pathComponents[pathComponents.length - 1];
+    }
+
+    String getParent() {
+        return parent;
+    }
+
+    String[] getAll() {
+        return pathComponents;
+    }
+
+    String getPath() {
+        return path;
+    }
+
 }

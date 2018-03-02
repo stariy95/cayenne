@@ -49,12 +49,14 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
     }
 
     @Override
-    public String getSql() throws Exception {
+    public String getSql() {
         List<Function<TranslatorContext, TranslationStage>> stageProducers = Arrays.asList(
                 ColumnExtractorStage::new,
                 PrefetchNodeStage::new,
+                OrderingStage::new,
                 QualifierTranslationStage::new,
-                SqlGenerationStage::new
+                LimitOffsetStage::new,
+                SQLGenerationStage::new
         );
 
         for(Function<TranslatorContext, TranslationStage> producer : stageProducers) {

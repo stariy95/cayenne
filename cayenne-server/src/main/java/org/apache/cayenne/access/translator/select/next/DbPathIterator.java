@@ -30,36 +30,26 @@ import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
-import org.apache.cayenne.map.EmbeddedAttribute;
 import org.apache.cayenne.map.JoinType;
-import org.apache.cayenne.map.ObjAttribute;
-import org.apache.cayenne.map.ObjEntity;
-import org.apache.cayenne.map.ObjRelationship;
-import org.apache.cayenne.util.CayenneMapEntry;
 
 /**
  * @since 4.1
  */
-class ObjPathIterator implements Iterator<Void> {
+public class DbPathIterator implements Iterator<Void> {
 
     private final PathIterator pathIterator;
     private final TranslatorContext context;
     private final List<DbAttribute> dbAttributeList;
     private final StringBuilder currentDbPath;
 
-    private ObjEntity entity;
-    private EmbeddedAttribute embeddedAttribute;
-
-    // Iterator can end either with attribute or relationship
-    private ObjAttribute attribute;
     private DbRelationship relationship;
+    private DbEntity entity;
 
-
-    ObjPathIterator(TranslatorContext context, ObjEntity entity, String path, Map<String, String> pathAlias) {
-        this.context = context;
+    DbPathIterator(TranslatorContext context, DbEntity entity, String path, Map<String, String> pathAlias) {
         this.pathIterator = new PathIterator(path, pathAlias);
+        this.context = context;
+        this.dbAttributeList = new ArrayList<>(1);
         this.entity = entity;
-        this.dbAttributeList = new ArrayList<>(2);
         this.currentDbPath = new StringBuilder();
     }
 
@@ -81,32 +71,14 @@ class ObjPathIterator implements Iterator<Void> {
         return null;
     }
 
-    ObjAttribute getAttribute() {
-        return attribute;
-    }
-
-    List<DbAttribute> getDbAttributeList() {
-        return dbAttributeList;
-    }
-
-    public DbRelationship getRelationship() {
-        return relationship;
-    }
-
-    protected void processNormalAttribute(String next) {
-        if(embeddedAttribute != null) {
-            attribute = embeddedAttribute.getAttribute(next);
-            embeddedAttribute = null;
-        } else {
-            attribute = entity.getAttribute(next);
-        }
-
-        if(attribute != null) {
-            processAttribute(attribute);
+    private void processNormalAttribute(String next) {
+        DbAttribute dbAttribute = entity.getAttribute(next);
+        if(dbAttribute != null) {
+            processAttribute(dbAttribute);
             return;
         }
 
-        ObjRelationship relationship = entity.getRelationship(next);
+        DbRelationship relationship = entity.getRelationship(next);
         if(relationship != null) {
             entity = relationship.getTargetEntity();
             processRelationship(relationship);
@@ -116,62 +88,26 @@ class ObjPathIterator implements Iterator<Void> {
         throw new IllegalStateException("Unable to resolve path: " + pathIterator.currentPath());
     }
 
-    protected void processAttribute(ObjAttribute attribute) {
-        if(attribute instanceof EmbeddedAttribute) {
-            embeddedAttribute = (EmbeddedAttribute)attribute;
-            return;
-        }
-
-        Iterator<CayenneMapEntry> dbPathIterator = attribute.getDbPathIterator();
-        while (dbPathIterator.hasNext()) {
-            Object pathPart = dbPathIterator.next();
-            if (pathPart == null) {
-                throw new CayenneRuntimeException("ObjAttribute has no component: %s", attribute.getName());
-            } else if (pathPart instanceof DbRelationship) {
-                appendDbPathSegment(((DbRelationship) pathPart).getName());
-                context.getTableTree().addJoinTable(currentDbPath.toString(), (DbRelationship) pathPart, JoinType.LEFT_OUTER);
-            } else if (pathPart instanceof DbAttribute) {
-                appendDbPathSegment(((DbAttribute) pathPart).getName());
-                dbAttributeList.add((DbAttribute)pathPart);
-            }
-        }
+    private void processAttribute(DbAttribute attribute) {
+        appendCurrentPath(attribute.getName());
+        dbAttributeList.add(attribute);
     }
 
-    protected void processRelationship(ObjRelationship relationship) {
+    private void processRelationship(DbRelationship relationship) {
         if (!pathIterator.hasNext()) {
             // if this is a last relationship in the path, it needs special handling
             processRelTermination(relationship);
         } else {
-            // find and add joins ....
-            for (DbRelationship dbRel : relationship.getDbRelationships()) {
-                appendDbPathSegment(dbRel.getName());
-                context.getTableTree().addJoinTable(currentDbPath.toString(), dbRel,
-                        pathIterator.isOuterJoin() ? JoinType.LEFT_OUTER : JoinType.INNER);
-            }
-        }
-    }
-
-    protected void processRelTermination(ObjRelationship rel) {
-
-        Iterator<DbRelationship> dbRels = rel.getDbRelationships().iterator();
-
-        // scan DbRelationships
-        while (dbRels.hasNext()) {
-            DbRelationship dbRel = dbRels.next();
-            appendDbPathSegment(dbRel.getName());
-
-            // if this is a last relationship in the path, it needs special handling
-            if (!dbRels.hasNext()) {
-                processRelTermination(dbRel);
-            } else {
-                // find and add joins ....
-                context.getTableTree().addJoinTable(currentDbPath.toString(), dbRel, JoinType.LEFT_OUTER);
-            }
+            appendCurrentPath(relationship.getName());
+            context.getTableTree().addJoinTable(currentDbPath.toString(), relationship,
+                    pathIterator.isOuterJoin() ? JoinType.LEFT_OUTER : JoinType.INNER);
         }
     }
 
     protected void processRelTermination(DbRelationship rel) {
         this.relationship = rel;
+        appendCurrentPath(relationship.getName());
+
         for(DbJoin join : rel.getJoins()) {
             DbAttribute attribute;
             if (rel.isToMany()) {
@@ -192,8 +128,8 @@ class ObjPathIterator implements Iterator<Void> {
         }
     }
 
-    protected void processAliasedAttribute(String next) {
-        ObjRelationship relationship = entity.getRelationship(next);
+    private void processAliasedAttribute(String next) {
+        DbRelationship relationship = entity.getRelationship(next);
         if(relationship == null) {
             throw new IllegalStateException("Non-relationship aliased path part: " + next);
         }
@@ -201,11 +137,19 @@ class ObjPathIterator implements Iterator<Void> {
         // todo resolve path
     }
 
-    protected void appendDbPathSegment(String pathSegment) {
+    public List<DbAttribute> getDbAttributeList() {
+        return dbAttributeList;
+    }
+
+    public DbRelationship getRelationship() {
+        return relationship;
+    }
+
+    private void appendCurrentPath(String nextSegment) {
         if(currentDbPath.length() > 0) {
             currentDbPath.append('.');
         }
-        currentDbPath.append(pathSegment);
+        currentDbPath.append(nextSegment);
     }
 
     public String getFinalPath() {

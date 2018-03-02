@@ -70,8 +70,8 @@ public final class SQLBuilder {
         return new ExpressionNodeBuilder(new ExistsNodeBuilder(builder));
     }
 
-    public static ExpressionNodeBuilder value(Object value) {
-        return new ExpressionNodeBuilder(() -> new ValueNode(value));
+    public static ValueNodeBuilder value(Object value) {
+        return new ValueNodeBuilder(value);
     }
 
     public static ExpressionNodeBuilder not(NodeBuilder value) {
@@ -100,6 +100,10 @@ public final class SQLBuilder {
 
     public static FunctionNodeBuilder function(String function, NodeBuilder... values) {
         return new FunctionNodeBuilder(function, values);
+    }
+
+    public static OrderingNodeBuilder order(NodeBuilder expression) {
+        return new OrderingNodeBuilder(expression);
     }
 
     private SQLBuilder() {

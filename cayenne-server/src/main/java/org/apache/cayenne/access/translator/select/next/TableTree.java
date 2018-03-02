@@ -19,7 +19,7 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.cayenne.CayenneRuntimeException;
@@ -47,12 +47,12 @@ class TableTree {
 
     TableTree(int tableAliasSequence) {
         this.tableAliasSequence = tableAliasSequence;
-        this.tableNodes = new HashMap<>();
+        this.tableNodes = new LinkedHashMap<>();
     }
 
     void addRootTable(DbEntity root) {
         rootNode = new TableTreeNode();
-        rootNode.attributePath = "";
+        rootNode.attributePath = new PathComponents("");
         rootNode.entity = root;
         rootNode.tableAlias = nextTableAlias();
     }
@@ -63,7 +63,7 @@ class TableTree {
         }
 
         TableTreeNode node = new TableTreeNode();
-        node.attributePath = path;
+        node.attributePath = new PathComponents(path);
         node.entity = relationship.getTargetEntity();
         node.tableAlias = nextTableAlias();
         node.relationship = relationship;

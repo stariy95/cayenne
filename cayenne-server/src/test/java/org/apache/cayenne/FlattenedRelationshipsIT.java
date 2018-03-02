@@ -76,8 +76,7 @@ public class FlattenedRelationshipsIT extends ServerCase {
         tFlattenedTest2.setColumns("FT2_ID", "FT1_ID", "NAME");
 
         tFlattenedTest3 = new TableHelper(dbHelper, "FLATTENED_TEST_3");
-        tFlattenedTest3.setColumns("FT3_ID", "FT2_ID", "NAME").setColumnTypes(
-                Types.INTEGER, Types.INTEGER, Types.VARCHAR);
+        tFlattenedTest3.setColumns("FT3_ID", "FT2_ID", "NAME");
 
         tComplexJoin = new TableHelper(dbHelper, "COMPLEX_JOIN");
         tComplexJoin.setColumns("PK", "FT1_FK", "FT3_FK", "EXTRA_COLUMN");
@@ -145,9 +144,7 @@ public class FlattenedRelationshipsIT extends ServerCase {
     public void testUnsetJoinWithPK() throws Exception {
         createCircularJoinDataSet();
 
-        SQLTemplate joinSelect = new SQLTemplate(
-                FlattenedTest1.class,
-                "SELECT * FROM COMPLEX_JOIN");
+        SQLTemplate joinSelect = new SQLTemplate(FlattenedTest1.class, "SELECT * FROM COMPLEX_JOIN");
         joinSelect.setFetchingDataRows(true);
         assertEquals(3, context.performQuery(joinSelect).size());
 
@@ -160,6 +157,14 @@ public class FlattenedRelationshipsIT extends ServerCase {
         assertEquals(2, related.size());
 
         FlattenedTest3 ft3 = Cayenne.objectForPK(context, FlattenedTest3.class, 3);
+        // SELECT DISTINCT
+        //      t0.NAME ,t1.FT1_ID ,t0.FT2_ID ,t0.FT3_ID
+        // FROM
+        //      FLATTENED_TEST_3 t0
+        //      JOIN FLATTENED_TEST_2 t1  ON ((t0.FT2_ID  =  t1.FT2_ID ))
+        //      JOIN COMPLEX_JOIN t2  ON ((t0.FT3_ID  =  t2.FT3_FK ))
+        //      LEFT JOIN FLATTENED_TEST_1 t3  ON ((t2.FT1_FK  =  t3.FT1_ID ))
+        // WHERE  (t3.FT1_ID  = ?) [bind: 1:2]
         assertTrue(related.contains(ft3));
 
         ft1.removeFromFt3OverComplex(ft3);

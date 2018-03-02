@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
+import org.apache.cayenne.map.DbAttribute;
+
 /**
  * @since 4.1
  */
@@ -26,13 +28,21 @@ public class ValueNode extends Node {
 
     private final Object value;
 
-    public ValueNode(Object value) {
+    // Used as hint for type of this value
+    private final DbAttribute attribute;
+
+    public ValueNode(Object value, DbAttribute attribute) {
         this.value = value;
+        this.attribute = attribute;
         this.type = NodeType.VALUE;
     }
 
     public Object getValue() {
         return value;
+    }
+
+    public DbAttribute getAttribute() {
+        return attribute;
     }
 
     @Override

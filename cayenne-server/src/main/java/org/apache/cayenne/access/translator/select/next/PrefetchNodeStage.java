@@ -22,15 +22,18 @@ package org.apache.cayenne.access.translator.select.next;
 import java.util.Collections;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.map.PathComponent;
+import org.apache.cayenne.query.PrefetchSelectQuery;
 import org.apache.cayenne.query.PrefetchTreeNode;
 import org.apache.cayenne.reflect.ClassDescriptor;
 
@@ -45,22 +48,31 @@ class PrefetchNodeStage extends TranslationStage {
 
     @Override
     void perform() {
+        processJoint();
+        processPrefetchQuery();
+    }
+
+    private void processJoint() {
         PrefetchTreeNode prefetch = context.getQuery().getPrefetchTree();
         if(prefetch == null) {
             return;
         }
-
         ObjEntity objEntity = context.getMetadata().getObjEntity();
 
         for(PrefetchTreeNode node : prefetch.adjacentJointNodes()) {
             Expression prefetchExp = ExpressionFactory.exp(node.getPath());
             ASTDbPath dbPrefetch = (ASTDbPath) objEntity.translateToDbPath(prefetchExp);
             DbRelationship r = null;
+            StringBuilder fullPath = new StringBuilder();
 
             for (PathComponent<DbAttribute, DbRelationship> component :
                     objEntity.getDbEntity().resolvePath(dbPrefetch, Collections.emptyMap())) {
                 r = component.getRelationship();
-                context.getTableTree().addJoinTable(node.getPath(), r, JoinType.LEFT_OUTER);
+                if(fullPath.length() > 0) {
+                    fullPath.append('.');
+                }
+                fullPath.append(r.getName());
+                context.getTableTree().addJoinTable(fullPath.toString(), r, JoinType.LEFT_OUTER);
             }
 
             if (r == null) {
@@ -73,6 +85,52 @@ class PrefetchNodeStage extends TranslationStage {
             String labelPrefix = dbPrefetch.getPath();
             DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor);
             columnExtractor.extract(labelPrefix);
+        }
+    }
+
+    private void processPrefetchQuery() {
+        if(!(context.getQuery() instanceof PrefetchSelectQuery)) {
+            return;
+        }
+
+        PrefetchSelectQuery prefetchSelectQuery = (PrefetchSelectQuery)context.getQuery();
+        for(String prefetchPath: prefetchSelectQuery.getResultPaths()) {
+            ASTDbPath pathExp = (ASTDbPath) context.getMetadata().getClassDescriptor().getEntity()
+                    .translateToDbPath(ExpressionFactory.exp(prefetchPath));
+
+            PathComponent<DbAttribute, DbRelationship> lastComponent = null;
+            StringBuilder fullPath = new StringBuilder();
+            for (PathComponent<DbAttribute, DbRelationship> component : context.getMetadata().getDbEntity()
+                    .resolvePath(pathExp, Collections.emptyMap())) {
+
+                if (component.getRelationship() != null) {
+                    DbRelationship rel = component.getRelationship();
+                    if(fullPath.length() > 0) {
+                        fullPath.append('.');
+                    }
+                    fullPath.append(rel.getName());
+                    context.getTableTree().addJoinTable(fullPath.toString(), rel, component.getJoinType());
+                }
+
+                lastComponent = component;
+            }
+
+            // process terminating element
+            if (lastComponent != null) {
+                DbRelationship relationship = lastComponent.getRelationship();
+                if (relationship != null) {
+                    String labelPrefix = pathExp.getPath();
+                    DbEntity targetEntity = relationship.getTargetEntity();
+                    for (DbAttribute pk : targetEntity.getPrimaryKeys()) {
+                        // note that we my select a source attribute, but label it as target for simplified snapshot processing
+                        String path = labelPrefix + '.' + pk.getName();
+                        String alias = context.getTableTree().aliasForAttributePath(path);
+                        ColumnDescriptor column = new ColumnDescriptor(pk, alias);
+                        column.setDataRowKey(path);
+                        context.getColumnDescriptors().add(column);
+                    }
+                }
+            }
         }
     }
 }

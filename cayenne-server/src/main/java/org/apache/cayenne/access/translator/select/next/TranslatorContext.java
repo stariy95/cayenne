@@ -20,7 +20,10 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
@@ -47,7 +50,7 @@ class TranslatorContext {
      * - prefetched objects attributes and additional db attributes (PKs and FKs)
      * - order by expressions if query is distinct?
      */
-    private final List<ColumnDescriptor> columnDescriptors;
+    private final Set<ColumnDescriptor> columnDescriptors;
 
     /**
      * Scalar values bindings in order of appearance in final SQL,
@@ -58,7 +61,7 @@ class TranslatorContext {
      * - order by expressions
      * - where expression (including qualifiers from all used DbEntities and ObjEntities)
      */
-    private final List<DbAttributeBinding> bindings;
+    private final Collection<DbAttributeBinding> bindings;
 
     private final SelectBuilder selectBuilder;
 
@@ -76,7 +79,7 @@ class TranslatorContext {
         this.resolver = resolver;
         this.metadata = query.getMetaData(resolver);
         this.tableTree = new TableTree(parentContext == null ? 0 : parentContext.getTableCount());
-        this.columnDescriptors = new ArrayList<>(8);
+        this.columnDescriptors = new LinkedHashSet<>(8);
         this.bindings = new ArrayList<>(4);
         this.selectBuilder = SQLBuilder.select();
     }
@@ -85,11 +88,11 @@ class TranslatorContext {
         return selectBuilder;
     }
 
-    public List<ColumnDescriptor> getColumnDescriptors() {
+    public Collection<ColumnDescriptor> getColumnDescriptors() {
         return columnDescriptors;
     }
 
-    public List<DbAttributeBinding> getBindings() {
+    public Collection<DbAttributeBinding> getBindings() {
         return bindings;
     }
 

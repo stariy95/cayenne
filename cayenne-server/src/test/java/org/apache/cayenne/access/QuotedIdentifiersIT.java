@@ -22,6 +22,7 @@ import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.query.EJBQLQuery;
 import org.apache.cayenne.query.ObjectIdQuery;
@@ -63,14 +64,6 @@ public class QuotedIdentifiersIT extends ServerCase {
 
         context.commitChanges();
 
-        SelectQuery q = new SelectQuery(QuoteAdress.class);
-        List objects = context.performQuery(q);
-        assertEquals(1, objects.size());
-
-        SelectQuery qQuote_Person = new SelectQuery(Quote_Person.class);
-        List objects2 = context.performQuery(qQuote_Person);
-        assertEquals(1, objects2.size());
-
         QuoteAdress quoteAdress2 = context.newObject(QuoteAdress.class);
         quoteAdress2.setCity("city2");
 
@@ -85,31 +78,41 @@ public class QuotedIdentifiersIT extends ServerCase {
     }
 
     @Test
-    public void testPrefetchQuote() throws Exception {
-        DbEntity entity = context.getEntityResolver().getObjEntity(QuoteAdress.class).getDbEntity();
-        List idAttributes = Collections.singletonList(entity.getAttribute("City"));
-        List updatedAttributes = Collections.singletonList(entity.getAttribute("City"));
+    public void testDataSetup() {
+        SelectQuery<QuoteAdress> q = SelectQuery.query(QuoteAdress.class);
+        List<QuoteAdress> objects = q.select(context);
+        assertEquals(1, objects.size());
 
-        UpdateBatchQuery updateQuery = new UpdateBatchQuery(entity, idAttributes, updatedAttributes,
-                Collections.<String> emptySet(), 1);
+        SelectQuery<Quote_Person> qQuote_Person = SelectQuery.query(Quote_Person.class);
+        List<Quote_Person> objects2 = qQuote_Person.select(context);
+        assertEquals(1, objects2.size());
+    }
+
+    @Test
+    public void testPrefetchQuote() {
+        DbEntity entity = context.getEntityResolver().getObjEntity(QuoteAdress.class).getDbEntity();
+        List<DbAttribute> idAttributes = Collections.singletonList(entity.getAttribute("City"));
+        List<DbAttribute> updatedAttributes = Collections.singletonList(entity.getAttribute("City"));
+
+        UpdateBatchQuery updateQuery = new UpdateBatchQuery(entity, idAttributes, updatedAttributes, Collections.emptySet(), 1);
 
         List objects3 = context.performQuery(updateQuery);
         assertEquals(0, objects3.size());
 
-        SelectQuery qQuote_Person2 = new SelectQuery(Quote_Person.class);
-        List objects4 = context.performQuery(qQuote_Person2);
+        SelectQuery<Quote_Person> qQuote_Person2 = SelectQuery.query(Quote_Person.class);
+        List<Quote_Person> objects4 = qQuote_Person2.select(context);
         assertEquals(2, objects4.size());
 
-        SelectQuery qQuote_Person3 = new SelectQuery(Quote_Person.class, ExpressionFactory.matchExp("salary", 100));
-        List objects5 = context.performQuery(qQuote_Person3);
+        SelectQuery<Quote_Person> qQuote_Person3 = SelectQuery.query(Quote_Person.class, ExpressionFactory.matchExp("salary", 100));
+        List<Quote_Person> objects5 = qQuote_Person3.select(context);
         assertEquals(1, objects5.size());
 
-        SelectQuery qQuote_Person4 = new SelectQuery(Quote_Person.class, ExpressionFactory.matchExp("group", "107324"));
-        List objects6 = context.performQuery(qQuote_Person4);
+        SelectQuery<Quote_Person> qQuote_Person4 = SelectQuery.query(Quote_Person.class, ExpressionFactory.matchExp("group", "107324"));
+        List<Quote_Person> objects6 = qQuote_Person4.select(context);
         assertEquals(1, objects6.size());
 
-        SelectQuery quoteAdress1 = new SelectQuery(QuoteAdress.class, ExpressionFactory.matchExp("group", "324"));
-        List objects7 = context.performQuery(quoteAdress1);
+        SelectQuery<QuoteAdress> quoteAdress1 = SelectQuery.query(QuoteAdress.class, ExpressionFactory.matchExp("group", "324"));
+        List<QuoteAdress> objects7 = quoteAdress1.select(context);
         assertEquals(1, objects7.size());
 
         ObjectIdQuery queryObjectId = new ObjectIdQuery(new ObjectId("QuoteAdress", QuoteAdress.GROUP.getName(), "324"));
@@ -121,8 +124,8 @@ public class QuotedIdentifiersIT extends ServerCase {
         List objects9 = context.performQuery(queryObjectId2);
         assertEquals(1, objects9.size());
 
-        SelectQuery person2Query = new SelectQuery(Quote_Person.class, ExpressionFactory.matchExp("name", "Name"));
-        Quote_Person quote_Person2 = (Quote_Person) context.performQuery(person2Query).get(0);
+        SelectQuery<Quote_Person> person2Query = SelectQuery.query(Quote_Person.class, ExpressionFactory.matchExp("name", "Name"));
+        Quote_Person quote_Person2 = person2Query.select(context).get(0);
 
         RelationshipQuery relationshipQuery = new RelationshipQuery(quote_Person2.getObjectId(), "address_Rel");
         List objects10 = context.performQuery(relationshipQuery);
@@ -130,7 +133,7 @@ public class QuotedIdentifiersIT extends ServerCase {
     }
 
     @Test
-    public void testQuotedEJBQLQuery() throws Exception {
+    public void testQuotedEJBQLQuery() {
         String ejbql = "select a from QuoteAdress a where a.group = '324'";
         EJBQLQuery queryEJBQL = new EJBQLQuery(ejbql);
         List objects11 = context.performQuery(queryEJBQL);
@@ -138,7 +141,7 @@ public class QuotedIdentifiersIT extends ServerCase {
     }
 
     @Test
-    public void testQuotedEJBQLQueryWithJoin() throws Exception {
+    public void testQuotedEJBQLQueryWithJoin() {
         String ejbql = "select p from Quote_Person p join p.address_Rel a where p.name = 'Arcadi'";
         EJBQLQuery queryEJBQL = new EJBQLQuery(ejbql);
         List resultList = context.performQuery(queryEJBQL);
@@ -146,9 +149,10 @@ public class QuotedIdentifiersIT extends ServerCase {
     }
 
     @Test
-    public void testQuotedEJBQLQueryWithOrderBy() throws Exception {
+    public void testQuotedEJBQLQueryWithOrderBy() {
         EJBQLQuery query = new EJBQLQuery("select p from Quote_Person p order by p.name");
 
+        @SuppressWarnings("unchecked")
         List<Quote_Person> resultList = (List<Quote_Person>) context.performQuery(query);
 
         assertEquals(2, resultList.size());
@@ -157,7 +161,7 @@ public class QuotedIdentifiersIT extends ServerCase {
     }
 
     @Test
-    public void testQuotedEJBQLCountQuery() throws Exception {
+    public void testQuotedEJBQLCountQuery() {
         EJBQLQuery query = new EJBQLQuery("select count(p) from Quote_Person p");
         assertEquals(Collections.singletonList(2L), context.performQuery(query));
 

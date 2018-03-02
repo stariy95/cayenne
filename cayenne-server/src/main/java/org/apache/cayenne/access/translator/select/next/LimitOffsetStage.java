@@ -22,27 +22,24 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-class ColumnExtractorStage extends TranslationStage {
-
-    ColumnExtractorStage(TranslatorContext context) {
+class LimitOffsetStage extends TranslationStage {
+    LimitOffsetStage(TranslatorContext context) {
         super(context);
     }
 
+    @Override
     void perform() {
-        ColumnExtractor extractor;
+        int offset = context.getMetadata().getFetchOffset();
+        int limit = context.getMetadata().getFetchLimit();
 
-        context.getTableTree().addRootTable(context.getMetadata().getDbEntity());
+        if (offset > 0 || limit > 0) {
+            // both OFFSET and LIMIT must be present, so come up with defaults
+            // if one of them is not set by the user
+            if (limit == 0) {
+                limit = Integer.MAX_VALUE;
+            }
 
-        if(context.getQuery().getColumns() != null && !context.getQuery().getColumns().isEmpty()) {
-            extractor = new CustomColumnSetExtractor(context, context.getQuery().getColumns());
-        } else if (context.getMetadata().getClassDescriptor() != null) {
-            extractor = new DescriptorColumnExtractor(context, context.getMetadata().getClassDescriptor());
-        } else if (context.getMetadata().getPageSize() > 0) {
-            extractor = new IdColumnExtractor(context);
-        } else {
-            extractor = new DbEntityColumnExtractor(context);
+            context.getSelectBuilder().limit(limit).offset(offset);
         }
-
-        extractor.extract(null);
     }
 }

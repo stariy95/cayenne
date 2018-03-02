@@ -26,6 +26,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.types.ExtendedType;
+import org.apache.cayenne.map.DbAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,30 +61,29 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
         if(node instanceof ValueNode) {
             if(context != null) {
                 Object value = ((ValueNode) node).getValue();
-                if(value instanceof byte[]) {
-                    addValueBinding((byte[])value);
-                } else if(value instanceof short[]) {
-                    addValueBinding((short[])value);
+                DbAttribute attribute = ((ValueNode) node).getAttribute();
+                if(value instanceof short[]) {
+                    addValueBinding((short[])value, attribute);
                 } else if(value instanceof char[]) {
-                    addValueBinding((char[])value);
+                    addValueBinding((char[])value, attribute);
                 } else if(value instanceof int[]) {
-                    addValueBinding((int[])value);
+                    addValueBinding((int[])value, attribute);
                 } else if(value instanceof long[]) {
-                    addValueBinding((long[])value);
+                    addValueBinding((long[])value, attribute);
                 } else if(value instanceof float[]) {
-                    addValueBinding((float[])value);
+                    addValueBinding((float[])value, attribute);
                 } else if(value instanceof double[]) {
-                    addValueBinding((double[])value);
+                    addValueBinding((double[])value, attribute);
                 } else if(value instanceof boolean[]) {
-                    addValueBinding((boolean[])value);
+                    addValueBinding((boolean[])value, attribute);
                 } else if(value instanceof Object[]) {
-                    addValueBinding((Object[]) value);
+                    addValueBinding((Object[]) value, attribute);
                 } else if(value instanceof ObjectId) {
-                    addValueBinding((ObjectId)value);
+                    addValueBinding((ObjectId)value, attribute);
                 } else if(value instanceof Persistent) {
-                    addValueBinding((Persistent)value);
+                    addValueBinding((Persistent)value, attribute);
                 } else {
-                    addValueBinding(value);
+                    addValueBinding(value, attribute);
                 }
                 builder.delete(builder.length() - 1, builder.length());
             }
@@ -93,83 +93,76 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
         }
     }
 
-    private void addValueBinding(byte[] value) {
-        for(byte v : value) {
-            addValueBinding(v);
-        }
-    }
-
-    private void addValueBinding(short[] value) {
+    private void addValueBinding(short[] value, DbAttribute attribute) {
         for(short v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(char[] value) {
+    private void addValueBinding(char[] value, DbAttribute attribute) {
         for(char v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(int[] value) {
+    private void addValueBinding(int[] value, DbAttribute attribute) {
         for(int v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(long[] value) {
+    private void addValueBinding(long[] value, DbAttribute attribute) {
         for(long v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(float[] value) {
+    private void addValueBinding(float[] value, DbAttribute attribute) {
         for(float v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(double[] value) {
+    private void addValueBinding(double[] value, DbAttribute attribute) {
         for(double v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(boolean[] value) {
+    private void addValueBinding(boolean[] value, DbAttribute attribute) {
         for(boolean v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(Object[] value) {
+    private void addValueBinding(Object[] value, DbAttribute attribute) {
         for(Object v : value) {
-            addValueBinding(v);
+            addValueBinding(v, attribute);
         }
     }
 
-    private void addValueBinding(Persistent value) {
-        addValueBinding(value.getObjectId());
+    private void addValueBinding(Persistent value, DbAttribute attribute) {
+        addValueBinding(value.getObjectId(), attribute);
     }
 
-    private void addValueBinding(ObjectId value) {
+    private void addValueBinding(ObjectId value, DbAttribute attribute) {
         for(Object idVal: value.getIdSnapshot().values()) {
-            addValueBinding(idVal);
+            addValueBinding(idVal, attribute);
         }
     }
 
-    private void addValueBinding(Object value) {
+    private void addValueBinding(Object value, DbAttribute attribute) {
         ExtendedType extendedType = value != null
                 ? context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass())
                 : context.getAdapter().getExtendedTypes().getDefaultType();
-        DbAttributeBinding binding = new DbAttributeBinding(null); //
-        binding.setStatementPosition(context.getBindings().size() + 1);
-        binding.setExtendedType(extendedType);
-        binding.setValue(value);
-        context.getBindings().add(binding);
         if(value == null) {
             builder.append(",");
-            binding.setStatementPosition(-1);
         } else {
+            DbAttributeBinding binding = new DbAttributeBinding(attribute);
+            binding.setStatementPosition(context.getBindings().size() + 1);
+            binding.setExtendedType(extendedType);
+            binding.setValue(value);
+            context.getBindings().add(binding);
             builder.append("?,");
         }
     }

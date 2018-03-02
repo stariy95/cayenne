@@ -25,15 +25,24 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 /**
  * @since 4.1
  */
-class OrderingNodeBuilder implements NodeBuilder {
+public class OrderingNodeBuilder implements NodeBuilder {
 
     private final NodeBuilder column;
 
-    private final String direction;
+    private String direction = "";
 
-    public OrderingNodeBuilder(NodeBuilder column, String direction) {
+    public OrderingNodeBuilder(NodeBuilder column) {
         this.column = column;
-        this.direction = direction;
+    }
+
+    public OrderingNodeBuilder desc() {
+        direction = "DESC";
+        return this;
+    }
+
+    public OrderingNodeBuilder asc() {
+        direction = "";
+        return this;
     }
 
     @Override
