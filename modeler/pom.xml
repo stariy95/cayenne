@@ -41,6 +41,7 @@
 		<module>cayenne-modeler-mac</module>
 		<module>cayenne-modeler-win</module>
         <module>cayenne-modeler-win-ext</module>
+        <module>cayenne-diagrams</module>
     </modules>
 
 	<build>
