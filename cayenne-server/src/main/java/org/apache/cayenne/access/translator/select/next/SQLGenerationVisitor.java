@@ -41,6 +41,8 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
 
     private final StringBuilder builder;
 
+    private boolean debug;
+
     private int level = 0;
 
     public SQLGenerationVisitor(TranslatorContext context) {
@@ -48,45 +50,49 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
         this.context = context;
     }
 
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
     @Override
     public void onNodeStart(Node node) {
-        StringBuilder msg = new StringBuilder();
-        for(int i=0; i<level; i++) {
-            msg.append("  ");
+        if(debug) {
+            StringBuilder msg = new StringBuilder();
+            for (int i = 0; i < level; i++) {
+                msg.append("  ");
+            }
+            msg.append("start node {}");
+            logger.info(msg.toString(), node);
+            level++;
         }
-        msg.append("start node {}");
-        logger.info(msg.toString(), node);
-        level++;
 
         if(node instanceof ValueNode) {
-            if(context != null) {
-                Object value = ((ValueNode) node).getValue();
-                DbAttribute attribute = ((ValueNode) node).getAttribute();
-                if(value instanceof short[]) {
-                    addValueBinding((short[])value, attribute);
-                } else if(value instanceof char[]) {
-                    addValueBinding((char[])value, attribute);
-                } else if(value instanceof int[]) {
-                    addValueBinding((int[])value, attribute);
-                } else if(value instanceof long[]) {
-                    addValueBinding((long[])value, attribute);
-                } else if(value instanceof float[]) {
-                    addValueBinding((float[])value, attribute);
-                } else if(value instanceof double[]) {
-                    addValueBinding((double[])value, attribute);
-                } else if(value instanceof boolean[]) {
-                    addValueBinding((boolean[])value, attribute);
-                } else if(value instanceof Object[]) {
-                    addValueBinding((Object[]) value, attribute);
-                } else if(value instanceof ObjectId) {
-                    addValueBinding((ObjectId)value, attribute);
-                } else if(value instanceof Persistent) {
-                    addValueBinding((Persistent)value, attribute);
-                } else {
-                    addValueBinding(value, attribute);
-                }
-                builder.delete(builder.length() - 1, builder.length());
+            Object value = ((ValueNode) node).getValue();
+            DbAttribute attribute = ((ValueNode) node).getAttribute();
+            if(value instanceof short[]) {
+                addValueBinding((short[])value, attribute);
+            } else if(value instanceof char[]) {
+                addValueBinding((char[])value, attribute);
+            } else if(value instanceof int[]) {
+                addValueBinding((int[])value, attribute);
+            } else if(value instanceof long[]) {
+                addValueBinding((long[])value, attribute);
+            } else if(value instanceof float[]) {
+                addValueBinding((float[])value, attribute);
+            } else if(value instanceof double[]) {
+                addValueBinding((double[])value, attribute);
+            } else if(value instanceof boolean[]) {
+                addValueBinding((boolean[])value, attribute);
+            } else if(value instanceof Object[]) {
+                addValueBinding((Object[]) value, attribute);
+            } else if(value instanceof ObjectId) {
+                addValueBinding((ObjectId)value, attribute);
+            } else if(value instanceof Persistent) {
+                addValueBinding((Persistent)value, attribute);
+            } else {
+                addValueBinding(value, attribute);
             }
+            builder.delete(builder.length() - 1, builder.length());
         } else {
             node.append(builder);
             node.appendChildrenStart(builder);
@@ -152,18 +158,18 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     }
 
     private void addValueBinding(Object value, DbAttribute attribute) {
-        ExtendedType extendedType = value != null
-                ? context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass())
-                : context.getAdapter().getExtendedTypes().getDefaultType();
         if(value == null) {
             builder.append(",");
         } else {
-            DbAttributeBinding binding = new DbAttributeBinding(attribute);
-            binding.setStatementPosition(context.getBindings().size() + 1);
-            binding.setExtendedType(extendedType);
-            binding.setValue(value);
-            context.getBindings().add(binding);
             builder.append("?,");
+            if(context != null) {
+                ExtendedType extendedType = context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass());
+                DbAttributeBinding binding = new DbAttributeBinding(attribute);
+                binding.setStatementPosition(context.getBindings().size() + 1);
+                binding.setExtendedType(extendedType);
+                binding.setValue(value);
+                context.getBindings().add(binding);
+            }
         }
     }
 
@@ -177,10 +183,12 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     @Override
     public void onNodeEnd(Node node) {
         node.appendChildrenEnd(builder);
-        level--;
+        if(debug) {
+            level--;
+        }
     }
 
-    public String getString() {
+    public String getSQLString() {
         return builder.toString();
     }
 }

@@ -70,7 +70,7 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
     protected String generateSql() {
         SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
         context.getSelectBuilder().build().visit(visitor);
-        return visitor.getString();
+        return visitor.getSQLString();
     }
 
     @Override

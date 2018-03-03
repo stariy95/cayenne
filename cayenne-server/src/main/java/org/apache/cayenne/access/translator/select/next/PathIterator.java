@@ -30,17 +30,19 @@ import org.apache.cayenne.map.Entity;
  */
 class PathIterator implements Iterator<String> {
 
-    private final StringTokenizer tokenizer;
+    private final PathComponents components;
     private final StringBuilder currentPath;
     private final Map<String, String> pathAlias;
 
+    private int position;
     private boolean isAlias;
     private boolean isOuterJoin;
 
     PathIterator(String path, Map<String, String> pathAlias) {
-        this.tokenizer = new StringTokenizer(path, Entity.PATH_SEPARATOR);
+        this.components = new PathComponents(path);
         this.currentPath = new StringBuilder();
         this.pathAlias = pathAlias;
+        this.position = 0;
     }
 
     public String currentPath() {
@@ -57,12 +59,12 @@ class PathIterator implements Iterator<String> {
 
     @Override
     public boolean hasNext() {
-        return tokenizer.hasMoreTokens();
+        return position < components.size();
     }
 
     @Override
     public String next() {
-        String next = tokenizer.nextToken();
+        String next = components.getAll()[position++];
         if(next.endsWith(Entity.OUTER_JOIN_INDICATOR)) {
             next = next.substring(0, next.length() - Entity.OUTER_JOIN_INDICATOR.length());
             isOuterJoin = true;

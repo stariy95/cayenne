@@ -31,6 +31,7 @@ import org.apache.cayenne.unit.di.server.UseServerRuntime;
 import org.junit.Test;
 
 import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -67,6 +68,7 @@ public class SqlBuilderIT extends ServerCase {
         // ORDER BY p_count DESC
 
         SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
+//        visitor.setDebug(true);
 
         select(table("a").column("ARTIST_ID").as("a_id"),
                 count(table("p").column("PAINTING_TITLE")).as("p_count"))
@@ -79,7 +81,7 @@ public class SqlBuilderIT extends ServerCase {
                 .where(
                         table("a").column("ARTIST_NAME")
                                 .eq(value("Picasso"))
-                                .and(exists(select(value('*'))
+                                .and(exists(select(star())
                                                 .from(table("GALLERY").as("g"))
                                                 .where(table("g").column("GALLERY_ID").eq(table("p").column("GALLERY_ID")))))
                                 .and(value(1).eq(value(1)))
@@ -90,16 +92,15 @@ public class SqlBuilderIT extends ServerCase {
                 .build()
                 .visit(visitor);
 
-//        assertEquals("SELECT DISTINCT   a.ARTIST_ID AS a_id ," +
-//                "COUNT(p.PAINTING_TITLE ) AS p_count  " +
-//                "FROM ARTIST AS a  " +
-//                "LEFT JOIN PAINTING AS p  ON(((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  10 ))) " +
-//                "WHERE ((((a.ARTIST_NAME  =  'Picasso' ) " +
-//                "AND  EXISTS(SELECT  *  FROM GALLERY AS g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID ))) " +
-//                "AND  (1  =  1 )) OR  false ) " +
-//                "GROUP BY a.ARTIST_ID  " +
-//                "HAVING (COUNT(p.PAINTING_TITLE ) >  3 ) " +
-//                "ORDER BY  p_count  DESC ", visitor.getString());
+        assertEquals("SELECT DISTINCT   a.ARTIST_ID a_id ,COUNT(p.PAINTING_TITLE ) AS p_count  " +
+                "FROM ARTIST a  " +
+                "LEFT JOIN PAINTING p  ON (((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ?))) " +
+                "WHERE ((((a.ARTIST_NAME  =  ?) " +
+                "AND  EXISTS(SELECT  *  FROM GALLERY g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID ))) " +
+                "AND  (? =  ?)) OR  ?) " +
+                "GROUP BY a.ARTIST_ID  " +
+                "HAVING NOT  (COUNT(p.PAINTING_TITLE ) >  ?) " +
+                "ORDER BY  p_count  DESC ", visitor.getSQLString());
 
     }
 

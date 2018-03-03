@@ -86,7 +86,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
 
             SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
             nextNode.build().visit(visitor);
-            String exp = visitor.getString();
+            String exp = visitor.getSQLString();
 
             int type = getJdbcTypeForProperty(property);
 

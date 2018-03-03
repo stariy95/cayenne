@@ -19,45 +19,48 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import java.util.Collections;
+
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
 /**
  * @since 4.1
  */
-public class PathComponents {
+public class PathIteratorTest {
 
-    private final String path;
-    private final String parent;
-    private final String[] pathComponents;
+    @Test
+    public void testSimple() {
+        PathIterator it = new PathIterator("test", Collections.emptyMap());
+        assertTrue(it.hasNext());
+        assertTrue(it.currentPath().isEmpty());
 
-    PathComponents(String path) {
-        this.path = path;
-        int lastDot = path.lastIndexOf('.');
-        if(lastDot == -1) {
-            pathComponents = new String[]{path};
-            parent = "";
-        } else {
-            pathComponents = path.split("\\.");
-            parent = path.substring(0, lastDot);
-        }
+        String next = it.next();
+
+        assertEquals("test", next);
+        assertFalse(it.hasNext());
+        assertEquals("test", it.currentPath());
     }
 
-    int size() {
-        return pathComponents.length;
+    @Test
+    public void testTwo() {
+        PathIterator it = new PathIterator("test.path", Collections.emptyMap());
+        assertTrue(it.hasNext());
+        assertTrue(it.currentPath().isEmpty());
+
+        String next = it.next();
+
+        assertEquals("test", next);
+        assertTrue(it.hasNext());
+        assertEquals("test", it.currentPath());
+
+        next = it.next();
+
+        assertEquals("path", next);
+        assertFalse(it.hasNext());
+        assertEquals("test.path", it.currentPath());
     }
 
-    String getLast() {
-        return pathComponents[pathComponents.length - 1];
-    }
-
-    String getParent() {
-        return parent;
-    }
-
-    String[] getAll() {
-        return pathComponents;
-    }
-
-    String getPath() {
-        return path;
-    }
 
 }

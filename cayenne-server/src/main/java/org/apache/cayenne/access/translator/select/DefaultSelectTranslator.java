@@ -242,7 +242,7 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 		SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
 		selectBuilder.build().visit(visitor);
 
-		this.sql = visitor.getString();
+		this.sql = visitor.getSQLString();
 	}
 
 	/**

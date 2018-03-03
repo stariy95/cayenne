@@ -50,7 +50,7 @@ class OrderingStage extends TranslationStage {
 
         SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
         orderingNode.build().visit(visitor);
-        String exp = visitor.getString();
+        String exp = visitor.getSQLString();
         ColumnDescriptor descriptor = new ColumnDescriptor(exp, Integer.MIN_VALUE);
 
         context.getColumnDescriptors().add(descriptor);

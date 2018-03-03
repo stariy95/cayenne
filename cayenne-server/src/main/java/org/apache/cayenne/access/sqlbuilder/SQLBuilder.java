@@ -19,7 +19,7 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 
 /**
  * @since 4.1
@@ -72,6 +72,10 @@ public final class SQLBuilder {
 
     public static ValueNodeBuilder value(Object value) {
         return new ValueNodeBuilder(value);
+    }
+
+    public static NodeBuilder star() {
+        return () -> new TextNode("*");
     }
 
     public static ExpressionNodeBuilder not(NodeBuilder value) {
