@@ -19,18 +19,24 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.Map;
-
-import org.apache.cayenne.map.ObjEntity;
-
 /**
  * @since 4.1
  */
-class NoJoinsObjPathIterator extends ObjPathIterator {
+public class DistinctStage extends TranslationStage {
 
-    NoJoinsObjPathIterator(TranslatorContext context, ObjEntity entity, String path, Map<String, String> pathAlias) {
-        super(context, entity, path, pathAlias);
+    DistinctStage(TranslatorContext context) {
+        super(context);
     }
 
+    @Override
+    void perform() {
+        if(context.getQuery().isDistinct()) {
+            context.getSelectBuilder().distinct();
+            return;
+        }
 
+        if(context.getTableTree().getNodeCount() > 1) {
+            context.getSelectBuilder().distinct();
+        }
+    }
 }

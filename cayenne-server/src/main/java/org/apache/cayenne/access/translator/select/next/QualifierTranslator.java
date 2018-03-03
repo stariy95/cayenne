@@ -37,6 +37,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.TraversalHandler;
 import org.apache.cayenne.exp.parser.ASTDbPath;
+import org.apache.cayenne.exp.parser.ASTFunctionCall;
 import org.apache.cayenne.exp.parser.ASTList;
 import org.apache.cayenne.exp.parser.ASTObjPath;
 import org.apache.cayenne.exp.parser.SimpleNode;
@@ -51,7 +52,7 @@ import static org.apache.cayenne.exp.Expression.*;
 /**
  * @since 4.1
  */
-public class QualifierTranslator implements TraversalHandler {
+class QualifierTranslator implements TraversalHandler {
 
     private final TranslatorContext context;
     private final PathTranslator pathTranslator;
@@ -60,8 +61,7 @@ public class QualifierTranslator implements TraversalHandler {
     private Node rootNode;
     private Node currentNode;
 
-
-    public QualifierTranslator(TranslatorContext context) {
+    QualifierTranslator(TranslatorContext context) {
         this.context = context;
         this.pathTranslator = new PathTranslator(context);
     }
@@ -219,6 +219,17 @@ public class QualifierTranslator implements TraversalHandler {
                     }
                 };
 
+            case FUNCTION_CALL:
+                ASTFunctionCall functionCall = (ASTFunctionCall)node;
+                return function(functionCall.getFunctionName()).build();
+
+            case ASTERISK:
+                return new Node() {
+                    @Override
+                    public void append(StringBuilder buffer) {
+                        buffer.append('*');
+                    }
+                };
         }
 
         return new EmptyNode();

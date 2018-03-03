@@ -19,8 +19,28 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.map.DbAttribute;
+
 /**
  * @since 4.1
  */
-public class PathResolver {
+abstract class BaseColumnExtractor implements ColumnExtractor {
+
+    protected final TranslatorContext context;
+
+    BaseColumnExtractor(TranslatorContext context) {
+        this.context = context;
+    }
+
+    protected void addDbAttribute(String prefix, DbAttribute dba) {
+        String path = dba.getName();
+        if(prefix != null) {
+            path = prefix + '.' + path;
+        }
+        String alias = context.getTableTree().aliasForAttributePath(path);
+        ColumnDescriptor column = new ColumnDescriptor(dba, alias);
+        column.setDataRowKey(path);
+        context.getColumnDescriptors().add(column);
+    }
 }

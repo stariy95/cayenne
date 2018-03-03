@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.OrderingNodeBuilder;
 import org.apache.cayenne.query.Ordering;
@@ -47,7 +48,12 @@ class OrderingStage extends TranslationStage {
     private void processOrdering(Ordering ordering) {
         NodeBuilder orderingNode = qualifierTranslator.translate(ordering.getSortSpec());
 
-//        context.getSelectBuilder().result(orderingNode);
+        SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
+        orderingNode.build().visit(visitor);
+        String exp = visitor.getString();
+        ColumnDescriptor descriptor = new ColumnDescriptor(exp, Integer.MIN_VALUE);
+
+        context.getColumnDescriptors().add(descriptor);
 
         if(ordering.isCaseInsensitive()) {
             orderingNode = function("UPPER", orderingNode);

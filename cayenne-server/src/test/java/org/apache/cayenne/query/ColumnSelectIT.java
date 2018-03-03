@@ -55,6 +55,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 /**
@@ -654,7 +655,7 @@ public class ColumnSelectIT extends ServerCase {
                 .pageSize(10)
                 .select(context);
         assertNotNull(a);
-        assertEquals(5, a.size());
+        assertEquals(20, a.size());
         int idx = 0;
         for(Object[] next : a) {
             assertNotNull(next);
@@ -673,7 +674,7 @@ public class ColumnSelectIT extends ServerCase {
                 .pageSize(10)
                 .select(context);
         assertNotNull(a);
-        assertEquals(21, a.size());
+        assertEquals(36, a.size());
         int idx = 0;
         for(Object[] next : a) {
             assertNotNull(next);
@@ -727,9 +728,9 @@ public class ColumnSelectIT extends ServerCase {
     private void checkPrefetchResults(List<Object[]> result) {
         assertEquals(21, result.size());
         for(Object[] next : result) {
-            assertTrue(next[0] instanceof Artist);
-            assertTrue(next[1] instanceof java.util.Date);
-            assertTrue(next[2] instanceof String);
+            assertThat(next[0], instanceOf(Artist.class));
+            assertThat(next[1], instanceOf(java.util.Date.class));
+            assertThat(next[2], instanceOf(String.class));
             Artist artist = (Artist)next[0];
             assertEquals(PersistenceState.COMMITTED, artist.getPersistenceState());
 
@@ -776,7 +777,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     private void checkAggregatePrefetchResults(List<Object[]> result) {
-        assertEquals(5, result.size());
+        assertEquals(20, result.size());
         for(Object[] next : result) {
             assertTrue(next[0] instanceof Artist);
             assertTrue(next[1] instanceof Long);

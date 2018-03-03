@@ -46,7 +46,6 @@ class SQLGenerationStage extends TranslationStage {
     void perform() {
         addResult();
         addFrom();
-        addDistinct();
     }
 
     private void addResult() {
@@ -64,10 +63,6 @@ class SQLGenerationStage extends TranslationStage {
 
             context.getSelectBuilder().from(table);
         });
-    }
-
-    private void addDistinct() {
-        context.getSelectBuilder().distinct();
     }
 
     private JoinNodeBuilder getJoin(TableTreeNode node, NodeBuilder table) {

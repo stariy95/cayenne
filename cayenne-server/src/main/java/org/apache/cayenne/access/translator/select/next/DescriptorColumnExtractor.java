@@ -33,15 +33,14 @@ import org.apache.cayenne.reflect.ToOneProperty;
 /**
  * @since 4.1
  */
-class DescriptorColumnExtractor implements PropertyVisitor, ColumnExtractor {
+class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyVisitor {
 
-    private final TranslatorContext context;
     private final ClassDescriptor descriptor;
     private final PathTranslator pathTranslator;
     private String prefix;
 
     DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor) {
-        this.context = context;
+        super(context);
         this.descriptor = descriptor;
         this.pathTranslator = new PathTranslator(context);
     }
@@ -56,17 +55,6 @@ class DescriptorColumnExtractor implements PropertyVisitor, ColumnExtractor {
         for (DbAttribute dba : table.getPrimaryKeys()) {
             addDbAttribute(prefix, dba);
         }
-    }
-
-    private void addDbAttribute(String prefix, DbAttribute dba) {
-        String path = dba.getName();
-        if(prefix != null) {
-            path = prefix + '.' + path;
-        }
-        String alias = context.getTableTree().aliasForAttributePath(path);
-        ColumnDescriptor column = new ColumnDescriptor(dba, alias);
-        column.setDataRowKey(path);
-        context.getColumnDescriptors().add(column);
     }
 
     @Override

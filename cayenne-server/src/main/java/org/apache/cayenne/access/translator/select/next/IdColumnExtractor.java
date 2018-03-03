@@ -19,23 +19,26 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.ObjEntity;
 
 /**
  * @since 4.1
  */
-class IdColumnExtractor implements ColumnExtractor {
+class IdColumnExtractor extends BaseColumnExtractor {
 
-    private final TranslatorContext context;
     private final ObjEntity objEntity;
 
-    IdColumnExtractor(TranslatorContext context) {
-        this.context = context;
-        this.objEntity = context.getMetadata().getClassDescriptor().getEntity();
+    IdColumnExtractor(TranslatorContext context, ObjEntity objEntity) {
+        super(context);
+        this.objEntity = objEntity;
     }
 
     @Override
     public void extract(String prefix) {
-
+        for (DbAttribute dba : objEntity.getDbEntity().getPrimaryKeys()) {
+            addDbAttribute(prefix, dba);
+        }
     }
+
 }

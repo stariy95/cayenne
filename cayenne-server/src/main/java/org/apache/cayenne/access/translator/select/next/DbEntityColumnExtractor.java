@@ -19,34 +19,25 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 
 /**
  * @since 4.1
  */
-class DbEntityColumnExtractor implements ColumnExtractor {
+class DbEntityColumnExtractor extends BaseColumnExtractor {
 
-    private final TranslatorContext context;
     private final DbEntity dbEntity;
 
     DbEntityColumnExtractor(TranslatorContext context) {
-        this.context = context;
+        super(context);
         this.dbEntity = context.getMetadata().getDbEntity();
     }
 
     @Override
     public void extract(String prefix) {
         for(DbAttribute attribute : dbEntity.getAttributes()) {
-            String path = attribute.getName();
-            if(prefix != null) {
-                path = prefix + '.' + path;
-            }
-            String alias = context.getTableTree().aliasForAttributePath(path);
-            ColumnDescriptor column = new ColumnDescriptor(attribute, alias);
-            column.setDataRowKey(path);
-            context.getColumnDescriptors().add(column);
+            addDbAttribute(prefix, attribute);
         }
     }
 }

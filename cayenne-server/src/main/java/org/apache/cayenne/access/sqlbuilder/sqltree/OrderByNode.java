@@ -28,4 +28,9 @@ public class OrderByNode extends Node {
     public void append(StringBuilder buffer) {
         buffer.append("ORDER BY");
     }
+
+    @Override
+    public void appendChildSeparator(StringBuilder builder, int childInd) {
+        builder.append(',');
+    }
 }

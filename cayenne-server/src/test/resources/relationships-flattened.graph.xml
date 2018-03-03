@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<graphs xmlns="http://cayenne.apache.org/schema/10/graph">
+	<graph type="ER" scale="1.060449937300001">
+		<entity name="COMPLEX_JOIN" x="558.74" y="-0.13" width="105.0" height="98.0"/>
+		<entity name="FLATTENED_CIRCULAR_JOIN" x="60.17" y="660.26" width="217.0" height="90.0"/>
+		<entity name="FLATTENED_TEST_5" x="11.11" y="484.79" width="137.0" height="66.0"/>
+		<entity name="FLATTENED_CIRCULAR" x="471.36" y="672.14" width="156.0" height="50.0"/>
+		<entity name="FLATTENED_TEST_4" x="398.63" y="237.61" width="137.0" height="82.0"/>
+		<entity name="COMPLEX_JOIN2" x="29.58" y="35.04" width="113.0" height="82.0"/>
+		<entity name="FLATTENED_TEST_3" x="561.41" y="465.05" width="137.0" height="82.0"/>
+		<entity name="FLATTENED_TEST_2" x="229.67" y="470.0" width="137.0" height="82.0"/>
+		<entity name="FLATTENED_TEST_1" x="257.73" y="18.89" width="137.0" height="66.0"/>
+	</graph>
+	<graph type="CLASS" scale="1.3785849184900012">
+		<entity name="FlattenedTest3" x="24.16" y="318.2" width="103.0" height="50.0"/>
+		<entity name="FlattenedTest4" x="331.69" y="308.16" width="103.0" height="50.0"/>
+		<entity name="FlattenedTest1" x="255.54" y="67.32" width="103.0" height="50.0"/>
+		<entity name="FlattenedTest2" x="22.39" y="39.9" width="103.0" height="50.0"/>
+		<entity name="FlattenedTest5" x="507.31" y="26.0" width="103.0" height="50.0"/>
+		<entity name="FlattenedCircular" x="509.27" y="222.55" width="149.0" height="80.0"/>
+	</graph>
+</graphs>

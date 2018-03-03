@@ -22,7 +22,6 @@ package org.apache.cayenne.access.translator.select.next;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
@@ -31,7 +30,6 @@ import org.apache.cayenne.access.sqlbuilder.SQLBuilder;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.QueryMetadata;
 import org.apache.cayenne.query.SelectQuery;
 
@@ -84,19 +82,19 @@ class TranslatorContext {
         this.selectBuilder = SQLBuilder.select();
     }
 
-    public SelectBuilder getSelectBuilder() {
+    SelectBuilder getSelectBuilder() {
         return selectBuilder;
     }
 
-    public Collection<ColumnDescriptor> getColumnDescriptors() {
+    Collection<ColumnDescriptor> getColumnDescriptors() {
         return columnDescriptors;
     }
 
-    public Collection<DbAttributeBinding> getBindings() {
+    Collection<DbAttributeBinding> getBindings() {
         return bindings;
     }
 
-    public TableTree getTableTree() {
+    TableTree getTableTree() {
         return tableTree;
     }
 
@@ -104,19 +102,19 @@ class TranslatorContext {
         return tableTree.getNodeCount();
     }
 
-    public SelectQuery<?> getQuery() {
+    SelectQuery<?> getQuery() {
         return query;
     }
 
-    public QueryMetadata getMetadata() {
+    QueryMetadata getMetadata() {
         return metadata;
     }
 
-    public EntityResolver getResolver() {
+    EntityResolver getResolver() {
         return resolver;
     }
 
-    public DbAdapter getAdapter() {
+    DbAdapter getAdapter() {
         return adapter;
     }
 }

@@ -55,6 +55,7 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
                 PrefetchNodeStage::new,
                 OrderingStage::new,
                 QualifierTranslationStage::new,
+                DistinctStage::new,
                 LimitOffsetStage::new,
                 SQLGenerationStage::new
         );
