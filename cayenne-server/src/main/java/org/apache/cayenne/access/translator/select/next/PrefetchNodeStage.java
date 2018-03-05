@@ -70,7 +70,9 @@ class PrefetchNodeStage extends TranslationStage {
                 r = component.getRelationship();
                 if(fullPath.length() > 0) {
                     fullPath.append('.');
-                }
+                } //else {
+                    //fullPath.append("p$"); // TODO: Make PrefetchProcessorJointNode respect this...
+//                }
                 fullPath.append(r.getName());
                 context.getTableTree().addJoinTable(fullPath.toString(), r, JoinType.LEFT_OUTER);
             }
@@ -82,9 +84,9 @@ class PrefetchNodeStage extends TranslationStage {
             ObjRelationship targetRel = (ObjRelationship) prefetchExp.evaluate(objEntity);
             ClassDescriptor prefetchClassDescriptor = context.getResolver().getClassDescriptor(targetRel.getTargetEntityName());
 
-            String labelPrefix = dbPrefetch.getPath();
+//            String labelPrefix = dbPrefetch.getPath();
             DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor);
-            columnExtractor.extract(labelPrefix);
+            columnExtractor.extract(fullPath.toString());
         }
     }
 

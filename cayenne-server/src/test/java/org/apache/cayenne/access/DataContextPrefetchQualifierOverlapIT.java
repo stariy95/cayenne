@@ -78,8 +78,7 @@ public class DataContextPrefetchQualifierOverlapIT extends ServerCase {
         createTwoArtistsThreePaintingsDataSet();
 
         SelectQuery query = new SelectQuery(Artist.class);
-        query.andQualifier(ExpressionFactory
-                .likeExp("paintingArray.paintingTitle", "AB%"));
+        query.andQualifier(ExpressionFactory.likeExp("paintingArray.paintingTitle", "AB%"));
         query.addPrefetch(Artist.PAINTING_ARRAY.joint());
 
         List<Artist> result = context.performQuery(query);
