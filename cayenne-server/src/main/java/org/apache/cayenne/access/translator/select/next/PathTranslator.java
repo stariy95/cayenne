@@ -81,7 +81,7 @@ class PathTranslator {
     }
 
     PathTranslationResult translatePath(ObjEntity entity, String path) {
-        ObjPathIterator it = new ObjPathIterator(context, entity, path, Collections.emptyMap());
+        ObjPathIterator it = new ObjPathIterator(context, entity, path, context.getMetadata().getPathSplitAliases());
         while(it.hasNext()) {
             it.next();
         }
@@ -90,7 +90,7 @@ class PathTranslator {
     }
 
     PathTranslationResult translatePath(DbEntity entity, String path) {
-        DbPathIterator it = new DbPathIterator(context, entity, path, Collections.emptyMap());
+        DbPathIterator it = new DbPathIterator(context, entity, path, context.getMetadata().getPathSplitAliases());
         while(it.hasNext()) {
             it.next();
         }

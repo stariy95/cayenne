@@ -94,13 +94,7 @@ class ObjPathIterator implements Iterator<Void> {
     }
 
     protected void processNormalAttribute(String next) {
-        if(embeddedAttribute != null) {
-            attribute = embeddedAttribute.getAttribute(next);
-            embeddedAttribute = null;
-        } else {
-            attribute = entity.getAttribute(next);
-        }
-
+        fetchAttribute(next);
         if(attribute != null) {
             processAttribute(attribute);
             return;
@@ -108,12 +102,21 @@ class ObjPathIterator implements Iterator<Void> {
 
         ObjRelationship relationship = entity.getRelationship(next);
         if(relationship != null) {
-            entity = relationship.getTargetEntity();
             processRelationship(relationship);
             return;
         }
 
-        throw new IllegalStateException("Unable to resolve path: " + pathIterator.currentPath());
+        throw new IllegalStateException("Unable to resolve path: " + currentDbPath.toString()
+                + " (unknown '" + next + "' component)");
+    }
+
+    protected void fetchAttribute(String name) {
+        if(embeddedAttribute != null) {
+            attribute = embeddedAttribute.getAttribute(name);
+            embeddedAttribute = null;
+        } else {
+            attribute = entity.getAttribute(name);
+        }
     }
 
     protected void processAttribute(ObjAttribute attribute) {
@@ -138,6 +141,7 @@ class ObjPathIterator implements Iterator<Void> {
     }
 
     protected void processRelationship(ObjRelationship relationship) {
+        entity = relationship.getTargetEntity();
         if (!pathIterator.hasNext()) {
             // if this is a last relationship in the path, it needs special handling
             processRelTermination(relationship);
@@ -193,16 +197,17 @@ class ObjPathIterator implements Iterator<Void> {
     }
 
     protected void processAliasedAttribute(String next) {
+        currentDbPath.append(pathIterator.getNonAliasedName()).append('$');
         ObjRelationship relationship = entity.getRelationship(next);
         if(relationship == null) {
             throw new IllegalStateException("Non-relationship aliased path part: " + next);
         }
 
-        // todo resolve path
+        processRelationship(relationship);
     }
 
     protected void appendDbPathSegment(String pathSegment) {
-        if(currentDbPath.length() > 0) {
+        if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != '$') {
             currentDbPath.append('.');
         }
         currentDbPath.append(pathSegment);

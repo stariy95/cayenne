@@ -34,32 +34,27 @@ public class PathIteratorTest {
     public void testSimple() {
         PathIterator it = new PathIterator("test", Collections.emptyMap());
         assertTrue(it.hasNext());
-        assertTrue(it.currentPath().isEmpty());
 
         String next = it.next();
 
         assertEquals("test", next);
         assertFalse(it.hasNext());
-        assertEquals("test", it.currentPath());
     }
 
     @Test
     public void testTwo() {
         PathIterator it = new PathIterator("test.path", Collections.emptyMap());
         assertTrue(it.hasNext());
-        assertTrue(it.currentPath().isEmpty());
 
         String next = it.next();
 
         assertEquals("test", next);
         assertTrue(it.hasNext());
-        assertEquals("test", it.currentPath());
 
         next = it.next();
 
         assertEquals("path", next);
         assertFalse(it.hasNext());
-        assertEquals("test.path", it.currentPath());
     }
 
 

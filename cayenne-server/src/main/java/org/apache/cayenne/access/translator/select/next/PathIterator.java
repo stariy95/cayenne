@@ -31,22 +31,17 @@ import org.apache.cayenne.map.Entity;
 class PathIterator implements Iterator<String> {
 
     private final PathComponents components;
-    private final StringBuilder currentPath;
     private final Map<String, String> pathAlias;
 
     private int position;
     private boolean isAlias;
+    private String nonAliasedName;
     private boolean isOuterJoin;
 
     PathIterator(String path, Map<String, String> pathAlias) {
         this.components = new PathComponents(path);
-        this.currentPath = new StringBuilder();
         this.pathAlias = pathAlias;
         this.position = 0;
-    }
-
-    public String currentPath() {
-        return currentPath.toString();
     }
 
     public boolean isAlias() {
@@ -65,6 +60,7 @@ class PathIterator implements Iterator<String> {
     @Override
     public String next() {
         String next = components.getAll()[position++];
+
         if(next.endsWith(Entity.OUTER_JOIN_INDICATOR)) {
             next = next.substring(0, next.length() - Entity.OUTER_JOIN_INDICATOR.length());
             isOuterJoin = true;
@@ -72,22 +68,20 @@ class PathIterator implements Iterator<String> {
             isOuterJoin = false;
         }
 
-        if(currentPath.length() > 0) {
-            currentPath.append(Entity.PATH_SEPARATOR);
-        }
-        currentPath.append(next);
-        if(isOuterJoin) {
-            currentPath.append('+');
-        }
+        nonAliasedName = next;
 
         String alias = pathAlias.get(next);
         if(alias != null) {
-            next = alias;
             isAlias = true;
+            next = alias;
         } else {
             isAlias = false;
         }
 
         return next;
+    }
+
+    public String getNonAliasedName() {
+        return nonAliasedName;
     }
 }

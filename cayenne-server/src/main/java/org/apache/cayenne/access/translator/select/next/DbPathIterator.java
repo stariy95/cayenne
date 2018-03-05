@@ -85,7 +85,7 @@ public class DbPathIterator implements Iterator<Void> {
             return;
         }
 
-        throw new IllegalStateException("Unable to resolve path: " + pathIterator.currentPath());
+        throw new IllegalStateException("Unable to resolve path: " + currentDbPath.toString());
     }
 
     private void processAttribute(DbAttribute attribute) {
@@ -146,7 +146,7 @@ public class DbPathIterator implements Iterator<Void> {
     }
 
     private void appendCurrentPath(String nextSegment) {
-        if(currentDbPath.length() > 0) {
+        if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != '$') {
             currentDbPath.append('.');
         }
         currentDbPath.append(nextSegment);
