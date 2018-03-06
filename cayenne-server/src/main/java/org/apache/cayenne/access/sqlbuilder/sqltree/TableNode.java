@@ -24,15 +24,22 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 /**
  * @since 4.1
  */
-public class LimitNode extends Node {
-    private final int limit;
+public class TableNode extends Node {
 
-    public LimitNode(int limit) {
-        this.limit = limit;
+    private final String tableName;
+
+    private final String alias;
+
+    public TableNode(String tableName, String alias) {
+        this.tableName = tableName;
+        this.alias = alias;
     }
 
     @Override
     public void append(QuotingAppendable buffer) {
-        buffer.append("LIMIT ").append(limit);
+        buffer.appendQuoted(tableName);
+        if (alias != null) {
+            buffer.append(' ').appendQuoted(alias);
+        }
     }
 }

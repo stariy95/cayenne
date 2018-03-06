@@ -40,14 +40,20 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     private final TranslatorContext context;
 
     private final StringBuilder builder;
+    private final StringBuilderAppendable delegate;
 
     private boolean debug;
 
     private int level = 0;
 
     public SQLGenerationVisitor(TranslatorContext context) {
-        this.builder = new StringBuilder();
         this.context = context;
+        if(context == null) {
+            this.delegate = new StringBuilderAppendable();
+        } else {
+            this.delegate = new DefaultQuotingAppendable(context);
+        }
+        this.builder = delegate.unwrap();
     }
 
     public void setDebug(boolean debug) {
@@ -94,8 +100,8 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
             }
             builder.delete(builder.length() - 1, builder.length());
         } else {
-            node.append(builder);
-            node.appendChildrenStart(builder);
+            node.append(delegate);
+            node.appendChildrenStart(delegate);
         }
     }
 
@@ -176,13 +182,13 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     @Override
     public void onChildNodeEnd(Node node, int index, boolean hasMore) {
         if(hasMore && node.getParent() != null) {
-            node.getParent().appendChildSeparator(builder, index);
+            node.getParent().appendChildSeparator(delegate, index);
         }
     }
 
     @Override
     public void onNodeEnd(Node node) {
-        node.appendChildrenEnd(builder);
+        node.appendChildrenEnd(delegate);
         if(debug) {
             level--;
         }
@@ -191,4 +197,5 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     public String getSQLString() {
         return builder.toString();
     }
+
 }

@@ -21,6 +21,7 @@ package org.apache.cayenne.access.sqlbuilder;
 
 import java.util.Objects;
 
+import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
@@ -30,13 +31,13 @@ public class ColumnNodeBuilder implements ExpressionTrait {
 
     private final String table;
 
-    private final String field;
+    private final String column;
 
     private String alias;
 
     public ColumnNodeBuilder(String table, String field) {
         this.table = table;
-        this.field = Objects.requireNonNull(field);
+        this.column = Objects.requireNonNull(field);
     }
 
     public ColumnNodeBuilder as(String alias) {
@@ -54,18 +55,7 @@ public class ColumnNodeBuilder implements ExpressionTrait {
 
     @Override
     public Node build() {
-        return new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                if(table != null) {
-                    buffer.append(table).append('.');
-                }
-                buffer.append(field);
-                if(alias != null) {
-                    buffer.append(' ').append(alias);
-                }
-            }
-        };
+        return new ColumnNode(table, column, alias);
     }
 
 }

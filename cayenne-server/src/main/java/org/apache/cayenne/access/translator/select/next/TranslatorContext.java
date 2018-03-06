@@ -29,6 +29,8 @@ import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
 import org.apache.cayenne.access.sqlbuilder.SQLBuilder;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
+import org.apache.cayenne.dba.QuotingStrategy;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.QueryMetadata;
 import org.apache.cayenne.query.SelectQuery;
@@ -62,14 +64,11 @@ class TranslatorContext {
     private final Collection<DbAttributeBinding> bindings;
 
     private final SelectBuilder selectBuilder;
-
     private final SelectQuery<?> query;
-
     private final QueryMetadata metadata;
-
     private final EntityResolver resolver;
-
     private final DbAdapter adapter;
+    private final QuotingStrategy quotingStrategy;
 
     TranslatorContext(SelectQuery<?> query, DbAdapter adapter, EntityResolver resolver, TranslatorContext parentContext) {
         this.query = query;
@@ -80,6 +79,7 @@ class TranslatorContext {
         this.columnDescriptors = new LinkedHashSet<>(8);
         this.bindings = new ArrayList<>(4);
         this.selectBuilder = SQLBuilder.select();
+        this.quotingStrategy = adapter.getQuotingStrategy();
     }
 
     SelectBuilder getSelectBuilder() {
@@ -116,5 +116,13 @@ class TranslatorContext {
 
     DbAdapter getAdapter() {
         return adapter;
+    }
+
+    public DbEntity getRootDbEntity() {
+        return metadata.getDbEntity();
+    }
+
+    public QuotingStrategy getQuotingStrategy() {
+        return quotingStrategy;
     }
 }

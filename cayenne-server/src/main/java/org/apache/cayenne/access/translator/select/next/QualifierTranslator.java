@@ -96,18 +96,18 @@ class QualifierTranslator implements TraversalHandler {
             case IN:
                 return new Node() {
                     @Override
-                    public void append(StringBuilder buffer) {
+                    public void append(QuotingAppendable buffer) {
                     }
 
                     @Override
-                    public void appendChildSeparator(StringBuilder builder, int childInd) {
+                    public void appendChildSeparator(QuotingAppendable builder, int childInd) {
                         if(childInd == 0) {
                             builder.append(' ').append(expToStr(node.getType())).append(" (");
                         }
                     }
 
                     @Override
-                    public void appendChildrenEnd(StringBuilder builder) {
+                    public void appendChildrenEnd(QuotingAppendable builder) {
                         builder.append(')');
                     }
                 };
@@ -116,7 +116,7 @@ class QualifierTranslator implements TraversalHandler {
             case BETWEEN:
                 return new ExpressionNode() {
                     @Override
-                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
                         if(childIdx == 0) {
                             builder.append(expToStr(node.getType())).append(' ');
                         } else {
@@ -128,7 +128,7 @@ class QualifierTranslator implements TraversalHandler {
             case NOT:
                 return new ExpressionNode() {
                     @Override
-                    public void append(StringBuilder buffer) {
+                    public void append(QuotingAppendable buffer) {
                         buffer.append("NOT");
                     }
                 };
@@ -136,7 +136,7 @@ class QualifierTranslator implements TraversalHandler {
             case EQUAL_TO:
                 return new ExpressionNode() {
                     @Override
-                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
                         String expStr = " = ";
                         if(node.getOperand(1) == null) {
                             expStr = " IS NULL";
@@ -147,7 +147,7 @@ class QualifierTranslator implements TraversalHandler {
             case NOT_EQUAL_TO:
                 return new ExpressionNode() {
                     @Override
-                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
                         String expStr = " <> ";
                         if(node.getOperand(1) == null) {
                             expStr = " IS NOT NULL";
@@ -171,7 +171,7 @@ class QualifierTranslator implements TraversalHandler {
             case NOT_LIKE:
                 return new ExpressionNode() {
                     @Override
-                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
                         builder.append(' ').append(expToStr(node.getType())).append(' ');
                     }
                 };
@@ -181,21 +181,21 @@ class QualifierTranslator implements TraversalHandler {
             case NOT_LIKE_IGNORE_CASE:
                 return new ExpressionNode() {
                     @Override
-                    public void append(StringBuilder buffer) {
+                    public void append(QuotingAppendable buffer) {
                     }
 
                     @Override
-                    public void appendChildrenStart(StringBuilder builder) {
+                    public void appendChildrenStart(QuotingAppendable builder) {
                         builder.append("UPPER(");
                     }
 
                     @Override
-                    public void appendChildSeparator(StringBuilder builder, int childIdx) {
+                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
                         builder.append(") ").append(expToStr(node.getType())).append(" UPPER(");
                     }
 
                     @Override
-                    public void appendChildrenEnd(StringBuilder builder) {
+                    public void appendChildrenEnd(QuotingAppendable builder) {
                         builder.append(")");
                     }
                 };
@@ -214,7 +214,7 @@ class QualifierTranslator implements TraversalHandler {
             case FALSE:
                 return new Node() {
                     @Override
-                    public void append(StringBuilder buffer) {
+                    public void append(QuotingAppendable buffer) {
                         buffer.append(expToStr(node.getType()));
                     }
                 };
@@ -226,7 +226,7 @@ class QualifierTranslator implements TraversalHandler {
             case ASTERISK:
                 return new Node() {
                     @Override
-                    public void append(StringBuilder buffer) {
+                    public void append(QuotingAppendable buffer) {
                         buffer.append('*');
                     }
                 };

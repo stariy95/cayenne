@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TableNode;
 
 /**
  * @since 4.1
@@ -53,14 +54,7 @@ public class TableNodeBuilder implements NodeBuilder {
 
     @Override
     public Node build() {
-        return new Node() {
-            @Override
-            public void append(StringBuilder buffer) {
-                buffer.append(tableName);
-                if(alias != null) {
-                    buffer.append(' ').append(alias);
-                }
-            }
-        };
+        return new TableNode(tableName, alias);
     }
+
 }

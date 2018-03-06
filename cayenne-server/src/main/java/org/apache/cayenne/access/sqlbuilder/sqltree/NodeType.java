@@ -26,6 +26,6 @@ public enum NodeType {
 
     UNDEFINED,
     VALUE,
-
+    COLUMN,
 
 }

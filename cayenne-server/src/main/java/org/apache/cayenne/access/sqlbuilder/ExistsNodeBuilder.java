@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
@@ -36,17 +37,17 @@ class ExistsNodeBuilder implements NodeBuilder {
     public Node build() {
         Node node = new Node() {
             @Override
-            public void append(StringBuilder buffer) {
+            public void append(QuotingAppendable buffer) {
                 buffer.append("EXISTS");
             }
 
             @Override
-            public void appendChildrenStart(StringBuilder builder) {
+            public void appendChildrenStart(QuotingAppendable builder) {
                 builder.append('(');
             }
 
             @Override
-            public void appendChildrenEnd(StringBuilder builder) {
+            public void appendChildrenEnd(QuotingAppendable builder) {
                 builder.append(')');
             }
         };

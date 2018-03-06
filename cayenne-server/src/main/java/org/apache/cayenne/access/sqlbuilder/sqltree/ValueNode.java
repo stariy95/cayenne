@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 import org.apache.cayenne.map.DbAttribute;
 
 /**
@@ -46,11 +47,11 @@ public class ValueNode extends Node {
     }
 
     @Override
-    public void append(StringBuilder buffer) {
+    public void append(QuotingAppendable buffer) {
         appendValue(value, buffer);
     }
 
-    private void appendValue(Object val, StringBuilder buffer) {
+    private void appendValue(Object val, QuotingAppendable buffer) {
         if(val == null) {
             return;
         }
@@ -89,7 +90,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(byte[] val, StringBuilder buffer) {
+    private void appendValue(byte[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(byte i : val) {
             if(first) {
@@ -101,7 +102,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(short[] val, StringBuilder buffer) {
+    private void appendValue(short[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(short i : val) {
             if(first) {
@@ -113,7 +114,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(char[] val, StringBuilder buffer) {
+    private void appendValue(char[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(char i : val) {
             if(first) {
@@ -125,7 +126,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(int[] val, StringBuilder buffer) {
+    private void appendValue(int[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(int i : val) {
             if(first) {
@@ -137,7 +138,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(long[] val, StringBuilder buffer) {
+    private void appendValue(long[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(long i : val) {
             if(first) {
@@ -149,7 +150,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(float[] val, StringBuilder buffer) {
+    private void appendValue(float[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(float i : val) {
             if(first) {
@@ -161,7 +162,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(double[] val, StringBuilder buffer) {
+    private void appendValue(double[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(double i : val) {
             if(first) {
@@ -173,7 +174,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(boolean[] val, StringBuilder buffer) {
+    private void appendValue(boolean[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(boolean i : val) {
             if(first) {
@@ -185,7 +186,7 @@ public class ValueNode extends Node {
         }
     }
 
-    private void appendValue(Object[] val, StringBuilder buffer) {
+    private void appendValue(Object[] val, QuotingAppendable buffer) {
         boolean first = true;
         for(Object i : val) {
             if(first) {

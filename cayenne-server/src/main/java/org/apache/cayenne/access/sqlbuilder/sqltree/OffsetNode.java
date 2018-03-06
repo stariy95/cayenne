@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+
 /**
  * @since 4.1
  */
@@ -30,7 +32,7 @@ public class OffsetNode extends Node {
     }
 
     @Override
-    public void append(StringBuilder buffer) {
+    public void append(QuotingAppendable buffer) {
         buffer.append("OFFSET ").append(offset);
     }
 }

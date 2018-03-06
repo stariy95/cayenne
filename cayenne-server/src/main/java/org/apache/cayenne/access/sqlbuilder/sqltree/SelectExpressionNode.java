@@ -21,6 +21,8 @@ package org.apache.cayenne.access.sqlbuilder.sqltree;
 
 import java.util.Objects;
 
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+
 /**
  * @since 4.1
  */
@@ -36,10 +38,10 @@ public class SelectExpressionNode extends Node {
     }
 
     @Override
-    public void append(StringBuilder buffer) {
+    public void append(QuotingAppendable buffer) {
         buffer.append(expression);
         if(alias != null) {
-            buffer.append(" AS ").append(alias);
+            buffer.append(" AS ").appendQuoted(alias);
         }
     }
 }

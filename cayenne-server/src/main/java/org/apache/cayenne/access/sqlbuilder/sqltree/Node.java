@@ -22,6 +22,9 @@ package org.apache.cayenne.access.sqlbuilder.sqltree;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+import org.apache.cayenne.access.translator.select.next.StringBuilderAppendable;
+
 /**
  * @since 4.1
  */
@@ -72,7 +75,7 @@ public abstract class Node {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        QuotingAppendable sb = new StringBuilderAppendable();
         append(sb);
         return "Node {" + sb.toString() + "}";
     }
@@ -81,16 +84,16 @@ public abstract class Node {
         return type;
     }
 
-    public abstract void append(StringBuilder buffer);
+    public abstract void append(QuotingAppendable buffer);
 
-    public void appendChildSeparator(StringBuilder builder, int childInd) {
+    public void appendChildSeparator(QuotingAppendable builder, int childInd) {
         builder.append(' ');
     }
 
-    public void appendChildrenStart(StringBuilder builder) {
+    public void appendChildrenStart(QuotingAppendable builder) {
         builder.append(' ');
     }
 
-    public void appendChildrenEnd(StringBuilder builder) {
+    public void appendChildrenEnd(QuotingAppendable builder) {
     }
 }

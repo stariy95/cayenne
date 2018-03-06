@@ -17,21 +17,55 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder.sqltree;
-
-import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+package org.apache.cayenne.access.translator.select.next;
 
 /**
  * @since 4.1
  */
-public class EmptyNode extends Node {
+public class StringBuilderAppendable implements QuotingAppendable {
+
+    protected final StringBuilder builder;
+
+    public StringBuilderAppendable() {
+        this.builder = new StringBuilder();
+    }
 
     @Override
-    public void append(QuotingAppendable buffer) {
+    public QuotingAppendable append(CharSequence csq) {
+        builder.append(csq);
+        return this;
+    }
+
+    @Override
+    public QuotingAppendable append(CharSequence csq, int start, int end) {
+        builder.append(csq, start, end);
+        return this;
+    }
+
+    @Override
+    public QuotingAppendable append(char c) {
+        builder.append(c);
+        return this;
+    }
+
+    @Override
+    public QuotingAppendable append(int c) {
+        builder.append(c);
+        return this;
+    }
+
+    @Override
+    public QuotingAppendable appendQuoted(String content) {
+        builder.append(content);
+        return this;
     }
 
     @Override
     public String toString() {
-        return "EmptyNode";
+        return builder.toString();
+    }
+
+    public StringBuilder unwrap() {
+        return builder;
     }
 }

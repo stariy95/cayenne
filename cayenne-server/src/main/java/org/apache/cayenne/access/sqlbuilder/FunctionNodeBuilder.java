@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
@@ -46,25 +47,25 @@ public class FunctionNodeBuilder implements ExpressionTrait {
     public Node build() {
         Node functionNode = new Node() {
             @Override
-            public void append(StringBuilder buffer) {
+            public void append(QuotingAppendable buffer) {
                 buffer.append(functionName);
             }
 
             @Override
-            public void appendChildrenStart(StringBuilder builder) {
+            public void appendChildrenStart(QuotingAppendable builder) {
                 builder.append('(');
             }
 
             @Override
-            public void appendChildrenEnd(StringBuilder builder) {
+            public void appendChildrenEnd(QuotingAppendable builder) {
                 builder.append(')');
                 if(alias != null) {
-                    builder.append(" AS ").append(alias).append(' ');
+                    builder.append(" AS ").appendQuoted(alias).append(' ');
                 }
             }
 
             @Override
-            public void appendChildSeparator(StringBuilder builder, int childIdx) {
+            public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
                 builder.append(',');
             }
         };

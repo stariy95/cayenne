@@ -19,21 +19,23 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+
 /**
  * @since 4.1
  */
 public class ExpressionNode extends Node {
     @Override
-    public void append(StringBuilder buffer) {
+    public void append(QuotingAppendable buffer) {
     }
 
     @Override
-    public void appendChildrenStart(StringBuilder builder) {
+    public void appendChildrenStart(QuotingAppendable builder) {
         builder.append('(');
     }
 
     @Override
-    public void appendChildrenEnd(StringBuilder builder) {
+    public void appendChildrenEnd(QuotingAppendable builder) {
         builder.append(')');
     }
 

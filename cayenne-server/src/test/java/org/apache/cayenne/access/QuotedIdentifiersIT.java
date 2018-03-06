@@ -79,6 +79,7 @@ public class QuotedIdentifiersIT extends ServerCase {
 
     @Test
     public void testDataSetup() {
+        // TODO: rewrite data creation to use direct insert
         SelectQuery<QuoteAdress> q = SelectQuery.query(QuoteAdress.class);
         List<QuoteAdress> objects = q.select(context);
         assertEquals(1, objects.size());

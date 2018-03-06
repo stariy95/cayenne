@@ -19,18 +19,20 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+
 /**
  * @since 4.1
  */
 public class OrderByNode extends Node {
 
     @Override
-    public void append(StringBuilder buffer) {
+    public void append(QuotingAppendable buffer) {
         buffer.append("ORDER BY");
     }
 
     @Override
-    public void appendChildSeparator(StringBuilder builder, int childInd) {
+    public void appendChildSeparator(QuotingAppendable builder, int childInd) {
         builder.append(',');
     }
 }

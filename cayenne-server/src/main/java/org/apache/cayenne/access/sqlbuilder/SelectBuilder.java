@@ -30,6 +30,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.OrderByNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.SelectNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.SelectResultNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.WhereNode;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 import org.apache.cayenne.di.Provider;
 
 /**
@@ -73,7 +74,7 @@ public class SelectBuilder implements NodeBuilder {
     public SelectBuilder top(int count) {
         root.addChild(new Node() {
             @Override
-            public void append(StringBuilder buffer) {
+            public void append(QuotingAppendable buffer) {
                 buffer.append("TOP ").append(count);
             }
         });

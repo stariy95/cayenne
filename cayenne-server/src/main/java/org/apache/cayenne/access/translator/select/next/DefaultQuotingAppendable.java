@@ -17,22 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder.sqltree;
-
-import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+package org.apache.cayenne.access.translator.select.next;
 
 /**
  * @since 4.1
  */
-public class LimitNode extends Node {
-    private final int limit;
+public class DefaultQuotingAppendable extends StringBuilderAppendable {
 
-    public LimitNode(int limit) {
-        this.limit = limit;
+    private final TranslatorContext context;
+
+    public DefaultQuotingAppendable(TranslatorContext context) {
+        this.context = context;
     }
 
     @Override
-    public void append(QuotingAppendable buffer) {
-        buffer.append("LIMIT ").append(limit);
+    public QuotingAppendable appendQuoted(String content) {
+        String quotedIdentifier = context.getQuotingStrategy().quotedIdentifier(context.getRootDbEntity(), content);
+        builder.append(quotedIdentifier);
+        return this;
     }
 }
