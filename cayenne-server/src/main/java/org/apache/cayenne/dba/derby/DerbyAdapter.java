@@ -20,6 +20,7 @@
 package org.apache.cayenne.dba.derby;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
@@ -38,13 +39,13 @@ import org.apache.cayenne.dba.JdbcAdapter;
 import org.apache.cayenne.dba.PkGenerator;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
-import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.resource.ResourceLocator;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for the <a href="http://db.apache.org/derby/"> Derby RDBMS
@@ -172,6 +173,11 @@ public class DerbyAdapter extends JdbcAdapter {
                 "RTRIM");
         translator.setCaseInsensitive(caseInsensitiveCollations);
         return translator;
+    }
+
+    @Override
+    public Function<Node, Node> getSqlTreeProcessor() {
+        return new DerbySqlTreeProcessor();
     }
 
     /**

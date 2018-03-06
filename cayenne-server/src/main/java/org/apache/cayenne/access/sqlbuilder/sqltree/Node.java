@@ -54,6 +54,14 @@ public abstract class Node {
         return children.size();
     }
 
+    public void removeChild(int idx) {
+        children.remove(idx).setParent(null);
+    }
+
+    public void replaceChild(int idx, Node node) {
+        children.set(idx, node).setParent(null);
+    }
+
     public Node getParent() {
         return parent;
     }
@@ -67,6 +75,7 @@ public abstract class Node {
         int count = getChildrenCount();
         for(int i=0; i<count; i++) {
             Node child = getChild(i);
+            visitor.onChildNodeStart(child, i, i < (count - 1));
             child.visit(visitor);
             visitor.onChildNodeEnd(child, i, i < (count - 1));
         }

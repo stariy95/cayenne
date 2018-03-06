@@ -21,6 +21,7 @@ package org.apache.cayenne.dba;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.batch.BatchTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
@@ -58,6 +59,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * A generic DbAdapter implementation. Can be used as a default adapter or as a
@@ -540,8 +542,12 @@ public class JdbcAdapter implements DbAdapter {
 	}
 
 	@Override
-	public void bindParameter(PreparedStatement statement, ParameterBinding binding)
-			throws SQLException, Exception {
+	public Function<Node, Node> getSqlTreeProcessor() {
+		return Function.identity();
+	}
+
+	@Override
+	public void bindParameter(PreparedStatement statement, ParameterBinding binding) throws Exception {
 
 		if (binding.getValue() == null) {
 			statement.setNull(binding.getStatementPosition(), binding.getJdbcType());

@@ -17,18 +17,28 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder.sqltree;
+package org.apache.cayenne.dba.derby.sqltree;
+
+import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
  */
-public interface NodeTreeVisitor {
+public class DerbyLimitOffsetNode extends LimitOffsetNode {
 
-    void onNodeStart(Node node);
+    public DerbyLimitOffsetNode(LimitOffsetNode node) {
+        super(node.getLimit(), node.getOffset());
+    }
 
-    void onChildNodeStart(Node node, int index, boolean hasMore);
-
-    void onChildNodeEnd(Node node, int index, boolean hasMore);
-
-    void onNodeEnd(Node node);
+    @Override
+    public void append(QuotingAppendable buffer) {
+        // OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY
+        if(offset > 0) {
+            buffer.append("OFFSET ").append(offset).append(" ROWS ");
+        }
+        if(limit > 0) {
+            buffer.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
+        }
+    }
 }

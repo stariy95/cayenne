@@ -23,7 +23,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.DistinctNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FromNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.GroupByNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.HavingNode;
-import org.apache.cayenne.access.sqlbuilder.sqltree.LimitNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.OffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.OrderByNode;
@@ -46,7 +46,6 @@ public class SelectBuilder implements NodeBuilder {
     private static final int UNION_NODE     = 5;
     private static final int ORDERBY_NODE   = 6;
     private static final int LIMIT_NODE     = 7;
-    private static final int OFFSET_NODE    = 8;
 
     /**
      * Main root of this query
@@ -57,7 +56,7 @@ public class SelectBuilder implements NodeBuilder {
      * Following nodes are all children of root,
      * but we keep them here for quick access.
      */
-    private Node[] nodes = new Node[OFFSET_NODE + 1];
+    private Node[] nodes = new Node[LIMIT_NODE + 1];
 
     public SelectBuilder(NodeBuilder... selectExpressions) {
         root = new SelectNode();
@@ -127,12 +126,12 @@ public class SelectBuilder implements NodeBuilder {
     }
 
     public SelectBuilder limit(int limit) {
-        node(LIMIT_NODE, new LimitNode(limit));
+        ((LimitOffsetNode)node(LIMIT_NODE, LimitOffsetNode::new)).setLimit(limit);
         return this;
     }
 
     public SelectBuilder offset(int offset) {
-        node(OFFSET_NODE, new OffsetNode(offset));
+        ((LimitOffsetNode)node(LIMIT_NODE, LimitOffsetNode::new)).setOffset(offset);
         return this;
     }
 

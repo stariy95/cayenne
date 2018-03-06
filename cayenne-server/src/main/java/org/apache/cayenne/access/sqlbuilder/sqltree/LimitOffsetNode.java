@@ -24,15 +24,43 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 /**
  * @since 4.1
  */
-public class LimitNode extends Node {
-    private final int limit;
+public class LimitOffsetNode extends Node {
 
-    public LimitNode(int limit) {
+    protected int limit;
+    protected int offset;
+
+    public LimitOffsetNode() {
+    }
+
+    public LimitOffsetNode(int limit, int offset) {
         this.limit = limit;
+        this.offset = offset;
     }
 
     @Override
     public void append(QuotingAppendable buffer) {
-        buffer.append("LIMIT ").append(limit);
+        buffer.append("LIMIT ").append(limit)
+                .append(" OFFSET ").append(offset);
+    }
+
+    @Override
+    public NodeType getType() {
+        return NodeType.LIMIT_OFFSET;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 }

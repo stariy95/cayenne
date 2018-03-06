@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
 import org.apache.cayenne.dba.DbAdapter;
@@ -69,8 +70,13 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
     }
 
     protected String generateSql() {
+        // Build final SQL tree
+        Node node = context.getSelectBuilder().build();
+        // convert to database flavour
+        node = context.getAdapter().getSqlTreeProcessor().apply(node);
+        // generate SQL
         SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
-        context.getSelectBuilder().build().visit(visitor);
+        node.visit(visitor);
         return visitor.getSQLString();
     }
 
