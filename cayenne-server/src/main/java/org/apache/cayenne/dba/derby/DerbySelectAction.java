@@ -17,38 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.derby.sqltree;
+package org.apache.cayenne.dba.derby;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
-import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.jdbc.SelectAction;
+import org.apache.cayenne.query.SelectQuery;
 
 /**
  * @since 4.1
  */
-public class DerbyLimitOffsetNode extends LimitOffsetNode {
+public class DerbySelectAction extends SelectAction {
 
-    public DerbyLimitOffsetNode(LimitOffsetNode node) {
-        super(node.getLimit(), node.getOffset());
+    public DerbySelectAction(SelectQuery<?> query, DataNode dataNode) {
+        super(query, dataNode);
     }
 
     @Override
-    public void append(QuotingAppendable buffer) {
-        // using JDBC escape syntax
-//        if(offset > 0 || limit > 0) {
-//            buffer.append("{ ");
-//            buffer.append("LIMIT ").append(limit).append(' ');
-//            if(offset > 0) {
-//                buffer.append("OFFSET ").append(offset);
-//            }
-//            buffer.append(" }");
-//        }
-
-        // OFFSET X ROWS FETCH NEXT Y ROWS ONLY
-        if(offset > 0) {
-            buffer.append("OFFSET ").append(offset).append(" ROWS ");
-        }
-        if(limit > 0) {
-            buffer.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
-        }
+    protected int getInMemoryOffset(int queryOffset) {
+        return 0;
     }
 }

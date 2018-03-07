@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collections;
@@ -127,7 +128,7 @@ public class SelectQueryIT extends ServerCase {
 
 		createArtistsDataSet();
 
-		int totalRows = new SelectQuery<>(Artist.class).select(context).size();
+		long totalRows = ObjectSelect.query(Artist.class).selectCount(context);
 
 		SelectQuery<Artist> query = new SelectQuery<>(Artist.class);
 		query.addOrdering("db:" + Artist.ARTIST_ID_PK_COLUMN, SortOrder.ASCENDING);

@@ -32,14 +32,6 @@ class LimitOffsetStage extends TranslationStage {
         int offset = context.getMetadata().getFetchOffset();
         int limit = context.getMetadata().getFetchLimit();
 
-        if (offset > 0 || limit > 0) {
-            // both OFFSET and LIMIT must be present, so come up with defaults
-            // if one of them is not set by the user
-            if (limit == 0) {
-                limit = Integer.MAX_VALUE;
-            }
-
-            context.getSelectBuilder().limit(limit).offset(offset);
-        }
+        context.getSelectBuilder().limit(limit).offset(offset);
     }
 }

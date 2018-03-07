@@ -23,7 +23,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
+import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
@@ -64,23 +67,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
         for(Property<?> property : columns) {
             NodeBuilder nextNode = translator.translate(property.getExpression());
 
-            if(property.getExpression().getType() == Expression.FULL_OBJECT) {
-                ASTFullObject exp = (ASTFullObject)property.getExpression();
-                if(exp.getOperandCount() > 0) {
-                    Expression op = (Expression) exp.getOperand(0);
-                    if (op instanceof ASTPath) {
-                        prefix = ((ASTPath) op).getPath();
-                    }
-                }
-                ColumnExtractor extractor;
-                ObjEntity entity = context.getResolver().getObjEntity(property.getType());
-                if(context.getMetadata().getPageSize() > 0) {
-                    extractor = new IdColumnExtractor(context, entity);
-                } else {
-                    ClassDescriptor descriptor = context.getResolver().getClassDescriptor(entity.getName());
-                    extractor = new DescriptorColumnExtractor(context, descriptor);
-                }
-                extractor.extract(prefix);
+            if(checkAndExtractFullObject(prefix, property)) {
                 continue;
             }
 
@@ -114,6 +101,49 @@ class CustomColumnSetExtractor implements ColumnExtractor {
                 }
             });
         }
+    }
+
+    private boolean checkAndExtractFullObject(String prefix, Property<?> property) {
+        int expressionType = property.getExpression().getType();
+
+        // forbid direct selection of toMany relationships columns
+        if(property.getType() != null && (expressionType == Expression.OBJ_PATH || expressionType == Expression.DB_PATH)
+                && (Collection.class.isAssignableFrom(property.getType())
+                || Map.class.isAssignableFrom(property.getType()))) {
+            throw new CayenneRuntimeException("Can't directly select toMany relationship columns. " +
+                    "Either select it with aggregate functions like count() or with flat() function to select full related objects.");
+        }
+
+        // evaluate ObjPath with Persistent type as toOne relations and use it as full object
+        boolean objectProperty = expressionType == Expression.FULL_OBJECT
+                || (property.getType() != null && expressionType == Expression.OBJ_PATH
+                    && Persistent.class.isAssignableFrom(property.getType()));
+
+        if(!objectProperty) {
+            return false;
+        }
+
+        Expression propertyExpression = property.getExpression();
+        if(expressionType == Expression.FULL_OBJECT && propertyExpression != null
+                && propertyExpression.getOperandCount() > 0) {
+            Object op = propertyExpression.getOperand(0);
+            if(op instanceof ASTPath) {
+                prefix = ((ASTPath) op).getPath();
+            }
+        } else if(propertyExpression instanceof ASTPath) {
+            prefix = ((ASTPath) propertyExpression).getPath();
+        }
+
+        ColumnExtractor extractor;
+        ObjEntity entity = context.getResolver().getObjEntity(property.getType());
+        if(context.getMetadata().getPageSize() > 0) {
+            extractor = new IdColumnExtractor(context, entity);
+        } else {
+            ClassDescriptor descriptor = context.getResolver().getClassDescriptor(entity.getName());
+            extractor = new DescriptorColumnExtractor(context, descriptor);
+        }
+        extractor.extract(prefix);
+        return true;
     }
 
     private int getJdbcTypeForProperty(Property<?> property) {

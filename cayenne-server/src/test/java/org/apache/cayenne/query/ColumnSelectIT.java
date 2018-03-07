@@ -847,7 +847,7 @@ public class ColumnSelectIT extends ServerCase {
         List<Object[]> result = ObjectSelect.query(Artist.class)
                 .columns(artistFull, Artist.ARTIST_NAME, Artist.PAINTING_ARRAY.count())
                 .select(context);
-        assertEquals(5, result.size());
+        assertEquals(20, result.size());
 
         for(Object[] next : result) {
             assertTrue(next[0] instanceof Artist);
@@ -898,15 +898,19 @@ public class ColumnSelectIT extends ServerCase {
         List<Object[]> result = ObjectSelect.query(Artist.class)
                 .columns(artist, Artist.PAINTING_ARRAY.flat(Painting.class), Artist.PAINTING_ARRAY.dot(Painting.TO_GALLERY))
                 .select(context);
-        assertEquals(21, result.size());
+        assertEquals(36, result.size());
 
         for(Object[] next : result) {
             assertTrue(next[0] instanceof Artist);
-            assertTrue(next[1] instanceof Painting);
-            assertTrue(next[2] instanceof Gallery);
             assertEquals(PersistenceState.COMMITTED, ((Artist)next[0]).getPersistenceState());
-            assertEquals(PersistenceState.COMMITTED, ((Painting)(next[1])).getPersistenceState());
-            assertEquals(PersistenceState.COMMITTED, ((Gallery)(next[2])).getPersistenceState());
+            if(next[1] != null) {
+                assertTrue(next[1] instanceof Painting);
+                assertEquals(PersistenceState.COMMITTED, ((Painting)(next[1])).getPersistenceState());
+            }
+            if(next[2] != null) {
+                assertTrue(next[2] instanceof Gallery);
+                assertEquals(PersistenceState.COMMITTED, ((Gallery) (next[2])).getPersistenceState());
+            }
         }
     }
 
