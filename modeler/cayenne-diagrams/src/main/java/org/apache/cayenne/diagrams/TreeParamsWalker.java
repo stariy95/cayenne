@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.diagrams;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,12 +49,14 @@ public class TreeParamsWalker implements NodeTreeWalker {
     /**
      * Define width per depth (total nodes on depth + unrelated components)
      */
-    Map<Integer, Width> width = new HashMap<>();
+    private Map<Integer, Width> width = new HashMap<>();
+
+    private Map<Integer, List<Node>> nodePerDepth = new HashMap<>();
 
     /**
      * Mark visited to ignore cycles
      */
-    Set<Node> visited = new HashSet<>();
+    private Set<Node> visited = new HashSet<>();
 
     @Override
     public void walk(Node node, Consumer<Node> consumer) {
@@ -60,6 +64,8 @@ public class TreeParamsWalker implements NodeTreeWalker {
         // add visited now to evade self-references
         visited.add(node);
         consumer.accept(node);
+
+        nodePerDepth.computeIfAbsent(depth, d -> new ArrayList<>()).add(node);
 
         List<Node> children = node.getChildren().stream()
                 .filter(c -> visited.add(c)).collect(Collectors.toList());
@@ -69,7 +75,7 @@ public class TreeParamsWalker implements NodeTreeWalker {
             if (depth > maxDepth) {
                 maxDepth = depth;
             }
-            width.compute(depth, (d, old) -> old == null ? new Width(count) : old.add(count));
+            width.computeIfAbsent(depth, d -> new Width()).add(count);
             children.forEach(c -> walk(c, consumer));
             depth--;
         }
@@ -79,18 +85,32 @@ public class TreeParamsWalker implements NodeTreeWalker {
         return maxDepth;
     }
 
+    public int getWidth(int level) {
+        return width.getOrDefault(level, new Width()).getTotal();
+    }
+
+    public int getMaxWidth() {
+        return width.values().stream()
+                .max(Comparator.comparingInt(Width::getTotal))
+                .orElse(new Width())
+                .getTotal();
+    }
+
+    public List<Node> getNodes(int level) {
+        return nodePerDepth.get(level);
+    }
+
     static private class Width {
-        int total;
-        int components;
-        private Width(int count) {
-            components = 1;
-            total = count;
+        private int total;
+        private int components;
+
+        public int getTotal() {
+            return total;
         }
 
-        Width add(int count) {
+        void add(int count) {
             components++;
             total += count;
-            return this;
         }
     }
 }

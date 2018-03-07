@@ -49,7 +49,10 @@ public class NodeTest {
 
         walker.walk(node0, n -> {});
 
-        System.out.println("Max depth: " + walker.getMaxDepth());
+        int depth = walker.getMaxDepth();
+        int width = walker.getMaxWidth();
+
+        System.out.println("Tree depth: " + depth + ", tree width: " + width);
     }
 
 

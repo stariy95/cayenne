@@ -19,13 +19,14 @@
 
 package org.apache.cayenne.diagrams;
 
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.ArcType;
 import javafx.stage.Stage;
 
 /**
@@ -41,7 +42,7 @@ public class TestApp extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Drawing Operations Test");
         Group root = new Group();
-        Canvas canvas = new Canvas(300, 250);
+        Canvas canvas = new Canvas(800, 600);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         drawShapes(gc);
         root.getChildren().add(canvas);
@@ -50,26 +51,55 @@ public class TestApp extends Application {
     }
 
     private void drawShapes(GraphicsContext gc) {
+        TreeParamsWalker walker = new TreeParamsWalker();
+
+        Node node0 = new Node();
+        Node node1 = new Node();
+        node0.addChild(node0);
+        node0.addChild(node1);
+        node1.addChild(new Node());
+        node1.addChild(new Node());
+
+        Node node2 = new Node();
+        node0.addChild(node2);
+
+        Node node3 = new Node();
+        node2.addChild(node3);
+        node3.addChild(new Node());
+        node3.addChild(new Node());
+        node3.addChild(new Node());
+        node3.addChild(node1);
+
+        walker.walk(node0, n -> {});
+
+        int depth = walker.getMaxDepth();
+        int width = walker.getMaxWidth();
+
+        int nodeWidth  = 100;
+        int nodeHeight = 50;
+
+        int margin = 5;
+
+        int x = margin;
+        int y = margin;
+
+        int centerX = 200;
+        int centerY = 0;
+
         gc.setFill(Color.GREEN);
         gc.setStroke(Color.BLUE);
-        gc.setLineWidth(5);
-        gc.strokeLine(40, 10, 10, 40);
-        gc.fillOval(10, 60, 30, 30);
-        gc.strokeOval(60, 60, 30, 30);
-        gc.fillRoundRect(110, 60, 30, 30, 10, 10);
-        gc.strokeRoundRect(160, 60, 30, 30, 10, 10);
-        gc.fillArc(10, 110, 30, 30, 45, 240, ArcType.OPEN);
-        gc.fillArc(60, 110, 30, 30, 45, 240, ArcType.CHORD);
-        gc.fillArc(110, 110, 30, 30, 45, 240, ArcType.ROUND);
-        gc.strokeArc(10, 160, 30, 30, 45, 240, ArcType.OPEN);
-        gc.strokeArc(60, 160, 30, 30, 45, 240, ArcType.CHORD);
-        gc.strokeArc(110, 160, 30, 30, 45, 240, ArcType.ROUND);
-        gc.fillPolygon(new double[]{10, 40, 10, 40},
-                new double[]{210, 210, 240, 240}, 4);
-        gc.strokePolygon(new double[]{60, 90, 60, 90},
-                new double[]{210, 210, 240, 240}, 4);
-        gc.strokePolyline(new double[]{110, 140, 110, 140},
-                new double[]{210, 210, 240, 240}, 4);
+        gc.setLineWidth(2);
+
+        for(int i=0; i<=depth; i++) {
+            List<Node> nodeList = walker.getNodes(i);
+            for(int j=0; j<nodeList.size(); j++) {
+                gc.strokeRoundRect(x, y, nodeWidth, nodeHeight, 5, 5);
+                x += nodeWidth + 2 * margin;
+            }
+            x = margin;
+            y += nodeHeight + 2 * margin;
+        }
+
     }
 
 }
