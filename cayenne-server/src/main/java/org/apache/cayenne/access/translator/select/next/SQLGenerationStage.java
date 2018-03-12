@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.access.sqlbuilder.ColumnNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.JoinNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
@@ -50,7 +51,11 @@ class SQLGenerationStage extends TranslationStage {
 
     private void addResult() {
         for(ColumnDescriptor descriptor : context.getColumnDescriptors()) {
-            context.getSelectBuilder().result(table(descriptor.getNamePrefix()).column(descriptor.getName()));
+            ColumnNodeBuilder nodeBuilder = table(descriptor.getNamePrefix()).column(descriptor.getName());
+            if(descriptor.isExpression()) {
+                nodeBuilder.unescaped();
+            }
+            context.getSelectBuilder().result(nodeBuilder);
         }
     }
 

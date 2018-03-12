@@ -17,28 +17,32 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.derby.sqltree;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
  */
-public class DerbyLimitOffsetNode extends LimitOffsetNode {
+public class UnescapedColumnNode extends ColumnNode {
 
-    public DerbyLimitOffsetNode(LimitOffsetNode node) {
-        super(node.getLimit(), node.getOffset());
+    public UnescapedColumnNode(String table, String column, String alias) {
+        super(table, column, alias);
     }
 
     @Override
     public void append(QuotingAppendable buffer) {
-        // OFFSET X ROWS FETCH NEXT Y ROWS ONLY
-        if(offset > 0) {
-            buffer.append("OFFSET ").append(offset).append(" ROWS ");
+        if (table != null) {
+            buffer.append(table).append('.');
         }
-        if(limit > 0) {
-            buffer.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
+        buffer.append(column);
+        if (alias != null) {
+            buffer.append(' ').appendQuoted(alias);
         }
+    }
+
+    @Override
+    public NodeType getType() {
+        return NodeType.COLUMN;
     }
 }

@@ -607,7 +607,7 @@ public class ColumnSelectIT extends ServerCase {
                 .pageSize(10)
                 .select(context);
         assertNotNull(a);
-        assertEquals(5, a.size());
+        assertEquals(20, a.size());
         int idx = 0;
         for(Object[] next : a) {
             assertNotNull(next);

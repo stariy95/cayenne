@@ -22,6 +22,7 @@ package org.apache.cayenne.access.translator.select.next;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.OrderingNodeBuilder;
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.query.Ordering;
 
 import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
@@ -46,12 +47,14 @@ class OrderingStage extends TranslationStage {
     }
 
     private void processOrdering(Ordering ordering) {
-        NodeBuilder orderingNode = qualifierTranslator.translate(ordering.getSortSpec());
+        Expression exp = ordering.getSortSpec();
+        NodeBuilder orderingNode = qualifierTranslator.translate(exp);
 
         SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
         orderingNode.build().visit(visitor);
-        String exp = visitor.getSQLString();
-        ColumnDescriptor descriptor = new ColumnDescriptor(exp, Integer.MIN_VALUE);
+        String expSql = visitor.getSQLString();
+        ColumnDescriptor descriptor = new ColumnDescriptor(expSql, Integer.MIN_VALUE);
+        descriptor.setIsExpression(true);
 
         context.getColumnDescriptors().add(descriptor);
 

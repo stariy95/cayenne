@@ -294,7 +294,7 @@ class QualifierTranslator implements TraversalHandler {
         ExpressionNodeBuilder eq;
 
         if(relationship.isToMany()) {
-            String alias = context.getTableTree().aliasForAttributePath(relationship.getName() + "." + "dummy");
+            String alias = context.getTableTree().aliasForPath(relationship.getName());
             for (DbAttribute attribute : relationship.getTargetEntity().getPrimaryKeys()) {
                 Object nextValue = objectId.getIdSnapshot().get(attribute.getName());
                 eq = table(alias).column(attribute.getName()).eq(value(nextValue));

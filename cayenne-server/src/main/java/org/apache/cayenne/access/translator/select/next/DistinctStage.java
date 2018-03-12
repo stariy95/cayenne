@@ -35,7 +35,7 @@ public class DistinctStage extends TranslationStage {
             return;
         }
 
-        if(context.getTableTree().getNodeCount() > 1) {
+        if(context.getTableTree().getNodeCount() > 1 && !context.getMetadata().isSuppressingDistinct()) {
             context.getSelectBuilder().distinct();
         }
     }

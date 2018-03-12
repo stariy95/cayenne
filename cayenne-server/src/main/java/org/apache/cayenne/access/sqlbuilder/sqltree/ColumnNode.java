@@ -26,9 +26,9 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
  */
 public class ColumnNode extends Node {
 
-    private final String table;
-    private final String column;
-    private final String alias;
+    protected final String table;
+    protected final String column;
+    protected final String alias;
 
     public ColumnNode(String table, String column, String alias) {
         this.table = table;

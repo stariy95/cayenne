@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.UnescapedColumnNode;
 
 /**
  * @since 4.1
@@ -32,6 +33,8 @@ public class ColumnNodeBuilder implements ExpressionTrait {
     private final String table;
 
     private final String column;
+
+    private boolean unescaped;
 
     private String alias;
 
@@ -45,6 +48,10 @@ public class ColumnNodeBuilder implements ExpressionTrait {
         return this;
     }
 
+    public void unescaped() {
+        this.unescaped = true;
+    }
+
     public OrderingNodeBuilder desc() {
         return new OrderingNodeBuilder(this).desc();
     }
@@ -55,7 +62,11 @@ public class ColumnNodeBuilder implements ExpressionTrait {
 
     @Override
     public Node build() {
-        return new ColumnNode(table, column, alias);
+        if(unescaped) {
+            return new UnescapedColumnNode(table, column, alias);
+        } else {
+            return new ColumnNode(table, column, alias);
+        }
     }
 
 }

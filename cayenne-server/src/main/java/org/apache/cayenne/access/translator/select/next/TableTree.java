@@ -26,6 +26,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
+import org.apache.cayenne.util.Util;
 
 /**
  * @since 4.1
@@ -72,17 +73,24 @@ class TableTree {
         tableNodes.put(path, node);
     }
 
+    String aliasForPath(String attributePath) {
+        if(Util.isEmptyString(attributePath)) {
+            return rootNode.tableAlias;
+        }
+        TableTreeNode node = tableNodes.get(attributePath);
+        if (node == null) {
+            throw new CayenneRuntimeException("No table for attribute '%s' found", attributePath);
+        }
+        return node.tableAlias;
+    }
+
     String aliasForAttributePath(String attributePath) {
         int lastSeparator = attributePath.lastIndexOf('.');
         if (lastSeparator == -1) {
             return rootNode.tableAlias;
         }
         String table = attributePath.substring(0, lastSeparator);
-        TableTreeNode node = tableNodes.get(table);
-        if (node == null) {
-            throw new CayenneRuntimeException("No table for attribute '%s' found", attributePath);
-        }
-        return node.tableAlias;
+        return aliasForPath(table);
     }
 
     String nextTableAlias() {

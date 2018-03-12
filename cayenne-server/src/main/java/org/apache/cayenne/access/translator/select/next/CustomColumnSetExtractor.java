@@ -88,7 +88,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
             }
         }
 
-        if(!aggregateExpressions.isEmpty()) {
+        if(!aggregateExpressions.isEmpty() || context.getQuery().getHavingQualifier() != null) {
             context.getColumnDescriptors().forEach(c -> {
                 String groupByExp = c.getName();
                 String groupByPrefix = c.getNamePrefix();
