@@ -33,14 +33,18 @@ abstract class BaseColumnExtractor implements ColumnExtractor {
         this.context = context;
     }
 
-    protected void addDbAttribute(String prefix, DbAttribute dba) {
+    protected void addDbAttribute(String prefix, String labelPrefix, DbAttribute dba) {
         String path = dba.getName();
         if(prefix != null) {
             path = prefix + '.' + path;
         }
         String alias = context.getTableTree().aliasForAttributePath(path);
         ColumnDescriptor column = new ColumnDescriptor(dba, alias);
-        column.setDataRowKey(path);
+        if(labelPrefix != null) {
+            column.setDataRowKey(labelPrefix + '.' + dba.getName());
+        } else {
+            column.setDataRowKey(dba.getName());
+        }
         context.getColumnDescriptors().add(column);
     }
 }

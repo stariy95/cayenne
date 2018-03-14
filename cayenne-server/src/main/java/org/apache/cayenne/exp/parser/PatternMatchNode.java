@@ -78,6 +78,10 @@ public abstract class PatternMatchNode extends ConditionNode {
         escapeChar = value;
     }
 
+    public boolean isIgnoringCase() {
+        return ignoringCase;
+    }
+
     protected boolean matchPattern(String string) {
         return (string != null) ? getPattern().matcher(string).find() : false;
     }

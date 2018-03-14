@@ -24,46 +24,55 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 /**
  * @since 4.1
  */
-public class LimitOffsetNode extends Node {
+public class FunctionNode extends Node {
 
-    protected int limit;
-    protected int offset;
+    private final String functionName;
+    private final String alias;
+    private final boolean needParentheses;
 
-    public LimitOffsetNode() {
-    }
-
-    public LimitOffsetNode(int limit, int offset) {
-        this.limit = limit;
-        this.offset = offset;
+    public FunctionNode(String functionName, String alias, boolean needParentheses) {
+        this.functionName = functionName;
+        this.alias = alias;
+        this.needParentheses = needParentheses;
     }
 
     @Override
     public void append(QuotingAppendable buffer) {
-        if(limit == 0 && offset == 0) {
-            return;
+        buffer.append(functionName);
+    }
+
+    @Override
+    public void appendChildrenStart(QuotingAppendable builder) {
+        if (needParentheses) {
+            builder.append('(');
         }
-        buffer.append("LIMIT ").append(limit)
-                .append(" OFFSET ").append(offset);
+    }
+
+    @Override
+    public void appendChildrenEnd(QuotingAppendable builder) {
+        if (needParentheses) {
+            builder.append(')');
+        }
+        if (alias != null) {
+            builder.append(" AS ").appendQuoted(alias).append(' ');
+        }
+    }
+
+    @Override
+    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+        builder.append(',');
+    }
+
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public String getAlias() {
+        return alias;
     }
 
     @Override
     public NodeType getType() {
-        return NodeType.LIMIT_OFFSET;
-    }
-
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public int getOffset() {
-        return offset;
+        return NodeType.FUNCTION;
     }
 }

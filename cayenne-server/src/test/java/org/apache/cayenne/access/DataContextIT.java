@@ -326,7 +326,7 @@ public class DataContextIT extends ServerCase {
 
 		Artist artist = objects.get(0);
 		DataRow snapshot = context.getObjectStore().getSnapshot(artist.getObjectId());
-		assertEquals(3, snapshot.size());
+		assertEquals(4, snapshot.size());
 
 		// assert the ordering
 		assertEquals("artist1", objects.get(0).getArtistName());

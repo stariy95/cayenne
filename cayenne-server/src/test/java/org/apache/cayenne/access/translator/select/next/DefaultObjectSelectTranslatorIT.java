@@ -51,7 +51,7 @@ public class DefaultObjectSelectTranslatorIT extends ServerCase {
         DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, adapter, context.getEntityResolver());
 
         String sql = translator.getSql();
-        assertEquals("SELECT  t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  FROM ARTIST t0 ", sql);
+        assertEquals("SELECT  t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  FROM ARTIST t0", sql.trim());
     }
 
     @Test
@@ -65,9 +65,9 @@ public class DefaultObjectSelectTranslatorIT extends ServerCase {
         DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, adapter, context.getEntityResolver());
 
         String sql = translator.getSql();
-        assertEquals("SELECT  t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  " +
+        assertEquals("SELECT DISTINCT   t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  " +
                 "FROM ARTIST t0  JOIN PAINTING t1  ON ((t0.ARTIST_ID  =  t1.ARTIST_ID )) " +
-                "WHERE  ((t0.ARTIST_NAME  = 'artist' ) AND (t1.PAINTING_TITLE  = 'painting' ))", sql);
+                "WHERE  ((RTRIM(t0.ARTIST_NAME ) = ?) AND (t1.PAINTING_TITLE  = ?))", sql.trim());
     }
 
     @Test
@@ -77,6 +77,6 @@ public class DefaultObjectSelectTranslatorIT extends ServerCase {
         DefaultObjectSelectTranslator translator = new DefaultObjectSelectTranslator(select, adapter, context.getEntityResolver());
 
         String sql = translator.getSql();
-        assertEquals("SELECT  t0.ESTIMATED_PRICE ,t0.PAINTING_DESCRIPTION ,t0.PAINTING_TITLE ,t0.ARTIST_ID ,t0.GALLERY_ID ,t0.PAINTING_ID  FROM PAINTING t0 ", sql);
+        assertEquals("SELECT  t0.ESTIMATED_PRICE ,t0.PAINTING_DESCRIPTION ,t0.PAINTING_TITLE ,t0.ARTIST_ID ,t0.GALLERY_ID ,t0.PAINTING_ID  FROM PAINTING t0", sql.trim());
     }
 }

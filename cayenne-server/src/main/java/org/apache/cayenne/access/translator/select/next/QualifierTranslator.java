@@ -20,10 +20,7 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.cayenne.CayenneRuntimeException;
@@ -33,13 +30,14 @@ import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.TraversalHandler;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTFunctionCall;
-import org.apache.cayenne.exp.parser.ASTList;
 import org.apache.cayenne.exp.parser.ASTObjPath;
+import org.apache.cayenne.exp.parser.PatternMatchNode;
 import org.apache.cayenne.exp.parser.SimpleNode;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbJoin;
@@ -60,6 +58,8 @@ class QualifierTranslator implements TraversalHandler {
     private Set<Object> expressionsToSkip;
     private Node rootNode;
     private Node currentNode;
+
+    private boolean forceJoin;
 
     QualifierTranslator(TranslatorContext context) {
         this.context = context;
@@ -167,8 +167,6 @@ class QualifierTranslator implements TraversalHandler {
             case LESS_THAN_EQUAL_TO:
             case GREATER_THAN:
             case GREATER_THAN_EQUAL_TO:
-            case LIKE:
-            case NOT_LIKE:
                 return new ExpressionNode() {
                     @Override
                     public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
@@ -176,29 +174,13 @@ class QualifierTranslator implements TraversalHandler {
                     }
                 };
 
-
+            case LIKE:
+            case NOT_LIKE:
             case LIKE_IGNORE_CASE:
             case NOT_LIKE_IGNORE_CASE:
-                return new ExpressionNode() {
-                    @Override
-                    public void append(QuotingAppendable buffer) {
-                    }
-
-                    @Override
-                    public void appendChildrenStart(QuotingAppendable builder) {
-                        builder.append("UPPER(");
-                    }
-
-                    @Override
-                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-                        builder.append(") ").append(expToStr(node.getType())).append(" UPPER(");
-                    }
-
-                    @Override
-                    public void appendChildrenEnd(QuotingAppendable builder) {
-                        builder.append(")");
-                    }
-                };
+                PatternMatchNode patternMatchNode = (PatternMatchNode)node;
+                boolean not = node.getType() == NOT_LIKE || node.getType() == NOT_LIKE_IGNORE_CASE;
+                return new LikeNode(patternMatchNode.isIgnoringCase(), not, patternMatchNode.getEscapeChar());
 
             case OBJ_PATH:
                 String path = (String)node.getOperand(0);
@@ -239,11 +221,10 @@ class QualifierTranslator implements TraversalHandler {
         StringBuilder path = new StringBuilder(result.getFinalPath());
         DbAttribute[] lastDbAttribute = new DbAttribute[]{result.getLastAttribute()};
         result.getDbRelationship().ifPresent(r -> {
-            context.getTableTree().addJoinTable(path.toString(), r, JoinType.LEFT_OUTER);
-            if(!r.isToMany()) {
-                lastDbAttribute[0] = r.getJoins().get(0).getTarget();
+            if(r.isToMany() || !r.isToPK() || forceJoin) {
+                context.getTableTree().addJoinTable(path.toString(), r, JoinType.LEFT_OUTER);
+                path.append('.').append(lastDbAttribute[0].getName());
             }
-            path.append('.').append(lastDbAttribute[0].getName());
         });
 
         if(result.getDbAttributes().size() > 1) {
@@ -376,6 +357,10 @@ class QualifierTranslator implements TraversalHandler {
 
     @Override
     public void finishedChild(Expression node, int childIndex, boolean hasMoreChildren) {
+    }
+
+    public void setForceJoin(boolean forceJoin) {
+        this.forceJoin = forceJoin;
     }
 
     private String expToStr(int type) {

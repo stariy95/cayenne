@@ -21,6 +21,7 @@ package org.apache.cayenne.dba.hsqldb;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
@@ -53,6 +54,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for the <a href="http://hsqldb.sourceforge.net/">
@@ -98,6 +100,14 @@ public class HSQLDBAdapter extends JdbcAdapter {
 	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
 //		return new HSQLSelectTranslator(query, this, entityResolver);
 		return new DefaultObjectSelectTranslator(query, this, entityResolver);
+	}
+
+	/**
+	 * @since 4.1
+	 */
+	@Override
+	public Function<Node, Node> getSqlTreeProcessor() {
+		return new HSQLTreeProcessor();
 	}
 
 	/**

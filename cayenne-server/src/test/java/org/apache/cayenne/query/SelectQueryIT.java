@@ -320,8 +320,7 @@ public class SelectQueryIT extends ServerCase {
 
 		createArtistsWildcardDataSet();
 
-		// CAY-1978 - combining LIKE..ESCAPE with another clause generated bad
-		// SQL
+		// CAY-1978 - combining LIKE..ESCAPE with another clause generated bad SQL
 		SelectQuery<Artist> query = new SelectQuery<>(Artist.class);
 		query.andQualifier(ExpressionFactory.likeIgnoreCaseExp("artistName", "=_%", '='));
 		query.andQualifier(Artist.ARTIST_NAME.eq("_X"));

@@ -37,7 +37,7 @@ class DbEntityColumnExtractor extends BaseColumnExtractor {
     @Override
     public void extract(String prefix) {
         for(DbAttribute attribute : dbEntity.getAttributes()) {
-            addDbAttribute(prefix, attribute);
+            addDbAttribute(prefix, prefix, attribute);
         }
     }
 }

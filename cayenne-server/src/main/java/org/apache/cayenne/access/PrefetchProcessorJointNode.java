@@ -170,7 +170,7 @@ class PrefetchProcessorJointNode extends PrefetchProcessorNode {
                     .translateToDbPath(objectPath);
 
             // make sure we do not include "db:" prefix
-            prefix = /*"p$" +*/ translated.getOperand(0) + ".";
+            prefix = translated.getOperand(0) + ".";
         } else {
             prefix = "";
         }

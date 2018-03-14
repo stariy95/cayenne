@@ -62,6 +62,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
     @Override
     public void extract(String prefix) {
         QualifierTranslator translator = new QualifierTranslator(context);
+        translator.setForceJoin(true);
         Collection<String> aggregateExpressions = new HashSet<>(columns.size());
 
         for(Property<?> property : columns) {
@@ -140,7 +141,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
             extractor = new IdColumnExtractor(context, entity);
         } else {
             ClassDescriptor descriptor = context.getResolver().getClassDescriptor(entity.getName());
-            extractor = new DescriptorColumnExtractor(context, descriptor);
+            extractor = new DescriptorColumnExtractor(context, descriptor, null);
         }
         extractor.extract(prefix);
         return true;

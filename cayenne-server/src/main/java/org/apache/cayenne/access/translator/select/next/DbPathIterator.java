@@ -106,25 +106,15 @@ public class DbPathIterator implements Iterator<Void> {
 
     protected void processRelTermination(DbRelationship rel) {
         this.relationship = rel;
-        appendCurrentPath(relationship.getName());
+        appendCurrentPath(rel.getName());
 
-        for(DbJoin join : rel.getJoins()) {
-            DbAttribute attribute;
-            if (rel.isToMany()) {
-                DbEntity ent = join.getRelationship().getTargetEntity();
-                Collection<DbAttribute> pk = ent.getPrimaryKeys();
-                if (pk.size() != 1) {
-                    String msg = "DB_NAME expressions can only support targets with a single column PK. " +
-                            "This entity has %d columns in primary key.";
-                    throw new CayenneRuntimeException(msg, pk.size());
-                }
-
-                attribute = pk.iterator().next();
-            } else {
-                attribute = join.getSource();
+        if (rel.isToMany() || !rel.isToPK()) {
+            // match on target PK
+            dbAttributeList.addAll(rel.getTargetEntity().getPrimaryKeys());
+        } else {
+            for(DbJoin join : rel.getJoins()) {
+                dbAttributeList.add(join.getSource());
             }
-
-            dbAttributeList.add(attribute);
         }
     }
 

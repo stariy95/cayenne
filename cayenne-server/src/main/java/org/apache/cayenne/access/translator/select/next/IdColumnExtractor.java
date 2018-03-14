@@ -37,7 +37,7 @@ class IdColumnExtractor extends BaseColumnExtractor {
     @Override
     public void extract(String prefix) {
         for (DbAttribute dba : objEntity.getDbEntity().getPrimaryKeys()) {
-            addDbAttribute(prefix, dba);
+            addDbAttribute(prefix, prefix, dba);
         }
     }
 

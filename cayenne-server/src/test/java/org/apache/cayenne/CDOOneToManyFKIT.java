@@ -59,6 +59,10 @@ public class CDOOneToManyFKIT extends ServerCase {
 
         context.invalidateObjects(src, target, src2);
 
+        // SELECT DISTINCT   t0.DEP_ID ,t0.NAME ,t0.OTHER_ID  FROM TO_MANY_FKDEP t0  LEFT JOIN TO_MANY_FKROOT t1  ON ((t0.DEP_ID  =  t1.FK_ID )) WHERE  (t1.FK_ID  = ?)   [bind: 1->DEP_ID:200]
+        // SELECT            t0.DEP_ID ,t0.NAME ,t0.OTHER_ID  FROM TO_MANY_FKDEP t0       JOIN TO_MANY_FKROOT t1  ON ((t0.DEP_ID  =  t1.FK_ID )) WHERE t1.ID = ?  [bind: 1->ID:200]
+        // SELECT DISTINCT   t0.DEP_ID ,t0.NAME ,t0.OTHER_ID  FROM TO_MANY_FKDEP t0  LEFT JOIN TO_MANY_FKROOT t1  ON ((t0.DEP_ID  =  t1.FK_ID )) WHERE  (t1.FK_ID  = ?)   [bind: 1->DEP_ID:200]
+
         ToManyFkRoot src1 = (ToManyFkRoot) Cayenne.objectForPK(context, src.getObjectId());
         assertNotNull(src1.getDeps());
         assertEquals(1, src1.getDeps().size());

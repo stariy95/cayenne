@@ -29,6 +29,8 @@ import org.apache.cayenne.query.ObjectIdQuery;
 import org.apache.cayenne.query.RelationshipQuery;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.query.UpdateBatchQuery;
+import org.apache.cayenne.test.jdbc.DBHelper;
+import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.quotemap.QuoteAdress;
 import org.apache.cayenne.testdo.quotemap.Quote_Person;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
@@ -37,6 +39,7 @@ import org.apache.cayenne.unit.di.server.UseServerRuntime;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.Types;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -49,9 +52,35 @@ public class QuotedIdentifiersIT extends ServerCase {
     @Inject
     private ObjectContext context;
 
+    @Inject
+    protected DBHelper dbHelper;
+
     @Before
     public void setUp() throws Exception {
+        TableHelper tQuotedAddress = new TableHelper(dbHelper, "QUOTED_ADDRESS");
+        tQuotedAddress.setColumns("ADDRESS ID", "City", "group");
+        tQuotedAddress.insert(1, "city", "324");
+        tQuotedAddress.insert(2, "city2", null);
 
+        TableHelper tQuotedPerson = new TableHelper(dbHelper, "quote Person");
+        tQuotedPerson.setColumns("id", "address_id", "DAte", "GROUP", "NAME", "salary");
+        tQuotedPerson.insert(1, 1, null, "107324", "Arcadi", 10000);
+        tQuotedPerson.insert(2, 2, new Date(), "1111", "Name", 100);
+    }
+
+    @Test
+    public void testDataSetup() {
+        SelectQuery<QuoteAdress> q = SelectQuery.query(QuoteAdress.class);
+        List<QuoteAdress> objects = q.select(context);
+        assertEquals(2, objects.size());
+
+        SelectQuery<Quote_Person> qQuote_Person = SelectQuery.query(Quote_Person.class);
+        List<Quote_Person> objects2 = qQuote_Person.select(context);
+        assertEquals(2, objects2.size());
+    }
+
+    @Test
+    public void testInsert() {
         QuoteAdress quoteAdress = context.newObject(QuoteAdress.class);
         quoteAdress.setCity("city");
         quoteAdress.setGroup("324");
@@ -75,18 +104,14 @@ public class QuotedIdentifiersIT extends ServerCase {
         quote_Person2.setAddress_Rel(quoteAdress2);
 
         context.commitChanges();
-    }
 
-    @Test
-    public void testDataSetup() {
-        // TODO: rewrite data creation to use direct insert
         SelectQuery<QuoteAdress> q = SelectQuery.query(QuoteAdress.class);
         List<QuoteAdress> objects = q.select(context);
-        assertEquals(1, objects.size());
+        assertEquals(4, objects.size());
 
         SelectQuery<Quote_Person> qQuote_Person = SelectQuery.query(Quote_Person.class);
         List<Quote_Person> objects2 = qQuote_Person.select(context);
-        assertEquals(1, objects2.size());
+        assertEquals(4, objects2.size());
     }
 
     @Test

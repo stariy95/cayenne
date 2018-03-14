@@ -60,6 +60,7 @@ public abstract class Node {
 
     public void replaceChild(int idx, Node node) {
         children.set(idx, node).setParent(null);
+        node.setParent(this);
     }
 
     public Node getParent() {

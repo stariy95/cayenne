@@ -37,12 +37,14 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
     private final ClassDescriptor descriptor;
     private final PathTranslator pathTranslator;
+    private final String columnLabelPrefix;
     private String prefix;
 
-    DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor) {
+    DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor, String columnLabelPrefix) {
         super(context);
         this.descriptor = descriptor;
         this.pathTranslator = new PathTranslator(context);
+        this.columnLabelPrefix = columnLabelPrefix;
     }
 
     public void extract(String prefix) {
@@ -53,7 +55,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
         // add remaining needed attrs from DbEntity
         DbEntity table = descriptor.getEntity().getDbEntity();
         for (DbAttribute dba : table.getPrimaryKeys()) {
-            addDbAttribute(prefix, dba);
+            addDbAttribute(prefix, columnLabelPrefix, dba);
         }
     }
 
@@ -69,8 +71,8 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
         DbAttribute attribute = result.getDbAttributes().get(result.getDbAttributes().size() - 1);
         ColumnDescriptor column = new ColumnDescriptor(oa, attribute, alias);
-        if(prefix != null) {
-            column.setDataRowKey(prefix + '.' + attribute.getName());
+        if(columnLabelPrefix != null) {
+            column.setDataRowKey(columnLabelPrefix + '.' + attribute.getName());
         }
         context.getColumnDescriptors().add(column);
 
@@ -90,8 +92,8 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
         for(DbAttribute attribute : result.getDbAttributes()) {
             ColumnDescriptor column = new ColumnDescriptor(attribute, alias);
-            if(prefix != null) {
-                column.setDataRowKey(prefix + '.' + attribute.getName());
+            if(columnLabelPrefix != null) {
+                column.setDataRowKey(columnLabelPrefix + '.' + attribute.getName());
             }
             context.getColumnDescriptors().add(column);
         }

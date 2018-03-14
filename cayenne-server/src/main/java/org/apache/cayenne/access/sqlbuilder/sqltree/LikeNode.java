@@ -22,48 +22,52 @@ package org.apache.cayenne.access.sqlbuilder.sqltree;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
+ * expressions: LIKE, ILIKE, NOT LIKE, NOT ILIKE + ESCAPE
+ *
  * @since 4.1
  */
-public class LimitOffsetNode extends Node {
+public class LikeNode extends ExpressionNode {
 
-    protected int limit;
-    protected int offset;
+    private final boolean ignoreCase;
+    private final boolean not;
+    private final char escape;
 
-    public LimitOffsetNode() {
-    }
-
-    public LimitOffsetNode(int limit, int offset) {
-        this.limit = limit;
-        this.offset = offset;
+    public LikeNode(boolean ignoreCase, boolean not, char escape) {
+        this.ignoreCase = ignoreCase;
+        this.not = not;
+        this.escape = escape;
     }
 
     @Override
-    public void append(QuotingAppendable buffer) {
-        if(limit == 0 && offset == 0) {
-            return;
+    public void appendChildrenStart(QuotingAppendable builder) {
+        if(ignoreCase) {
+            builder.append("UPPER(");
         }
-        buffer.append("LIMIT ").append(limit)
-                .append(" OFFSET ").append(offset);
     }
 
     @Override
-    public NodeType getType() {
-        return NodeType.LIMIT_OFFSET;
+    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+        builder.append(' ');
+        if(ignoreCase) {
+            builder.append(')');
+        }
+        if(not) {
+            builder.append("NOT ");
+        }
+        builder.append("LIKE");
+        builder.append(' ');
+        if(ignoreCase) {
+            builder.append("UPPER(");
+        }
     }
 
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public int getOffset() {
-        return offset;
+    @Override
+    public void appendChildrenEnd(QuotingAppendable builder) {
+        if(ignoreCase) {
+            builder.append(')');
+        }
+        if(escape != 0) {
+            builder.append(" ESCAPE '").append(escape).append('\'');
+        }
     }
 }

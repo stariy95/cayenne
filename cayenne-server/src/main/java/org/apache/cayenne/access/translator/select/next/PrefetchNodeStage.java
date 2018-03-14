@@ -48,8 +48,21 @@ class PrefetchNodeStage extends TranslationStage {
 
     @Override
     void perform() {
+        updatePrefetchNodes();
         processJoint();
         processPrefetchQuery();
+    }
+
+    private void updatePrefetchNodes() {
+        if(context.getQuery().getPrefetchTree() == null) {
+            return;
+        }
+        // Set entity name, in case MixedConversionStrategy will be used to select objects from this query
+        // Note: all prefetch nodes will point to query root, it is not a problem until select query can't
+        // perform some sort of union or sub-queries.
+        for(PrefetchTreeNode prefetch : context.getQuery().getPrefetchTree().getChildren()) {
+            prefetch.setEntityName(context.getMetadata().getObjEntity().getName());
+        }
     }
 
     private void processJoint() {
@@ -70,9 +83,10 @@ class PrefetchNodeStage extends TranslationStage {
                 r = component.getRelationship();
                 if(fullPath.length() > 0) {
                     fullPath.append('.');
-                } //else {
-                    //fullPath.append("p$"); // TODO: Make PrefetchProcessorJointNode respect this...
-//                }
+                } else {
+                    // add mark of prefetch to not overlap with query qualifiers
+                    fullPath.append("p:");
+                }
                 fullPath.append(r.getName());
                 context.getTableTree().addJoinTable(fullPath.toString(), r, JoinType.LEFT_OUTER);
             }
@@ -84,8 +98,8 @@ class PrefetchNodeStage extends TranslationStage {
             ObjRelationship targetRel = (ObjRelationship) prefetchExp.evaluate(objEntity);
             ClassDescriptor prefetchClassDescriptor = context.getResolver().getClassDescriptor(targetRel.getTargetEntityName());
 
-//            String labelPrefix = dbPrefetch.getPath();
-            DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor);
+            String labelPrefix = dbPrefetch.getPath();
+            DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor, labelPrefix);
             columnExtractor.extract(fullPath.toString());
         }
     }
