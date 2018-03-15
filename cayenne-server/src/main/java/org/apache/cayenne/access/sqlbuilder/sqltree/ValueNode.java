@@ -60,9 +60,7 @@ public class ValueNode extends Node {
         boolean isArray = val.getClass().isArray();
 
         if(isArray) {
-            if(val instanceof byte[]) {
-                appendValue((byte[])val, buffer);
-            } else if(val instanceof short[]) {
+            if(val instanceof short[]) {
                 appendValue((short[])val, buffer);
             } else if(val instanceof char[]) {
                 appendValue((char[])val, buffer);
@@ -78,28 +76,27 @@ public class ValueNode extends Node {
                 appendValue((boolean[])val, buffer);
             } else if(val instanceof Object[]) {
                 appendValue((Object[])val, buffer);
+            } else {
+                appendObjectValue(buffer, val);
             }
         } else {
-            if (isString) {
-                buffer.append('\'');
-            }
-            buffer.append(String.valueOf(val));
-            if (isString) {
-                buffer.append('\'');
+            if(isString) {
+                appendStringValue(buffer, (CharSequence)val);
+            } else {
+                appendObjectValue(buffer, val);
             }
         }
     }
 
-    private void appendValue(byte[] val, QuotingAppendable buffer) {
-        boolean first = true;
-        for(byte i : val) {
-            if(first) {
-                first = false;
-            } else {
-                buffer.append(',');
-            }
-            appendValue(i, buffer);
+    protected void appendObjectValue(QuotingAppendable buffer, Object value) {
+        if(value == null) {
+            return;
         }
+        buffer.append('?');
+    }
+
+    protected void appendStringValue(QuotingAppendable buffer, CharSequence value) {
+        buffer.append('?');
     }
 
     private void appendValue(short[] val, QuotingAppendable buffer) {

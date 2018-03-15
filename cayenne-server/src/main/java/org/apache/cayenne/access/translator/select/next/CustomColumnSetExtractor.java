@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.Persistent;
@@ -32,6 +33,7 @@ import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.dba.TypesMapping;
+import org.apache.cayenne.dba.derby.DerbySqlTreeProcessor;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.exp.parser.ASTAggregateFunctionCall;
@@ -61,6 +63,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
 
     @Override
     public void extract(String prefix) {
+        Function<Node, Node> treeModifier = context.getAdapter().getSqlTreeProcessor();
         QualifierTranslator translator = new QualifierTranslator(context);
         translator.setForceJoin(true);
         Collection<String> aggregateExpressions = new HashSet<>(columns.size());
@@ -73,7 +76,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
             }
 
             SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
-            nextNode.build().visit(visitor);
+            treeModifier.apply(nextNode.build()).visit(visitor);
             String exp = visitor.getSQLString();
 
             int type = getJdbcTypeForProperty(property);

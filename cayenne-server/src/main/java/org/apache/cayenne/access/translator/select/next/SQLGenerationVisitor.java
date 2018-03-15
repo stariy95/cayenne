@@ -23,6 +23,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.types.ExtendedType;
@@ -72,7 +73,7 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
             level++;
         }
 
-        if(node instanceof ValueNode) {
+        if(node.getType() == NodeType.VALUE) {
             Object value = ((ValueNode) node).getValue();
             DbAttribute attribute = ((ValueNode) node).getAttribute();
             if(value instanceof short[]) {
@@ -98,11 +99,9 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
             } else {
                 addValueBinding(value, attribute);
             }
-            builder.delete(builder.length() - 1, builder.length());
-        } else {
-            node.append(delegate);
-            node.appendChildrenStart(delegate);
         }
+        node.append(delegate);
+        node.appendChildrenStart(delegate);
     }
 
     private void addValueBinding(short[] value, DbAttribute attribute) {
@@ -164,18 +163,13 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     }
 
     private void addValueBinding(Object value, DbAttribute attribute) {
-        if(value == null) {
-            builder.append(",");
-        } else {
-            builder.append("?,");
-            if(context != null) {
-                ExtendedType extendedType = context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass());
-                DbAttributeBinding binding = new DbAttributeBinding(attribute);
-                binding.setStatementPosition(context.getBindings().size() + 1);
-                binding.setExtendedType(extendedType);
-                binding.setValue(value);
-                context.getBindings().add(binding);
-            }
+        if(value != null && context != null) {
+            ExtendedType extendedType = context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass());
+            DbAttributeBinding binding = new DbAttributeBinding(attribute);
+            binding.setStatementPosition(context.getBindings().size() + 1);
+            binding.setExtendedType(extendedType);
+            binding.setValue(value);
+            context.getBindings().add(binding);
         }
     }
 

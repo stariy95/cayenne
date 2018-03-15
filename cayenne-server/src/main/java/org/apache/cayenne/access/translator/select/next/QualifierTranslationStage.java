@@ -31,14 +31,10 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.1
  */
-class QualifierTranslationStage extends TranslationStage {
-
-    QualifierTranslationStage(TranslatorContext context) {
-        super(context);
-    }
+class QualifierTranslationStage implements TranslationStage {
 
     @Override
-    void perform() {
+    public void perform(TranslatorContext context) {
         QualifierTranslator translator = new QualifierTranslator(context);
 
         Expression expression = context.getQuery().getQualifier();

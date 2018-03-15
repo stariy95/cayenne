@@ -19,23 +19,45 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import java.sql.Types;
+
+import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+
 /**
  * @since 4.1
  */
-public class DistinctStage extends TranslationStage {
+public class DistinctStage implements TranslationStage {
 
-    DistinctStage(TranslatorContext context) {
-        super(context);
+    protected static final int[] UNSUPPORTED_DISTINCT_TYPES = { Types.BLOB, Types.CLOB, Types.NCLOB,
+            Types.LONGVARBINARY, Types.LONGVARCHAR, Types.LONGNVARCHAR };
+
+    protected static boolean isUnsupportedForDistinct(int type) {
+        for (int unsupportedDistinctType : UNSUPPORTED_DISTINCT_TYPES) {
+            if (unsupportedDistinctType == type) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
-    void perform() {
-        if(context.getQuery().isDistinct()) {
-            context.getSelectBuilder().distinct();
+    public void perform(TranslatorContext context) {
+        // explicit suppressing of distinct
+        if(context.getMetadata().isSuppressingDistinct()) {
+            context.setDistinctSuppression(true);
             return;
         }
 
-        if(context.getTableTree().getNodeCount() > 1 && !context.getMetadata().isSuppressingDistinct()) {
+        // query forcing distinct or query have joins (qualifier or prefetch)
+        if(context.getQuery().isDistinct() || context.getTableTree().getNodeCount() > 1) {
+            // unsuitable jdbc type for distinct clause
+            for(ColumnDescriptor columnDescriptor : context.getColumnDescriptors()) {
+                if(isUnsupportedForDistinct(columnDescriptor.getJdbcType())) {
+                    context.setDistinctSuppression(true);
+                    return;
+                }
+            }
             context.getSelectBuilder().distinct();
         }
     }

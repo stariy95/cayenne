@@ -17,22 +17,21 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.hsqldb;
+package org.apache.cayenne.dba.mysql;
 
 import java.util.function.Function;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
-import org.apache.cayenne.dba.derby.sqltree.DerbyColumnNode;
+import org.apache.cayenne.dba.mysql.sqltree.MysqlLimitOffsetNode;
 
 /**
  * @since 4.1
  */
-public class HSQLTreeProcessor implements Function<Node, Node> {
-
+public class MySQLTreeProcessor implements Function<Node, Node> {
     @Override
     public Node apply(Node node) {
         NodeTreeVisitor visitor = new NodeTreeVisitor() {
@@ -42,38 +41,23 @@ public class HSQLTreeProcessor implements Function<Node, Node> {
 
             @Override
             public void onChildNodeStart(Node node, int index, boolean hasMore) {
-                if(node.getType() == NodeType.FUNCTION) {
+                if(node.getType() == NodeType.LIMIT_OFFSET) {
+                    LimitOffsetNode limitOffsetNode = (LimitOffsetNode)node;
+                    Node replacement = new MysqlLimitOffsetNode(limitOffsetNode.getLimit(), limitOffsetNode.getOffset());
+                    node.getParent().replaceChild(index, replacement);
+                } else if(node.getType() == NodeType.FUNCTION) {
                     FunctionNode oldNode = (FunctionNode) node;
                     String functionName = oldNode.getFunctionName();
-                    if("CURRENT_DATE".equals(functionName)
-                            || "CURRENT_TIMESTAMP".equals(functionName)) {
-                        // Skip parentheses for time functions
-                        FunctionNode replacement = new FunctionNode(functionName, oldNode.getAlias(), false);
-                        node.getParent().replaceChild(index, replacement);
-                    } else if("CURRENT_TIME".equals(functionName)) {
-                        // from documentation:
-                        // CURRENT_TIME returns a value of TIME WITH TIME ZONE type.
-                        // LOCALTIME returns a value of TIME type.
-                        // CURTIME() is a synonym for LOCALTIME.
-                        // use LOCALTIME to better align with other DBs
-                        FunctionNode replacement = new FunctionNode("LOCALTIME", oldNode.getAlias(), false);
-                        node.getParent().replaceChild(index, replacement);
-                    } else if("DAY_OF_MONTH".equals(functionName)
+                    if("DAY_OF_MONTH".equals(functionName)
                             || "DAY_OF_WEEK".equals(functionName)
                             || "DAY_OF_YEAR".equals(functionName)) {
                         // hsqldb variants are without '_'
                         FunctionNode replacement = new FunctionNode(functionName.replace("_", ""), oldNode.getAlias(), true);
-                        for(int i=0; i<node.getChildrenCount(); i++) {
+                        for (int i = 0; i < node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
                         node.getParent().replaceChild(index, replacement);
                     }
-                } else if(node.getType() == NodeType.COLUMN) {
-                    DerbyColumnNode replacement = new DerbyColumnNode((ColumnNode)node);
-                    for(int i=0; i<node.getChildrenCount(); i++) {
-                        replacement.addChild(node.getChild(i));
-                    }
-                    node.getParent().replaceChild(index, replacement);
                 }
             }
 
@@ -85,7 +69,6 @@ public class HSQLTreeProcessor implements Function<Node, Node> {
             public void onNodeEnd(Node node) {
             }
         };
-
         node.visit(visitor);
         return node;
     }

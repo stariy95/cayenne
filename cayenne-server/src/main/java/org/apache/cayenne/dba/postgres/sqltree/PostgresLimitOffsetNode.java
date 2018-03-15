@@ -17,60 +17,32 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder.sqltree;
+package org.apache.cayenne.dba.postgres.sqltree;
 
+import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.map.DbAttribute;
 
 /**
  * @since 4.1
  */
-public class ColumnNode extends Node {
+public class PostgresLimitOffsetNode extends LimitOffsetNode {
 
-    protected final String table;
-    protected final String column;
-    protected final String alias;
-    protected DbAttribute attribute;
-
-    public ColumnNode(String table, String column, String alias) {
-        this.table = table;
-        this.column = column;
-        this.alias = alias;
+    public PostgresLimitOffsetNode(LimitOffsetNode node) {
+        super(node.getLimit(), node.getOffset());
     }
 
     @Override
     public void append(QuotingAppendable buffer) {
-        if (table != null) {
-            buffer.appendQuoted(table).append('.');
+        if(limit == 0 && offset == 0) {
+            return;
         }
-        buffer.appendQuoted(column);
-        if (alias != null) {
-            buffer.append(' ').appendQuoted(alias);
+
+        if(limit > 0) {
+            buffer.append("LIMIT ").append(limit);
         }
-    }
 
-    @Override
-    public NodeType getType() {
-        return NodeType.COLUMN;
-    }
-
-    public String getTable() {
-        return table;
-    }
-
-    public String getColumn() {
-        return column;
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    public void setAttribute(DbAttribute attribute) {
-        this.attribute = attribute;
-    }
-
-    public DbAttribute getAttribute() {
-        return attribute;
+        if(offset > 0) {
+            buffer.append(" OFFSET ").append(offset);
+        }
     }
 }

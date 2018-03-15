@@ -26,12 +26,15 @@ import java.util.Set;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.sqlbuilder.ColumnNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.TraversalHandler;
 import org.apache.cayenne.exp.parser.ASTDbPath;
@@ -133,34 +136,29 @@ class QualifierTranslator implements TraversalHandler {
                     }
                 };
 
+            case BITWISE_NOT:
+                return new ExpressionNode() {
+                    @Override
+                    public void append(QuotingAppendable buffer) {
+                        buffer.append("!");
+                    }
+                };
+
             case EQUAL_TO:
-                return new ExpressionNode() {
-                    @Override
-                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-                        String expStr = " = ";
-                        if(node.getOperand(1) == null) {
-                            expStr = " IS NULL";
-                        }
-                        builder.append(expStr);
-                    }
-                };
+                return new EqualNode();
             case NOT_EQUAL_TO:
-                return new ExpressionNode() {
-                    @Override
-                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-                        String expStr = " <> ";
-                        if(node.getOperand(1) == null) {
-                            expStr = " IS NOT NULL";
-                        }
-                        builder.append(expStr);
-                    }
-                };
+                return new NotEqualNode();
 
             case ADD:
             case SUBTRACT:
             case MULTIPLY:
             case DIVIDE:
             case NEGATIVE:
+            case BITWISE_AND:
+            case BITWISE_LEFT_SHIFT:
+            case BITWISE_OR:
+            case BITWISE_RIGHT_SHIFT:
+            case BITWISE_XOR:
             case OR:
             case AND:
             case LESS_THAN:
@@ -232,11 +230,8 @@ class QualifierTranslator implements TraversalHandler {
         } else if(result.getDbAttributes().isEmpty()) {
             return new EmptyNode();
         } else {
-            NodeBuilder column = table(context.getTableTree().aliasForAttributePath(path.toString()))
-                    .column(lastDbAttribute[0].getName());
-            if(lastDbAttribute[0].getType() == Types.CHAR) {
-                column = function("RTRIM", column);
-            }
+            ColumnNodeBuilder column = table(context.getTableTree().aliasForAttributePath(path.toString()))
+                    .column(lastDbAttribute[0]);
             return column.build();
         }
     }
@@ -278,7 +273,7 @@ class QualifierTranslator implements TraversalHandler {
             String alias = context.getTableTree().aliasForPath(relationship.getName());
             for (DbAttribute attribute : relationship.getTargetEntity().getPrimaryKeys()) {
                 Object nextValue = objectId.getIdSnapshot().get(attribute.getName());
-                eq = table(alias).column(attribute.getName()).eq(value(nextValue));
+                eq = table(alias).column(attribute).eq(value(nextValue));
                 if (expressionNodeBuilder == null) {
                     expressionNodeBuilder = eq;
                 } else {
@@ -290,7 +285,7 @@ class QualifierTranslator implements TraversalHandler {
             String alias = context.getTableTree().aliasForAttributePath(path);
             for (DbJoin join : relationship.getJoins()) {
                 Object nextValue = objectId.getIdSnapshot().get(join.getTargetName());
-                eq = table(alias).column(join.getSourceName()).eq(value(nextValue));
+                eq = table(alias).column(join.getSource()).eq(value(nextValue));
                 if (expressionNodeBuilder == null) {
                     expressionNodeBuilder = eq;
                 } else {
@@ -413,8 +408,54 @@ class QualifierTranslator implements TraversalHandler {
                 return "1=1";
             case FALSE:
                 return "1=0";
+            case BITWISE_AND:
+                return "&";
+            case BITWISE_OR:
+                return "|";
+            case BITWISE_XOR:
+                return "^";
+            case BITWISE_NOT:
+                return "!";
+            case BITWISE_LEFT_SHIFT:
+                return "<<";
+            case BITWISE_RIGHT_SHIFT:
+                return ">>";
             default:
                 return "{other}";
+        }
+    }
+
+    private static class EqualNode extends ExpressionNode {
+        @Override
+        public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+            String expStr = " = ";
+            Node child = getChild(1);
+            if(child.getType() == NodeType.VALUE && ((ValueNode)child).getValue() == null) {
+                expStr = " IS NULL";
+            }
+            builder.append(expStr);
+        }
+
+        @Override
+        public NodeType getType() {
+            return NodeType.EQUALITY;
+        }
+    }
+
+    private static class NotEqualNode extends ExpressionNode {
+        @Override
+        public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+            String expStr = " <> ";
+            Node child = getChild(1);
+            if(child.getType() == NodeType.VALUE && ((ValueNode)child).getValue() == null) {
+                expStr = " IS NOT NULL";
+            }
+            builder.append(expStr);
+        }
+
+        @Override
+        public NodeType getType() {
+            return NodeType.EQUALITY;
         }
     }
 }

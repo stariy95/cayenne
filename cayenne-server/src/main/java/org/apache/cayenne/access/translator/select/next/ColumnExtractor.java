@@ -22,7 +22,6 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-@FunctionalInterface
 interface ColumnExtractor {
 
     void extract(String prefix);

@@ -28,5 +28,6 @@ public enum NodeType {
     VALUE,
     COLUMN,
     LIMIT_OFFSET,
-    FUNCTION
+    FUNCTION,
+    EQUALITY,
 }

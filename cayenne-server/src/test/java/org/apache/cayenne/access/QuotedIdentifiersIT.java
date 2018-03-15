@@ -63,7 +63,8 @@ public class QuotedIdentifiersIT extends ServerCase {
         tQuotedAddress.insert(2, "city2", null);
 
         TableHelper tQuotedPerson = new TableHelper(dbHelper, "quote Person");
-        tQuotedPerson.setColumns("id", "address_id", "DAte", "GROUP", "NAME", "salary");
+        tQuotedPerson.setColumns("id", "address_id", "DAte", "GROUP", "NAME", "salary")
+                .setColumnTypes(Types.INTEGER, Types.INTEGER, Types.DATE, Types.VARCHAR, Types.VARCHAR, Types.INTEGER);
         tQuotedPerson.insert(1, 1, null, "107324", "Arcadi", 10000);
         tQuotedPerson.insert(2, 2, new Date(), "1111", "Name", 100);
     }

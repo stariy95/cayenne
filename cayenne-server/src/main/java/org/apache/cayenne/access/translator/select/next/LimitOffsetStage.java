@@ -22,13 +22,12 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-class LimitOffsetStage extends TranslationStage {
-    LimitOffsetStage(TranslatorContext context) {
-        super(context);
-    }
-
+class LimitOffsetStage implements TranslationStage {
     @Override
-    void perform() {
+    public void perform(TranslatorContext context) {
+        if(context.isDistinctSuppression()) {
+            return;
+        }
         int offset = context.getMetadata().getFetchOffset();
         int limit = context.getMetadata().getFetchLimit();
 

@@ -17,60 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder.sqltree;
+package org.apache.cayenne.dba.derby.sqltree;
 
+import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 import org.apache.cayenne.map.DbAttribute;
 
 /**
  * @since 4.1
  */
-public class ColumnNode extends Node {
+public class DerbyValueNode extends ValueNode {
 
-    protected final String table;
-    protected final String column;
-    protected final String alias;
-    protected DbAttribute attribute;
-
-    public ColumnNode(String table, String column, String alias) {
-        this.table = table;
-        this.column = column;
-        this.alias = alias;
+    public DerbyValueNode(Object value, DbAttribute attribute) {
+        super(value, attribute);
     }
 
-    @Override
-    public void append(QuotingAppendable buffer) {
-        if (table != null) {
-            buffer.appendQuoted(table).append('.');
-        }
-        buffer.appendQuoted(column);
-        if (alias != null) {
-            buffer.append(' ').appendQuoted(alias);
-        }
+    protected void appendStringValue(QuotingAppendable buffer, CharSequence value) {
+        buffer.append("CAST(? AS VARCHAR(").append(value.length()).append("))");
     }
 
-    @Override
-    public NodeType getType() {
-        return NodeType.COLUMN;
-    }
-
-    public String getTable() {
-        return table;
-    }
-
-    public String getColumn() {
-        return column;
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    public void setAttribute(DbAttribute attribute) {
-        this.attribute = attribute;
-    }
-
-    public DbAttribute getAttribute() {
-        return attribute;
-    }
 }

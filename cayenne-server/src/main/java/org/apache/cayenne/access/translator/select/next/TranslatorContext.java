@@ -70,6 +70,8 @@ class TranslatorContext {
     private final DbAdapter adapter;
     private final QuotingStrategy quotingStrategy;
 
+    private boolean distinctSuppression;
+
     TranslatorContext(SelectQuery<?> query, DbAdapter adapter, EntityResolver resolver, TranslatorContext parentContext) {
         this.query = query;
         this.adapter = adapter;
@@ -124,5 +126,13 @@ class TranslatorContext {
 
     public QuotingStrategy getQuotingStrategy() {
         return quotingStrategy;
+    }
+
+    public void setDistinctSuppression(boolean distinctSuppression) {
+        this.distinctSuppression = distinctSuppression;
+    }
+
+    public boolean isDistinctSuppression() {
+        return distinctSuppression;
     }
 }

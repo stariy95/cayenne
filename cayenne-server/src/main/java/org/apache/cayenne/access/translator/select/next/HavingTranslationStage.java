@@ -25,14 +25,10 @@ import org.apache.cayenne.exp.Expression;
 /**
  * @since 4.1
  */
-public class HavingTranslationStage extends TranslationStage {
-
-    HavingTranslationStage(TranslatorContext context) {
-        super(context);
-    }
+public class HavingTranslationStage implements TranslationStage {
 
     @Override
-    void perform() {
+    public void perform(TranslatorContext context) {
         QualifierTranslator translator = new QualifierTranslator(context);
         Expression expression = context.getQuery().getHavingQualifier();
         NodeBuilder qualifierBuilder = translator.translate(expression);

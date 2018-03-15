@@ -40,20 +40,16 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.1
  */
-class PrefetchNodeStage extends TranslationStage {
-
-    PrefetchNodeStage(TranslatorContext context) {
-        super(context);
-    }
+class PrefetchNodeStage implements TranslationStage {
 
     @Override
-    void perform() {
-        updatePrefetchNodes();
-        processJoint();
-        processPrefetchQuery();
+    public void perform(TranslatorContext context) {
+        updatePrefetchNodes(context);
+        processJoint(context);
+        processPrefetchQuery(context);
     }
 
-    private void updatePrefetchNodes() {
+    private void updatePrefetchNodes(TranslatorContext context) {
         if(context.getQuery().getPrefetchTree() == null) {
             return;
         }
@@ -65,7 +61,7 @@ class PrefetchNodeStage extends TranslationStage {
         }
     }
 
-    private void processJoint() {
+    private void processJoint(TranslatorContext context) {
         PrefetchTreeNode prefetch = context.getQuery().getPrefetchTree();
         if(prefetch == null) {
             return;
@@ -104,7 +100,7 @@ class PrefetchNodeStage extends TranslationStage {
         }
     }
 
-    private void processPrefetchQuery() {
+    private void processPrefetchQuery(TranslatorContext context) {
         if(!(context.getQuery() instanceof PrefetchSelectQuery)) {
             return;
         }

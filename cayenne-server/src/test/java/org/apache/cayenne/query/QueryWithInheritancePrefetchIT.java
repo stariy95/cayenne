@@ -100,6 +100,7 @@ public class QueryWithInheritancePrefetchIT extends ServerCase {
     public void queryWithJointPrefetch() {
         List<Dependent> result = ObjectSelect.query(Dependent.class)
                 .prefetch(Dependent.ROOT.joint())
+                .orderBy("db:"+Dependent.ID_PK_COLUMN)
                 .select(runtime.newContext());
 
         assertPrefetchResult(result);

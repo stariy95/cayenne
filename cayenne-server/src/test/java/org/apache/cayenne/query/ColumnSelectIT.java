@@ -749,6 +749,16 @@ public class ColumnSelectIT extends ServerCase {
                 .prefetch(Artist.PAINTING_ARRAY.joint())
                 .select(context);
 
+        // SELECT DISTINCT
+        //      RTRIM(t0.ARTIST_NAME) ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
+        //      COUNT(t1.PAINTING_ID ) ,
+        //      t2.ESTIMATED_PRICE ,t2.PAINTING_DESCRIPTION ,t2.PAINTING_TITLE ,t2.ARTIST_ID ,t2.GALLERY_ID ,t2.PAINTING_ID
+        // FROM
+        //      ARTIST t0
+        //      LEFT JOIN PAINTING t1  ON ((t0.ARTIST_ID  =  t1.ARTIST_ID ))
+        //      LEFT JOIN PAINTING t2  ON ((t0.ARTIST_ID  =  t2.ARTIST_ID ))
+        // GROUP BY t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID
+
         checkAggregatePrefetchResults(result);
     }
 

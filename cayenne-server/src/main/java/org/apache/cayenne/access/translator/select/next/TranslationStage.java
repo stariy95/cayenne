@@ -22,13 +22,6 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-abstract class TranslationStage {
-
-    final TranslatorContext context;
-
-    TranslationStage(TranslatorContext context) {
-        this.context = context;
-    }
-
-    abstract void perform();
+interface TranslationStage {
+    void perform(TranslatorContext context);
 }

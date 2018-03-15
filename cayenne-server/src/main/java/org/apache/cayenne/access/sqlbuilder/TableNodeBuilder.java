@@ -21,6 +21,7 @@ package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TableNode;
+import org.apache.cayenne.map.DbAttribute;
 
 /**
  * @since 4.1
@@ -42,6 +43,10 @@ public class TableNodeBuilder implements NodeBuilder {
 
     public ColumnNodeBuilder column(String column) {
         return new ColumnNodeBuilder(tableName, column);
+    }
+
+    public ColumnNodeBuilder column(DbAttribute attribute) {
+        return new ColumnNodeBuilder(tableName, attribute);
     }
 
     public String getAlias() {

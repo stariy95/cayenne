@@ -19,9 +19,12 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import java.util.function.Function;
+
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.OrderingNodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.query.Ordering;
 
@@ -30,39 +33,35 @@ import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 /**
  * @since 4.1
  */
-class OrderingStage extends TranslationStage {
-
-    private final QualifierTranslator qualifierTranslator;
-
-    OrderingStage(TranslatorContext context) {
-        super(context);
-        qualifierTranslator = new QualifierTranslator(context);
-    }
+class OrderingStage implements TranslationStage {
 
     @Override
-    void perform() {
+    public void perform(TranslatorContext context) {
+        QualifierTranslator qualifierTranslator = new QualifierTranslator(context);
         for(Ordering ordering : context.getQuery().getOrderings()) {
-            processOrdering(ordering);
+            processOrdering(qualifierTranslator, context, ordering);
         }
     }
 
-    private void processOrdering(Ordering ordering) {
+    private void processOrdering(QualifierTranslator qualifierTranslator, TranslatorContext context, Ordering ordering) {
         Expression exp = ordering.getSortSpec();
-        NodeBuilder orderingNode = qualifierTranslator.translate(exp);
-
-        SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
-        orderingNode.build().visit(visitor);
-        String expSql = visitor.getSQLString();
-        ColumnDescriptor descriptor = new ColumnDescriptor(expSql, Integer.MIN_VALUE);
-        descriptor.setIsExpression(true);
-
-        context.getColumnDescriptors().add(descriptor);
+        NodeBuilder nodeBuilder = qualifierTranslator.translate(exp);
 
         if(ordering.isCaseInsensitive()) {
-            orderingNode = function("UPPER", orderingNode);
+            nodeBuilder = function("UPPER", nodeBuilder);
         }
 
-        OrderingNodeBuilder orderingNodeBuilder = order(orderingNode);
+        if(!context.isDistinctSuppression()) {
+            Function<Node, Node> treeProcessor = context.getAdapter().getSqlTreeProcessor();
+            SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
+            treeProcessor.apply(nodeBuilder.build()).visit(visitor);
+            String expSql = visitor.getSQLString();
+            ColumnDescriptor descriptor = new ColumnDescriptor(expSql, Integer.MIN_VALUE);
+            descriptor.setIsExpression(true);
+            context.getColumnDescriptors().add(descriptor);
+        }
+
+        OrderingNodeBuilder orderingNodeBuilder = order(nodeBuilder);
         if(ordering.isDescending()) {
             orderingNodeBuilder.desc();
         }

@@ -24,6 +24,7 @@ import java.util.Objects;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.UnescapedColumnNode;
+import org.apache.cayenne.map.DbAttribute;
 
 /**
  * @since 4.1
@@ -38,9 +39,17 @@ public class ColumnNodeBuilder implements ExpressionTrait {
 
     private String alias;
 
+    private DbAttribute attribute;
+
     public ColumnNodeBuilder(String table, String field) {
         this.table = table;
         this.column = Objects.requireNonNull(field);
+    }
+
+    public ColumnNodeBuilder(String table, DbAttribute attribute) {
+        this.table = table;
+        this.column = Objects.requireNonNull(attribute).getName();
+        this.attribute = attribute;
     }
 
     public ColumnNodeBuilder as(String alias) {
@@ -48,8 +57,14 @@ public class ColumnNodeBuilder implements ExpressionTrait {
         return this;
     }
 
-    public void unescaped() {
+    public ColumnNodeBuilder unescaped() {
         this.unescaped = true;
+        return this;
+    }
+
+    public ColumnNodeBuilder attribute(DbAttribute attribute) {
+        this.attribute = attribute;
+        return this;
     }
 
     public OrderingNodeBuilder desc() {
@@ -62,11 +77,14 @@ public class ColumnNodeBuilder implements ExpressionTrait {
 
     @Override
     public Node build() {
+        ColumnNode columnNode;
         if(unescaped) {
-            return new UnescapedColumnNode(table, column, alias);
+            columnNode = new UnescapedColumnNode(table, column, alias);
         } else {
-            return new ColumnNode(table, column, alias);
+            columnNode = new ColumnNode(table, column, alias);
         }
+        columnNode.setAttribute(attribute);
+        return columnNode;
     }
 
 }

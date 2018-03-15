@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
@@ -39,6 +38,17 @@ import org.apache.cayenne.query.SelectQuery;
  */
 public class DefaultObjectSelectTranslator implements SelectTranslator {
 
+    private static final List<TranslationStage> TRANSLATION_STAGES = Arrays.asList(
+            new ColumnExtractorStage(),
+            new PrefetchNodeStage(),
+            new OrderingStage(),
+            new QualifierTranslationStage(),
+            new HavingTranslationStage(),
+            new DistinctStage(),
+            new LimitOffsetStage(),
+            new SQLGenerationStage()
+    );
+
     private TranslatorContext context;
 
     public DefaultObjectSelectTranslator(SelectQuery<?> query, DbAdapter adapter, EntityResolver entityResolver, DefaultObjectSelectTranslator parent) {
@@ -51,21 +61,9 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
 
     @Override
     public String getSql() {
-        List<Function<TranslatorContext, TranslationStage>> stageProducers = Arrays.asList(
-                ColumnExtractorStage::new,
-                PrefetchNodeStage::new,
-                OrderingStage::new,
-                QualifierTranslationStage::new,
-                HavingTranslationStage::new,
-                DistinctStage::new,
-                LimitOffsetStage::new,
-                SQLGenerationStage::new
-        );
-
-        for(Function<TranslatorContext, TranslationStage> producer : stageProducers) {
-            producer.apply(context).perform();
+        for(TranslationStage stage : TRANSLATION_STAGES) {
+            stage.perform(context);
         }
-
         return generateSql();
     }
 
@@ -97,7 +95,7 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
 
     @Override
     public boolean isSuppressingDistinct() {
-        return false;
+        return context.isDistinctSuppression();
     }
 
     @Override
