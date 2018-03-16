@@ -22,16 +22,34 @@ package org.apache.cayenne.access.translator.select.next;
 /**
  * @since 4.1
  */
-public class DefaultQuotingAppendable extends StringBuilderAppendable {
-
-    public DefaultQuotingAppendable(TranslatorContext context) {
-        super(context);
-    }
+public class GroupByStage implements TranslationStage {
 
     @Override
-    public QuotingAppendable appendQuoted(String content) {
-        String quotedIdentifier = context.getQuotingStrategy().quotedIdentifier(context.getRootDbEntity(), content);
-        builder.append(quotedIdentifier);
-        return this;
+    public void perform(TranslatorContext context) {
+        if(!haveAggregate(context)) {
+            return;
+        }
+
+        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
+            if(resultNode.isAggregate()) {
+                continue;
+            }
+
+            context.getSelectBuilder().groupBy(resultNode::getNode);
+        }
+    }
+
+    private boolean haveAggregate(TranslatorContext context) {
+        if(context.getQuery().getHavingQualifier() != null) {
+            return true;
+        }
+
+        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
+            if(resultNode.isAggregate()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

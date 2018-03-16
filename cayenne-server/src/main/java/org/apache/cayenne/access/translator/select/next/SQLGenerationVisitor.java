@@ -19,15 +19,8 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
-import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
-import org.apache.cayenne.access.translator.DbAttributeBinding;
-import org.apache.cayenne.access.types.ExtendedType;
-import org.apache.cayenne.map.DbAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,27 +31,21 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
 
     private static final Logger logger = LoggerFactory.getLogger(SQLGenerationVisitor.class);
 
-    private final TranslatorContext context;
 
     private final StringBuilder builder;
     private final StringBuilderAppendable delegate;
 
-    private boolean debug;
+    private boolean debug = true;
 
     private int level = 0;
 
     public SQLGenerationVisitor(TranslatorContext context) {
-        this.context = context;
         if(context == null) {
-            this.delegate = new StringBuilderAppendable();
+            this.delegate = new StringBuilderAppendable(null);
         } else {
             this.delegate = new DefaultQuotingAppendable(context);
         }
         this.builder = delegate.unwrap();
-    }
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
     }
 
     @Override
@@ -72,106 +59,10 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
             logger.info(msg.toString(), node);
             level++;
         }
-
-        if(node.getType() == NodeType.VALUE) {
-            Object value = ((ValueNode) node).getValue();
-            DbAttribute attribute = ((ValueNode) node).getAttribute();
-            if(value instanceof short[]) {
-                addValueBinding((short[])value, attribute);
-            } else if(value instanceof char[]) {
-                addValueBinding((char[])value, attribute);
-            } else if(value instanceof int[]) {
-                addValueBinding((int[])value, attribute);
-            } else if(value instanceof long[]) {
-                addValueBinding((long[])value, attribute);
-            } else if(value instanceof float[]) {
-                addValueBinding((float[])value, attribute);
-            } else if(value instanceof double[]) {
-                addValueBinding((double[])value, attribute);
-            } else if(value instanceof boolean[]) {
-                addValueBinding((boolean[])value, attribute);
-            } else if(value instanceof Object[]) {
-                addValueBinding((Object[]) value, attribute);
-            } else if(value instanceof ObjectId) {
-                addValueBinding((ObjectId)value, attribute);
-            } else if(value instanceof Persistent) {
-                addValueBinding((Persistent)value, attribute);
-            } else {
-                addValueBinding(value, attribute);
-            }
-        }
         node.append(delegate);
         node.appendChildrenStart(delegate);
     }
 
-    private void addValueBinding(short[] value, DbAttribute attribute) {
-        for(short v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(char[] value, DbAttribute attribute) {
-        for(char v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(int[] value, DbAttribute attribute) {
-        for(int v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(long[] value, DbAttribute attribute) {
-        for(long v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(float[] value, DbAttribute attribute) {
-        for(float v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(double[] value, DbAttribute attribute) {
-        for(double v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(boolean[] value, DbAttribute attribute) {
-        for(boolean v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(Object[] value, DbAttribute attribute) {
-        for(Object v : value) {
-            addValueBinding(v, attribute);
-        }
-    }
-
-    private void addValueBinding(Persistent value, DbAttribute attribute) {
-        addValueBinding(value.getObjectId(), attribute);
-    }
-
-    private void addValueBinding(ObjectId value, DbAttribute attribute) {
-        for(Object idVal: value.getIdSnapshot().values()) {
-            addValueBinding(idVal, attribute);
-        }
-    }
-
-    private void addValueBinding(Object value, DbAttribute attribute) {
-        if(value != null && context != null) {
-            ExtendedType extendedType = context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass());
-            DbAttributeBinding binding = new DbAttributeBinding(attribute);
-            binding.setStatementPosition(context.getBindings().size() + 1);
-            binding.setExtendedType(extendedType);
-            binding.setValue(value);
-            context.getBindings().add(binding);
-        }
-    }
 
     @Override
     public void onChildNodeStart(Node node, int index, boolean hasMore) {

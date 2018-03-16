@@ -51,14 +51,10 @@ class OrderingStage implements TranslationStage {
             nodeBuilder = function("UPPER", nodeBuilder);
         }
 
+        // If query is DISTINCT than we need to add all ORDER BY clauses as result columns
         if(!context.isDistinctSuppression()) {
-            Function<Node, Node> treeProcessor = context.getAdapter().getSqlTreeProcessor();
-            SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
-            treeProcessor.apply(nodeBuilder.build()).visit(visitor);
-            String expSql = visitor.getSQLString();
-            ColumnDescriptor descriptor = new ColumnDescriptor(expSql, Integer.MIN_VALUE);
-            descriptor.setIsExpression(true);
-            context.getColumnDescriptors().add(descriptor);
+            // TODO: need to check duplicates
+            context.addResultNode(nodeBuilder.build());
         }
 
         OrderingNodeBuilder orderingNodeBuilder = order(nodeBuilder);

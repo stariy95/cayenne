@@ -20,7 +20,10 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
+
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
 
 /**
  * @since 4.1
@@ -42,9 +45,11 @@ abstract class BaseColumnExtractor implements ColumnExtractor {
         ColumnDescriptor column = new ColumnDescriptor(dba, alias);
         if(labelPrefix != null) {
             column.setDataRowKey(labelPrefix + '.' + dba.getName());
-        } else {
-            column.setDataRowKey(dba.getName());
         }
-        context.getColumnDescriptors().add(column);
+
+//        context.getColumnDescriptors().add(column);
+        Node columnNode = table(alias).column(dba.getName()).attribute(dba).build();
+        context.addResultNode(columnNode, true,
+                labelPrefix != null ? labelPrefix + '.' + dba.getName() : null);
     }
 }

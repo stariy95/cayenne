@@ -34,4 +34,6 @@ public interface QuotingAppendable extends Appendable {
 
     QuotingAppendable append(int c);
 
+    TranslatorContext getContext();
+
 }

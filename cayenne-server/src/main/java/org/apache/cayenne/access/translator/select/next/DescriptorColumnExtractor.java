@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.ObjAttribute;
@@ -29,6 +30,8 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.reflect.PropertyVisitor;
 import org.apache.cayenne.reflect.ToManyProperty;
 import org.apache.cayenne.reflect.ToOneProperty;
+
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
 
 /**
  * @since 4.1
@@ -74,7 +77,11 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
         if(columnLabelPrefix != null) {
             column.setDataRowKey(columnLabelPrefix + '.' + attribute.getName());
         }
-        context.getColumnDescriptors().add(column);
+//        context.getColumnDescriptors().add(column);
+
+        Node columnNode = table(alias).column(attribute.getName()).attribute(attribute).build();
+        context.addResultNode(columnNode, true,
+                columnLabelPrefix != null ? columnLabelPrefix + '.' + attribute.getName() : null);
 
         return true;
     }
@@ -95,7 +102,10 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
             if(columnLabelPrefix != null) {
                 column.setDataRowKey(columnLabelPrefix + '.' + attribute.getName());
             }
-            context.getColumnDescriptors().add(column);
+//            context.getColumnDescriptors().add(column);
+            Node columnNode = table(alias).column(attribute.getName()).attribute(attribute).build();
+            context.addResultNode(columnNode, true,
+                    columnLabelPrefix != null ? columnLabelPrefix + '.' + attribute.getName() : null);
         }
 
         return true;

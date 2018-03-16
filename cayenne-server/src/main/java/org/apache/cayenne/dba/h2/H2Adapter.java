@@ -19,6 +19,10 @@
 
 package org.apache.cayenne.dba.h2;
 
+import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
+import org.apache.cayenne.access.translator.select.SelectTranslator;
 import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.access.types.ExtendedTypeFactory;
 import org.apache.cayenne.access.types.ValueObjectTypeRegistry;
@@ -26,11 +30,17 @@ import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.configuration.RuntimeProperties;
 import org.apache.cayenne.dba.JdbcAdapter;
 import org.apache.cayenne.dba.PkGenerator;
+import org.apache.cayenne.dba.derby.DerbyActionBuilder;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.query.Query;
+import org.apache.cayenne.query.SQLAction;
+import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.resource.ResourceLocator;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for <a href="http://www.h2database.com/">H2
@@ -64,6 +74,21 @@ public class H2Adapter extends JdbcAdapter {
         if (column.isGenerated()) {
             sqlBuffer.append(" AUTO_INCREMENT");
         }
+    }
+
+//    @Override
+//    public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
+//        return new DefaultSelectTranslator(query, this, entityResolver);
+//    }
+
+    @Override
+    public Function<Node, Node> getSqlTreeProcessor() {
+        return new H2SqlTreeProcessor();
+    }
+
+    @Override
+    public SQLAction getAction(Query query, DataNode node) {
+        return query.createSQLAction(new H2ActionBuilder(node));
     }
 
     @Override

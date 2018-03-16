@@ -25,9 +25,11 @@ package org.apache.cayenne.access.translator.select.next;
 public class StringBuilderAppendable implements QuotingAppendable {
 
     protected final StringBuilder builder;
+    protected final TranslatorContext context;
 
-    public StringBuilderAppendable() {
+    public StringBuilderAppendable(TranslatorContext context) {
         this.builder = new StringBuilder();
+        this.context = context;
     }
 
     @Override
@@ -63,6 +65,11 @@ public class StringBuilderAppendable implements QuotingAppendable {
     @Override
     public String toString() {
         return builder.toString();
+    }
+
+    @Override
+    public TranslatorContext getContext() {
+        return context;
     }
 
     public StringBuilder unwrap() {

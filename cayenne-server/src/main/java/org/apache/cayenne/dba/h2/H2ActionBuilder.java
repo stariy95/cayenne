@@ -17,21 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.translator.select.next;
+package org.apache.cayenne.dba.h2;
+
+import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.dba.JdbcActionBuilder;
+import org.apache.cayenne.query.SQLAction;
+import org.apache.cayenne.query.SelectQuery;
 
 /**
  * @since 4.1
  */
-public class DefaultQuotingAppendable extends StringBuilderAppendable {
-
-    public DefaultQuotingAppendable(TranslatorContext context) {
-        super(context);
+public class H2ActionBuilder extends JdbcActionBuilder {
+    public H2ActionBuilder(DataNode node) {
+        super(node);
     }
 
     @Override
-    public QuotingAppendable appendQuoted(String content) {
-        String quotedIdentifier = context.getQuotingStrategy().quotedIdentifier(context.getRootDbEntity(), content);
-        builder.append(quotedIdentifier);
-        return this;
+    public <T> SQLAction objectSelectAction(SelectQuery<T> query) {
+        return new H2SelectAction(query, dataNode);
     }
 }

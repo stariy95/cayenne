@@ -74,7 +74,7 @@ class QualifierTranslator implements TraversalHandler {
             return null;
         }
 
-        rootNode = new EmptyNode();
+        this.rootNode = new EmptyNode();
         this.currentNode = rootNode;
         this.expressionsToSkip = new HashSet<>();
 
@@ -88,9 +88,13 @@ class QualifierTranslator implements TraversalHandler {
             return;
         }
         Node nextNode = expressionNodeToSqlNode(node, parentNode);
-        currentNode.addChild(nextNode);
-        nextNode.setParent(currentNode);
-        currentNode = nextNode;
+        if(currentNode == null) {
+            currentNode = rootNode = nextNode;
+        } else {
+            currentNode.addChild(nextNode);
+            nextNode.setParent(currentNode);
+            currentNode = nextNode;
+        }
     }
 
     private Node expressionNodeToSqlNode(Expression node, Expression parentNode) {
@@ -314,13 +318,18 @@ class QualifierTranslator implements TraversalHandler {
         }
 
         Node nextNode = value(leaf).attribute(findDbAttribute(parentNode)).build();
-        currentNode.addChild(nextNode);
-        nextNode.setParent(currentNode);
+
+        if(currentNode == null) {
+            currentNode = rootNode = nextNode;
+        } else {
+            currentNode.addChild(nextNode);
+            nextNode.setParent(currentNode);
+        }
     }
 
     protected DbAttribute findDbAttribute(Expression node) {
         int len = node.getOperandCount();
-        if (len < 2) {
+        if (len != 2) {
             if (node instanceof SimpleNode) {
                 Expression parent = (Expression) ((SimpleNode) node).jjtGetParent();
                 if (parent != null) {
@@ -334,6 +343,7 @@ class QualifierTranslator implements TraversalHandler {
         PathTranslator.PathTranslationResult result = null;
         for(int i=0; i<node.getOperandCount(); i++) {
             Object op = node.getOperand(i);
+            // TODO: here is double translation of paths we already saw or going to translate soon
             if(op instanceof ASTObjPath) {
                 result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), ((ASTObjPath) op).getPath());
                 break;

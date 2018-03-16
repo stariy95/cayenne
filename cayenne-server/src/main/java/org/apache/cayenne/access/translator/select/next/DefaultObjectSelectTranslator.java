@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
 import org.apache.cayenne.dba.DbAdapter;
@@ -44,12 +43,14 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
             new OrderingStage(),
             new QualifierTranslationStage(),
             new HavingTranslationStage(),
+            new GroupByStage(),
             new DistinctStage(),
             new LimitOffsetStage(),
+            new SQLPreparationStage(),
             new SQLGenerationStage()
     );
 
-    private TranslatorContext context;
+    private final TranslatorContext context;
 
     public DefaultObjectSelectTranslator(SelectQuery<?> query, DbAdapter adapter, EntityResolver entityResolver, DefaultObjectSelectTranslator parent) {
         this.context = new TranslatorContext(query, adapter, entityResolver, parent == null ? null : parent.context);
@@ -64,18 +65,8 @@ public class DefaultObjectSelectTranslator implements SelectTranslator {
         for(TranslationStage stage : TRANSLATION_STAGES) {
             stage.perform(context);
         }
-        return generateSql();
-    }
 
-    protected String generateSql() {
-        // Build final SQL tree
-        Node node = context.getSelectBuilder().build();
-        // convert to database flavour
-        node = context.getAdapter().getSqlTreeProcessor().apply(node);
-        // generate SQL
-        SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
-        node.visit(visitor);
-        return visitor.getSQLString();
+        return context.getFinalSQL();
     }
 
     @Override

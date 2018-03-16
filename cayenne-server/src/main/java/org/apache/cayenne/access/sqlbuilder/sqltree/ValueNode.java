@@ -19,7 +19,12 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+import org.apache.cayenne.access.translator.select.next.TranslatorContext;
+import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.map.DbAttribute;
 
 /**
@@ -56,9 +61,7 @@ public class ValueNode extends Node {
             return;
         }
 
-        boolean isString = val instanceof CharSequence;
         boolean isArray = val.getClass().isArray();
-
         if(isArray) {
             if(val instanceof short[]) {
                 appendValue((short[])val, buffer);
@@ -75,12 +78,17 @@ public class ValueNode extends Node {
             } else if(val instanceof boolean[]) {
                 appendValue((boolean[])val, buffer);
             } else if(val instanceof Object[]) {
-                appendValue((Object[])val, buffer);
+                appendValue((Object[]) val, buffer);
             } else {
+                // append byte[] array as single object
                 appendObjectValue(buffer, val);
             }
         } else {
-            if(isString) {
+            if(val instanceof Persistent) {
+                appendValue((Persistent) val, buffer);
+            } else if(val instanceof ObjectId) {
+                appendValue((ObjectId) val, buffer);
+            } else if(val instanceof CharSequence) {
                 appendStringValue(buffer, (CharSequence)val);
             } else {
                 appendObjectValue(buffer, val);
@@ -93,10 +101,37 @@ public class ValueNode extends Node {
             return;
         }
         buffer.append('?');
+        addValueBinding(buffer, value);
     }
 
     protected void appendStringValue(QuotingAppendable buffer, CharSequence value) {
+        // value can't be null here
         buffer.append('?');
+        addValueBinding(buffer, value);
+    }
+
+    private void addValueBinding(QuotingAppendable buffer, Object value) {
+        // value can't be null here
+        TranslatorContext context = buffer.getContext();
+        if(context != null) {
+            // allow translation in out-of-context scope, to be able to use as a standalone SQL generator
+            ExtendedType extendedType = context.getAdapter().getExtendedTypes().getRegisteredType(value.getClass());
+            DbAttributeBinding binding = new DbAttributeBinding(attribute);
+            binding.setStatementPosition(context.getBindings().size() + 1);
+            binding.setExtendedType(extendedType);
+            binding.setValue(value);
+            context.getBindings().add(binding);
+        }
+    }
+
+    private void appendValue(Persistent value, QuotingAppendable buffer) {
+        appendValue(value.getObjectId(), buffer);
+    }
+
+    private void appendValue(ObjectId value, QuotingAppendable buffer) {
+        for(Object idVal: value.getIdSnapshot().values()) {
+            appendValue(idVal, buffer);
+        }
     }
 
     private void appendValue(short[] val, QuotingAppendable buffer) {

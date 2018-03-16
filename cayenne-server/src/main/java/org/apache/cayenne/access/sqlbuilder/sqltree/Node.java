@@ -85,7 +85,7 @@ public abstract class Node {
 
     @Override
     public String toString() {
-        QuotingAppendable sb = new StringBuilderAppendable();
+        QuotingAppendable sb = new StringBuilderAppendable(null);
         append(sb);
         return "Node {" + sb.toString() + "}";
     }
