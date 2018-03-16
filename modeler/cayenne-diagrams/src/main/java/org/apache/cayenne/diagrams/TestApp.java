@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.diagrams;
 
+import java.beans.EventHandler;
 import java.util.List;
 
 import javafx.application.Application;
@@ -26,7 +27,10 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.scene.transform.Affine;
 import javafx.stage.Stage;
 
 /**
@@ -42,17 +46,30 @@ public class TestApp extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Drawing Operations Test");
         Group root = new Group();
-        Canvas canvas = new Canvas(800, 600);
+        Canvas canvas = new Canvas(1024, 768);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         drawShapes(gc);
+
+        canvas.setOnMouseDragEntered(event -> {
+            double x = event.getSceneX();
+            double y = event.getSceneY();
+            gc.setStroke(Color.BLACK);
+            gc.strokeLine(x, y, x + 1, y + 1);
+        });
+
+        canvas.setOnMouseClicked(event -> {
+            double x = event.getSceneX();
+            double y = event.getSceneY();
+            gc.setStroke(Color.BLACK);
+            gc.strokeLine(x, y, x + 1, y + 1);
+        });
+
         root.getChildren().add(canvas);
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
     }
 
-    private void drawShapes(GraphicsContext gc) {
-        TreeParamsWalker walker = new TreeParamsWalker();
-
+    private Node createTestTree() {
         Node node0 = new Node();
         Node node1 = new Node();
         node0.addChild(node0);
@@ -70,35 +87,66 @@ public class TestApp extends Application {
         node3.addChild(new Node());
         node3.addChild(node1);
 
+        return node0;
+    }
+
+
+    private void drawShapes(GraphicsContext gc) {
+        TreeParamsWalker walker = new TreeParamsWalker();
+
+        Node node0 = createTestTree();
+
         walker.walk(node0, n -> {});
 
         int depth = walker.getMaxDepth();
         int width = walker.getMaxWidth();
 
-        int nodeWidth  = 100;
+        int nodeWidth  = 220;
         int nodeHeight = 50;
+        int margin = 8;
 
-        int margin = 5;
+        Affine transform = new Affine();
+        transform.setTx(0.0);
+        transform.setTy(0.0);
 
-        int x = margin;
         int y = margin;
-
-        int centerX = 200;
-        int centerY = 0;
-
-        gc.setFill(Color.GREEN);
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(2);
-
         for(int i=0; i<=depth; i++) {
             List<Node> nodeList = walker.getNodes(i);
-            for(int j=0; j<nodeList.size(); j++) {
-                gc.strokeRoundRect(x, y, nodeWidth, nodeHeight, 5, 5);
+            int nodesOnLevel = nodeList.size();
+            int x = margin + (width - nodesOnLevel) * (nodeWidth + margin) / 2;
+            for(Node nextNode : nodeList) {
                 x += nodeWidth + 2 * margin;
+                nextNode.setX(x);
+                nextNode.setY(y);
+                nextNode.setWidth(nodeWidth);
+                nextNode.setHeight(nodeHeight);
+
+                renderNode(gc, nextNode);
             }
-            x = margin;
             y += nodeHeight + 2 * margin;
         }
+    }
+
+    void renderNode(GraphicsContext gc, Node node) {
+        gc.setFill(Color.rgb(175,195,220));
+        gc.setStroke(Color.rgb(85, 118, 164));
+        gc.setLineWidth(2);
+        gc.translate(0, 0);
+
+        gc.fillRoundRect(node.getX(), node.getY(), node.getWidth(), node.getHeight(), 5, 5);
+        gc.strokeRoundRect(node.getX(), node.getY(), node.getWidth(), node.getHeight(), 5, 5);
+
+        gc.translate(0, 0);
+        gc.setFill(Color.BLACK);
+
+        final Text text = new Text("SomeCayenneEntityName");
+        double captionWidth = text.getLayoutBounds().getWidth();
+        double captionHeight = text.getLayoutBounds().getHeight();
+
+        double captionX = node.getX() + node.getWidth() / 2 - captionWidth / 2;
+        double captionY = node.getY() + captionHeight + 2;
+
+        gc.fillText("SomeCayenneEntityName", captionX, captionY);
 
     }
 
