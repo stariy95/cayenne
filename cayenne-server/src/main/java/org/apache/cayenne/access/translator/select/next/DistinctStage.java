@@ -52,8 +52,9 @@ public class DistinctStage implements TranslationStage {
         // query forcing distinct or query have joins (qualifier or prefetch)
         if(context.getQuery().isDistinct() || context.getTableTree().getNodeCount() > 1) {
             // unsuitable jdbc type for distinct clause
-            for(ColumnDescriptor columnDescriptor : context.getColumnDescriptors()) {
-                if(isUnsupportedForDistinct(columnDescriptor.getJdbcType())) {
+            for(TranslatorContext.ResultNode node : context.getResultNodeList()) {
+                // TODO: make it per adapter rather than one-for-all
+                if(isUnsupportedForDistinct(node.getJdbcType())) {
                     context.setDistinctSuppression(true);
                     return;
                 }

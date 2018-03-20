@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
 
@@ -37,19 +36,9 @@ abstract class BaseColumnExtractor implements ColumnExtractor {
     }
 
     protected void addDbAttribute(String prefix, String labelPrefix, DbAttribute dba) {
-        String path = dba.getName();
-        if(prefix != null) {
-            path = prefix + '.' + path;
-        }
-        String alias = context.getTableTree().aliasForAttributePath(path);
-        ColumnDescriptor column = new ColumnDescriptor(dba, alias);
-        if(labelPrefix != null) {
-            column.setDataRowKey(labelPrefix + '.' + dba.getName());
-        }
-
-//        context.getColumnDescriptors().add(column);
-        Node columnNode = table(alias).column(dba.getName()).attribute(dba).build();
-        context.addResultNode(columnNode, true,
-                labelPrefix != null ? labelPrefix + '.' + dba.getName() : null);
+        String alias = context.getTableTree().aliasForPath(prefix);
+        String dataRowKey = labelPrefix != null ? labelPrefix + '.' + dba.getName() : dba.getName();
+        Node columnNode = table(alias).column(dba).build();
+        context.addResultNode(columnNode, dataRowKey);
     }
 }

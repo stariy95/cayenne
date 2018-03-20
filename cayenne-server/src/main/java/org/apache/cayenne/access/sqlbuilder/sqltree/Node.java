@@ -75,10 +75,9 @@ public abstract class Node {
         visitor.onNodeStart(this);
         int count = getChildrenCount();
         for(int i=0; i<count; i++) {
-            Node child = getChild(i);
-            visitor.onChildNodeStart(this, child, i, i < (count - 1));
-            child.visit(visitor);
-            visitor.onChildNodeEnd(this, child, i, i < (count - 1));
+            visitor.onChildNodeStart(this, getChild(i), i, i < (count - 1));
+            getChild(i).visit(visitor);
+            visitor.onChildNodeEnd(this, getChild(i), i, i < (count - 1));
         }
         visitor.onNodeEnd(this);
     }

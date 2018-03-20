@@ -53,17 +53,17 @@ public class DerbySqlTreeProcessor implements Function<Node, Node> {
             public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
                 if(node.getType() == NodeType.LIMIT_OFFSET) {
                     DerbyLimitOffsetNode replacement = new DerbyLimitOffsetNode((LimitOffsetNode) node);
-                    node.getParent().replaceChild(index, replacement);
+                    parent.replaceChild(index, replacement);
                 } else if(node.getType() == NodeType.COLUMN) {
                     DerbyColumnNode replacement = new DerbyColumnNode((ColumnNode)node);
                     for(int i=0; i<node.getChildrenCount(); i++) {
                         replacement.addChild(node.getChild(i));
                     }
-                    node.getParent().replaceChild(index, replacement);
+                    parent.replaceChild(index, replacement);
                 } else if(node.getType() == NodeType.VALUE) {
                     ValueNode valueNode = (ValueNode)node;
                     Node replacement = new DerbyValueNode(valueNode.getValue(), valueNode.getAttribute());
-                    node.getParent().replaceChild(index, replacement);
+                    parent.replaceChild(index, replacement);
                 } else if(node.getType() == NodeType.FUNCTION) {
                     FunctionNode oldNode = (FunctionNode) node;
                     String functionName = oldNode.getFunctionName();
@@ -72,13 +72,13 @@ public class DerbySqlTreeProcessor implements Function<Node, Node> {
                         for(int i=0; i<node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     } else if("DAY_OF_MONTH".equals(functionName)) {
                         FunctionNode replacement = new FunctionNode("DAY", oldNode.getAlias(), true);
                         for(int i=0; i<node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     } else if("WEEK".equals(functionName)
                             || "DAY_OF_WEEK".equals(functionName)
                             || "DAY_OF_YEAR".equals(functionName)) {
@@ -87,7 +87,7 @@ public class DerbySqlTreeProcessor implements Function<Node, Node> {
                             || "CURRENT_TIME".equals(functionName)
                             || "CURRENT_TIMESTAMP".equals(functionName)) {
                         FunctionNode replacement = new FunctionNode(functionName, oldNode.getAlias(), false);
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     } else if("CONCAT".equals(functionName)) {
                         Node replacement = new ExpressionNode() {
                             @Override
@@ -98,7 +98,7 @@ public class DerbySqlTreeProcessor implements Function<Node, Node> {
                         for(int i=0; i<node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     }
                 }
             }

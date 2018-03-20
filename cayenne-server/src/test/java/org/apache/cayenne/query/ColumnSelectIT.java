@@ -493,45 +493,6 @@ public class ColumnSelectIT extends ServerCase {
         ).select(context);
         assertEquals(21, result.size());
 
-
-        // SELECT DISTINCT
-        //      COUNT(t1.PAINTING_ID ),
-        //      RTRIM(t0.ARTIST_NAME) ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
-        //      t1.PAINTING_TITLE ,
-        //      RTRIM(t0.ARTIST_NAME) ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
-        //      t2.GALLERY_NAME ,
-        //      RTRIM(t0.ARTIST_NAME) ,
-        //      RTRIM(t0.ARTIST_NAME) ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID
-        // FROM
-        //      ARTIST t0
-        //      LEFT JOIN PAINTING t1  ON  (t0.ARTIST_ID  =  t1.ARTIST_ID )
-        //      JOIN GALLERY t2  ON  (t1.GALLERY_ID  =  t2.GALLERY_ID )
-        // GROUP BY
-        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
-        //      t1.PAINTING_TITLE ,
-        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
-        //      t2.GALLERY_NAME ,
-        //      RTRIM(t0.ARTIST_NAME) ,
-        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID
-
-        // SELECT DISTINCT
-        //      COUNT(t1.PAINTING_ID) ,
-        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
-        //      t2.PAINTING_TITLE ,
-        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
-        //      t3.GALLERY_NAME ,
-        //      RTRIM(t0.ARTIST_NAME) ,
-        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID
-        // FROM
-        //      ARTIST t0
-        //      LEFT JOIN PAINTING t1  ON  (t0.ARTIST_ID  =  t1.ARTIST_ID )
-        //      JOIN PAINTING t2  ON  (t0.ARTIST_ID  =  t2.ARTIST_ID )
-        //      JOIN GALLERY t3  ON  (t2.GALLERY_ID  =  t3.GALLERY_ID )
-        // GROUP BY
-        //      t3.GALLERY_NAME ,RTRIM(t0.ARTIST_NAME) ,
-        //      t0.ARTIST_NAME ,t0.ARTIST_ID ,
-        //      t2.PAINTING_TITLE ,t0.DATE_OF_BIRTH
-
         for(Object[] next : result) {
             long count = (Long)next[0];
             Artist artist = (Artist)next[1];

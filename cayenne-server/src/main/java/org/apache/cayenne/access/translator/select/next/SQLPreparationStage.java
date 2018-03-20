@@ -47,30 +47,27 @@ public class SQLPreparationStage implements TranslationStage {
     }
 
     private void addResult(TranslatorContext context) {
-        Function<Node, Node> treeModifier = context.getAdapter().getSqlTreeProcessor();
-
+        int counter = 0;
         for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
-
             context.getSelectBuilder().result(resultNode::getNode);
 
             if(!resultNode.isInDataRow()) {
                 continue;
             }
 
-            String name;
-            if(resultNode.getProperty() != null) {
-                SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
-                treeModifier.apply(resultNode.getNode()).visit(visitor);
-                name = visitor.getSQLString();
-            } else {
+            String name = "__c" + counter;
+            DbAttribute attribute = resultNode.getDbAttribute();
+            if(attribute != null) {
                 name = resultNode.getDbAttribute().getName();
             }
 
             ColumnDescriptor descriptor = new ColumnDescriptor(name, resultNode.getJdbcType());
+            descriptor.setAttribute(resultNode.getDbAttribute());
             descriptor.setDataRowKey(resultNode.getDataRowKey());
             descriptor.setJavaClass(resultNode.getJavaType());
 
             context.getColumnDescriptors().add(descriptor);
+            counter++;
         }
     }
 

@@ -506,7 +506,7 @@ public class SelectQueryIT extends ServerCase {
 		Expression qual = ExpressionFactory.matchExp("artistName", "artist1");
 		query.setQualifier(qual);
 
-		Artist artist = (Artist) query.selectOne(context);
+		Artist artist = query.selectOne(context);
 		assertEquals("artist1", artist.getArtistName());
 	}
 

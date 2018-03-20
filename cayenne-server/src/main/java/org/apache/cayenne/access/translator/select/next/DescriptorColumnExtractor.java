@@ -22,7 +22,6 @@ package org.apache.cayenne.access.translator.select.next;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -57,6 +56,13 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
     public void extract(String prefix) {
         this.prefix = prefix;
+        TranslatorContext.DescriptorType type = TranslatorContext.DescriptorType.OTHER;
+        if(columnLabelPrefix != null) {
+            type = TranslatorContext.DescriptorType.PREFETCH;
+        } else if(descriptor.getEntity().getDbEntity() == context.getRootDbEntity()) {
+            type = TranslatorContext.DescriptorType.ROOT;
+        }
+        context.markDescriptorStart(type);
 
         descriptor.visitAllProperties(this);
 
@@ -69,6 +75,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
                 addDbAttribute(prefix, columnLabelPrefix, dba);
             }
         }
+        context.markDescriptorEnd(type);
     }
 
     @Override
@@ -86,11 +93,11 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
         String columnUniqueName = alias + '.' + attribute.getName();
         if(columnTracker.add(columnUniqueName)) {
+            Node columnNode = table(alias).column(attribute).build();
             String dataRowKey = columnLabelPrefix != null
                     ? columnLabelPrefix + '.' + oa.getDbAttributePath()
                     : oa.getDbAttributePath();
-            Node columnNode = table(alias).column(attribute).build();
-            context.addResultNode(columnNode, true, dataRowKey).setJavaType(oa.getType());
+            context.addResultNode(columnNode, dataRowKey).setJavaType(oa.getType());
         }
 
         return true;
@@ -114,7 +121,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
                 String dataRowKey = columnLabelPrefix != null
                         ? columnLabelPrefix + '.' + attribute.getName()
                         : attribute.getName();
-                context.addResultNode(columnNode, true, dataRowKey);
+                context.addResultNode(columnNode, dataRowKey);
             }
         }
 

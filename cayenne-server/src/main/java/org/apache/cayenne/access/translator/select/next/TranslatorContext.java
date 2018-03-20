@@ -21,9 +21,8 @@ package org.apache.cayenne.access.translator.select.next;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
@@ -84,6 +83,9 @@ public class TranslatorContext {
     private String finalSQL;
     private boolean distinctSuppression;
 
+    private int rootSegmentEnd;
+    private boolean appendResultToRoot;
+
     TranslatorContext(SelectQuery<?> query, DbAdapter adapter, EntityResolver resolver, TranslatorContext parentContext) {
         this.query = query;
         this.adapter = adapter;
@@ -94,7 +96,21 @@ public class TranslatorContext {
         this.bindings = new ArrayList<>(4);
         this.selectBuilder = SQLBuilder.select();
         this.quotingStrategy = adapter.getQuotingStrategy();
-        this.resultNodeList = new ArrayList<>();
+        this.resultNodeList = new LinkedList<>();
+    }
+
+    void markDescriptorStart(DescriptorType type) {
+        if(type == DescriptorType.PREFETCH) {
+            appendResultToRoot = true;
+        }
+    }
+
+    void markDescriptorEnd(DescriptorType type) {
+        if(type == DescriptorType.ROOT) {
+            rootSegmentEnd = resultNodeList.size() - 1;
+        } else if(type == DescriptorType.PREFETCH) {
+            appendResultToRoot = false;
+        }
     }
 
     SelectBuilder getSelectBuilder() {
@@ -162,17 +178,27 @@ public class TranslatorContext {
     }
 
     public ResultNode addResultNode(Node node) {
-        return addResultNode(node, false, null);
+        return addResultNode(node, false, null, null);
     }
 
-    public ResultNode addResultNode(Node node, boolean inDataRow, String dataRowKey) {
-        return addResultNode(node, inDataRow, null, dataRowKey);
+    public ResultNode addResultNode(Node node, String dataRowKey) {
+        return addResultNode(node, true, null, dataRowKey);
     }
 
     public ResultNode addResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
         ResultNode resultNode = new ResultNode(node, inDataRow, property, dataRowKey);
-        resultNodeList.add(resultNode);
+        if(appendResultToRoot) {
+            resultNodeList.add(rootSegmentEnd + 1, resultNode);
+        } else {
+            resultNodeList.add(resultNode);
+        }
         return resultNode;
+    }
+
+    enum DescriptorType {
+        ROOT,
+        PREFETCH,
+        OTHER
     }
 
     static class ResultNode {
@@ -216,6 +242,9 @@ public class TranslatorContext {
             }
             if(property != null) {
                 return property.getAlias();
+            }
+            if(getDbAttribute() != null) {
+                return getDbAttribute().getName();
             }
             return null;
         }

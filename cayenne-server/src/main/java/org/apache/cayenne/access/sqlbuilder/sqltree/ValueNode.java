@@ -110,7 +110,7 @@ public class ValueNode extends Node {
         addValueBinding(buffer, value);
     }
 
-    private void addValueBinding(QuotingAppendable buffer, Object value) {
+    protected void addValueBinding(QuotingAppendable buffer, Object value) {
         // value can't be null here
         TranslatorContext context = buffer.getContext();
         if(context != null) {
