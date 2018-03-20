@@ -19,6 +19,9 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
@@ -41,7 +44,9 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     private final ClassDescriptor descriptor;
     private final PathTranslator pathTranslator;
     private final String columnLabelPrefix;
+
     private String prefix;
+    private Set<String> columnTracker = new HashSet<>();
 
     DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor, String columnLabelPrefix) {
         super(context);
@@ -57,8 +62,12 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
         // add remaining needed attrs from DbEntity
         DbEntity table = descriptor.getEntity().getDbEntity();
+        String alias = context.getTableTree().aliasForPath(prefix);
         for (DbAttribute dba : table.getPrimaryKeys()) {
-            addDbAttribute(prefix, columnLabelPrefix, dba);
+            String columnUniqueName = alias + '.' + dba.getName();
+            if(columnTracker.add(columnUniqueName)) {
+                addDbAttribute(prefix, columnLabelPrefix, dba);
+            }
         }
     }
 
@@ -66,22 +75,23 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     public boolean visitAttribute(AttributeProperty property) {
         ObjAttribute oa = property.getAttribute();
         PathTranslator.PathTranslationResult result = pathTranslator.translatePath(oa.getEntity(), property.getName());
+
+        DbAttribute attribute = result.getLastAttribute();
+
         String path = result.getFinalPath();
         if(prefix != null) {
             path = prefix + '.' + path;
         }
         String alias = context.getTableTree().aliasForAttributePath(path);
 
-        DbAttribute attribute = result.getDbAttributes().get(result.getDbAttributes().size() - 1);
-        ColumnDescriptor column = new ColumnDescriptor(oa, attribute, alias);
-        if(columnLabelPrefix != null) {
-            column.setDataRowKey(columnLabelPrefix + '.' + attribute.getName());
+        String columnUniqueName = alias + '.' + attribute.getName();
+        if(columnTracker.add(columnUniqueName)) {
+            String dataRowKey = columnLabelPrefix != null
+                    ? columnLabelPrefix + '.' + oa.getDbAttributePath()
+                    : oa.getDbAttributePath();
+            Node columnNode = table(alias).column(attribute).build();
+            context.addResultNode(columnNode, true, dataRowKey).setJavaType(oa.getType());
         }
-//        context.getColumnDescriptors().add(column);
-
-        Node columnNode = table(alias).column(attribute.getName()).attribute(attribute).build();
-        context.addResultNode(columnNode, true,
-                columnLabelPrefix != null ? columnLabelPrefix + '.' + attribute.getName() : null);
 
         return true;
     }
@@ -98,14 +108,14 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
         String alias = context.getTableTree().aliasForAttributePath(path);
 
         for(DbAttribute attribute : result.getDbAttributes()) {
-            ColumnDescriptor column = new ColumnDescriptor(attribute, alias);
-            if(columnLabelPrefix != null) {
-                column.setDataRowKey(columnLabelPrefix + '.' + attribute.getName());
+            String columnUniqueName = alias + '.' + attribute.getName();
+            if(columnTracker.add(columnUniqueName)) {
+                Node columnNode = table(alias).column(attribute).build();
+                String dataRowKey = columnLabelPrefix != null
+                        ? columnLabelPrefix + '.' + attribute.getName()
+                        : attribute.getName();
+                context.addResultNode(columnNode, true, dataRowKey);
             }
-//            context.getColumnDescriptors().add(column);
-            Node columnNode = table(alias).column(attribute.getName()).attribute(attribute).build();
-            context.addResultNode(columnNode, true,
-                    columnLabelPrefix != null ? columnLabelPrefix + '.' + attribute.getName() : null);
         }
 
         return true;

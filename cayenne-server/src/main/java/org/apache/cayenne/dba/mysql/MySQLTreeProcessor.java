@@ -40,7 +40,7 @@ public class MySQLTreeProcessor implements Function<Node, Node> {
             }
 
             @Override
-            public void onChildNodeStart(Node node, int index, boolean hasMore) {
+            public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
                 if(node.getType() == NodeType.LIMIT_OFFSET) {
                     LimitOffsetNode limitOffsetNode = (LimitOffsetNode)node;
                     Node replacement = new MysqlLimitOffsetNode(limitOffsetNode.getLimit(), limitOffsetNode.getOffset());
@@ -62,7 +62,7 @@ public class MySQLTreeProcessor implements Function<Node, Node> {
             }
 
             @Override
-            public void onChildNodeEnd(Node node, int index, boolean hasMore) {
+            public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
             }
 
             @Override

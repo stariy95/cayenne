@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 
 /**
@@ -31,9 +32,9 @@ public class HavingTranslationStage implements TranslationStage {
     public void perform(TranslatorContext context) {
         QualifierTranslator translator = new QualifierTranslator(context);
         Expression expression = context.getQuery().getHavingQualifier();
-        NodeBuilder qualifierBuilder = translator.translate(expression);
-        if(qualifierBuilder != null) {
-            context.getSelectBuilder().having(qualifierBuilder);
+        Node qualifier = translator.translate(expression);
+        if(qualifier != null) {
+            context.getSelectBuilder().having(() -> qualifier);
         }
     }
 

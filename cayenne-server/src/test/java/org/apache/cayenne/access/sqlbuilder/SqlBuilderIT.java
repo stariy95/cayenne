@@ -95,13 +95,13 @@ public class SqlBuilderIT extends ServerCase {
         assertEquals("SELECT DISTINCT   " +
                 "a.ARTIST_ID a_id ,COUNT(p.PAINTING_TITLE ) AS p_count  " +
                 "FROM ARTIST a  " +
-                "LEFT JOIN PAINTING p  ON (((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ? ))) " +
+                "LEFT JOIN PAINTING p  ON  ((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ? )) " +
                 "WHERE ((((a.ARTIST_NAME  =  ? ) " +
                 "AND  EXISTS(SELECT  *  FROM GALLERY g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID ))) " +
                 "AND  (?  =  ? )) OR  ? ) " +
                 "GROUP BY a.ARTIST_ID  " +
                 "HAVING NOT  (COUNT(p.PAINTING_TITLE ) >  ? ) " +
-                "ORDER BY  p_count  DESC ", visitor.getSQLString());
+                "ORDER BY  p_count  DESC", visitor.getSQLString().trim());
 
     }
 

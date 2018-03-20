@@ -211,6 +211,9 @@ class ObjPathIterator implements Iterator<Void> {
             currentDbPath.append('.');
         }
         currentDbPath.append(pathSegment);
+        if(pathIterator.isOuterJoin()) {
+            currentDbPath.append('+');
+        }
     }
 
     public String getFinalPath() {

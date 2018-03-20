@@ -58,7 +58,7 @@ public class TranslatorContext {
      * - prefetched objects attributes and additional db attributes (PKs and FKs)
      * - order by expressions if query is distinct?
      */
-    private final Set<ColumnDescriptor> columnDescriptors;
+    private final List<ColumnDescriptor> columnDescriptors;
 
 
     /**
@@ -89,7 +89,7 @@ public class TranslatorContext {
         this.resolver = resolver;
         this.metadata = query.getMetaData(resolver);
         this.tableTree = new TableTree(parentContext == null ? 0 : parentContext.getTableCount());
-        this.columnDescriptors = new LinkedHashSet<>(8);
+        this.columnDescriptors = new ArrayList<>();
         this.bindings = new ArrayList<>(4);
         this.selectBuilder = SQLBuilder.select();
         this.quotingStrategy = adapter.getQuotingStrategy();
@@ -160,20 +160,22 @@ public class TranslatorContext {
         return resultNodeList;
     }
 
-    public void addResultNode(Node node) {
-        addResultNode(node, false, null);
+    public ResultNode addResultNode(Node node) {
+        return addResultNode(node, false, null);
     }
 
-    public void addResultNode(Node node, boolean inDataRow) {
-        addResultNode(node, inDataRow, null);
+    public ResultNode addResultNode(Node node, boolean inDataRow) {
+        return addResultNode(node, inDataRow, null);
     }
 
-    public void addResultNode(Node node, boolean inDataRow, String dataRowKey) {
-        addResultNode(node, inDataRow, null, dataRowKey);
+    public ResultNode addResultNode(Node node, boolean inDataRow, String dataRowKey) {
+        return addResultNode(node, inDataRow, null, dataRowKey);
     }
 
-    public void addResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
-        resultNodeList.add(new ResultNode(node, inDataRow, property, dataRowKey));
+    public ResultNode addResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
+        ResultNode resultNode = new ResultNode(node, inDataRow, property, dataRowKey);
+        resultNodeList.add(resultNode);
+        return resultNode;
     }
 
     static class ResultNode {
@@ -181,8 +183,9 @@ public class TranslatorContext {
         private final boolean inDataRow;
         private final String dataRowKey;
         private final boolean isAggregate;
-
         private final Property<?> property;
+
+        private String javaType;
 
         private ResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
             this.node = node;
@@ -213,6 +216,20 @@ public class TranslatorContext {
             return dataRowKey;
         }
 
+        public void setJavaType(String javaType) {
+            this.javaType = javaType;
+        }
+
+        public String getJavaType() {
+            if(javaType != null) {
+                return javaType;
+            }
+            if(property != null) {
+                return property.getType().getCanonicalName();
+            }
+            return null;
+        }
+
         public DbAttribute getDbAttribute() {
             DbAttribute[] dbAttribute = {null};
             node.visit(new NodeTreeVisitor() {
@@ -224,10 +241,10 @@ public class TranslatorContext {
                 }
 
                 @Override
-                public void onChildNodeStart(Node node, int index, boolean hasMore) {
+                public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
                 }
                 @Override
-                public void onChildNodeEnd(Node node, int index, boolean hasMore) {
+                public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
                 }
                 @Override
                 public void onNodeEnd(Node node) {

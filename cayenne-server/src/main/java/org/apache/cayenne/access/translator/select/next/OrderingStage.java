@@ -19,13 +19,10 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.function.Function;
-
-import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.OrderingNodeBuilder;
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.parser.ASTAggregateFunctionCall;
 import org.apache.cayenne.query.Ordering;
 
 import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
@@ -45,14 +42,14 @@ class OrderingStage implements TranslationStage {
 
     private void processOrdering(QualifierTranslator qualifierTranslator, TranslatorContext context, Ordering ordering) {
         Expression exp = ordering.getSortSpec();
-        NodeBuilder nodeBuilder = qualifierTranslator.translate(exp);
+        NodeBuilder nodeBuilder = () -> qualifierTranslator.translate(exp);
 
         if(ordering.isCaseInsensitive()) {
             nodeBuilder = function("UPPER", nodeBuilder);
         }
 
         // If query is DISTINCT than we need to add all ORDER BY clauses as result columns
-        if(!context.isDistinctSuppression()) {
+        if(shouldAddToResult(context, ordering)) {
             // TODO: need to check duplicates
             context.addResultNode(nodeBuilder.build());
         }
@@ -63,4 +60,15 @@ class OrderingStage implements TranslationStage {
         }
         context.getSelectBuilder().orderBy(orderingNodeBuilder);
     }
+
+    private boolean shouldAddToResult(TranslatorContext context, Ordering ordering) {
+        if(context.isDistinctSuppression()) {
+           return false;
+        }
+        if(ordering.getSortSpec() instanceof ASTAggregateFunctionCall) {
+            return false;
+        }
+        return true;
+    }
+
 }

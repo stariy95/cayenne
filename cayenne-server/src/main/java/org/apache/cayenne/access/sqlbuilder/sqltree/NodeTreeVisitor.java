@@ -26,9 +26,9 @@ public interface NodeTreeVisitor {
 
     void onNodeStart(Node node);
 
-    void onChildNodeStart(Node node, int index, boolean hasMore);
+    void onChildNodeStart(Node parent, Node child, int index, boolean hasMore);
 
-    void onChildNodeEnd(Node node, int index, boolean hasMore);
+    void onChildNodeEnd(Node parent, Node child, int index, boolean hasMore);
 
     void onNodeEnd(Node node);
 }

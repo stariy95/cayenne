@@ -59,16 +59,6 @@ public class JoinNodeBuilder implements NodeBuilder {
             public void append(QuotingAppendable buffer) {
                 buffer.append("ON ");
             }
-
-            @Override
-            public void appendChildrenStart(QuotingAppendable builder) {
-                builder.append('(');
-            }
-
-            @Override
-            public void appendChildrenEnd(QuotingAppendable builder) {
-                builder.append(')');
-            }
         };
         onNode.addChild(joinExp.build());
         node.addChild(onNode);

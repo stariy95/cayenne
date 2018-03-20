@@ -50,7 +50,7 @@ public class DerbySqlTreeProcessor implements Function<Node, Node> {
             }
 
             @Override
-            public void onChildNodeStart(Node node, int index, boolean hasMore) {
+            public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
                 if(node.getType() == NodeType.LIMIT_OFFSET) {
                     DerbyLimitOffsetNode replacement = new DerbyLimitOffsetNode((LimitOffsetNode) node);
                     node.getParent().replaceChild(index, replacement);
@@ -104,7 +104,7 @@ public class DerbySqlTreeProcessor implements Function<Node, Node> {
             }
 
             @Override
-            public void onChildNodeEnd(Node node, int index, boolean hasMore) {
+            public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
             }
 
             @Override

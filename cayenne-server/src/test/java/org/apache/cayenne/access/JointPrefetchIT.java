@@ -172,7 +172,7 @@ public class JointPrefetchIT extends ServerCase {
             int rowWidth = context.getEntityResolver().getDbEntity("ARTIST").getAttributes().size()
                     + context.getEntityResolver().getDbEntity("PAINTING").getAttributes().size();
             for (DataRow row : rows) {
-                assertEquals("" + row, rowWidth + 1, row.size());
+                assertEquals("" + row, rowWidth, row.size());
 
                 // assert columns presence
                 assertTrue(row + "", row.containsKey("PAINTING_ID"));

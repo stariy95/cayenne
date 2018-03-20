@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTObjPath;
@@ -64,10 +65,10 @@ class QualifierTranslationStage implements TranslationStage {
             }
         }
 
-        NodeBuilder qualifierBuilder = translator.translate(expression);
+        Node qualifierNode = translator.translate(expression);
 
-        if(qualifierBuilder != null) {
-            context.getSelectBuilder().where(qualifierBuilder);
+        if(qualifierNode != null) {
+            context.getSelectBuilder().where(() -> qualifierNode);
         }
     }
 }

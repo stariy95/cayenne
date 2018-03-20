@@ -90,7 +90,7 @@ public class ColumnDescriptor {
         this(attribute.getName(), attribute.getType());
 
         this.attribute = attribute;
-//        this.namePrefix = tableAlias;
+        this.namePrefix = tableAlias;
 
         if (attribute.getEntity() != null) {
             this.tableName = attribute.getEntity().getName();

@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.sql.Types;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,7 +27,6 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.sqlbuilder.ColumnNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
-import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
@@ -59,7 +57,6 @@ class QualifierTranslator implements TraversalHandler {
     private final PathTranslator pathTranslator;
 
     private Set<Object> expressionsToSkip;
-    private Node rootNode;
     private Node currentNode;
 
     private boolean forceJoin;
@@ -69,17 +66,17 @@ class QualifierTranslator implements TraversalHandler {
         this.pathTranslator = new PathTranslator(context);
     }
 
-    NodeBuilder translate(Expression qualifier) {
+    Node translate(Expression qualifier) {
         if(qualifier == null) {
             return null;
         }
 
-        this.rootNode = new EmptyNode();
+        Node rootNode = new EmptyNode();
         this.currentNode = rootNode;
         this.expressionsToSkip = new HashSet<>();
 
         qualifier.traverse(this);
-        return () -> rootNode;
+        return rootNode;
     }
 
     @Override
@@ -88,13 +85,9 @@ class QualifierTranslator implements TraversalHandler {
             return;
         }
         Node nextNode = expressionNodeToSqlNode(node, parentNode);
-        if(currentNode == null) {
-            currentNode = rootNode = nextNode;
-        } else {
-            currentNode.addChild(nextNode);
-            nextNode.setParent(currentNode);
-            currentNode = nextNode;
-        }
+        currentNode.addChild(nextNode);
+        nextNode.setParent(currentNode);
+        currentNode = nextNode;
     }
 
     private Node expressionNodeToSqlNode(Expression node, Expression parentNode) {
@@ -319,12 +312,8 @@ class QualifierTranslator implements TraversalHandler {
 
         Node nextNode = value(leaf).attribute(findDbAttribute(parentNode)).build();
 
-        if(currentNode == null) {
-            currentNode = rootNode = nextNode;
-        } else {
-            currentNode.addChild(nextNode);
-            nextNode.setParent(currentNode);
-        }
+        currentNode.addChild(nextNode);
+        nextNode.setParent(currentNode);
     }
 
     protected DbAttribute findDbAttribute(Expression node) {

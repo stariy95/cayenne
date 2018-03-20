@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
-import org.apache.cayenne.access.sqlbuilder.ColumnNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.JoinNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
@@ -55,13 +54,15 @@ public class SQLPreparationStage implements TranslationStage {
         Function<Node, Node> treeModifier = context.getAdapter().getSqlTreeProcessor();
 
         for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
+
             context.getSelectBuilder().result(resultNode::getNode);
+
             if(!resultNode.isInDataRow()) {
                 continue;
             }
 
             if(resultNode.getProperty() != null) {
-                SQLGenerationVisitor visitor = new SQLGenerationVisitor(context);
+                SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
                 treeModifier.apply(resultNode.getNode()).visit(visitor);
                 String exp = visitor.getSQLString();
                 int type = getJdbcType(resultNode);
@@ -75,19 +76,13 @@ public class SQLPreparationStage implements TranslationStage {
             } else {
                 // TODO: we need correct java type here from ObjAttribute
                 ColumnDescriptor column = new ColumnDescriptor(resultNode.getDbAttribute(), null);
-                column.setDataRowKey(resultNode.getDataRowKey());
+                column.setJavaClass(resultNode.getJavaType());
+                if(resultNode.getDataRowKey() != null) {
+                    column.setDataRowKey(resultNode.getDataRowKey());
+                }
+                context.getColumnDescriptors().add(column);
             }
         }
-//
-//        for(ColumnDescriptor descriptor : context.getColumnDescriptors()) {
-//            ColumnNodeBuilder nodeBuilder = descriptor.getAttribute() == null
-//                    ? table(descriptor.getNamePrefix()).column(descriptor.getName())
-//                    : table(descriptor.getNamePrefix()).column(descriptor.getAttribute());
-//            if(descriptor.isExpression()) {
-//                nodeBuilder.unescaped();
-//            }
-//            context.getSelectBuilder().result(nodeBuilder);
-//        }
     }
 
     private int getJdbcType(TranslatorContext.ResultNode resultNode) {
@@ -152,11 +147,11 @@ public class SQLPreparationStage implements TranslationStage {
         if (dbQualifier != null) {
             QualifierTranslator translator = new QualifierTranslator(context);
             dbQualifier = dbQualifier.transform(new JoinedDbEntityQualifierTransformer(node));
-            NodeBuilder translatedQualifier = translator.translate(dbQualifier);
+            Node translatedQualifier = translator.translate(dbQualifier);
             if (expressionNodeBuilder != null) {
-                expressionNodeBuilder = expressionNodeBuilder.and(translatedQualifier);
+                expressionNodeBuilder = expressionNodeBuilder.and(() -> translatedQualifier);
             } else {
-                expressionNodeBuilder = new ExpressionNodeBuilder(translatedQualifier);
+                expressionNodeBuilder = new ExpressionNodeBuilder(() -> translatedQualifier);
             }
         }
         return expressionNodeBuilder;

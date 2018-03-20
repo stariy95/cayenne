@@ -23,6 +23,7 @@ import java.util.Collections;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.parser.ASTDbPath;
@@ -36,6 +37,8 @@ import org.apache.cayenne.map.PathComponent;
 import org.apache.cayenne.query.PrefetchSelectQuery;
 import org.apache.cayenne.query.PrefetchTreeNode;
 import org.apache.cayenne.reflect.ClassDescriptor;
+
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
 
 /**
  * @since 4.1
@@ -134,12 +137,15 @@ class PrefetchNodeStage implements TranslationStage {
                     String labelPrefix = pathExp.getPath();
                     DbEntity targetEntity = relationship.getTargetEntity();
                     for (DbAttribute pk : targetEntity.getPrimaryKeys()) {
-                        // note that we my select a source attribute, but label it as target for simplified snapshot processing
+                        // note that we may select a source attribute, but label it as target for simplified snapshot processing
                         String path = labelPrefix + '.' + pk.getName();
                         String alias = context.getTableTree().aliasForAttributePath(path);
-                        ColumnDescriptor column = new ColumnDescriptor(pk, alias);
-                        column.setDataRowKey(path);
-                        context.getColumnDescriptors().add(column);
+//                        ColumnDescriptor column = new ColumnDescriptor(pk, alias);
+//                        column.setDataRowKey(path);
+//                        context.getColumnDescriptors().add(column);
+
+                        Node columnNode = table(alias).column(pk.getName()).attribute(pk).build();
+                        context.addResultNode(columnNode, true, path);
                     }
                 }
             }

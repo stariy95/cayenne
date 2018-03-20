@@ -41,7 +41,7 @@ public class HSQLTreeProcessor implements Function<Node, Node> {
             }
 
             @Override
-            public void onChildNodeStart(Node node, int index, boolean hasMore) {
+            public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
                 if(node.getType() == NodeType.FUNCTION) {
                     FunctionNode oldNode = (FunctionNode) node;
                     String functionName = oldNode.getFunctionName();
@@ -73,12 +73,14 @@ public class HSQLTreeProcessor implements Function<Node, Node> {
                     for(int i=0; i<node.getChildrenCount(); i++) {
                         replacement.addChild(node.getChild(i));
                     }
-                    node.getParent().replaceChild(index, replacement);
+                    if(node.getParent() != null) {
+                        node.getParent().replaceChild(index, replacement);
+                    }
                 }
             }
 
             @Override
-            public void onChildNodeEnd(Node node, int index, boolean hasMore) {
+            public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
             }
 
             @Override

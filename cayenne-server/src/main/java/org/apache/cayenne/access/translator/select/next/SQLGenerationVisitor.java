@@ -65,13 +65,13 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
 
 
     @Override
-    public void onChildNodeStart(Node node, int index, boolean hasMore) {
+    public void onChildNodeStart(Node parent, Node child, int index, boolean hasMore) {
     }
 
     @Override
-    public void onChildNodeEnd(Node node, int index, boolean hasMore) {
-        if(hasMore && node.getParent() != null) {
-            node.getParent().appendChildSeparator(delegate, index);
+    public void onChildNodeEnd(Node parent, Node child, int index, boolean hasMore) {
+        if(hasMore && parent != null) {
+            parent.appendChildSeparator(delegate, index);
         }
     }
 
