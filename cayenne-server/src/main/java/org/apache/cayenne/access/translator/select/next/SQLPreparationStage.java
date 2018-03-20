@@ -27,17 +27,13 @@ import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.JoinNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.exp.Expression;
-import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTPath;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbJoin;
 
-import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.join;
-import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.leftJoin;
-import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 
 /**
  * @since 4.1
@@ -61,40 +57,21 @@ public class SQLPreparationStage implements TranslationStage {
                 continue;
             }
 
+            String name;
             if(resultNode.getProperty() != null) {
                 SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
                 treeModifier.apply(resultNode.getNode()).visit(visitor);
-                String exp = visitor.getSQLString();
-                int type = getJdbcType(resultNode);
-
-                Property<?> property = resultNode.getProperty();
-                ColumnDescriptor descriptor = new ColumnDescriptor(exp, type,
-                        property.getType() == null ? null : property.getType().getCanonicalName());
-                descriptor.setDataRowKey(property.getAlias());
-                descriptor.setIsExpression(true);
-                context.getColumnDescriptors().add(descriptor);
+                name = visitor.getSQLString();
             } else {
-                // TODO: we need correct java type here from ObjAttribute
-                ColumnDescriptor column = new ColumnDescriptor(resultNode.getDbAttribute(), null);
-                column.setJavaClass(resultNode.getJavaType());
-                if(resultNode.getDataRowKey() != null) {
-                    column.setDataRowKey(resultNode.getDataRowKey());
-                }
-                context.getColumnDescriptors().add(column);
+                name = resultNode.getDbAttribute().getName();
             }
-        }
-    }
 
-    private int getJdbcType(TranslatorContext.ResultNode resultNode) {
-        if(resultNode.getDbAttribute() != null) {
-            return resultNode.getDbAttribute().getType();
-        }
+            ColumnDescriptor descriptor = new ColumnDescriptor(name, resultNode.getJdbcType());
+            descriptor.setDataRowKey(resultNode.getDataRowKey());
+            descriptor.setJavaClass(resultNode.getJavaType());
 
-        if(resultNode.getProperty() != null) {
-            return TypesMapping.getSqlTypeByJava(resultNode.getProperty().getType());
+            context.getColumnDescriptors().add(descriptor);
         }
-
-        return Integer.MIN_VALUE;
     }
 
     private void addFrom(TranslatorContext context) {

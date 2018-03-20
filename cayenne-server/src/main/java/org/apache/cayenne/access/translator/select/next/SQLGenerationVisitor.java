@@ -29,15 +29,12 @@ import org.slf4j.LoggerFactory;
  */
 public class SQLGenerationVisitor implements NodeTreeVisitor {
 
+    // TODO: remove debug-related stuff
     private static final Logger logger = LoggerFactory.getLogger(SQLGenerationVisitor.class);
-
-
-    private final StringBuilder builder;
-    private final StringBuilderAppendable delegate;
-
-    private boolean debug = true;
-
+    private static final boolean debug = true;
     private int level = 0;
+
+    private final StringBuilderAppendable delegate;
 
     public SQLGenerationVisitor(TranslatorContext context) {
         if(context == null) {
@@ -45,7 +42,6 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
         } else {
             this.delegate = new DefaultQuotingAppendable(context);
         }
-        this.builder = delegate.unwrap();
     }
 
     @Override
@@ -53,7 +49,7 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
         if(debug) {
             StringBuilder msg = new StringBuilder();
             for (int i = 0; i < level; i++) {
-                msg.append("  ");
+                msg.append('\t');
             }
             msg.append("start node {}");
             logger.info(msg.toString(), node);
@@ -62,7 +58,6 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
         node.append(delegate);
         node.appendChildrenStart(delegate);
     }
-
 
     @Override
     public void onChildNodeStart(Node parent, Node child, int index, boolean hasMore) {
@@ -84,7 +79,7 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
     }
 
     public String getSQLString() {
-        return builder.toString();
+        return delegate.toString();
     }
 
 }

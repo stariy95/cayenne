@@ -94,15 +94,6 @@ public class HSQLDBAdapter extends JdbcAdapter {
 	}
 
 	/**
-	 * @since 4.0
-	 */
-	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-//		return new HSQLSelectTranslator(query, this, entityResolver);
-		return new DefaultObjectSelectTranslator(query, this, entityResolver);
-	}
-
-	/**
 	 * @since 4.1
 	 */
 	@Override

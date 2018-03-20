@@ -35,6 +35,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.QuotingStrategy;
+import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.exp.parser.ASTAggregateFunctionCall;
 import org.apache.cayenne.map.DbAttribute;
@@ -164,10 +165,6 @@ public class TranslatorContext {
         return addResultNode(node, false, null);
     }
 
-    public ResultNode addResultNode(Node node, boolean inDataRow) {
-        return addResultNode(node, inDataRow, null);
-    }
-
     public ResultNode addResultNode(Node node, boolean inDataRow, String dataRowKey) {
         return addResultNode(node, inDataRow, null, dataRowKey);
     }
@@ -185,6 +182,7 @@ public class TranslatorContext {
         private final boolean isAggregate;
         private final Property<?> property;
 
+        private DbAttribute dbAttribute;
         private String javaType;
 
         private ResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
@@ -213,7 +211,13 @@ public class TranslatorContext {
         }
 
         public String getDataRowKey() {
-            return dataRowKey;
+            if(dataRowKey != null) {
+                return dataRowKey;
+            }
+            if(property != null) {
+                return property.getAlias();
+            }
+            return null;
         }
 
         public void setJavaType(String javaType) {
@@ -230,7 +234,22 @@ public class TranslatorContext {
             return null;
         }
 
+        public int getJdbcType() {
+            if(getDbAttribute() != null) {
+                return getDbAttribute().getType();
+            }
+
+            if(getProperty() != null) {
+                return TypesMapping.getSqlTypeByJava(getProperty().getType());
+            }
+
+            return TypesMapping.NOT_DEFINED;
+        }
+
         public DbAttribute getDbAttribute() {
+            if(this.dbAttribute != null) {
+                return this.dbAttribute;
+            }
             DbAttribute[] dbAttribute = {null};
             node.visit(new NodeTreeVisitor() {
                 @Override
@@ -250,7 +269,7 @@ public class TranslatorContext {
                 public void onNodeEnd(Node node) {
                 }
             });
-            return dbAttribute[0];
+            return this.dbAttribute = dbAttribute[0];
         }
     }
 }

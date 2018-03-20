@@ -110,7 +110,7 @@ public class ExpressionCollectionEvaluationIT extends ServerCase {
     private <T extends Comparable<T>> void testExpression(String expStr, Class<T> tClass) {
         Expression exp = ExpressionFactory.exp(expStr);
         Object res = exp.evaluate(ObjectSelect.query(Artist.class).prefetch(Artist.PAINTING_ARRAY.disjoint()).selectOne(context));
-        List<T> sqlResult = ObjectSelect.query(Artist.class).column(Property.create(exp, tClass)).orderBy("db:paintingArray.PAINTING_ID").select(context);
+        List<T> sqlResult = ObjectSelect.query(Artist.class).column(Property.create(exp, tClass)).select(context);
 
         Collections.sort((List)res);
         Collections.sort(sqlResult);

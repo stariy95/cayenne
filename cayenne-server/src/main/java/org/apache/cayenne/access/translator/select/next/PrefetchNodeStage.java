@@ -69,6 +69,9 @@ class PrefetchNodeStage implements TranslationStage {
         if(prefetch == null) {
             return;
         }
+
+        // TODO: use new path translator
+
         ObjEntity objEntity = context.getMetadata().getObjEntity();
 
         for(PrefetchTreeNode node : prefetch.adjacentJointNodes()) {
@@ -108,47 +111,27 @@ class PrefetchNodeStage implements TranslationStage {
             return;
         }
 
+        PathTranslator pathTranslator = new PathTranslator(context);
         PrefetchSelectQuery prefetchSelectQuery = (PrefetchSelectQuery)context.getQuery();
         for(String prefetchPath: prefetchSelectQuery.getResultPaths()) {
             ASTDbPath pathExp = (ASTDbPath) context.getMetadata().getClassDescriptor().getEntity()
                     .translateToDbPath(ExpressionFactory.exp(prefetchPath));
 
-            PathComponent<DbAttribute, DbRelationship> lastComponent = null;
-            StringBuilder fullPath = new StringBuilder();
-            for (PathComponent<DbAttribute, DbRelationship> component : context.getMetadata().getDbEntity()
-                    .resolvePath(pathExp, Collections.emptyMap())) {
+            String path = pathExp.getPath();
+            PathTranslator.PathTranslationResult result = pathTranslator
+                    .translatePath(context.getMetadata().getDbEntity(), path);
+            result.getDbRelationship().ifPresent(r -> {
+                DbEntity targetEntity = r.getTargetEntity();
+                context.getTableTree().addJoinTable(path, r, JoinType.INNER);
+                for (DbAttribute pk : targetEntity.getPrimaryKeys()) {
+                    // note that we may select a source attribute, but label it as target for simplified snapshot processing
+                    String finalPath = path + '.' + pk.getName();
+                    String alias = context.getTableTree().aliasForAttributePath(finalPath);
 
-                if (component.getRelationship() != null) {
-                    DbRelationship rel = component.getRelationship();
-                    if(fullPath.length() > 0) {
-                        fullPath.append('.');
-                    }
-                    fullPath.append(rel.getName());
-                    context.getTableTree().addJoinTable(fullPath.toString(), rel, component.getJoinType());
+                    Node columnNode = table(alias).column(pk).build();
+                    context.addResultNode(columnNode, true, finalPath);
                 }
-
-                lastComponent = component;
-            }
-
-            // process terminating element
-            if (lastComponent != null) {
-                DbRelationship relationship = lastComponent.getRelationship();
-                if (relationship != null) {
-                    String labelPrefix = pathExp.getPath();
-                    DbEntity targetEntity = relationship.getTargetEntity();
-                    for (DbAttribute pk : targetEntity.getPrimaryKeys()) {
-                        // note that we may select a source attribute, but label it as target for simplified snapshot processing
-                        String path = labelPrefix + '.' + pk.getName();
-                        String alias = context.getTableTree().aliasForAttributePath(path);
-//                        ColumnDescriptor column = new ColumnDescriptor(pk, alias);
-//                        column.setDataRowKey(path);
-//                        context.getColumnDescriptors().add(column);
-
-                        Node columnNode = table(alias).column(pk.getName()).attribute(pk).build();
-                        context.addResultNode(columnNode, true, path);
-                    }
-                }
-            }
+            });
         }
     }
 }

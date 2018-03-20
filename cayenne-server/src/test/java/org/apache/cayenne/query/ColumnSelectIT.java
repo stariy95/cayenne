@@ -713,9 +713,6 @@ public class ColumnSelectIT extends ServerCase {
                 .columns(Artist.ARTIST_NAME, artistFull, Artist.PAINTING_ARRAY.flat(Painting.class))
                 .pageSize(10)
                 .select(context);
-        // SELECT DISTINCT    RTRIM(t0.ARTIST_NAME) ,t0.ARTIST_ID ,t1.PAINTING_ID  FROM ARTIST t0  LEFT JOIN PAINTING t1  ON  (t0.ARTIST_ID  =  t1.ARTIST_ID )
-        // SELECT  RTRIM(t0.ARTIST_NAME) ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID  FROM ARTIST t0  WHERE  ((t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ) OR (t0.ARTIST_ID  = ? ))
-        // [bind: 1->ARTIST_ID:1, 2->ARTIST_ID:1, 3->ARTIST_ID:1, 4->ARTIST_ID:1, 5->ARTIST_ID:10, 6->ARTIST_ID:11, 7->ARTIST_ID:12, 8->ARTIST_ID:13, 9->ARTIST_ID:14, 10->ARTIST_ID:15]
 
         assertNotNull(a);
         assertEquals(36, a.size());
@@ -724,7 +721,9 @@ public class ColumnSelectIT extends ServerCase {
             assertNotNull(next);
             assertEquals("" + idx, String.class, next[0].getClass());
             assertEquals("" + idx, Artist.class, next[1].getClass());
-            assertEquals("" + idx, Painting.class, next[2].getClass());
+            if(next[2] != null) {
+                assertEquals("" + idx, Painting.class, next[2].getClass());
+            }
             idx++;
         }
     }

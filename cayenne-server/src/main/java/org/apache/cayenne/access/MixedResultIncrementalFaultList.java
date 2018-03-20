@@ -142,7 +142,10 @@ class MixedResultIncrementalFaultList<E> extends IncrementalFaultList<E> {
                 for (int i = fromIndex; i < toIndex; i++) {
                     Object[] object = (Object[])elements.get(i);
                     if (helper.unresolvedSuspect(object[dataIdx])) {
-                        quals.add(buildIdQualifier(dataIdx, object));
+                        Expression nextQualifier = buildIdQualifier(dataIdx, object);
+                        if(nextQualifier != null) {
+                            quals.add(nextQualifier);
+                        }
                     }
                 }
 
@@ -188,7 +191,9 @@ class MixedResultIncrementalFaultList<E> extends IncrementalFaultList<E> {
     Expression buildIdQualifier(int index, Object[] data) {
         Map<String, Object> map;
         if(data[index] instanceof Map) {
-            map = (Map<String, Object>)data[index];
+            map = (Map<String, Object>) data[index];
+        } else if(data[index] == null) {
+            return null;
         } else {
             map = new HashMap<>();
             int i = 0;
@@ -235,6 +240,8 @@ class MixedResultIncrementalFaultList<E> extends IncrementalFaultList<E> {
                         return false;
                     }
                 }
+            } else if(dataInTheList[dataIdx] == null) {
+                return false;
             } else {
                 for(Object id : map.values()) {
                     if (!dataInTheList[dataIdx++].equals(id)) {

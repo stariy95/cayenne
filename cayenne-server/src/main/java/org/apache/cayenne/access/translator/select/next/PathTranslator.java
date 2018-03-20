@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +32,31 @@ import org.apache.cayenne.map.ObjEntity;
  * @since 4.1
  */
 class PathTranslator {
+
+    private final TranslatorContext context;
+
+    PathTranslator(TranslatorContext context) {
+        this.context = context;
+    }
+
+    PathTranslationResult translatePath(ObjEntity entity, String path) {
+        // TODO: iterator -> processor
+        ObjPathIterator it = new ObjPathIterator(context, entity, path, context.getMetadata().getPathSplitAliases());
+        while(it.hasNext()) {
+            it.next();
+        }
+
+        return new PathTranslationResult(it.getFinalPath(), it.getDbAttributeList(), it.getAttribute(), it.getRelationship());
+    }
+
+    PathTranslationResult translatePath(DbEntity entity, String path) {
+        DbPathIterator it = new DbPathIterator(context, entity, path, context.getMetadata().getPathSplitAliases());
+        while(it.hasNext()) {
+            it.next();
+        }
+
+        return new PathTranslationResult(it.getFinalPath(), it.getDbAttributeList(), null, it.getRelationship());
+    }
 
     static class PathTranslationResult {
         private final String finalPath;
@@ -73,29 +97,4 @@ class PathTranslator {
             return finalPath;
         }
     }
-
-    private final TranslatorContext context;
-
-    PathTranslator(TranslatorContext context) {
-        this.context = context;
-    }
-
-    PathTranslationResult translatePath(ObjEntity entity, String path) {
-        ObjPathIterator it = new ObjPathIterator(context, entity, path, context.getMetadata().getPathSplitAliases());
-        while(it.hasNext()) {
-            it.next();
-        }
-
-        return new PathTranslationResult(it.getFinalPath(), it.getDbAttributeList(), it.getAttribute(), it.getRelationship());
-    }
-
-    PathTranslationResult translatePath(DbEntity entity, String path) {
-        DbPathIterator it = new DbPathIterator(context, entity, path, context.getMetadata().getPathSplitAliases());
-        while(it.hasNext()) {
-            it.next();
-        }
-
-        return new PathTranslationResult(it.getFinalPath(), it.getDbAttributeList(), null, it.getRelationship());
-    }
-
 }
