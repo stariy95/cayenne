@@ -35,7 +35,7 @@ public class DerbyValueNode extends ValueNode {
     }
 
     protected void appendStringValue(QuotingAppendable buffer, CharSequence value) {
-        if(getAttribute() != null && getAttribute().getType() == Types.CLOB) {
+        if(getAttribute() == null || (getAttribute() != null && getAttribute().getType() == Types.CLOB)) {
             buffer.append("CAST(? AS VARCHAR(").append(value.length()).append("))");
         } else {
             buffer.append('?');
