@@ -82,6 +82,18 @@ public abstract class Node {
         visitor.onNodeEnd(this);
     }
 
+    /**
+     * @return deep copy(i.e. with copies of all children) of this node
+     */
+    public Node deepCopy() {
+        Node node = this.copy();
+        for(int i=0; i<getChildrenCount(); i++) {
+            Node child = getChild(i).deepCopy();
+            node.addChild(child);
+        }
+        return node;
+    }
+
     @Override
     public String toString() {
         QuotingAppendable sb = new StringBuilderAppendable(null);
@@ -94,6 +106,8 @@ public abstract class Node {
     }
 
     public abstract void append(QuotingAppendable buffer);
+
+    public abstract Node copy();
 
     public void appendChildSeparator(QuotingAppendable builder, int childInd) {
         builder.append(' ');

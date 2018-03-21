@@ -17,39 +17,31 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.translator.select.next;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
+
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
  */
-public class GroupByStage implements TranslationStage {
-
+public class ExistsNode extends Node {
     @Override
-    public void perform(TranslatorContext context) {
-        if(!haveAggregate(context)) {
-            return;
-        }
-
-        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
-            if(resultNode.isAggregate()) {
-                continue;
-            }
-
-            context.getSelectBuilder().groupBy(() -> resultNode.getNode().deepCopy());
-        }
+    public void append(QuotingAppendable buffer) {
+        buffer.append("EXISTS");
     }
 
-    private boolean haveAggregate(TranslatorContext context) {
-        if(context.getQuery().getHavingQualifier() != null) {
-            return true;
-        }
+    @Override
+    public void appendChildrenStart(QuotingAppendable builder) {
+        builder.append('(');
+    }
 
-        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
-            if(resultNode.isAggregate()) {
-                return true;
-            }
-        }
+    @Override
+    public void appendChildrenEnd(QuotingAppendable builder) {
+        builder.append(')');
+    }
 
-        return false;
+    @Override
+    public Node copy() {
+        return new ExistsNode();
     }
 }

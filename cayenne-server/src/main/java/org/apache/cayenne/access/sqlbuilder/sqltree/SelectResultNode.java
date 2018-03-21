@@ -43,4 +43,9 @@ public class SelectResultNode extends Node {
     public NodeType getType() {
         return NodeType.RESULT;
     }
+
+    @Override
+    public Node copy() {
+        return new SelectResultNode();
+    }
 }

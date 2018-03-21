@@ -20,6 +20,7 @@
 package org.apache.cayenne.dba.mysql.sqltree;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 
 /**
  * @since 4.1
@@ -33,5 +34,10 @@ public class MysqlLimitOffsetNode extends LimitOffsetNode {
         if(limit == 0 && offset > 0) {
             setLimit(Integer.MAX_VALUE);
         }
+    }
+
+    @Override
+    public Node copy() {
+        return new MysqlLimitOffsetNode(limit, offset);
     }
 }

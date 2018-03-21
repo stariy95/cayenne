@@ -35,4 +35,9 @@ public class OffsetNode extends Node {
     public void append(QuotingAppendable buffer) {
         buffer.append("OFFSET ").append(offset);
     }
+
+    @Override
+    public Node copy() {
+        return new OffsetNode(offset);
+    }
 }

@@ -29,4 +29,9 @@ public class WhereNode extends Node {
     public void append(QuotingAppendable buffer) {
         buffer.append("WHERE");
     }
+
+    @Override
+    public Node copy() {
+        return new WhereNode();
+    }
 }

@@ -19,29 +19,25 @@
 
 package org.apache.cayenne.access.sqlbuilder.sqltree;
 
-import java.util.Objects;
-
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
  */
-public class SelectExpressionNode extends Node {
+public class TopNode extends Node {
+    private final int count;
 
-    private final String expression;
-
-    private final String alias;
-
-    public SelectExpressionNode(String expression, String alias) {
-        this.expression = Objects.requireNonNull(expression);
-        this.alias = alias;
+    public TopNode(int count) {
+        this.count = count;
     }
 
     @Override
     public void append(QuotingAppendable buffer) {
-        buffer.append(expression);
-        if(alias != null) {
-            buffer.append(" AS ").appendQuoted(alias);
-        }
+        buffer.append("TOP ").append(count);
+    }
+
+    @Override
+    public Node copy() {
+        return new TopNode(count);
     }
 }

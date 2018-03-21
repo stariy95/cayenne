@@ -51,7 +51,7 @@ class OrderingStage implements TranslationStage {
         // If query is DISTINCT than we need to add all ORDER BY clauses as result columns
         if(shouldAddToResult(context, ordering)) {
             // TODO: need to check duplicates
-            context.addResultNode(nodeBuilder.build());
+            context.addResultNode(nodeBuilder.build().deepCopy());
         }
 
         OrderingNodeBuilder orderingNodeBuilder = order(nodeBuilder);

@@ -21,6 +21,7 @@ package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
@@ -50,12 +51,7 @@ public class OrderingNodeBuilder implements NodeBuilder {
     public Node build() {
         Node node = new EmptyNode();
         node.addChild(column.build());
-        node.addChild(new Node() {
-            @Override
-            public void append(QuotingAppendable buffer) {
-                buffer.append(direction);
-            }
-        });
+        node.addChild(new TextNode(direction));
         return node;
     }
 }

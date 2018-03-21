@@ -20,6 +20,7 @@
 package org.apache.cayenne.dba.derby.sqltree;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
@@ -31,6 +32,10 @@ public class DerbyLimitOffsetNode extends LimitOffsetNode {
         super(node.getLimit(), node.getOffset());
     }
 
+    private DerbyLimitOffsetNode(int limit, int offset) {
+        super(limit, offset);
+    }
+
     @Override
     public void append(QuotingAppendable buffer) {
         // OFFSET X ROWS FETCH NEXT Y ROWS ONLY
@@ -40,5 +45,10 @@ public class DerbyLimitOffsetNode extends LimitOffsetNode {
         if(limit > 0) {
             buffer.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
         }
+    }
+
+    @Override
+    public Node copy() {
+        return new DerbyLimitOffsetNode(limit, offset);
     }
 }

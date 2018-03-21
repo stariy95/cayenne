@@ -30,4 +30,9 @@ public class FromNode extends Node {
     public void append(QuotingAppendable buffer) {
         buffer.append("FROM");
     }
+
+    @Override
+    public Node copy() {
+        return new FromNode();
+    }
 }

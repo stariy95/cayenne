@@ -31,4 +31,8 @@ public class SelectNode extends Node {
         buffer.append("SELECT");
     }
 
+    @Override
+    public Node copy() {
+        return new SelectNode();
+    }
 }

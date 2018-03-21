@@ -35,4 +35,9 @@ public class OrderByNode extends Node {
     public void appendChildSeparator(QuotingAppendable builder, int childInd) {
         builder.append(',');
     }
+
+    @Override
+    public Node copy() {
+        return new OrderByNode();
+    }
 }

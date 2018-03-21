@@ -45,4 +45,9 @@ public class UnescapedColumnNode extends ColumnNode {
     public NodeType getType() {
         return NodeType.COLUMN;
     }
+
+    @Override
+    public Node copy() {
+        return new UnescapedColumnNode(table, column, alias);
+    }
 }

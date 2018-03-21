@@ -36,4 +36,9 @@ public class TextNode extends Node {
     public void append(QuotingAppendable buffer) {
         buffer.append(text);
     }
+
+    @Override
+    public Node copy() {
+        return new TextNode(text);
+    }
 }

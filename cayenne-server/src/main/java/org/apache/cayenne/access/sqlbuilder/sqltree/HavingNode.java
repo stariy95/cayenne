@@ -29,4 +29,9 @@ public class HavingNode extends Node {
     public void append(QuotingAppendable buffer) {
         buffer.append("HAVING");
     }
+
+    @Override
+    public Node copy() {
+        return new HavingNode();
+    }
 }

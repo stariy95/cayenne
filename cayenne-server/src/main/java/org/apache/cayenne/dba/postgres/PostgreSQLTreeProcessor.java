@@ -68,27 +68,7 @@ public class PostgreSQLTreeProcessor implements Function<Node, Node> {
                     FunctionNode oldNode = (FunctionNode) node;
                     String functionName = oldNode.getFunctionName();
                     if(EXTRACT_FUNCTION_NAMES.contains(functionName)) {
-                        Node replacement = new Node() {
-                            @Override
-                            public void append(QuotingAppendable buffer) {
-                                buffer.append("EXTRACT(");
-                                if("DAY_OF_MONTH".equals(functionName)) {
-                                    buffer.append("day");
-                                } else if("DAY_OF_WEEK".equals(functionName)) {
-                                    buffer.append("dow");
-                                } else if("DAY_OF_YEAR".equals(functionName)) {
-                                    buffer.append("doy");
-                                } else {
-                                    buffer.append(functionName);
-                                }
-                                buffer.append(" FROM ");
-                            }
-
-                            @Override
-                            public void appendChildrenEnd(QuotingAppendable builder) {
-                                builder.append(")");
-                            }
-                        };
+                        Node replacement = new PostgresExtractFunctionNode(functionName);
                         for(int i=0; i<node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
@@ -125,5 +105,38 @@ public class PostgreSQLTreeProcessor implements Function<Node, Node> {
         };
         node.visit(visitor);
         return node;
+    }
+
+    private static class PostgresExtractFunctionNode extends Node {
+        private final String functionName;
+
+        public PostgresExtractFunctionNode(String functionName) {
+            this.functionName = functionName;
+        }
+
+        @Override
+        public void append(QuotingAppendable buffer) {
+            buffer.append("EXTRACT(");
+            if("DAY_OF_MONTH".equals(functionName)) {
+                buffer.append("day");
+            } else if("DAY_OF_WEEK".equals(functionName)) {
+                buffer.append("dow");
+            } else if("DAY_OF_YEAR".equals(functionName)) {
+                buffer.append("doy");
+            } else {
+                buffer.append(functionName);
+            }
+            buffer.append(" FROM ");
+        }
+
+        @Override
+        public void appendChildrenEnd(QuotingAppendable builder) {
+            builder.append(")");
+        }
+
+        @Override
+        public Node copy() {
+            return new PostgresExtractFunctionNode(functionName);
+        }
     }
 }

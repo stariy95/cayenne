@@ -111,4 +111,9 @@ public class DerbyColumnNode extends Node {
 
         return 255;
     }
+
+    @Override
+    public Node copy() {
+        return new DerbyColumnNode((ColumnNode)columnNode.deepCopy());
+    }
 }

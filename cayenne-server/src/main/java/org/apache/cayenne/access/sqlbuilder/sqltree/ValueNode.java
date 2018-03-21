@@ -229,4 +229,9 @@ public class ValueNode extends Node {
             appendValue(i, buffer);
         }
     }
+
+    @Override
+    public Node copy() {
+        return new ValueNode(value, attribute);
+    }
 }

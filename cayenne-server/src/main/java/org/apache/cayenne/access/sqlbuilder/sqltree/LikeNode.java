@@ -70,4 +70,9 @@ public class LikeNode extends ExpressionNode {
             builder.append(" ESCAPE '").append(escape).append('\'');
         }
     }
+
+    @Override
+    public Node copy() {
+        return new LikeNode(ignoreCase, not, escape);
+    }
 }

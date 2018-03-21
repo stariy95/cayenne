@@ -101,4 +101,9 @@ public class FunctionNode extends Node {
     public NodeType getType() {
         return NodeType.FUNCTION;
     }
+
+    @Override
+    public Node copy() {
+        return new FunctionNode(functionName, alias, needParentheses);
+    }
 }

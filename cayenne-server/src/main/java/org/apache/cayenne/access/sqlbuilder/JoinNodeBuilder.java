@@ -22,6 +22,7 @@ package org.apache.cayenne.access.sqlbuilder;
 import java.util.Objects;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
@@ -47,19 +48,9 @@ public class JoinNodeBuilder implements NodeBuilder {
 
     @Override
     public Node build() {
-        Node node = new Node() {
-            @Override
-            public void append(QuotingAppendable buffer) {
-                buffer.append(joinType);
-            }
-        };
+        Node node = new TextNode(joinType);
         node.addChild(table.build());
-        Node onNode = new Node() {
-            @Override
-            public void append(QuotingAppendable buffer) {
-                buffer.append("ON ");
-            }
-        };
+        Node onNode = new TextNode("ON");
         onNode.addChild(joinExp.build());
         node.addChild(onNode);
         return node;

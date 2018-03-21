@@ -29,4 +29,9 @@ public class DistinctNode extends Node {
     public void append(QuotingAppendable buffer) {
         buffer.append("DISTINCT");
     }
+
+    @Override
+    public Node copy() {
+        return new DistinctNode();
+    }
 }

@@ -21,6 +21,8 @@ package org.apache.cayenne.access.sqlbuilder;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NotNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
@@ -89,12 +91,7 @@ public class ExpressionNodeBuilder implements ExpressionTrait {
 
     public ExpressionNodeBuilder not() {
         return new ExpressionNodeBuilder(() -> {
-            Node and = new Node() {
-                @Override
-                public void append(QuotingAppendable buffer) {
-                    buffer.append("NOT ");
-                }
-            };
+            Node and = new NotNode();
             and.addChild(left.build());
             return and;
         });
@@ -120,12 +117,7 @@ public class ExpressionNodeBuilder implements ExpressionTrait {
         public Node build() {
             Node node = new ExpressionNode();
             node.addChild(left.build())
-                    .addChild(new Node() {
-                        @Override
-                        public void append(QuotingAppendable buffer) {
-                            buffer.append(operation);
-                        }
-                    })
+                    .addChild(new TextNode(operation))
                     .addChild(operand.build());
             return node;
         }

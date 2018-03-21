@@ -42,4 +42,9 @@ public class TableNode extends Node {
             buffer.append(' ').appendQuoted(alias);
         }
     }
+
+    @Override
+    public Node copy() {
+        return new TableNode(tableName, alias);
+    }
 }

@@ -43,4 +43,9 @@ public class ExpressionNode extends Node {
     public String toString() {
         return "{ExpressionNode}";
     }
+
+    @Override
+    public Node copy() {
+        return new ExpressionNode();
+    }
 }

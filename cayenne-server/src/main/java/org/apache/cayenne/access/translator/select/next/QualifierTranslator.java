@@ -32,6 +32,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.Property;
@@ -106,24 +107,9 @@ class QualifierTranslator implements TraversalHandler {
     private Node expressionNodeToSqlNode(Expression node, Expression parentNode) {
         switch (node.getType()) {
             case NOT_IN:
+                return new InNode(true);
             case IN:
-                return new Node() {
-                    @Override
-                    public void append(QuotingAppendable buffer) {
-                    }
-
-                    @Override
-                    public void appendChildSeparator(QuotingAppendable builder, int childInd) {
-                        if(childInd == 0) {
-                            builder.append(' ').append(expToStr(node.getType())).append(" (");
-                        }
-                    }
-
-                    @Override
-                    public void appendChildrenEnd(QuotingAppendable builder) {
-                        builder.append(')');
-                    }
-                };
+                return new InNode(false);
 
             case NOT_BETWEEN:
             case BETWEEN:
@@ -202,12 +188,7 @@ class QualifierTranslator implements TraversalHandler {
 
             case TRUE:
             case FALSE:
-                return new Node() {
-                    @Override
-                    public void append(QuotingAppendable buffer) {
-                        buffer.append(expToStr(node.getType()));
-                    }
-                };
+                return new TextNode(expToStr(node.getType()));
 
             case FUNCTION_CALL:
                 ASTFunctionCall functionCall = (ASTFunctionCall)node;
@@ -216,12 +197,7 @@ class QualifierTranslator implements TraversalHandler {
                 return function(functionCall.getFunctionName()).as(alias).build();
 
             case ASTERISK:
-                return new Node() {
-                    @Override
-                    public void append(QuotingAppendable buffer) {
-                        buffer.append('*');
-                    }
-                };
+                return new TextNode("*");
         }
 
         return new EmptyNode();
@@ -472,6 +448,39 @@ class QualifierTranslator implements TraversalHandler {
         @Override
         public NodeType getType() {
             return NodeType.EQUALITY;
+        }
+    }
+
+    private class InNode extends Node {
+        private final boolean not;
+
+        public InNode(boolean not) {
+            this.not = not;
+        }
+
+        @Override
+        public void append(QuotingAppendable buffer) {
+        }
+
+        @Override
+        public void appendChildSeparator(QuotingAppendable builder, int childInd) {
+            if(childInd == 0) {
+                builder.append(' ');
+                if(not) {
+                    builder.append("NOT ");
+                }
+                builder.append("IN (");
+            }
+        }
+
+        @Override
+        public void appendChildrenEnd(QuotingAppendable builder) {
+            builder.append(')');
+        }
+
+        @Override
+        public Node copy() {
+            return new InNode(not);
         }
     }
 }

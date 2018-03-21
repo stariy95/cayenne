@@ -53,22 +53,7 @@ public class SqlBuilderIT extends ServerCase {
     @Test
     public void selectDemo() {
 
-        // SELECT DISTINCT
-        //      a.ARTIST_ID AS a_id
-        //      COUNT p.PAINTING_TITLE AS p_count
-        // FROM
-        //      ARTIST AS a
-        //      LEFT JOIN PAINTING AS p ON a.ARTIST_ID =  p.ARTIST_ID  AND   p.ESTIMATED_PRICE >  10
-        // WHERE
-        //      a.ARTIST_NAME =  'Picasso'
-        //      AND EXISTS SELECT* FROM GALLERY AS g WHERE g.GALLERY_ID =  p.GALLERY_ID
-        //      AND   1 =  1
-        //      OR  false
-        // GROUP BY a.ARTIST_ID
-        // ORDER BY p_count DESC
-
         SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
-//        visitor.setDebug(true);
 
         select(table("a").column("ARTIST_ID").as("a_id"),
                 count(table("p").column("PAINTING_TITLE")).as("p_count"))
@@ -95,7 +80,7 @@ public class SqlBuilderIT extends ServerCase {
         assertEquals("SELECT DISTINCT   " +
                 "a.ARTIST_ID a_id ,COUNT(p.PAINTING_TITLE ) AS p_count  " +
                 "FROM ARTIST a  " +
-                "LEFT JOIN PAINTING p  ON  ((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ? )) " +
+                "LEFT JOIN PAINTING p  ON ((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ? )) " +
                 "WHERE ((((a.ARTIST_NAME  =  ? ) " +
                 "AND  EXISTS(SELECT  *  FROM GALLERY g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID ))) " +
                 "AND  (?  =  ? )) OR  ? ) " +

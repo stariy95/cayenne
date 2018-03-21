@@ -35,4 +35,9 @@ public class GroupByNode extends Node {
     public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
         builder.append(',');
     }
+
+    @Override
+    public Node copy() {
+        return new GroupByNode();
+    }
 }

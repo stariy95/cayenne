@@ -20,6 +20,7 @@
 package org.apache.cayenne.dba.postgres.sqltree;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
@@ -29,6 +30,10 @@ public class PostgresLimitOffsetNode extends LimitOffsetNode {
 
     public PostgresLimitOffsetNode(LimitOffsetNode node) {
         super(node.getLimit(), node.getOffset());
+    }
+
+    private PostgresLimitOffsetNode(int limit, int offset) {
+        super(limit, offset);
     }
 
     @Override
@@ -44,5 +49,10 @@ public class PostgresLimitOffsetNode extends LimitOffsetNode {
         if(offset > 0) {
             buffer.append(" OFFSET ").append(offset);
         }
+    }
+
+    @Override
+    public Node copy() {
+        return new PostgresLimitOffsetNode(limit, offset);
     }
 }

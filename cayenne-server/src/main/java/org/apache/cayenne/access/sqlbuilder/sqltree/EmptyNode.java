@@ -34,4 +34,9 @@ public class EmptyNode extends Node {
     public String toString() {
         return "EmptyNode";
     }
+
+    @Override
+    public Node copy() {
+        return new EmptyNode();
+    }
 }

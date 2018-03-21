@@ -73,4 +73,11 @@ public class ColumnNode extends Node {
     public DbAttribute getAttribute() {
         return attribute;
     }
+
+    @Override
+    public Node copy() {
+        ColumnNode node = new ColumnNode(table, column, alias);
+        node.setAttribute(attribute);
+        return node;
+    }
 }

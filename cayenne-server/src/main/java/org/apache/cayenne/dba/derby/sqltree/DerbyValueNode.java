@@ -21,6 +21,7 @@ package org.apache.cayenne.dba.derby.sqltree;
 
 import java.sql.Types;
 
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 import org.apache.cayenne.map.DbAttribute;
@@ -43,4 +44,8 @@ public class DerbyValueNode extends ValueNode {
         addValueBinding(buffer, value);
     }
 
+    @Override
+    public Node copy() {
+        return new DerbyValueNode(getValue(), getAttribute());
+    }
 }

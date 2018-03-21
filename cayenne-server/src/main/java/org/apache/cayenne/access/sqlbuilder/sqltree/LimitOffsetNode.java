@@ -66,4 +66,9 @@ public class LimitOffsetNode extends Node {
     public int getOffset() {
         return offset;
     }
+
+    @Override
+    public Node copy() {
+        return new LimitOffsetNode(limit, offset);
+    }
 }
