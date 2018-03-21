@@ -30,4 +30,5 @@ public enum NodeType {
     LIMIT_OFFSET,
     FUNCTION,
     EQUALITY,
+    RESULT
 }

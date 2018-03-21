@@ -34,6 +34,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.exp.TraversalHandler;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTFunctionCall;
@@ -60,10 +61,22 @@ class QualifierTranslator implements TraversalHandler {
     private Node currentNode;
 
     private boolean forceJoin;
+    private String topLevelAlias;
 
     QualifierTranslator(TranslatorContext context) {
         this.context = context;
         this.pathTranslator = new PathTranslator(context);
+    }
+
+    Node translate(Property<?> property) {
+        if(property == null) {
+            return null;
+        }
+
+        topLevelAlias = property.getAlias();
+        Node result = translate(property.getExpression());
+        topLevelAlias = null;
+        return result;
     }
 
     Node translate(Expression qualifier) {
@@ -198,7 +211,9 @@ class QualifierTranslator implements TraversalHandler {
 
             case FUNCTION_CALL:
                 ASTFunctionCall functionCall = (ASTFunctionCall)node;
-                return function(functionCall.getFunctionName()).build();
+                String alias = topLevelAlias;
+                topLevelAlias = null;
+                return function(functionCall.getFunctionName()).as(alias).build();
 
             case ASTERISK:
                 return new Node() {
@@ -227,8 +242,10 @@ class QualifierTranslator implements TraversalHandler {
         } else if(result.getDbAttributes().isEmpty()) {
             return new EmptyNode();
         } else {
+            String alias = topLevelAlias;
+            topLevelAlias = null;
             ColumnNodeBuilder column = table(context.getTableTree().aliasForAttributePath(path.toString()))
-                    .column(lastDbAttribute[0]);
+                    .column(lastDbAttribute[0]).as(alias);
             return column.build();
         }
     }

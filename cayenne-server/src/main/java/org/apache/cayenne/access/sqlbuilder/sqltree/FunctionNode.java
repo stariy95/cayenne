@@ -38,24 +38,50 @@ public class FunctionNode extends Node {
 
     @Override
     public void append(QuotingAppendable buffer) {
-        buffer.append(functionName);
+        if(alias != null && !isResultNode()) {
+            buffer.append(alias);
+        } else {
+            buffer.append(functionName);
+        }
+    }
+
+    @Override
+    public void visit(NodeTreeVisitor visitor) {
+        if(alias != null && !isResultNode()) {
+            visitor.onNodeStart(this);
+            visitor.onNodeEnd(this);
+            return;
+        }
+        super.visit(visitor);
     }
 
     @Override
     public void appendChildrenStart(QuotingAppendable builder) {
-        if (needParentheses) {
+        if (needParentheses && (alias == null || isResultNode())) {
             builder.append('(');
         }
     }
 
     @Override
     public void appendChildrenEnd(QuotingAppendable builder) {
-        if (needParentheses) {
+        if (needParentheses && (alias == null || isResultNode())) {
             builder.append(')');
         }
-        if (alias != null) {
+        if (alias != null && isResultNode()) {
             builder.append(" AS ").appendQuoted(alias).append(' ');
         }
+    }
+
+    protected boolean isResultNode() {
+        // TODO: this check is broken for now, as we have same nodes with same parent for result and group, order, qualifier...
+        Node parent = getParent();
+        while(parent != null) {
+            if(parent.getType() == NodeType.RESULT) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
     }
 
     @Override

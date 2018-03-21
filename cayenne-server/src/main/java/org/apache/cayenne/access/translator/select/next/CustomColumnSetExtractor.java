@@ -63,7 +63,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
         translator.setForceJoin(true);
 
         for(Property<?> property : columns) {
-            Node nextNode = translator.translate(property.getExpression());
+            Node nextNode = translator.translate(property);
             if(checkAndExtractFullObject(prefix, property)) {
                 continue;
             }

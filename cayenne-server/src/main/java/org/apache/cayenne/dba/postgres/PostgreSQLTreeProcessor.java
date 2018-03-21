@@ -57,13 +57,13 @@ public class PostgreSQLTreeProcessor implements Function<Node, Node> {
                 if(node.getType() == NodeType.LIMIT_OFFSET) {
                     LimitOffsetNode limitOffsetNode = (LimitOffsetNode)node;
                     Node replacement = new PostgresLimitOffsetNode(limitOffsetNode);
-                    node.getParent().replaceChild(index, replacement);
+                    parent.replaceChild(index, replacement);
                 } else if(node.getType() == NodeType.COLUMN) {
                     DerbyColumnNode replacement = new DerbyColumnNode((ColumnNode)node);
                     for(int i=0; i<node.getChildrenCount(); i++) {
                         replacement.addChild(node.getChild(i));
                     }
-                    node.getParent().replaceChild(index, replacement);
+                    parent.replaceChild(index, replacement);
                 } else if(node.getType() == NodeType.FUNCTION) {
                     FunctionNode oldNode = (FunctionNode) node;
                     String functionName = oldNode.getFunctionName();
@@ -92,12 +92,12 @@ public class PostgreSQLTreeProcessor implements Function<Node, Node> {
                         for(int i=0; i<node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     } else if("CURRENT_DATE".equals(functionName)
                             || "CURRENT_TIME".equals(functionName)
                             || "CURRENT_TIMESTAMP".equals(functionName)) {
                         FunctionNode replacement = new FunctionNode(functionName, oldNode.getAlias(), false);
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     } else if("LOCATE".equals(functionName)) {
                         FunctionNode replacement = new FunctionNode("POSITION", oldNode.getAlias(), true) {
                             @Override
@@ -108,7 +108,7 @@ public class PostgreSQLTreeProcessor implements Function<Node, Node> {
                         for(int i=0; i<node.getChildrenCount(); i++) {
                             replacement.addChild(node.getChild(i));
                         }
-                        node.getParent().replaceChild(index, replacement);
+                        parent.replaceChild(index, replacement);
                     }
                 }
             }

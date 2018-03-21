@@ -38,4 +38,9 @@ public class SelectResultNode extends Node {
     public String toString() {
         return "{SelectResultNode}";
     }
+
+    @Override
+    public NodeType getType() {
+        return NodeType.RESULT;
+    }
 }

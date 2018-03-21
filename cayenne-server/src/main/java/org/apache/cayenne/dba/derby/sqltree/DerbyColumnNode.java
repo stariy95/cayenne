@@ -40,19 +40,53 @@ public class DerbyColumnNode extends Node {
 
     @Override
     public void append(QuotingAppendable buffer) {
-        if(columnNode.getAttribute() != null
-                && columnNode.getAttribute().getType() == Types.CHAR) {
-            buffer.append("RTRIM(");
-            columnNode.append(buffer);
-            buffer.append(")");
-        } else if(getParent().getType() == NodeType.EQUALITY
-                && columnNode.getAttribute() != null
-                && columnNode.getAttribute().getType() == Types.CLOB) {
-            buffer.append("CAST(");
-            columnNode.append(buffer);
-            buffer.append(" AS VARCHAR(").append(getColumnSize()).append("))");
+        boolean isResult = isResultNode();
+        if(columnNode.getAlias() == null || isResult) {
+            if(columnNode.getAttribute() != null
+                    && columnNode.getAttribute().getType() == Types.CHAR) {
+                buffer.append("RTRIM(");
+                appendColumnNode(buffer);
+                buffer.append(")");
+                appendAlias(buffer, isResult);
+            } else if(getParent().getType() == NodeType.EQUALITY
+                    && columnNode.getAttribute() != null
+                    && columnNode.getAttribute().getType() == Types.CLOB) {
+                buffer.append("CAST(");
+                appendColumnNode(buffer);
+                buffer.append(" AS VARCHAR(").append(getColumnSize()).append("))");
+                appendAlias(buffer, isResult);
+            } else {
+                columnNode.append(buffer);
+            }
         } else {
-            columnNode.append(buffer);
+            appendAlias(buffer, false);
+        }
+    }
+
+    protected boolean isResultNode() {
+        Node parent = getParent();
+        while(parent != null) {
+            if(parent.getType() == NodeType.RESULT) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
+    }
+
+    protected void appendColumnNode(QuotingAppendable buffer) {
+        if (columnNode.getTable() != null) {
+            buffer.appendQuoted(columnNode.getTable()).append('.');
+        }
+        buffer.appendQuoted(columnNode.getColumn());
+    }
+
+    protected void appendAlias(QuotingAppendable buffer, boolean isResult) {
+        if(!isResult) {
+            return;
+        }
+        if (columnNode.getAlias() != null) {
+            buffer.append(' ').appendQuoted(columnNode.getAlias());
         }
     }
 
