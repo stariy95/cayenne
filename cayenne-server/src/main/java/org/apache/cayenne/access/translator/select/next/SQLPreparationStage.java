@@ -55,7 +55,7 @@ public class SQLPreparationStage implements TranslationStage {
                 continue;
             }
 
-            String name = "__c" + counter;
+            String name = "c" + counter;
             DbAttribute attribute = resultNode.getDbAttribute();
             if(attribute != null) {
                 name = resultNode.getDbAttribute().getName();

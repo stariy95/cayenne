@@ -249,8 +249,14 @@ public class TranslatorContext {
             return null;
         }
 
-        public void setJavaType(String javaType) {
+        public ResultNode setJavaType(String javaType) {
             this.javaType = javaType;
+            return this;
+        }
+
+        public ResultNode setDbAttribute(DbAttribute dbAttribute) {
+            this.dbAttribute = dbAttribute;
+            return this;
         }
 
         public String getJavaType() {
@@ -259,6 +265,9 @@ public class TranslatorContext {
             }
             if(property != null) {
                 return property.getType().getCanonicalName();
+            }
+            if(getDbAttribute() != null) {
+                return TypesMapping.getJavaBySqlType(getDbAttribute().getType());
             }
             return null;
         }

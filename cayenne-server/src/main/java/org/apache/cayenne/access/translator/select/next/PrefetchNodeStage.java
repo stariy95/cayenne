@@ -129,7 +129,7 @@ class PrefetchNodeStage implements TranslationStage {
                     String alias = context.getTableTree().aliasForAttributePath(finalPath);
 
                     Node columnNode = table(alias).column(pk).build();
-                    context.addResultNode(columnNode, finalPath);
+                    context.addResultNode(columnNode, finalPath).setDbAttribute(pk);
                 }
             });
         }

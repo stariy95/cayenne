@@ -39,6 +39,6 @@ abstract class BaseColumnExtractor implements ColumnExtractor {
         String alias = context.getTableTree().aliasForPath(prefix);
         String dataRowKey = labelPrefix != null ? labelPrefix + '.' + dba.getName() : dba.getName();
         Node columnNode = table(alias).column(dba).build();
-        context.addResultNode(columnNode, dataRowKey);
+        context.addResultNode(columnNode, dataRowKey).setDbAttribute(dba);
     }
 }

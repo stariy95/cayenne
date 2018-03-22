@@ -110,6 +110,7 @@ public class QueryWithInheritancePrefetchIT extends ServerCase {
     public void queryWithDisjointPrefetch() {
         List<Dependent> result = ObjectSelect.query(Dependent.class)
                 .prefetch(Dependent.ROOT.disjoint())
+                .orderBy("db:"+Dependent.ID_PK_COLUMN)
                 .select(runtime.newContext());
 
         assertPrefetchResult(result);
@@ -119,6 +120,7 @@ public class QueryWithInheritancePrefetchIT extends ServerCase {
     public void queryWithDisjointByIdPrefetch() {
         List<Dependent> result = ObjectSelect.query(Dependent.class)
                 .prefetch(Dependent.ROOT.disjointById())
+                .orderBy("db:"+Dependent.ID_PK_COLUMN)
                 .select(runtime.newContext());
 
         assertPrefetchResult(result);

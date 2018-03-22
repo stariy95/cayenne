@@ -21,6 +21,7 @@ package org.apache.cayenne.dba.oracle;
 
 import java.util.List;
 
+import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
@@ -48,7 +49,7 @@ class OracleSelectTranslator extends DefaultSelectTranslator {
 		if (limit > 0 || offset > 0) {
 			int max = (limit <= 0) ? Integer.MAX_VALUE : limit + offset;
 
-			selectBuilder = select(value('*'))
+			selectBuilder = select(() -> new TextNode("*"))
 					.from(
 							select(
 									table("tid").column("*"),

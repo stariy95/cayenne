@@ -97,7 +97,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
             String dataRowKey = columnLabelPrefix != null
                     ? columnLabelPrefix + '.' + oa.getDbAttributePath()
                     : oa.getDbAttributePath();
-            context.addResultNode(columnNode, dataRowKey).setJavaType(oa.getType());
+            context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute).setJavaType(oa.getType());
         }
 
         return true;
@@ -121,7 +121,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
                 String dataRowKey = columnLabelPrefix != null
                         ? columnLabelPrefix + '.' + attribute.getName()
                         : attribute.getName();
-                context.addResultNode(columnNode, dataRowKey);
+                context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute);
             }
         }
 

@@ -37,13 +37,9 @@ class Oracle8QualifierTranslator extends OracleQualifierTranslator {
 	@Override
 	protected void doAppendPart() {
 		super.doAppendPart();
-
-		if (out instanceof StringBuilder) {
-			StringBuilder buffer = (StringBuilder) out;
-			if (buffer.indexOf(" OR ") != -1) {
-				buffer.insert(0, '(');
-				buffer.append(')');
-			}
+		if (out.indexOf(" OR ") != -1) {
+			out.insert(0, '(');
+			out.append(')');
 		}
 	}
 }

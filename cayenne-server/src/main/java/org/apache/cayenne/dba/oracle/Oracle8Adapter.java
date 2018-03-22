@@ -86,10 +86,10 @@ public class Oracle8Adapter extends OracleAdapter {
 	/**
 	 * @since 4.0
 	 */
-	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new Oracle8SelectTranslator(query, this, entityResolver);
-	}
+//	@Override
+//	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
+//		return new Oracle8SelectTranslator(query, this, entityResolver);
+//	}
 
 	/**
 	 * Uses OracleActionBuilder to create the right action.

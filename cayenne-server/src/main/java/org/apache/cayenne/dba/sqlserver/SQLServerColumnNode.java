@@ -20,7 +20,6 @@
 package org.apache.cayenne.dba.sqlserver;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 import org.apache.cayenne.dba.derby.sqltree.DerbyColumnNode;
 

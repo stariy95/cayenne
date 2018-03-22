@@ -21,6 +21,7 @@ package org.apache.cayenne.dba.oracle;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
@@ -57,6 +58,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for <a href="http://www.oracle.com">Oracle RDBMS
@@ -173,9 +175,18 @@ public class OracleAdapter extends JdbcAdapter {
 	/**
 	 * @since 4.0
 	 */
+//	@Override
+//	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
+//		return new OracleSelectTranslator(query, this, entityResolver);
+//	}
+
+
+	/**
+	 * @since 4.1
+	 */
 	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new OracleSelectTranslator(query, this, entityResolver);
+	public Function<Node, Node> getSqlTreeProcessor() {
+		return new OracleSqlTreeProcessor();
 	}
 
 	/**

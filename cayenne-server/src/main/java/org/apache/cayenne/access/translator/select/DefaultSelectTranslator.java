@@ -744,7 +744,8 @@ public class DefaultSelectTranslator extends QueryAssembler implements SelectTra
 
 		if (skipSet.add(new ColumnTracker(alias, attribute))) {
 
-			ColumnDescriptor column = (objAttribute != null) ? new ColumnDescriptor(objAttribute, attribute, alias)
+			ColumnDescriptor column = (objAttribute != null)
+					? new ColumnDescriptor(objAttribute, attribute, alias)
 					: new ColumnDescriptor(attribute, alias);
 
 			if (label != null) {

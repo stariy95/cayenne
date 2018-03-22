@@ -19,6 +19,12 @@
 
 package org.apache.cayenne.access.sqlbuilder;
 
+import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 
 /**
@@ -74,8 +80,35 @@ public final class SQLBuilder {
         return new ValueNodeBuilder(value);
     }
 
+    public static ExpNodeBuilder exp(NodeBuilder builder) {
+        return new ExpNodeBuilder(builder);
+    }
+
+    public static Node aliased(Node node, String alias) {
+//        if(node instanceof EmptyNode) {
+//            return node;
+//        }
+        if(node.getType() == NodeType.COLUMN) {
+            if(((ColumnNode)node).getAlias() != null) {
+                return node;
+            }
+        } else if(node.getType() == NodeType.FUNCTION) {
+            if(((FunctionNode)node).getAlias() != null) {
+                return node;
+            }
+        }
+        Node root = new EmptyNode();
+        root.addChild(node);
+        root.addChild(new TextNode("AS " + alias));
+        return root;
+    }
+
+    public static NodeBuilder text(String text) {
+        return () -> new TextNode(text);
+    }
+
     public static NodeBuilder star() {
-        return () -> new TextNode("*");
+        return text("*");
     }
 
     public static ExpressionNodeBuilder not(NodeBuilder value) {
@@ -87,7 +120,7 @@ public final class SQLBuilder {
     }
 
     public static FunctionNodeBuilder count() {
-        return function("COUNT", value('*'));
+        return function("COUNT", column("*"));
     }
 
     public static FunctionNodeBuilder avg(NodeBuilder value) {
@@ -113,4 +146,30 @@ public final class SQLBuilder {
     private SQLBuilder() {
     }
 
+    public static class ExpNodeBuilder implements NodeBuilder {
+
+        private final NodeBuilder arg;
+        private String alias;
+
+        public ExpNodeBuilder(NodeBuilder arg) {
+            this.arg = arg;
+        }
+
+        public ExpNodeBuilder as(String alias) {
+            this.alias = alias;
+            return this;
+        }
+
+        @Override
+        public Node build() {
+            Node node = new EmptyNode();
+            Node exp = new ExpressionNode();
+            exp.addChild(arg.build());
+            node.addChild(exp);
+            if(alias != null) {
+                node.addChild(new TextNode(" " + alias));
+            }
+            return node;
+        }
+    }
 }

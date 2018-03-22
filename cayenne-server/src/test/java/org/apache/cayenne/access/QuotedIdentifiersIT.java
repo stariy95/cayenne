@@ -57,16 +57,41 @@ public class QuotedIdentifiersIT extends ServerCase {
 
     @Before
     public void setUp() throws Exception {
+        QuoteAdress quoteAdress = context.newObject(QuoteAdress.class);
+        quoteAdress.setCity("city");
+        quoteAdress.setGroup("324");
+
+        Quote_Person quote_Person = context.newObject(Quote_Person.class);
+        quote_Person.setSalary(10000);
+        quote_Person.setName("Arcadi");
+        quote_Person.setGroup("107324");
+        quote_Person.setAddress_Rel(quoteAdress);
+
+        context.commitChanges();
+
+        QuoteAdress quoteAdress2 = context.newObject(QuoteAdress.class);
+        quoteAdress2.setCity("city2");
+
+        Quote_Person quote_Person2 = context.newObject(Quote_Person.class);
+        quote_Person2.setSalary(100);
+        quote_Person2.setName("Name");
+        quote_Person2.setGroup("1111");
+        quote_Person2.setDAte(new Date());
+        quote_Person2.setAddress_Rel(quoteAdress2);
+
+        context.commitChanges();
+        /*
         TableHelper tQuotedAddress = new TableHelper(dbHelper, "QUOTED_ADDRESS");
         tQuotedAddress.setColumns("ADDRESS ID", "City", "group");
         tQuotedAddress.insert(1, "city", "324");
         tQuotedAddress.insert(2, "city2", null);
 
         TableHelper tQuotedPerson = new TableHelper(dbHelper, "quote Person");
-        tQuotedPerson.setColumns("id", "address_id", "DAte", "GROUP", "NAME", "salary")
-                .setColumnTypes(Types.INTEGER, Types.INTEGER, Types.DATE, Types.VARCHAR, Types.VARCHAR, Types.INTEGER);
+        tQuotedPerson.setColumns("id", "address_id", "DAte", "GROUP", "NAME", "salary");
+//                .setColumnTypes(Types.INTEGER, Types.INTEGER, Types.DATE, Types.VARCHAR, Types.VARCHAR, Types.INTEGER);
         tQuotedPerson.insert(1, 1, null, "107324", "Arcadi", 10000);
         tQuotedPerson.insert(2, 2, new Date(), "1111", "Name", 100);
+        */
     }
 
     @Test
