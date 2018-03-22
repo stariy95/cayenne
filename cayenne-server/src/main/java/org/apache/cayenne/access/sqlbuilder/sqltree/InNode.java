@@ -22,62 +22,37 @@ package org.apache.cayenne.access.sqlbuilder.sqltree;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
- * expressions: LIKE, ILIKE, NOT LIKE, NOT ILIKE + ESCAPE
- *
  * @since 4.1
  */
-public class LikeNode extends ExpressionNode {
-
-    private final boolean ignoreCase;
+public class InNode extends Node {
     private final boolean not;
-    private final char escape;
 
-    public LikeNode(boolean ignoreCase, boolean not, char escape) {
-        this.ignoreCase = ignoreCase;
+    public InNode(boolean not) {
         this.not = not;
-        this.escape = escape;
     }
 
     @Override
-    public void appendChildrenStart(QuotingAppendable builder) {
-        if(ignoreCase) {
-            builder.append("UPPER(");
-        }
+    public void append(QuotingAppendable buffer) {
     }
 
     @Override
-    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-        builder.append(' ');
-        if(ignoreCase) {
-            builder.append(')');
-        }
-        if(not) {
-            builder.append("NOT ");
-        }
-        builder.append("LIKE");
-        builder.append(' ');
-        if(ignoreCase) {
-            builder.append("UPPER(");
+    public void appendChildSeparator(QuotingAppendable builder, int childInd) {
+        if (childInd == 0) {
+            builder.append(' ');
+            if (not) {
+                builder.append("NOT ");
+            }
+            builder.append("IN (");
         }
     }
 
     @Override
     public void appendChildrenEnd(QuotingAppendable builder) {
-        if(ignoreCase) {
-            builder.append(')');
-        }
-        if(escape != 0) {
-            builder.append(" ESCAPE '").append(escape).append('\'');
-        }
+        builder.append(')');
     }
 
     @Override
     public Node copy() {
-        return new LikeNode(ignoreCase, not, escape);
-    }
-
-    @Override
-    public NodeType getType() {
-        return NodeType.LIKE;
+        return new InNode(not);
     }
 }

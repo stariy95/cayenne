@@ -32,7 +32,7 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
  */
 public class DerbyColumnNode extends Node {
 
-    ColumnNode columnNode ;
+    protected ColumnNode columnNode ;
 
     public DerbyColumnNode(ColumnNode columnNode) {
         this.columnNode = columnNode;
@@ -48,12 +48,11 @@ public class DerbyColumnNode extends Node {
                 appendColumnNode(buffer);
                 buffer.append(")");
                 appendAlias(buffer, isResult);
-            } else if(getParent().getType() == NodeType.EQUALITY
+            } else if((getParent().getType() == NodeType.EQUALITY
+                    || getParent().getType() == NodeType.LIKE)
                     && columnNode.getAttribute() != null
                     && columnNode.getAttribute().getType() == Types.CLOB) {
-                buffer.append("CAST(");
-                appendColumnNode(buffer);
-                buffer.append(" AS VARCHAR(").append(getColumnSize()).append("))");
+                appendClobColumnNode(buffer);
                 appendAlias(buffer, isResult);
             } else {
                 columnNode.append(buffer);
@@ -72,6 +71,12 @@ public class DerbyColumnNode extends Node {
             parent = parent.getParent();
         }
         return false;
+    }
+
+    protected void appendClobColumnNode(QuotingAppendable buffer) {
+        buffer.append("CAST(");
+        appendColumnNode(buffer);
+        buffer.append(" AS VARCHAR(").append(getColumnSize()).append("))");
     }
 
     protected void appendColumnNode(QuotingAppendable buffer) {
@@ -114,6 +119,6 @@ public class DerbyColumnNode extends Node {
 
     @Override
     public Node copy() {
-        return new DerbyColumnNode((ColumnNode)columnNode.deepCopy());
+        return new DerbyColumnNode(columnNode.deepCopy());
     }
 }

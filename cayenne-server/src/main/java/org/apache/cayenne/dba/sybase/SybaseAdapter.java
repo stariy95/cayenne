@@ -82,10 +82,10 @@ public class SybaseAdapter extends JdbcAdapter {
 	/**
 	 * @since 4.0
 	 */
-	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new SybaseSelectTranslator(query, this, entityResolver);
-	}
+//	@Override
+//	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
+//		return new SybaseSelectTranslator(query, this, entityResolver);
+//	}
 
     /**
      * @since 4.0

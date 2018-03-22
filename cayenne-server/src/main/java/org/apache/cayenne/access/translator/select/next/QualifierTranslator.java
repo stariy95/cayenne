@@ -28,12 +28,13 @@ import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.sqlbuilder.ColumnNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.EqualNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.InNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NotEqualNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
-import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.exp.TraversalHandler;
@@ -145,6 +146,30 @@ class QualifierTranslator implements TraversalHandler {
             case NOT_EQUAL_TO:
                 return new NotEqualNode();
 
+            case LIKE:
+            case NOT_LIKE:
+            case LIKE_IGNORE_CASE:
+            case NOT_LIKE_IGNORE_CASE:
+                PatternMatchNode patternMatchNode = (PatternMatchNode)node;
+                boolean not = node.getType() == NOT_LIKE || node.getType() == NOT_LIKE_IGNORE_CASE;
+                return new LikeNode(patternMatchNode.isIgnoringCase(), not, patternMatchNode.getEscapeChar());
+
+            case OBJ_PATH:
+                String path = (String)node.getOperand(0);
+                PathTranslator.PathTranslationResult result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), path);
+                return processPathTranslationResult(node, parentNode, result);
+
+            case DB_PATH:
+                String dbPath = (String)node.getOperand(0);
+                PathTranslator.PathTranslationResult dbResult = pathTranslator.translatePath(context.getMetadata().getDbEntity(), dbPath);
+                return processPathTranslationResult(node, parentNode, dbResult);
+
+            case FUNCTION_CALL:
+                ASTFunctionCall functionCall = (ASTFunctionCall)node;
+                String alias = topLevelAlias;
+                topLevelAlias = null;
+                return function(functionCall.getFunctionName()).as(alias).build();
+
             case ADD:
             case SUBTRACT:
             case MULTIPLY:
@@ -168,36 +193,10 @@ class QualifierTranslator implements TraversalHandler {
                     }
                 };
 
-            case LIKE:
-            case NOT_LIKE:
-            case LIKE_IGNORE_CASE:
-            case NOT_LIKE_IGNORE_CASE:
-                PatternMatchNode patternMatchNode = (PatternMatchNode)node;
-                boolean not = node.getType() == NOT_LIKE || node.getType() == NOT_LIKE_IGNORE_CASE;
-                return new LikeNode(patternMatchNode.isIgnoringCase(), not, patternMatchNode.getEscapeChar());
-
-            case OBJ_PATH:
-                String path = (String)node.getOperand(0);
-                PathTranslator.PathTranslationResult result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), path);
-                return processPathTranslationResult(node, parentNode, result);
-
-            case DB_PATH:
-                String dbPath = (String)node.getOperand(0);
-                PathTranslator.PathTranslationResult dbResult = pathTranslator.translatePath(context.getMetadata().getDbEntity(), dbPath);
-                return processPathTranslationResult(node, parentNode, dbResult);
-
             case TRUE:
             case FALSE:
-                return new TextNode(expToStr(node.getType()));
-
-            case FUNCTION_CALL:
-                ASTFunctionCall functionCall = (ASTFunctionCall)node;
-                String alias = topLevelAlias;
-                topLevelAlias = null;
-                return function(functionCall.getFunctionName()).as(alias).build();
-
             case ASTERISK:
-                return new TextNode("*");
+                return new TextNode(expToStr(node.getType()));
         }
 
         return new EmptyNode();
@@ -412,75 +411,10 @@ class QualifierTranslator implements TraversalHandler {
                 return "<<";
             case BITWISE_RIGHT_SHIFT:
                 return ">>";
+            case ASTERISK:
+                return "*";
             default:
                 return "{other}";
-        }
-    }
-
-    private static class EqualNode extends ExpressionNode {
-        @Override
-        public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-            String expStr = " = ";
-            Node child = getChild(1);
-            if(child.getType() == NodeType.VALUE && ((ValueNode)child).getValue() == null) {
-                expStr = " IS NULL";
-            }
-            builder.append(expStr);
-        }
-
-        @Override
-        public NodeType getType() {
-            return NodeType.EQUALITY;
-        }
-    }
-
-    private static class NotEqualNode extends ExpressionNode {
-        @Override
-        public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-            String expStr = " <> ";
-            Node child = getChild(1);
-            if(child.getType() == NodeType.VALUE && ((ValueNode)child).getValue() == null) {
-                expStr = " IS NOT NULL";
-            }
-            builder.append(expStr);
-        }
-
-        @Override
-        public NodeType getType() {
-            return NodeType.EQUALITY;
-        }
-    }
-
-    private class InNode extends Node {
-        private final boolean not;
-
-        public InNode(boolean not) {
-            this.not = not;
-        }
-
-        @Override
-        public void append(QuotingAppendable buffer) {
-        }
-
-        @Override
-        public void appendChildSeparator(QuotingAppendable builder, int childInd) {
-            if(childInd == 0) {
-                builder.append(' ');
-                if(not) {
-                    builder.append("NOT ");
-                }
-                builder.append("IN (");
-            }
-        }
-
-        @Override
-        public void appendChildrenEnd(QuotingAppendable builder) {
-            builder.append(')');
-        }
-
-        @Override
-        public Node copy() {
-            return new InNode(not);
         }
     }
 }

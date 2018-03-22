@@ -40,6 +40,12 @@ public abstract class Node {
         this.children = new ArrayList<>(2);
     }
 
+    public Node addChild(int index, Node node) {
+        children.add(index, node);
+        node.setParent(this);
+        return this;
+    }
+
     public Node addChild(Node node) {
         children.add(node);
         node.setParent(this);
@@ -85,13 +91,13 @@ public abstract class Node {
     /**
      * @return deep copy(i.e. with copies of all children) of this node
      */
-    public Node deepCopy() {
+    public <T extends Node> T deepCopy() {
         Node node = this.copy();
         for(int i=0; i<getChildrenCount(); i++) {
             Node child = getChild(i).deepCopy();
             node.addChild(child);
         }
-        return node;
+        return (T)node;
     }
 
     @Override

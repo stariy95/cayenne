@@ -17,19 +17,31 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.sqlbuilder.sqltree;
+package org.apache.cayenne.dba.sqlserver;
+
+import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+import org.apache.cayenne.dba.derby.sqltree.DerbyColumnNode;
 
 /**
  * @since 4.1
  */
-public enum NodeType {
-    UNDEFINED,
-    VALUE,
-    COLUMN,
-    LIMIT_OFFSET,
-    FUNCTION,
-    EQUALITY,
-    LIKE,
-    DISTINCT,
-    RESULT
+public class SQLServerColumnNode extends DerbyColumnNode {
+
+    public SQLServerColumnNode(ColumnNode columnNode) {
+        super(columnNode);
+    }
+
+    @Override
+    protected void appendClobColumnNode(QuotingAppendable buffer) {
+        buffer.append("CAST(");
+        appendColumnNode(buffer);
+        buffer.append(" AS NVARCHAR(MAX))");
+    }
+
+    @Override
+    public SQLServerColumnNode copy() {
+        return new SQLServerColumnNode(columnNode.deepCopy());
+    }
 }

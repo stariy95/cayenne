@@ -34,4 +34,9 @@ public class DistinctNode extends Node {
     public Node copy() {
         return new DistinctNode();
     }
+
+    @Override
+    public NodeType getType() {
+        return NodeType.DISTINCT;
+    }
 }

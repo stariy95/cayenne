@@ -22,62 +22,21 @@ package org.apache.cayenne.access.sqlbuilder.sqltree;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
- * expressions: LIKE, ILIKE, NOT LIKE, NOT ILIKE + ESCAPE
- *
  * @since 4.1
  */
-public class LikeNode extends ExpressionNode {
-
-    private final boolean ignoreCase;
-    private final boolean not;
-    private final char escape;
-
-    public LikeNode(boolean ignoreCase, boolean not, char escape) {
-        this.ignoreCase = ignoreCase;
-        this.not = not;
-        this.escape = escape;
-    }
-
-    @Override
-    public void appendChildrenStart(QuotingAppendable builder) {
-        if(ignoreCase) {
-            builder.append("UPPER(");
-        }
-    }
-
+public class NotEqualNode extends ExpressionNode {
     @Override
     public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-        builder.append(' ');
-        if(ignoreCase) {
-            builder.append(')');
+        String expStr = " <> ";
+        Node child = getChild(1);
+        if (child.getType() == NodeType.VALUE && ((ValueNode) child).getValue() == null) {
+            expStr = " IS NOT NULL";
         }
-        if(not) {
-            builder.append("NOT ");
-        }
-        builder.append("LIKE");
-        builder.append(' ');
-        if(ignoreCase) {
-            builder.append("UPPER(");
-        }
-    }
-
-    @Override
-    public void appendChildrenEnd(QuotingAppendable builder) {
-        if(ignoreCase) {
-            builder.append(')');
-        }
-        if(escape != 0) {
-            builder.append(" ESCAPE '").append(escape).append('\'');
-        }
-    }
-
-    @Override
-    public Node copy() {
-        return new LikeNode(ignoreCase, not, escape);
+        builder.append(expStr);
     }
 
     @Override
     public NodeType getType() {
-        return NodeType.LIKE;
+        return NodeType.EQUALITY;
     }
 }
