@@ -64,4 +64,14 @@ public interface QuotingStrategy {
      * @since 4.0
      */
     String quotedIdentifier(DataMap dataMap, String... identifierParts);
+
+    /**
+     * @since 4.1
+     */
+    String quotedIdentifier(Entity entity, String identifier);
+
+    /**
+     * @since 4.1
+     */
+    String quotedIdentifier(DataMap dataMap, String identifier);
 }

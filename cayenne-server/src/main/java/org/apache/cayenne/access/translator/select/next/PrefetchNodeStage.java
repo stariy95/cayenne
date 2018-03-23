@@ -22,7 +22,6 @@ package org.apache.cayenne.access.translator.select.next;
 import java.util.Collections;
 
 import org.apache.cayenne.CayenneRuntimeException;
-import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
@@ -111,23 +110,22 @@ class PrefetchNodeStage implements TranslationStage {
             return;
         }
 
-        PathTranslator pathTranslator = new PathTranslator(context);
+        PathTranslator pathTranslator = context.getPathTranslator();
         PrefetchSelectQuery prefetchSelectQuery = (PrefetchSelectQuery)context.getQuery();
         for(String prefetchPath: prefetchSelectQuery.getResultPaths()) {
             ASTDbPath pathExp = (ASTDbPath) context.getMetadata().getClassDescriptor().getEntity()
                     .translateToDbPath(ExpressionFactory.exp(prefetchPath));
 
             String path = pathExp.getPath();
-            PathTranslator.PathTranslationResult result = pathTranslator
+            PathTranslationResult result = pathTranslator
                     .translatePath(context.getMetadata().getDbEntity(), path);
             result.getDbRelationship().ifPresent(r -> {
                 DbEntity targetEntity = r.getTargetEntity();
-                context.getTableTree().addJoinTable(path, r, JoinType.INNER);
+                context.getTableTree().addJoinTable(path, r, JoinType.INNER); // TODO: can this join be added in path translator?
                 for (DbAttribute pk : targetEntity.getPrimaryKeys()) {
                     // note that we may select a source attribute, but label it as target for simplified snapshot processing
                     String finalPath = path + '.' + pk.getName();
-                    String alias = context.getTableTree().aliasForAttributePath(finalPath);
-
+                    String alias = context.getTableTree().aliasForPath(path);
                     Node columnNode = table(alias).column(pk).build();
                     context.addResultNode(columnNode, finalPath).setDbAttribute(pk);
                 }

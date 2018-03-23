@@ -83,15 +83,6 @@ public class PostgresAdapter extends JdbcAdapter {
 		setSupportsGeneratedKeys(true);
 	}
 
-	/**
-	 * @since 4.0
-	 */
-	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new DefaultObjectSelectTranslator(query, this, entityResolver);
-//		return new PostgresSelectTranslator(query, this, entityResolver);
-	}
-
 	@Override
 	public Function<Node, Node> getSqlTreeProcessor() {
 		return new PostgreSQLTreeProcessor();

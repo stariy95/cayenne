@@ -31,7 +31,7 @@ public class SQLGenerationVisitor implements NodeTreeVisitor {
 
     // TODO: remove debug-related stuff
     private static final Logger logger = LoggerFactory.getLogger(SQLGenerationVisitor.class);
-    private static final boolean debug = true;
+    private static final boolean debug = false;
     private int level = 0;
 
     private final StringBuilderAppendable delegate;

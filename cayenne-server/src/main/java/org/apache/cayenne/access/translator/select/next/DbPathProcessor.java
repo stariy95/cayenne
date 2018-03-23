@@ -19,13 +19,6 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
@@ -35,40 +28,22 @@ import org.apache.cayenne.map.JoinType;
 /**
  * @since 4.1
  */
-public class DbPathIterator implements Iterator<Void> {
+public class DbPathProcessor extends PathProcessor<DbEntity> {
 
-    private final PathIterator pathIterator;
-    private final TranslatorContext context;
-    private final List<DbAttribute> dbAttributeList;
-    private final StringBuilder currentDbPath;
-
-    private DbRelationship relationship;
-    private DbEntity entity;
-
-    DbPathIterator(TranslatorContext context, DbEntity entity, String path, Map<String, String> pathAlias) {
-        this.pathIterator = new PathIterator(path, pathAlias);
-        this.context = context;
-        this.dbAttributeList = new ArrayList<>(1);
-        this.entity = entity;
-        this.currentDbPath = new StringBuilder();
+    DbPathProcessor(TranslatorContext context, DbEntity entity, String path) {
+        super(context, entity, path);
     }
 
     @Override
-    public boolean hasNext() {
-        return pathIterator.hasNext();
-    }
-
-    @Override
-    public Void next() {
-        String next = pathIterator.next();
-
-        if(pathIterator.isAlias()) {
-            processAliasedAttribute(next);
-        } else {
-            processNormalAttribute(next);
+    public void process() {
+        while(pathIterator.hasNext()) {
+            String next = pathIterator.next();
+            if (pathIterator.isAlias()) {
+                processAliasedAttribute(next);
+            } else {
+                processNormalAttribute(next);
+            }
         }
-
-        return null;
     }
 
     private void processNormalAttribute(String next) {
@@ -127,22 +102,14 @@ public class DbPathIterator implements Iterator<Void> {
         // todo resolve path
     }
 
-    public List<DbAttribute> getDbAttributeList() {
-        return dbAttributeList;
-    }
-
-    public DbRelationship getRelationship() {
-        return relationship;
-    }
-
     private void appendCurrentPath(String nextSegment) {
         if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != '$') {
             currentDbPath.append('.');
         }
         currentDbPath.append(nextSegment);
+        if(pathIterator.isOuterJoin()) {
+            currentDbPath.append('+');
+        }
     }
 
-    public String getFinalPath() {
-        return currentDbPath.toString();
-    }
 }

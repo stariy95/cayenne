@@ -19,11 +19,8 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.map.DbAttribute;
@@ -40,57 +37,30 @@ import org.apache.cayenne.util.CayenneMapEntry;
 /**
  * @since 4.1
  */
-class ObjPathIterator implements Iterator<Void> {
+class ObjPathProcessor extends PathProcessor<ObjEntity> {
 
-    private final PathIterator pathIterator;
-    private final TranslatorContext context;
-    private final List<DbAttribute> dbAttributeList;
-    private final StringBuilder currentDbPath;
-
-    private ObjEntity entity;
+    private ObjAttribute attribute;
     private EmbeddedAttribute embeddedAttribute;
 
-    // Iterator can end either with attribute or relationship
-    private ObjAttribute attribute;
-    private DbRelationship relationship;
-
-
-    ObjPathIterator(TranslatorContext context, ObjEntity entity, String path, Map<String, String> pathAlias) {
-        this.context = context;
-        this.pathIterator = new PathIterator(path, pathAlias);
-        this.entity = entity;
-        this.dbAttributeList = new ArrayList<>(2);
-        this.currentDbPath = new StringBuilder();
+    ObjPathProcessor(TranslatorContext context, ObjEntity entity, String path) {
+        super(context, entity, path);
     }
 
     @Override
-    public boolean hasNext() {
-        return pathIterator.hasNext();
-    }
+    public void process() {
+        while(pathIterator.hasNext()) {
+            String next = pathIterator.next();
 
-    @Override
-    public Void next() {
-        String next = pathIterator.next();
-
-        if(pathIterator.isAlias()) {
-            processAliasedAttribute(next);
-        } else {
-            processNormalAttribute(next);
+            if (pathIterator.isAlias()) {
+                processAliasedAttribute(next);
+            } else {
+                processNormalAttribute(next);
+            }
         }
-
-        return null;
     }
 
     ObjAttribute getAttribute() {
         return attribute;
-    }
-
-    List<DbAttribute> getDbAttributeList() {
-        return dbAttributeList;
-    }
-
-    public DbRelationship getRelationship() {
-        return relationship;
     }
 
     protected void processNormalAttribute(String next) {
@@ -214,9 +184,5 @@ class ObjPathIterator implements Iterator<Void> {
         if(pathIterator.isOuterJoin()) {
             currentDbPath.append('+');
         }
-    }
-
-    public String getFinalPath() {
-        return currentDbPath.toString();
     }
 }

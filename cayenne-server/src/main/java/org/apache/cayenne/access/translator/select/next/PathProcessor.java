@@ -19,37 +19,47 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.map.ObjEntity;
+import org.apache.cayenne.map.DbRelationship;
+import org.apache.cayenne.map.Entity;
 
 /**
  * @since 4.1
  */
-class PathTranslator {
+public abstract class PathProcessor<T extends Entity> {
 
-    private final HashMap<String, PathTranslationResult> RESULT_CACHE = new HashMap<>();
+    protected final PathIterator pathIterator;
+    protected final TranslatorContext context;
+    protected final List<DbAttribute> dbAttributeList;
+    protected final StringBuilder currentDbPath;
 
-    private final TranslatorContext context;
+    protected T entity;
+    protected DbRelationship relationship;
 
-    PathTranslator(TranslatorContext context) {
+    public PathProcessor(TranslatorContext context, T entity, String path) {
         this.context = context;
+        this.entity = entity;
+        this.pathIterator = new PathIterator(path, context.getMetadata().getPathSplitAliases());
+        this.currentDbPath = new StringBuilder();
+        this.dbAttributeList = new ArrayList<>(1);
     }
 
-    PathTranslationResult translatePath(ObjEntity entity, String path) {
-        return RESULT_CACHE.computeIfAbsent(entity.getName() + '.' + path,
-                (k) -> translate(new ObjPathProcessor(context, entity, path)));
+    public abstract void process();
+
+    public List<DbAttribute> getDbAttributeList() {
+        return dbAttributeList;
     }
 
-    PathTranslationResult translatePath(DbEntity entity, String path) {
-        return RESULT_CACHE.computeIfAbsent(':' + entity.getName() + '.' + path,
-                (k) -> translate(new DbPathProcessor(context, entity, path)));
+    public DbRelationship getRelationship() {
+        return relationship;
     }
 
-    private static PathTranslationResult translate(PathProcessor<?> processor) {
-        processor.process();
-        return new PathTranslationResult(processor);
+    public String getFinalPath() {
+        return currentDbPath.toString();
     }
-
 }

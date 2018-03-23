@@ -21,8 +21,6 @@ package org.apache.cayenne.access.translator.select.next;
 
 import java.sql.Types;
 
-import org.apache.cayenne.access.jdbc.ColumnDescriptor;
-
 /**
  * @since 4.1
  */
@@ -52,7 +50,7 @@ public class DistinctStage implements TranslationStage {
         // query forcing distinct or query have joins (qualifier or prefetch)
         if(context.getQuery().isDistinct() || context.getTableTree().getNodeCount() > 1) {
             // unsuitable jdbc type for distinct clause
-            for(TranslatorContext.ResultNode node : context.getResultNodeList()) {
+            for(ResultNodeDescriptor node : context.getResultNodeList()) {
                 // TODO: make it per adapter rather than one-for-all
                 if(isUnsupportedForDistinct(node.getJdbcType())) {
                     context.setDistinctSuppression(true);

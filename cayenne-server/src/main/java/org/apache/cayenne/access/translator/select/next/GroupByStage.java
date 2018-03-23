@@ -30,7 +30,7 @@ public class GroupByStage implements TranslationStage {
             return;
         }
 
-        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
+        for(ResultNodeDescriptor resultNode : context.getResultNodeList()) {
             if(resultNode.isAggregate()) {
                 continue;
             }
@@ -44,7 +44,7 @@ public class GroupByStage implements TranslationStage {
             return true;
         }
 
-        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
+        for(ResultNodeDescriptor resultNode : context.getResultNodeList()) {
             if(resultNode.isAggregate()) {
                 return true;
             }

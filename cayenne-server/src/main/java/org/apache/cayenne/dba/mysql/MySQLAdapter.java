@@ -113,12 +113,6 @@ public class MySQLAdapter extends JdbcAdapter {
 	}
 
 	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-//		return new MySQLSelectTranslator(query, this, entityResolver);
-		return new DefaultObjectSelectTranslator(query, this, entityResolver);
-	}
-
-	@Override
 	public Function<Node, Node> getSqlTreeProcessor() {
 		return new MySQLTreeProcessor();
 	}

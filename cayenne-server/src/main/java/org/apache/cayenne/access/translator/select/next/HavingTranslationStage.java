@@ -30,7 +30,7 @@ public class HavingTranslationStage implements TranslationStage {
 
     @Override
     public void perform(TranslatorContext context) {
-        QualifierTranslator translator = new QualifierTranslator(context);
+        QualifierTranslator translator = context.getQualifierTranslator();
         Expression expression = context.getQuery().getHavingQualifier();
         Node qualifier = translator.translate(expression);
         if(qualifier != null) {

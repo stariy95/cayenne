@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.parser.ASTDbPath;
@@ -36,7 +35,7 @@ class QualifierTranslationStage implements TranslationStage {
 
     @Override
     public void perform(TranslatorContext context) {
-        QualifierTranslator translator = new QualifierTranslator(context);
+        QualifierTranslator translator = context.getQualifierTranslator();
 
         Expression expression = context.getQuery().getQualifier();
 
@@ -68,7 +67,7 @@ class QualifierTranslationStage implements TranslationStage {
         Node qualifierNode = translator.translate(expression);
 
         if(qualifierNode != null) {
-            context.getSelectBuilder().where(() -> qualifierNode);
+            context.getSelectBuilder().where(qualifierNode);
         }
     }
 }

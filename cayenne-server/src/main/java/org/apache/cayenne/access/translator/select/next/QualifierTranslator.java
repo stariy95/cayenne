@@ -58,16 +58,16 @@ class QualifierTranslator implements TraversalHandler {
 
     private final TranslatorContext context;
     private final PathTranslator pathTranslator;
-
-    private Set<Object> expressionsToSkip;
-    private Node currentNode;
+    private final Set<Object> expressionsToSkip;
 
     private boolean forceJoin;
+    private Node currentNode;
     private String topLevelAlias;
 
     QualifierTranslator(TranslatorContext context) {
         this.context = context;
-        this.pathTranslator = new PathTranslator(context);
+        this.pathTranslator = context.getPathTranslator();
+        this.expressionsToSkip = new HashSet<>();
     }
 
     Node translate(Property<?> property) {
@@ -87,9 +87,8 @@ class QualifierTranslator implements TraversalHandler {
         }
 
         Node rootNode = new EmptyNode();
+        expressionsToSkip.clear();
         this.currentNode = rootNode;
-        this.expressionsToSkip = new HashSet<>();
-
         qualifier.traverse(this);
         return rootNode;
     }
@@ -100,7 +99,7 @@ class QualifierTranslator implements TraversalHandler {
             return;
         }
         Node nextNode = expressionNodeToSqlNode(node, parentNode);
-        if(nextNode instanceof EmptyNode) {
+        if(nextNode == null) {
             return;
         }
         currentNode.addChild(nextNode);
@@ -117,6 +116,7 @@ class QualifierTranslator implements TraversalHandler {
 
             case NOT_BETWEEN:
             case BETWEEN:
+                // TODO: class with clone support
                 return new ExpressionNode() {
                     @Override
                     public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
@@ -129,6 +129,7 @@ class QualifierTranslator implements TraversalHandler {
                 };
 
             case NOT:
+                // TODO: class with clone support
                 return new ExpressionNode() {
                     @Override
                     public void append(QuotingAppendable buffer) {
@@ -137,6 +138,7 @@ class QualifierTranslator implements TraversalHandler {
                 };
 
             case BITWISE_NOT:
+                // TODO: class with clone support
                 return new ExpressionNode() {
                     @Override
                     public void append(QuotingAppendable buffer) {
@@ -159,12 +161,12 @@ class QualifierTranslator implements TraversalHandler {
 
             case OBJ_PATH:
                 String path = (String)node.getOperand(0);
-                PathTranslator.PathTranslationResult result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), path);
+                PathTranslationResult result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), path);
                 return processPathTranslationResult(node, parentNode, result);
 
             case DB_PATH:
                 String dbPath = (String)node.getOperand(0);
-                PathTranslator.PathTranslationResult dbResult = pathTranslator.translatePath(context.getMetadata().getDbEntity(), dbPath);
+                PathTranslationResult dbResult = pathTranslator.translatePath(context.getMetadata().getDbEntity(), dbPath);
                 return processPathTranslationResult(node, parentNode, dbResult);
 
             case FUNCTION_CALL:
@@ -189,6 +191,7 @@ class QualifierTranslator implements TraversalHandler {
             case LESS_THAN_EQUAL_TO:
             case GREATER_THAN:
             case GREATER_THAN_EQUAL_TO:
+                // TODO: class with clone support
                 return new ExpressionNode() {
                     @Override
                     public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
@@ -202,10 +205,10 @@ class QualifierTranslator implements TraversalHandler {
                 return new TextNode(expToStr(node.getType()));
         }
 
-        return new EmptyNode();
+        return null;
     }
 
-    private Node processPathTranslationResult(Expression node, Expression parentNode, PathTranslator.PathTranslationResult result) {
+    private Node processPathTranslationResult(Expression node, Expression parentNode, PathTranslationResult result) {
         StringBuilder path = new StringBuilder(result.getFinalPath());
         DbAttribute[] lastDbAttribute = new DbAttribute[]{result.getLastAttribute()};
         result.getDbRelationship().ifPresent(r -> {
@@ -228,7 +231,7 @@ class QualifierTranslator implements TraversalHandler {
         }
     }
 
-    private Node createMultiAttributeMatch(Expression node, Expression parentNode, PathTranslator.PathTranslationResult result) {
+    private Node createMultiAttributeMatch(Expression node, Expression parentNode, PathTranslationResult result) {
         DbRelationship relationship = result.getDbRelationship().orElseThrow(() -> new CayenneRuntimeException("No relationship found"));
         ObjectId objectId = null;
         expressionsToSkip.add(node);
@@ -324,7 +327,7 @@ class QualifierTranslator implements TraversalHandler {
             }
         }
 
-        PathTranslator.PathTranslationResult result = null;
+        PathTranslationResult result = null;
         for(int i=0; i<node.getOperandCount(); i++) {
             Object op = node.getOperand(i);
             // TODO: here is double translation of paths we already saw or going to translate soon

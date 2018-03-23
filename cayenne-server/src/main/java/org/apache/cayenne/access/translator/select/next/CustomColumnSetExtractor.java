@@ -59,15 +59,18 @@ class CustomColumnSetExtractor implements ColumnExtractor {
 
     @Override
     public void extract(String prefix) {
-        QualifierTranslator translator = new QualifierTranslator(context);
+        QualifierTranslator translator = context.getQualifierTranslator();
         translator.setForceJoin(true);
-
-        for(Property<?> property : columns) {
-            Node nextNode = translator.translate(property);
-            if(checkAndExtractFullObject(prefix, property)) {
-                continue;
+        try {
+            for (Property<?> property : columns) {
+                Node nextNode = translator.translate(property);
+                if (checkAndExtractFullObject(prefix, property)) {
+                    continue;
+                }
+                context.addResultNode(nextNode, true, property, property.getAlias());
             }
-            context.addResultNode(nextNode, true, property, property.getAlias());
+        } finally {
+            translator.setForceJoin(false);
         }
     }
 

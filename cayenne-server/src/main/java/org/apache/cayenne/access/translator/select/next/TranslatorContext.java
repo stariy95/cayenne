@@ -27,17 +27,11 @@ import java.util.List;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.access.sqlbuilder.SelectBuilder;
 import org.apache.cayenne.access.sqlbuilder.SQLBuilder;
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.dba.QuotingStrategy;
-import org.apache.cayenne.dba.TypesMapping;
 import org.apache.cayenne.exp.Property;
-import org.apache.cayenne.exp.parser.ASTAggregateFunctionCall;
-import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.QueryMetadata;
@@ -78,8 +72,10 @@ public class TranslatorContext {
     private final EntityResolver resolver;
     private final DbAdapter adapter;
     private final QuotingStrategy quotingStrategy;
+    private final QualifierTranslator qualifierTranslator;
+    private final PathTranslator pathTranslator;
 
-    private List<ResultNode> resultNodeList;
+    private List<ResultNodeDescriptor> resultNodeList;
     private String finalSQL;
     private boolean distinctSuppression;
 
@@ -95,6 +91,8 @@ public class TranslatorContext {
         this.columnDescriptors = new ArrayList<>();
         this.bindings = new ArrayList<>(4);
         this.selectBuilder = SQLBuilder.select();
+        this.pathTranslator = new PathTranslator(this);
+        this.qualifierTranslator = new QualifierTranslator(this);
         this.quotingStrategy = adapter.getQuotingStrategy();
         this.resultNodeList = new LinkedList<>();
     }
@@ -127,6 +125,14 @@ public class TranslatorContext {
 
     TableTree getTableTree() {
         return tableTree;
+    }
+
+    QualifierTranslator getQualifierTranslator() {
+        return qualifierTranslator;
+    }
+
+    PathTranslator getPathTranslator() {
+        return pathTranslator;
     }
 
     int getTableCount() {
@@ -173,20 +179,20 @@ public class TranslatorContext {
         return finalSQL;
     }
 
-    public List<ResultNode> getResultNodeList() {
+    public List<ResultNodeDescriptor> getResultNodeList() {
         return resultNodeList;
     }
 
-    public ResultNode addResultNode(Node node) {
+    public ResultNodeDescriptor addResultNode(Node node) {
         return addResultNode(node, false, null, null);
     }
 
-    public ResultNode addResultNode(Node node, String dataRowKey) {
+    public ResultNodeDescriptor addResultNode(Node node, String dataRowKey) {
         return addResultNode(node, true, null, dataRowKey);
     }
 
-    public ResultNode addResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
-        ResultNode resultNode = new ResultNode(node, inDataRow, property, dataRowKey);
+    public ResultNodeDescriptor addResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
+        ResultNodeDescriptor resultNode = new ResultNodeDescriptor(node, inDataRow, property, dataRowKey);
         if(appendResultToRoot) {
             resultNodeList.add(rootSegmentEnd + 1, resultNode);
         } else {
@@ -201,113 +207,4 @@ public class TranslatorContext {
         OTHER
     }
 
-    static class ResultNode {
-        private final Node node;
-        private final boolean inDataRow;
-        private final String dataRowKey;
-        private final boolean isAggregate;
-        private final Property<?> property;
-
-        private DbAttribute dbAttribute;
-        private String javaType;
-
-        private ResultNode(Node node, boolean inDataRow, Property<?> property, String dataRowKey) {
-            this.node = node;
-            this.inDataRow = inDataRow;
-            this.property = property;
-            this.dataRowKey = dataRowKey;
-            this.isAggregate = property != null
-                    && property.getExpression() instanceof ASTAggregateFunctionCall;
-        }
-
-        public boolean isAggregate() {
-            return isAggregate;
-        }
-
-        public boolean isInDataRow() {
-            return inDataRow;
-        }
-
-        public Property<?> getProperty() {
-            return property;
-        }
-
-        public Node getNode() {
-            return node;
-        }
-
-        public String getDataRowKey() {
-            if(dataRowKey != null) {
-                return dataRowKey;
-            }
-            if(property != null) {
-                return property.getAlias();
-            }
-            if(getDbAttribute() != null) {
-                return getDbAttribute().getName();
-            }
-            return null;
-        }
-
-        public ResultNode setJavaType(String javaType) {
-            this.javaType = javaType;
-            return this;
-        }
-
-        public ResultNode setDbAttribute(DbAttribute dbAttribute) {
-            this.dbAttribute = dbAttribute;
-            return this;
-        }
-
-        public String getJavaType() {
-            if(javaType != null) {
-                return javaType;
-            }
-            if(property != null) {
-                return property.getType().getCanonicalName();
-            }
-            if(getDbAttribute() != null) {
-                return TypesMapping.getJavaBySqlType(getDbAttribute().getType());
-            }
-            return null;
-        }
-
-        public int getJdbcType() {
-            if(getDbAttribute() != null) {
-                return getDbAttribute().getType();
-            }
-
-            if(getProperty() != null) {
-                return TypesMapping.getSqlTypeByJava(getProperty().getType());
-            }
-
-            return TypesMapping.NOT_DEFINED;
-        }
-
-        public DbAttribute getDbAttribute() {
-            if(this.dbAttribute != null) {
-                return this.dbAttribute;
-            }
-            DbAttribute[] dbAttribute = {null};
-            node.visit(new NodeTreeVisitor() {
-                @Override
-                public void onNodeStart(Node node) {
-                    if(node.getType() == NodeType.COLUMN) {
-                        dbAttribute[0] = ((ColumnNode)node).getAttribute();
-                    }
-                }
-
-                @Override
-                public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
-                }
-                @Override
-                public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
-                }
-                @Override
-                public void onNodeEnd(Node node) {
-                }
-            });
-            return this.dbAttribute = dbAttribute[0];
-        }
-    }
 }

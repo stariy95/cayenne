@@ -50,7 +50,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor, String columnLabelPrefix) {
         super(context);
         this.descriptor = descriptor;
-        this.pathTranslator = new PathTranslator(context);
+        this.pathTranslator = context.getPathTranslator();
         this.columnLabelPrefix = columnLabelPrefix;
     }
 
@@ -81,7 +81,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     @Override
     public boolean visitAttribute(AttributeProperty property) {
         ObjAttribute oa = property.getAttribute();
-        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(oa.getEntity(), property.getName());
+        PathTranslationResult result = pathTranslator.translatePath(oa.getEntity(), property.getName());
 
         DbAttribute attribute = result.getLastAttribute();
 
@@ -106,7 +106,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     @Override
     public boolean visitToOne(ToOneProperty property) {
         ObjRelationship rel = property.getRelationship();
-        PathTranslator.PathTranslationResult result = pathTranslator.translatePath(rel.getSourceEntity(), property.getName());
+        PathTranslationResult result = pathTranslator.translatePath(rel.getSourceEntity(), property.getName());
 
         String path = rel.getDbRelationshipPath();
         if(prefix != null) {

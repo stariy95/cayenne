@@ -21,6 +21,7 @@ package org.apache.cayenne.access.translator.select.next;
 
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.OrderingNodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.parser.ASTAggregateFunctionCall;
 import org.apache.cayenne.query.Ordering;
@@ -34,7 +35,7 @@ class OrderingStage implements TranslationStage {
 
     @Override
     public void perform(TranslatorContext context) {
-        QualifierTranslator qualifierTranslator = new QualifierTranslator(context);
+        QualifierTranslator qualifierTranslator = context.getQualifierTranslator();
         for(Ordering ordering : context.getQuery().getOrderings()) {
             processOrdering(qualifierTranslator, context, ordering);
         }
@@ -42,18 +43,18 @@ class OrderingStage implements TranslationStage {
 
     private void processOrdering(QualifierTranslator qualifierTranslator, TranslatorContext context, Ordering ordering) {
         Expression exp = ordering.getSortSpec();
-        NodeBuilder nodeBuilder = () -> qualifierTranslator.translate(exp);
-
-        if(ordering.isCaseInsensitive()) {
-            nodeBuilder = function("UPPER", nodeBuilder);
-        }
+        Node translatedNode = qualifierTranslator.translate(exp);
 
         // If query is DISTINCT than we need to add all ORDER BY clauses as result columns
         if(shouldAddToResult(context, ordering)) {
-            // TODO: need to check duplicates
-            context.addResultNode(nodeBuilder.build().deepCopy());
+            // TODO: need to check duplicates?
+            context.addResultNode(translatedNode.deepCopy());
         }
 
+        NodeBuilder nodeBuilder = node(translatedNode);
+        if(ordering.isCaseInsensitive()) {
+            nodeBuilder = function("UPPER", nodeBuilder);
+        }
         OrderingNodeBuilder orderingNodeBuilder = order(nodeBuilder);
         if(ordering.isDescending()) {
             orderingNodeBuilder.desc();

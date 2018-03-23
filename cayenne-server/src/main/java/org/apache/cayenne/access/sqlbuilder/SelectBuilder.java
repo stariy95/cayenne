@@ -98,10 +98,20 @@ public class SelectBuilder implements NodeBuilder {
         return this;
     }
 
+    public SelectBuilder where(Node node) {
+        node(WHERE_NODE, WhereNode::new).addChild(node);
+        return this;
+    }
+
     public SelectBuilder orderBy(NodeBuilder... params) {
         for(NodeBuilder next : params) {
             node(ORDERBY_NODE, OrderByNode::new).addChild(next.build());
         }
+        return this;
+    }
+
+    public SelectBuilder orderBy(NodeBuilder param) {
+        node(ORDERBY_NODE, OrderByNode::new).addChild(param.build());
         return this;
     }
 

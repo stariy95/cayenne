@@ -48,7 +48,7 @@ public class SQLPreparationStage implements TranslationStage {
 
     private void addResult(TranslatorContext context) {
         int counter = 0;
-        for(TranslatorContext.ResultNode resultNode : context.getResultNodeList()) {
+        for(ResultNodeDescriptor resultNode : context.getResultNodeList()) {
             context.getSelectBuilder().result(resultNode::getNode);
 
             if(!resultNode.isInDataRow()) {
@@ -58,11 +58,11 @@ public class SQLPreparationStage implements TranslationStage {
             String name = "c" + counter;
             DbAttribute attribute = resultNode.getDbAttribute();
             if(attribute != null) {
-                name = resultNode.getDbAttribute().getName();
+                name = attribute.getName();
             }
 
-            ColumnDescriptor descriptor = new ColumnDescriptor(name, resultNode.getJdbcType());
-            descriptor.setAttribute(resultNode.getDbAttribute());
+            ColumnDescriptor descriptor = new ColumnDescriptor(name, resultNode.getJdbcType(), null);
+            descriptor.setAttribute(attribute);
             descriptor.setDataRowKey(resultNode.getDataRowKey());
             descriptor.setJavaClass(resultNode.getJavaType());
 
@@ -73,12 +73,12 @@ public class SQLPreparationStage implements TranslationStage {
 
     private void addFrom(TranslatorContext context) {
         context.getTableTree().visit(node -> {
-            NodeBuilder table = table(node.entity.getFullyQualifiedName()).as(node.tableAlias);
+            NodeBuilder tableNode = table(node.entity.getFullyQualifiedName()).as(node.tableAlias);
             if(node.relationship != null) {
-                table = getJoin(node, table).on(getJoinExpression(context, node));
+                tableNode = getJoin(node, tableNode).on(getJoinExpression(context, node));
             }
 
-            context.getSelectBuilder().from(table);
+            context.getSelectBuilder().from(tableNode);
         });
     }
 
@@ -97,7 +97,7 @@ public class SQLPreparationStage implements TranslationStage {
         List<DbJoin> joins = node.relationship.getJoins();
 
         ExpressionNodeBuilder expressionNodeBuilder = null;
-        String sourceAlias = context.getTableTree().aliasForAttributePath(node.attributePath.getPath());
+        String sourceAlias = context.getTableTree().aliasForPath(node.attributePath.getParent());
         for (DbJoin dbJoin : joins) {
             DbAttribute src = dbJoin.getSource();
             DbAttribute dst = dbJoin.getTarget();
@@ -119,7 +119,7 @@ public class SQLPreparationStage implements TranslationStage {
     private ExpressionNodeBuilder attachTargetQualifier(TranslatorContext context, TableTreeNode node, ExpressionNodeBuilder expressionNodeBuilder) {
         Expression dbQualifier = node.relationship.getTargetEntity().getQualifier();
         if (dbQualifier != null) {
-            QualifierTranslator translator = new QualifierTranslator(context);
+            QualifierTranslator translator = context.getQualifierTranslator();
             dbQualifier = dbQualifier.transform(new JoinedDbEntityQualifierTransformer(node));
             Node translatedQualifier = translator.translate(dbQualifier);
             if (expressionNodeBuilder != null) {
