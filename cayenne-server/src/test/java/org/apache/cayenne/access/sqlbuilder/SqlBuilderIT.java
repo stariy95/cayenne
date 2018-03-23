@@ -66,7 +66,7 @@ public class SqlBuilderIT extends ServerCase {
                 .where(
                         table("a").column("ARTIST_NAME")
                                 .eq(value("Picasso"))
-                                .and(exists(select(star())
+                                .and(exists(select(all())
                                                 .from(table("GALLERY").as("g"))
                                                 .where(table("g").column("GALLERY_ID").eq(table("p").column("GALLERY_ID")))))
                                 .and(value(1).eq(value(1)))
@@ -82,7 +82,7 @@ public class SqlBuilderIT extends ServerCase {
                 "FROM ARTIST a  " +
                 "LEFT JOIN PAINTING p  ON ((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ? )) " +
                 "WHERE ((((a.ARTIST_NAME  =  ? ) " +
-                "AND  EXISTS(SELECT  *  FROM GALLERY g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID ))) " +
+                "AND  EXISTS((SELECT  *  FROM GALLERY g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID )))) " +
                 "AND  (?  =  ? )) OR  ? ) " +
                 "GROUP BY a.ARTIST_ID  " +
                 "HAVING NOT  (COUNT(p.PAINTING_TITLE ) >  ? ) " +

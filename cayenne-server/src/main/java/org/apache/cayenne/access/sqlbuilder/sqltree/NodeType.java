@@ -31,5 +31,6 @@ public enum NodeType {
     EQUALITY,
     LIKE,
     DISTINCT,
+    IN,
     RESULT
 }

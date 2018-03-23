@@ -25,6 +25,7 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
  * @since 4.1
  */
 public class InNode extends Node {
+
     private final boolean not;
 
     public InNode(boolean not) {
@@ -54,5 +55,14 @@ public class InNode extends Node {
     @Override
     public Node copy() {
         return new InNode(not);
+    }
+
+    public boolean isNot() {
+        return not;
+    }
+
+    @Override
+    public NodeType getType() {
+        return NodeType.IN;
     }
 }

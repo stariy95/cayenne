@@ -24,6 +24,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 
@@ -80,34 +81,69 @@ public final class SQLBuilder {
         return new ValueNodeBuilder(value);
     }
 
-    public static ExpNodeBuilder exp(NodeBuilder builder) {
-        return new ExpNodeBuilder(builder);
+    public static ExpressionNodeBuilder exp(NodeBuilder builder) {
+        return new ExpressionNodeBuilder(builder);
     }
 
-    public static Node aliased(Node node, String alias) {
-//        if(node instanceof EmptyNode) {
-//            return node;
-//        }
-        if(node.getType() == NodeType.COLUMN) {
-            if(((ColumnNode)node).getAlias() != null) {
-                return node;
-            }
-        } else if(node.getType() == NodeType.FUNCTION) {
-            if(((FunctionNode)node).getAlias() != null) {
-                return node;
-            }
+    public static NodeBuilder node(Node node) {
+        return () -> node;
+    }
+
+    public static NodeBuilder aliased(NodeBuilder nodeBuilder, String alias) {
+        return () -> {
+            Node root = new EmptyNode();
+            root.addChild(nodeBuilder.build());
+            root.addChild(new TextNode(" " + alias));
+            return root;
+        };
+    }
+
+    public static NodeBuilder aliased(Node node, String alias) {
+        if(suppressAlias(node)) {
+            return node(node);
         }
-        Node root = new EmptyNode();
-        root.addChild(node);
-        root.addChild(new TextNode("AS " + alias));
-        return root;
+        return () -> {
+            Node root = new EmptyNode();
+            root.addChild(node);
+            root.addChild(new TextNode(" " + alias));
+            return root;
+        };
+    }
+
+    public static boolean suppressAlias(Node node) {
+        boolean[] suppressAlias = {false};
+
+        NodeTreeVisitor visitor = new NodeTreeVisitor() {
+            @Override
+            public void onNodeStart(Node node) {
+                if(node.getType() == NodeType.COLUMN && ((ColumnNode) node).getAlias() != null) {
+                    suppressAlias[0] = true;
+                } else if(node.getType() == NodeType.FUNCTION && ((FunctionNode) node).getAlias() != null) {
+                    suppressAlias[0] = true;
+                }
+            }
+
+            @Override
+            public void onChildNodeStart(Node parent, Node child, int index, boolean hasMore) {
+            }
+
+            @Override
+            public void onChildNodeEnd(Node parent, Node child, int index, boolean hasMore) {
+            }
+
+            @Override
+            public void onNodeEnd(Node node) {
+            }
+        };
+        node.visit(visitor);
+        return suppressAlias[0];
     }
 
     public static NodeBuilder text(String text) {
         return () -> new TextNode(text);
     }
 
-    public static NodeBuilder star() {
+    public static NodeBuilder all() {
         return text("*");
     }
 
@@ -144,32 +180,5 @@ public final class SQLBuilder {
     }
 
     private SQLBuilder() {
-    }
-
-    public static class ExpNodeBuilder implements NodeBuilder {
-
-        private final NodeBuilder arg;
-        private String alias;
-
-        public ExpNodeBuilder(NodeBuilder arg) {
-            this.arg = arg;
-        }
-
-        public ExpNodeBuilder as(String alias) {
-            this.alias = alias;
-            return this;
-        }
-
-        @Override
-        public Node build() {
-            Node node = new EmptyNode();
-            Node exp = new ExpressionNode();
-            exp.addChild(arg.build());
-            node.addChild(exp);
-            if(alias != null) {
-                node.addChild(new TextNode(" " + alias));
-            }
-            return node;
-        }
     }
 }

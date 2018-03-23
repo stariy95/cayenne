@@ -100,6 +100,9 @@ class QualifierTranslator implements TraversalHandler {
             return;
         }
         Node nextNode = expressionNodeToSqlNode(node, parentNode);
+        if(nextNode instanceof EmptyNode) {
+            return;
+        }
         currentNode.addChild(nextNode);
         nextNode.setParent(currentNode);
         currentNode = nextNode;

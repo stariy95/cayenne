@@ -836,9 +836,7 @@ public class SelectQueryIT extends ServerCase {
 	 */
 	@Test
 	public void testSelectLongIn() {
-		// not all adapters strip INs, so we just make sure query with such
-		// qualifier
-		// fires OK
+		// not all adapters strip INs, so we just make sure query with such qualifier fires OK
 		Object[] numbers = new String[2009];
 		for (int i = 0; i < numbers.length; i++) {
 			numbers[i] = "" + i;

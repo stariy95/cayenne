@@ -27,8 +27,18 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 public class SelectNode extends Node {
 
     @Override
-    public void append(QuotingAppendable buffer) {
-        buffer.append("SELECT");
+    public void append(QuotingAppendable builder) {
+        if(parent != null) {
+            builder.append('(');
+        }
+        builder.append("SELECT");
+    }
+
+    @Override
+    public void appendChildrenEnd(QuotingAppendable builder) {
+        if(parent != null) {
+            builder.append(')');
+        }
     }
 
     @Override
