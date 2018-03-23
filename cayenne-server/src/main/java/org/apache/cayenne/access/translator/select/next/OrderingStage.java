@@ -45,16 +45,17 @@ class OrderingStage implements TranslationStage {
         Expression exp = ordering.getSortSpec();
         Node translatedNode = qualifierTranslator.translate(exp);
 
-        // If query is DISTINCT than we need to add all ORDER BY clauses as result columns
-        if(shouldAddToResult(context, ordering)) {
-            // TODO: need to check duplicates?
-            context.addResultNode(translatedNode.deepCopy());
-        }
-
         NodeBuilder nodeBuilder = node(translatedNode);
         if(ordering.isCaseInsensitive()) {
             nodeBuilder = function("UPPER", nodeBuilder);
         }
+
+        // If query is DISTINCT than we need to add all ORDER BY clauses as result columns
+        if(shouldAddToResult(context, ordering)) {
+            // TODO: need to check duplicates?
+            context.addResultNode(nodeBuilder.build().deepCopy());
+        }
+
         OrderingNodeBuilder orderingNodeBuilder = order(nodeBuilder);
         if(ordering.isDescending()) {
             orderingNodeBuilder.desc();

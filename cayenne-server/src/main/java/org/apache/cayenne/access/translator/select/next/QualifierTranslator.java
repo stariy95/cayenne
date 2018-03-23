@@ -330,7 +330,6 @@ class QualifierTranslator implements TraversalHandler {
         PathTranslationResult result = null;
         for(int i=0; i<node.getOperandCount(); i++) {
             Object op = node.getOperand(i);
-            // TODO: here is double translation of paths we already saw or going to translate soon
             if(op instanceof ASTObjPath) {
                 result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), ((ASTObjPath) op).getPath());
                 break;

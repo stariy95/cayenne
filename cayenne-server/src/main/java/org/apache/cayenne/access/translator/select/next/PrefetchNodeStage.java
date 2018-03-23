@@ -19,8 +19,6 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.Collections;
-
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
@@ -32,7 +30,6 @@ import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
-import org.apache.cayenne.map.PathComponent;
 import org.apache.cayenne.query.PrefetchSelectQuery;
 import org.apache.cayenne.query.PrefetchTreeNode;
 import org.apache.cayenne.reflect.ClassDescriptor;
@@ -69,39 +66,33 @@ class PrefetchNodeStage implements TranslationStage {
             return;
         }
 
-        // TODO: use new path translator
-
         ObjEntity objEntity = context.getMetadata().getObjEntity();
 
         for(PrefetchTreeNode node : prefetch.adjacentJointNodes()) {
             Expression prefetchExp = ExpressionFactory.exp(node.getPath());
             ASTDbPath dbPrefetch = (ASTDbPath) objEntity.translateToDbPath(prefetchExp);
-            DbRelationship r = null;
-            StringBuilder fullPath = new StringBuilder();
+            final String dbPath = dbPrefetch.getPath();
+            DbEntity dbEntity = objEntity.getDbEntity();
 
-            for (PathComponent<DbAttribute, DbRelationship> component :
-                    objEntity.getDbEntity().resolvePath(dbPrefetch, Collections.emptyMap())) {
-                r = component.getRelationship();
+            PathComponents components = new PathComponents(dbPath);
+            StringBuilder fullPath = new StringBuilder();
+            for(String c : components.getAll()) {
+                DbRelationship rel = dbEntity.getRelationship(c);
+                if(rel == null) {
+                    throw new CayenneRuntimeException("Unable to resolve path %s for entity %s", dbPath, objEntity.getName());
+                }
                 if(fullPath.length() > 0) {
                     fullPath.append('.');
-                } else {
-                    // add mark of prefetch to not overlap with query qualifiers
-                    fullPath.append("p:");
                 }
-                fullPath.append(r.getName());
-                context.getTableTree().addJoinTable(fullPath.toString(), r, JoinType.LEFT_OUTER);
-            }
-
-            if (r == null) {
-                throw new CayenneRuntimeException("Invalid joint prefetch '%s' for entity: %s", node, objEntity.getName());
+                context.getTableTree().addJoinTable("p:" + fullPath.append(c).toString(), rel, JoinType.LEFT_OUTER);
+                dbEntity = rel.getTargetEntity();
             }
 
             ObjRelationship targetRel = (ObjRelationship) prefetchExp.evaluate(objEntity);
             ClassDescriptor prefetchClassDescriptor = context.getResolver().getClassDescriptor(targetRel.getTargetEntityName());
 
-            String labelPrefix = dbPrefetch.getPath();
-            DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor, labelPrefix);
-            columnExtractor.extract(fullPath.toString());
+            DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor, dbPath);
+            columnExtractor.extract("p:" + dbPath);
         }
     }
 

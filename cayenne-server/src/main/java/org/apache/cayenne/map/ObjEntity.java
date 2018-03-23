@@ -1078,11 +1078,8 @@ public class ObjEntity extends Entity implements ObjEntityListener, Configuratio
             }
 
             // convert obj_path to db_path
-
             String converted = toDbPath(createPathIterator((String) expression.getOperand(0)));
-            Expression exp = ExpressionFactory.expressionOfType(Expression.DB_PATH);
-            exp.setOperand(0, converted);
-            return exp;
+            return ExpressionFactory.dbPathExp(converted);
         }
     }
 
