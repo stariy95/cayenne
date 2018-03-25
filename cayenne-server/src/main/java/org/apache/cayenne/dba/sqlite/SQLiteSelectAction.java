@@ -19,30 +19,25 @@
 package org.apache.cayenne.dba.sqlite;
 
 import org.apache.cayenne.access.DataNode;
-import org.apache.cayenne.dba.JdbcActionBuilder;
+import org.apache.cayenne.access.OperationObserver;
+import org.apache.cayenne.access.jdbc.SelectAction;
 import org.apache.cayenne.query.SQLAction;
-import org.apache.cayenne.query.SQLTemplate;
 import org.apache.cayenne.query.SelectQuery;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 /**
- * @since 3.0
+ * @since 4.1
  */
-class SQLiteActionBuilder extends JdbcActionBuilder {
+public class SQLiteSelectAction extends SelectAction {
 
-    SQLiteActionBuilder(DataNode dataNode) {
-        super(dataNode);
+    public SQLiteSelectAction(SelectQuery<?> query, DataNode dataNode) {
+        super(query, dataNode);
     }
 
     @Override
-    public SQLAction sqlAction(SQLTemplate query) {
-        return new SQLiteSQLTemplateAction(query, dataNode);
-    }
-
-    /**
-     * @since 4.1
-     */
-    @Override
-    public <T> SQLAction objectSelectAction(SelectQuery<T> query) {
-        return new SQLiteSelectAction(query, dataNode);
+    protected int getInMemoryOffset(int queryOffset) {
+        return 0;
     }
 }
