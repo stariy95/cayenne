@@ -22,9 +22,11 @@ package org.apache.cayenne.dba.db2;
 import java.sql.PreparedStatement;
 import java.sql.Types;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
@@ -41,6 +43,7 @@ import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.configuration.RuntimeProperties;
 import org.apache.cayenne.dba.JdbcAdapter;
 import org.apache.cayenne.dba.PkGenerator;
+import org.apache.cayenne.dba.derby.DerbySqlTreeProcessor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.query.Query;
@@ -152,6 +155,11 @@ public class DB2Adapter extends JdbcAdapter {
         QualifierTranslator translator = new DB2QualifierTranslator(queryAssembler, TRIM_FUNCTION);
         translator.setCaseInsensitive(caseInsensitiveCollations);
         return translator;
+    }
+
+    @Override
+    public Function<Node, Node> getSqlTreeProcessor() {
+        return new DB2SqlTreeProcessor();
     }
 
     /**
