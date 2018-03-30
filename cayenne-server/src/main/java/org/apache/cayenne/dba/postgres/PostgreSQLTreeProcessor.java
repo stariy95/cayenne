@@ -22,89 +22,52 @@ package org.apache.cayenne.dba.postgres;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
+import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.dba.derby.sqltree.DerbyColumnNode;
 import org.apache.cayenne.dba.postgres.sqltree.PostgresLimitOffsetNode;
 
 /**
  * @since 4.1
  */
-public class PostgreSQLTreeProcessor implements Function<Node, Node> {
+public class PostgreSQLTreeProcessor extends BaseSQLTreeProcessor {
 
     private static final Set<String> EXTRACT_FUNCTION_NAMES = new HashSet<>(Arrays.asList(
-            "DAY_OF_MONTH", "DAY", "MONTH", "HOUR", "WEEK", "YEAR", "DAY_OF_WEEK", "DAY_OF_YEAR", "MINUTE", "SECOND"
+        "DAY_OF_MONTH", "DAY", "MONTH", "HOUR", "WEEK", "YEAR", "DAY_OF_WEEK", "DAY_OF_YEAR", "MINUTE", "SECOND"
     ));
 
+    @Override
+    protected void onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
+        replaceChild(parent, index, new PostgresLimitOffsetNode(child), false);
+    }
 
     @Override
-    public Node apply(Node node) {
-        NodeTreeVisitor visitor = new NodeTreeVisitor() {
-            @Override
-            public void onNodeStart(Node node) {
+    protected void onColumnNode(Node parent, ColumnNode child, int index) {
+        replaceChild(parent, index, new TrimmingColumnNode(child));
+    }
 
-            }
+    @Override
+    protected void onFunctionNode(Node parent, FunctionNode child, int index) {
+        Node replacement = null;
+        String functionName = child.getFunctionName();
+        if(EXTRACT_FUNCTION_NAMES.contains(functionName)) {
+            replacement = new PostgresExtractFunctionNode(functionName);
+        } else if("CURRENT_DATE".equals(functionName)
+                || "CURRENT_TIME".equals(functionName)
+                || "CURRENT_TIMESTAMP".equals(functionName)) {
+            replacement = new FunctionNode(functionName, child.getAlias(), false);
+        } else if("LOCATE".equals(functionName)) {
+            replacement = new PositionFunctionNode(child.getAlias());
+        }
 
-            @Override
-            public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
-                if(node.getType() == NodeType.LIMIT_OFFSET) {
-                    LimitOffsetNode limitOffsetNode = (LimitOffsetNode)node;
-                    Node replacement = new PostgresLimitOffsetNode(limitOffsetNode);
-                    parent.replaceChild(index, replacement);
-                } else if(node.getType() == NodeType.COLUMN) {
-                    DerbyColumnNode replacement = new DerbyColumnNode((ColumnNode)node);
-                    for(int i=0; i<node.getChildrenCount(); i++) {
-                        replacement.addChild(node.getChild(i));
-                    }
-                    parent.replaceChild(index, replacement);
-                } else if(node.getType() == NodeType.FUNCTION) {
-                    FunctionNode oldNode = (FunctionNode) node;
-                    String functionName = oldNode.getFunctionName();
-                    if(EXTRACT_FUNCTION_NAMES.contains(functionName)) {
-                        Node replacement = new PostgresExtractFunctionNode(functionName);
-                        for(int i=0; i<node.getChildrenCount(); i++) {
-                            replacement.addChild(node.getChild(i));
-                        }
-                        parent.replaceChild(index, replacement);
-                    } else if("CURRENT_DATE".equals(functionName)
-                            || "CURRENT_TIME".equals(functionName)
-                            || "CURRENT_TIMESTAMP".equals(functionName)) {
-                        FunctionNode replacement = new FunctionNode(functionName, oldNode.getAlias(), false);
-                        parent.replaceChild(index, replacement);
-                    } else if("LOCATE".equals(functionName)) {
-                        FunctionNode replacement = new FunctionNode("POSITION", oldNode.getAlias(), true) {
-                            @Override
-                            public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-                                builder.append(" IN ");
-                            }
-                        };
-                        for(int i=0; i<node.getChildrenCount(); i++) {
-                            replacement.addChild(node.getChild(i));
-                        }
-                        parent.replaceChild(index, replacement);
-                    }
-                }
-            }
-
-            @Override
-            public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
-
-            }
-
-            @Override
-            public void onNodeEnd(Node node) {
-
-            }
-        };
-        node.visit(visitor);
-        return node;
+        if(replacement != null) {
+            replaceChild(parent, index, replacement);
+        }
     }
 
     private static class PostgresExtractFunctionNode extends Node {
@@ -137,6 +100,22 @@ public class PostgreSQLTreeProcessor implements Function<Node, Node> {
         @Override
         public Node copy() {
             return new PostgresExtractFunctionNode(functionName);
+        }
+    }
+
+    private static class PositionFunctionNode extends FunctionNode {
+        public PositionFunctionNode(String alias) {
+            super("POSITION", alias, true);
+        }
+
+        @Override
+        public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+            builder.append(" IN ");
+        }
+
+        @Override
+        public Node copy() {
+            return new PositionFunctionNode(getAlias());
         }
     }
 }

@@ -17,30 +17,25 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.sqlserver;
+package org.apache.cayenne.dba.firebird;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
-import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
+import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.dba.JdbcActionBuilder;
+import org.apache.cayenne.query.SQLAction;
+import org.apache.cayenne.query.SelectQuery;
 
 /**
  * @since 4.1
  */
-public class SQLServerColumnNode extends TrimmingColumnNode {
+public class FirebirdActionBuilder extends JdbcActionBuilder {
 
-    public SQLServerColumnNode(ColumnNode columnNode) {
-        super(columnNode);
+    public FirebirdActionBuilder(DataNode dataNode) {
+        super(dataNode);
     }
 
-    @Override
-    protected void appendClobColumnNode(QuotingAppendable buffer) {
-        buffer.append("CAST(");
-        appendColumnNode(buffer);
-        buffer.append(" AS NVARCHAR(MAX))");
-    }
 
     @Override
-    public SQLServerColumnNode copy() {
-        return new SQLServerColumnNode(columnNode.deepCopy());
+    public <T> SQLAction objectSelectAction(SelectQuery<T> query) {
+        return new FirebirdSelectAction(query, dataNode);
     }
 }

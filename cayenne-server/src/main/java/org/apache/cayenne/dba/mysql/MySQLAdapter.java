@@ -114,7 +114,7 @@ public class MySQLAdapter extends JdbcAdapter {
 
 	@Override
 	public Function<Node, Node> getSqlTreeProcessor() {
-		return new MySQLTreeProcessor();
+		return MySQLTreeProcessor.getInstance();
 	}
 
 	@Override

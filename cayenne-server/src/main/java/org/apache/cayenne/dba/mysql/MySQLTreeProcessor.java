@@ -19,57 +19,40 @@
 
 package org.apache.cayenne.dba.mysql;
 
-import java.util.function.Function;
-
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
 import org.apache.cayenne.dba.mysql.sqltree.MysqlLimitOffsetNode;
 
 /**
  * @since 4.1
  */
-public class MySQLTreeProcessor implements Function<Node, Node> {
+public class MySQLTreeProcessor extends BaseSQLTreeProcessor {
+
+    private static final MySQLTreeProcessor INSTANCE = new MySQLTreeProcessor();
+
+    public static MySQLTreeProcessor getInstance() {
+        return INSTANCE;
+    }
+
+    private MySQLTreeProcessor() {
+    }
+
     @Override
-    public Node apply(Node node) {
-        NodeTreeVisitor visitor = new NodeTreeVisitor() {
-            @Override
-            public void onNodeStart(Node node) {
-            }
+    protected void onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
+        Node replacement = new MysqlLimitOffsetNode(child.getLimit(), child.getOffset());
+        replaceChild(parent, index, replacement, false);
+    }
 
-            @Override
-            public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
-                if(node.getType() == NodeType.LIMIT_OFFSET) {
-                    LimitOffsetNode limitOffsetNode = (LimitOffsetNode)node;
-                    Node replacement = new MysqlLimitOffsetNode(limitOffsetNode.getLimit(), limitOffsetNode.getOffset());
-                    node.getParent().replaceChild(index, replacement);
-                } else if(node.getType() == NodeType.FUNCTION) {
-                    FunctionNode oldNode = (FunctionNode) node;
-                    String functionName = oldNode.getFunctionName();
-                    if("DAY_OF_MONTH".equals(functionName)
-                            || "DAY_OF_WEEK".equals(functionName)
-                            || "DAY_OF_YEAR".equals(functionName)) {
-                        // hsqldb variants are without '_'
-                        FunctionNode replacement = new FunctionNode(functionName.replace("_", ""), oldNode.getAlias(), true);
-                        for (int i = 0; i < node.getChildrenCount(); i++) {
-                            replacement.addChild(node.getChild(i));
-                        }
-                        node.getParent().replaceChild(index, replacement);
-                    }
-                }
-            }
-
-            @Override
-            public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
-            }
-
-            @Override
-            public void onNodeEnd(Node node) {
-            }
-        };
-        node.visit(visitor);
-        return node;
+    @Override
+    protected void onFunctionNode(Node parent, FunctionNode child, int index) {
+        String functionName = child.getFunctionName();
+        if("DAY_OF_MONTH".equals(functionName)
+                || "DAY_OF_WEEK".equals(functionName)
+                || "DAY_OF_YEAR".equals(functionName)) {
+            FunctionNode replacement = new FunctionNode(functionName.replace("_", ""), child.getAlias(), true);
+            replaceChild(parent, index, replacement);
+        }
     }
 }

@@ -19,145 +19,109 @@
 
 package org.apache.cayenne.dba.sqlserver;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.EmptyNode;
-import org.apache.cayenne.access.sqlbuilder.sqltree.ExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.sqlbuilder.sqltree.OpExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TopNode;
-import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.dba.derby.sqltree.DerbyColumnNode;
+import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
 
 /**
  * @since 4.1
  */
-public class SQLServerTreeProcessor implements Function<Node, Node> {
+public class SQLServerTreeProcessor extends BaseSQLTreeProcessor {
 
     @Override
-    public Node apply(Node node) {
-
-        AtomicInteger limit = new AtomicInteger();
-
-        NodeTreeVisitor visitor = new NodeTreeVisitor() {
-
-            @Override
-            public void onNodeStart(Node node) {
-
-            }
-
-            @Override
-            public void onChildNodeStart(Node parent, Node child, int index, boolean hasMore) {
-                if(child.getType() == NodeType.COLUMN) {
-                    SQLServerColumnNode replacement = new SQLServerColumnNode((ColumnNode)child);
-                    for(int i=0; i<child.getChildrenCount(); i++) {
-                        replacement.addChild(child.getChild(i));
-                    }
-                    parent.replaceChild(index, replacement);
-                } else if(child.getType() == NodeType.LIMIT_OFFSET) {
-                    LimitOffsetNode limitNode = (LimitOffsetNode)child;
-                    if(limitNode.getLimit() > 0) {
-                        limit.set(limitNode.getLimit() + limitNode.getOffset());
-                    }
-                    parent.replaceChild(index, new EmptyNode());
-                } else if(child.getType() == NodeType.FUNCTION) {
-                    FunctionNode oldNode = (FunctionNode) child;
-                    String functionName = oldNode.getFunctionName();
-                    Node replacement = null;
-                    switch (functionName) {
-                        case "LENGTH":
-                            replacement = new FunctionNode("LEN", oldNode.getAlias(), true);
-                            break;
-                        case "LOCATE":
-                            replacement = new FunctionNode("CHARINDEX", oldNode.getAlias(), true);
-                            break;
-                        case "MOD":
-                            replacement = new ExpressionNode() {
-                                @Override
-                                public void appendChildSeparator(QuotingAppendable builder, int childInd) {
-                                    builder.append('%');
-                                }
-                            };
-                            break;
-                        case "TRIM":
-                            Node rtrim = new FunctionNode("RTRIM", null, true);
-                            replacement = new FunctionNode("LTRIM", oldNode.getAlias(), true);
-                            for(int i=0; i<child.getChildrenCount(); i++) {
-                                rtrim.addChild(child.getChild(i));
-                            }
-                            replacement.addChild(rtrim);
-                            parent.replaceChild(index, replacement);
-                            return;
-                        case "CURRENT_DATE":
-                            replacement = new FunctionNode("{fn CURDATE()}", oldNode.getAlias(), false);
-                            break;
-                        case "CURRENT_TIME":
-                            replacement = new FunctionNode("{fn CURTIME()}", oldNode.getAlias(), false);
-                            break;
-                        case "CURRENT_TIMESTAMP":
-                            replacement = new FunctionNode("CURRENT_TIMESTAMP", oldNode.getAlias(), false);
-                            break;
-
-                        case "YEAR":
-                        case "MONTH":
-                        case "WEEK":
-                        case "DAY_OF_YEAR":
-                        case "DAY":
-                        case "DAY_OF_MONTH":
-                        case "DAY_OF_WEEK":
-                        case "HOUR":
-                        case "MINUTE":
-                        case "SECOND":
-                            replacement = new FunctionNode("DATEPART", oldNode.getAlias(), true);
-                            if("DAY_OF_MONTH".equals(functionName)) {
-                                functionName = "DAY";
-                            } else if("DAY_OF_WEEK".equals(functionName)) {
-                                functionName = "WEEKDAY";
-                            } else if("DAY_OF_YEAR".equals(functionName)) {
-                                functionName = "DAYOFYEAR";
-                            }
-                            replacement.addChild(new TextNode(functionName));
-                            break;
-                    }
-
-                    if(replacement != null) {
-                        for(int i=0; i<child.getChildrenCount(); i++) {
-                            replacement.addChild(child.getChild(i));
-                        }
-                        parent.replaceChild(index, replacement);
-                    }
-                }
-            }
-
-            @Override
-            public void onChildNodeEnd(Node parent, Node child, int index, boolean hasMore) {
-
-            }
-
-            @Override
-            public void onNodeEnd(Node node) {
-
-            }
-        };
-
-        node.visit(visitor);
-        if(limit.get() > 0) {
-            // "SELECT DISTINCT TOP N" vs "SELECT TOP N"
+    protected void onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
+        // SQLServer uses "SELECT DISTINCT TOP N" or "SELECT TOP N" instead of LIMIT
+        // Offset will be calculated in-memory
+        replaceChild(parent, index, new EmptyNode(), false);
+        if(child.getLimit() > 0) {
+            int limit = child.getLimit() + child.getOffset();
+            // we have root actually as input for processor, but it's better to keep processor stateless
+            // root shouldn't be far from limit's parent (likely it will be parent itself)
+            Node root = getRoot(parent);
             int idx = 0;
-            if(node.getChild(0).getType() == NodeType.DISTINCT) {
+            if(root.getChild(0).getType() == NodeType.DISTINCT) {
                 idx = 1;
             }
-            node.addChild(idx, new TopNode(limit.get()));
+            root.addChild(idx, new TopNode(limit));
+        }
+    }
+
+    private Node getRoot(Node node) {
+        while(node.getParent() != null) {
+            node = node.getParent();
+        }
+        return node;
+    }
+
+    @Override
+    protected void onColumnNode(Node parent, ColumnNode child, int index) {
+        replaceChild(parent, index,  new SQLServerColumnNode(child));
+    }
+
+    @Override
+    protected void onFunctionNode(Node parent, FunctionNode child, int index) {
+        String functionName = child.getFunctionName();
+        Node replacement = null;
+        switch (functionName) {
+            case "LENGTH":
+                replacement = new FunctionNode("LEN", child.getAlias(), true);
+                break;
+            case "LOCATE":
+                replacement = new FunctionNode("CHARINDEX", child.getAlias(), true);
+                break;
+            case "MOD":
+                replacement = new OpExpressionNode("%");
+                break;
+            case "TRIM":
+                Node rtrim = new FunctionNode("RTRIM", null, true);
+                replacement = new FunctionNode("LTRIM", child.getAlias(), true);
+                for(int i=0; i<child.getChildrenCount(); i++) {
+                    rtrim.addChild(child.getChild(i));
+                }
+                replacement.addChild(rtrim);
+                parent.replaceChild(index, replacement);
+                return;
+            case "CURRENT_DATE":
+                replacement = new FunctionNode("{fn CURDATE()}", child.getAlias(), false);
+                break;
+            case "CURRENT_TIME":
+                replacement = new FunctionNode("{fn CURTIME()}", child.getAlias(), false);
+                break;
+            case "CURRENT_TIMESTAMP":
+                replacement = new FunctionNode("CURRENT_TIMESTAMP", child.getAlias(), false);
+                break;
+
+            case "YEAR":
+            case "MONTH":
+            case "WEEK":
+            case "DAY_OF_YEAR":
+            case "DAY":
+            case "DAY_OF_MONTH":
+            case "DAY_OF_WEEK":
+            case "HOUR":
+            case "MINUTE":
+            case "SECOND":
+                replacement = new FunctionNode("DATEPART", child.getAlias(), true);
+                if("DAY_OF_MONTH".equals(functionName)) {
+                    functionName = "DAY";
+                } else if("DAY_OF_WEEK".equals(functionName)) {
+                    functionName = "WEEKDAY";
+                } else if("DAY_OF_YEAR".equals(functionName)) {
+                    functionName = "DAYOFYEAR";
+                }
+                replacement.addChild(new TextNode(functionName));
+                break;
         }
 
-
-        return node;
+        if(replacement != null) {
+            replaceChild(parent, index, replacement);
+        }
     }
 }

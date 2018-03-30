@@ -17,30 +17,28 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.sqlserver;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
 
 /**
  * @since 4.1
  */
-public class SQLServerColumnNode extends TrimmingColumnNode {
+public class OpExpressionNode extends ExpressionNode {
 
-    public SQLServerColumnNode(ColumnNode columnNode) {
-        super(columnNode);
+    private final String op;
+
+    public OpExpressionNode(String op) {
+        this.op = op;
     }
 
     @Override
-    protected void appendClobColumnNode(QuotingAppendable buffer) {
-        buffer.append("CAST(");
-        appendColumnNode(buffer);
-        buffer.append(" AS NVARCHAR(MAX))");
+    public void appendChildSeparator(QuotingAppendable builder, int childInd) {
+        builder.append(' ').append(op).append(' ');
     }
 
     @Override
-    public SQLServerColumnNode copy() {
-        return new SQLServerColumnNode(columnNode.deepCopy());
+    public Node copy() {
+        return new OpExpressionNode(op);
     }
 }

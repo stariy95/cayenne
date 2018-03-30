@@ -17,38 +17,41 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.derby;
+package org.apache.cayenne.dba.db2;
 
-import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.OpExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.OffsetFetchNextNode;
-import org.apache.cayenne.access.sqlbuilder.sqltree.OpExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
 import org.apache.cayenne.dba.derby.sqltree.DerbyValueNode;
+import org.apache.cayenne.dba.mysql.sqltree.MysqlLimitOffsetNode;
 
 /**
  * @since 4.1
  */
-public class DerbySqlTreeProcessor extends BaseSQLTreeProcessor {
+public class DB2SQLTreeProcessor extends BaseSQLTreeProcessor {
+
 
     @Override
     protected void onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
-        replaceChild(parent, index, new OffsetFetchNextNode(child), false);
+        Node replacement = new MysqlLimitOffsetNode(child.getLimit(), child.getOffset());
+        replaceChild(parent, index, replacement, false);
     }
 
     @Override
     protected void onColumnNode(Node parent, ColumnNode child, int index) {
-        replaceChild(parent, index, new TrimmingColumnNode(child));
+        TrimmingColumnNode replacement = new TrimmingColumnNode(child);
+        replaceChild(parent, index, replacement);
     }
 
     @Override
     protected void onValueNode(Node parent, ValueNode child, int index) {
-        replaceChild(parent, index, new DerbyValueNode(child.getValue(), child.getAttribute()));
+        Node replacement = new DerbyValueNode(child.getValue(), child.getAttribute());
+        replaceChild(parent, index, replacement, false);
     }
 
     @Override
@@ -65,10 +68,10 @@ public class DerbySqlTreeProcessor extends BaseSQLTreeProcessor {
                 return new FunctionNode("SUBSTR", child.getAlias(), true);
             case "DAY_OF_MONTH":
                 return new FunctionNode("DAY", child.getAlias(), true);
-            case "WEEK":
             case "DAY_OF_WEEK":
+                return new FunctionNode("DAYOFWEEK", child.getAlias(), true);
             case "DAY_OF_YEAR":
-                throw new CayenneRuntimeException("Function %s() is unsupported in Derby.", child.getFunctionName());
+                return new FunctionNode("DAYOFYEAR", child.getAlias(), true);
             case "CURRENT_DATE":
             case "CURRENT_TIME":
             case "CURRENT_TIMESTAMP":
@@ -78,4 +81,5 @@ public class DerbySqlTreeProcessor extends BaseSQLTreeProcessor {
         }
         return null;
     }
+
 }

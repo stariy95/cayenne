@@ -20,6 +20,8 @@
 package org.apache.cayenne.dba.firebird;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
@@ -34,9 +36,12 @@ import org.apache.cayenne.configuration.RuntimeProperties;
 import org.apache.cayenne.dba.JdbcAdapter;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.query.Query;
+import org.apache.cayenne.query.SQLAction;
 import org.apache.cayenne.resource.ResourceLocator;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for <a href="http://www.firebirdsql.org">FirebirdSQL
@@ -112,7 +117,17 @@ public class FirebirdAdapter extends JdbcAdapter {
     }
 
     @Override
+    public Function<Node, Node> getSqlTreeProcessor() {
+        return new FirebirdSQLTreeProcessor();
+    }
+
+    @Override
     public EJBQLTranslatorFactory getEjbqlTranslatorFactory() {
         return new FirebirdEJBQLTranslatorFactory();
+    }
+
+    @Override
+    public SQLAction getAction(Query query, DataNode node) {
+        return query.createSQLAction(new FirebirdActionBuilder(node));
     }
 }

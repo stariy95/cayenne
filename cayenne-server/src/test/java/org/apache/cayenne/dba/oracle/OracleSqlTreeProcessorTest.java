@@ -28,39 +28,4 @@ import static org.junit.Assert.*;
  */
 public class OracleSqlTreeProcessorTest {
 
-    @Test
-    public void sliceArray() {
-        int[] array = {1, 2, 3, 4, 5, 6, 7};
-
-        int[][] result = OracleSqlTreeProcessor.sliceArray(array, 2);
-
-        assertEquals(4, result.length);
-        assertArrayEquals(new int[]{1, 2}, result[0]);
-        assertArrayEquals(new int[]{3, 4}, result[1]);
-        assertArrayEquals(new int[]{5, 6}, result[2]);
-        assertArrayEquals(new int[]{7},    result[3]);
-
-        int[][] result2 = OracleSqlTreeProcessor.sliceArray(array, 4);
-
-        assertEquals(2, result2.length);
-        assertArrayEquals(new int[]{1, 2, 3, 4}, result2[0]);
-        assertArrayEquals(new int[]{5, 6, 7}, result2[1]);
-
-        int[][] result3 = OracleSqlTreeProcessor.sliceArray(array, 7);
-
-        assertEquals(1, result3.length);
-        assertArrayEquals(array, result3[0]);
-
-        int[][] result4 = OracleSqlTreeProcessor.sliceArray(array, 10);
-
-        assertEquals(1, result4.length);
-        assertArrayEquals(array, result4[0]);
-
-        int[] array2 = {1, 2, 3, 4, 5, 6, 7, 8};
-        int[][] result5 = OracleSqlTreeProcessor.sliceArray(array2, 4);
-
-        assertEquals(2, result5.length);
-        assertArrayEquals(new int[]{1, 2, 3, 4}, result5[0]);
-        assertArrayEquals(new int[]{5, 6, 7, 8}, result5[1]);
-    }
 }

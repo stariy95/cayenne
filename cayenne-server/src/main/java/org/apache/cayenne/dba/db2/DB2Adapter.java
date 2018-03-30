@@ -43,7 +43,6 @@ import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.configuration.RuntimeProperties;
 import org.apache.cayenne.dba.JdbcAdapter;
 import org.apache.cayenne.dba.PkGenerator;
-import org.apache.cayenne.dba.derby.DerbySqlTreeProcessor;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.query.Query;
@@ -159,7 +158,7 @@ public class DB2Adapter extends JdbcAdapter {
 
     @Override
     public Function<Node, Node> getSqlTreeProcessor() {
-        return new DB2SqlTreeProcessor();
+        return new DB2SQLTreeProcessor();
     }
 
     /**

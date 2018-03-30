@@ -17,30 +17,36 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.sqlserver;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
 
 /**
  * @since 4.1
  */
-public class SQLServerColumnNode extends TrimmingColumnNode {
+public class OffsetFetchNextNode extends LimitOffsetNode {
 
-    public SQLServerColumnNode(ColumnNode columnNode) {
-        super(columnNode);
+    public OffsetFetchNextNode(LimitOffsetNode node) {
+        super(node.getLimit(), node.getOffset());
+    }
+
+    private OffsetFetchNextNode(int limit, int offset) {
+        super(limit, offset);
     }
 
     @Override
-    protected void appendClobColumnNode(QuotingAppendable buffer) {
-        buffer.append("CAST(");
-        appendColumnNode(buffer);
-        buffer.append(" AS NVARCHAR(MAX))");
+    public void append(QuotingAppendable buffer) {
+        // OFFSET X ROWS FETCH NEXT Y ROWS ONLY
+        if(offset > 0) {
+            buffer.append("OFFSET ").append(offset).append(" ROWS ");
+        }
+        if(limit > 0) {
+            buffer.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
+        }
     }
 
     @Override
-    public SQLServerColumnNode copy() {
-        return new SQLServerColumnNode(columnNode.deepCopy());
+    public Node copy() {
+        return new OffsetFetchNextNode(limit, offset);
     }
 }

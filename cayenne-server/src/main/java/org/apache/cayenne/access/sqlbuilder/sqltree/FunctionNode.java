@@ -30,6 +30,10 @@ public class FunctionNode extends Node {
     private final String alias;
     private final boolean needParentheses;
 
+    public FunctionNode(String functionName, String alias) {
+        this(functionName, alias, true);
+    }
+
     public FunctionNode(String functionName, String alias, boolean needParentheses) {
         this.functionName = functionName;
         this.alias = alias;

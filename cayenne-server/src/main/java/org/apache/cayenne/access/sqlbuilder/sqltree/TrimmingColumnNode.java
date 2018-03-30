@@ -17,24 +17,20 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.derby.sqltree;
+package org.apache.cayenne.access.sqlbuilder.sqltree;
 
 import java.sql.Types;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
-import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
  * @since 4.1
  */
-public class DerbyColumnNode extends Node {
+public class TrimmingColumnNode extends Node {
 
     protected ColumnNode columnNode ;
 
-    public DerbyColumnNode(ColumnNode columnNode) {
+    public TrimmingColumnNode(ColumnNode columnNode) {
         this.columnNode = columnNode;
     }
 
@@ -119,6 +115,6 @@ public class DerbyColumnNode extends Node {
 
     @Override
     public Node copy() {
-        return new DerbyColumnNode(columnNode.deepCopy());
+        return new TrimmingColumnNode(columnNode.deepCopy());
     }
 }

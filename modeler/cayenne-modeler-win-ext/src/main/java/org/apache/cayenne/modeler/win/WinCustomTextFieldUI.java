@@ -38,7 +38,7 @@ public class WinCustomTextFieldUI extends BasicTextFieldUI {
         if(c instanceof EditorTextField) {
             c.putClientProperty("TextField.fullSizeBackground", Boolean.TRUE);
         }
-        return new WindowsTextFieldUI();
+        return null;//new WindowsTextFieldUI();
     }
 
 }

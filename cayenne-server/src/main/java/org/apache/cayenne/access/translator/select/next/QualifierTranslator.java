@@ -34,6 +34,7 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.InNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.NotEqualNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.OpExpressionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TextNode;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.Property;
@@ -191,13 +192,7 @@ class QualifierTranslator implements TraversalHandler {
             case LESS_THAN_EQUAL_TO:
             case GREATER_THAN:
             case GREATER_THAN_EQUAL_TO:
-                // TODO: class with clone support
-                return new ExpressionNode() {
-                    @Override
-                    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-                        builder.append(' ').append(expToStr(node.getType())).append(' ');
-                    }
-                };
+                return new OpExpressionNode(expToStr(node.getType()));
 
             case TRUE:
             case FALSE:

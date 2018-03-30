@@ -17,30 +17,34 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.sqlserver;
+package org.apache.cayenne.dba.firebird;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
 
 /**
  * @since 4.1
  */
-public class SQLServerColumnNode extends TrimmingColumnNode {
+class FirebirdLimitNode extends Node {
+    private final int from;
+    private final int to;
 
-    public SQLServerColumnNode(ColumnNode columnNode) {
-        super(columnNode);
+    public FirebirdLimitNode(int from, int to) {
+        this.from = from;
+        this.to = to;
     }
 
     @Override
-    protected void appendClobColumnNode(QuotingAppendable buffer) {
-        buffer.append("CAST(");
-        appendColumnNode(buffer);
-        buffer.append(" AS NVARCHAR(MAX))");
+    public void append(QuotingAppendable buffer) {
+        buffer.append("ROWS ");
+        if(from > 0) {
+            buffer.append(from).append(" TO ");
+        }
+        buffer.append(to);
     }
 
     @Override
-    public SQLServerColumnNode copy() {
-        return new SQLServerColumnNode(columnNode.deepCopy());
+    public Node copy() {
+        return new FirebirdLimitNode(from, to);
     }
 }

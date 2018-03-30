@@ -17,30 +17,45 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.sqlserver;
+package org.apache.cayenne.dba.firebird;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
-import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
 
 /**
+ * SUBSTRING function for Firebird
+ *
+ * It has following format:
+ *
+ * SUBSTRING (string FROM CAST(? AS INTEGER) FOR CAST(? AS INTEGER))
+ *
  * @since 4.1
  */
-public class SQLServerColumnNode extends TrimmingColumnNode {
-
-    public SQLServerColumnNode(ColumnNode columnNode) {
-        super(columnNode);
+class FirebirdSubstringFunctionNode extends FunctionNode {
+    public FirebirdSubstringFunctionNode(String alias) {
+        super("SUBSTRING", alias);
     }
 
     @Override
-    protected void appendClobColumnNode(QuotingAppendable buffer) {
-        buffer.append("CAST(");
-        appendColumnNode(buffer);
-        buffer.append(" AS NVARCHAR(MAX))");
+    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+        if(childIdx == 0) {
+            builder.append(" FROM CAST(");
+        } else if(childIdx == 1) {
+            builder.append(" AS INTEGER) FOR CAST(");
+        }
     }
 
     @Override
-    public SQLServerColumnNode copy() {
-        return new SQLServerColumnNode(columnNode.deepCopy());
+    public void appendChildrenEnd(QuotingAppendable builder) {
+        if(getAlias() == null || isResultNode()) {
+            builder.append(" AS INTEGER)");
+        }
+        super.appendChildrenEnd(builder);
+    }
+
+    @Override
+    public Node copy() {
+        return new FirebirdSubstringFunctionNode(getAlias());
     }
 }

@@ -19,44 +19,19 @@
 
 package org.apache.cayenne.dba.h2;
 
-import java.util.function.Function;
-
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeTreeVisitor;
-import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
-import org.apache.cayenne.dba.derby.sqltree.DerbyLimitOffsetNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.OffsetFetchNextNode;
+import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
 
 /**
  * @since 4.1
  */
-public class H2SqlTreeProcessor implements Function<Node, Node> {
+public class H2SqlTreeProcessor extends BaseSQLTreeProcessor {
 
     @Override
-    public Node apply(Node node) {
-        NodeTreeVisitor visitor = new NodeTreeVisitor() {
-            @Override
-            public void onNodeStart(Node node) {
-            }
-
-            @Override
-            public void onChildNodeStart(Node parent, Node node, int index, boolean hasMore) {
-                if(node.getType() == NodeType.LIMIT_OFFSET) {
-                    Node replacement = new DerbyLimitOffsetNode((LimitOffsetNode)node);
-                    node.getParent().replaceChild(index, replacement);
-                }
-            }
-
-            @Override
-            public void onChildNodeEnd(Node parent, Node node, int index, boolean hasMore) {
-            }
-
-            @Override
-            public void onNodeEnd(Node node) {
-            }
-        };
-
-        node.visit(visitor);
-        return node;
+    protected void onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
+        replaceChild(parent, index, new OffsetFetchNextNode(child), false);
     }
+
 }
