@@ -21,6 +21,7 @@ package org.apache.cayenne.dba.ingres;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
@@ -47,6 +48,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for <a
@@ -75,17 +77,14 @@ public class IngresAdapter extends JdbcAdapter {
 		setSupportsGeneratedKeys(true);
 	}
 
-	/**
-	 * @since 4.0
-	 */
-	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new IngresSelectTranslator(query, this, entityResolver);
-	}
-
 	@Override
 	public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
 		return new IngresQualifierTranslator(queryAssembler);
+	}
+
+	@Override
+	public Function<Node, Node> getSqlTreeProcessor() {
+		return new IngressSQLTreeProcessor();
 	}
 
 	@Override
