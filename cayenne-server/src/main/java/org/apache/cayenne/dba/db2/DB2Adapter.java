@@ -30,8 +30,6 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
-import org.apache.cayenne.access.translator.select.QualifierTranslator;
-import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.types.BooleanType;
 import org.apache.cayenne.access.types.ByteArrayType;
 import org.apache.cayenne.access.types.CharType;
@@ -146,15 +144,6 @@ public class DB2Adapter extends JdbcAdapter {
         return type == Types.LONGVARCHAR || type == Types.LONGVARBINARY || super.typeSupportsLength(type);
     }
 
-    /**
-     * Returns a trimming translator.
-     */
-    @Override
-    public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-        QualifierTranslator translator = new DB2QualifierTranslator(queryAssembler, TRIM_FUNCTION);
-        translator.setCaseInsensitive(caseInsensitiveCollations);
-        return translator;
-    }
 
     @Override
     public Function<Node, Node> getSqlTreeProcessor() {

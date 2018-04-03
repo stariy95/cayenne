@@ -46,7 +46,6 @@ import org.apache.cayenne.util.Util;
  * if there is no Persistent objects in the result Collection it will be iterated as is, without faulting anything.
  *
  * @see QueryMetadata#getPageSize()
- * @see org.apache.cayenne.access.translator.select.DefaultSelectTranslator
  * @see org.apache.cayenne.query.SelectQueryMetadata
  *
  * @since 4.0

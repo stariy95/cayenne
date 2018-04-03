@@ -47,6 +47,7 @@ import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
  * 
  * @since 3.0
  */
+@Deprecated
 public class JoinStack {
 
 	protected JoinTreeNode rootNode;

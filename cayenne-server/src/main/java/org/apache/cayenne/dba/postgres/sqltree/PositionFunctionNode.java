@@ -17,37 +17,27 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.dba.openbase;
+package org.apache.cayenne.dba.postgres.sqltree;
 
-import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
-import org.apache.cayenne.access.translator.select.JoinStack;
-import org.apache.cayenne.dba.DbAdapter;
-import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.query.Query;
+import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
 /**
- * @since 1.2
+ * @since 4.1
  */
-class OpenBaseSelectTranslator extends DefaultSelectTranslator {
+public class PositionFunctionNode extends FunctionNode {
+    public PositionFunctionNode(String alias) {
+        super("POSITION", alias, true);
+    }
 
-	/**
-	 * @since 4.0
-	 */
-	public OpenBaseSelectTranslator(Query query, DbAdapter adapter, EntityResolver entityResolver) {
-		super(query, adapter, entityResolver);
-	}
+    @Override
+    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+        builder.append(" IN ");
+    }
 
-	@Override
-	protected JoinStack createJoinStack() {
-		return new OpenBaseJoinStack(getAdapter(), this);
-	}
-
-	@Override
-	protected void appendLimitAndOffsetClauses() {
-		int limit = queryMetadata.getFetchLimit();
-		if (limit > 0) {
-			// TODO: buffer.append(" RETURN RESULTS ").append(limit);
-		}
-	}
-
+    @Override
+    public Node copy() {
+        return new PositionFunctionNode(getAlias());
+    }
 }

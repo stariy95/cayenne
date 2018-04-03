@@ -62,6 +62,7 @@ public interface DbAdapter {
 	 */
 	SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver);
 
+	@Deprecated
 	QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler);
 
 	/**

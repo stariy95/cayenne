@@ -519,10 +519,9 @@ public class JdbcAdapter implements DbAdapter {
 	 * Creates and returns a default implementation of a qualifier translator.
 	 */
 	@Override
+	@Deprecated
 	public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-		QualifierTranslator translator = new QualifierTranslator(queryAssembler);
-		translator.setCaseInsensitive(caseInsensitiveCollations);
-		return translator;
+		return null;
 	}
 
 	/**

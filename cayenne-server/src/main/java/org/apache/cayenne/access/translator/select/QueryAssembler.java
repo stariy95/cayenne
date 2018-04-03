@@ -39,6 +39,7 @@ import org.apache.cayenne.query.QueryMetadata;
 /**
  * Abstract superclass of Query translators.
  */
+@Deprecated
 public abstract class QueryAssembler {
 
 	protected Query query;

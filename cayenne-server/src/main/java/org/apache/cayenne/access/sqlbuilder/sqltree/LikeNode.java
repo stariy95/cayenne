@@ -28,9 +28,9 @@ import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
  */
 public class LikeNode extends ExpressionNode {
 
-    private final boolean ignoreCase;
-    private final boolean not;
-    private final char escape;
+    protected final boolean ignoreCase;
+    protected final boolean not;
+    protected final char escape;
 
     public LikeNode(boolean ignoreCase, boolean not, char escape) {
         this.ignoreCase = ignoreCase;
@@ -47,15 +47,13 @@ public class LikeNode extends ExpressionNode {
 
     @Override
     public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-        builder.append(' ');
         if(ignoreCase) {
             builder.append(')');
         }
         if(not) {
-            builder.append("NOT ");
+            builder.append(" NOT ");
         }
-        builder.append("LIKE");
-        builder.append(' ');
+        builder.append(" LIKE ");
         if(ignoreCase) {
             builder.append("UPPER(");
         }

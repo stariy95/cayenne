@@ -24,8 +24,6 @@ import java.util.function.Function;
 
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.translator.select.QualifierTranslator;
-import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.access.types.ExtendedTypeFactory;
 import org.apache.cayenne.access.types.ValueObjectTypeRegistry;
@@ -89,15 +87,6 @@ public class SQLServerAdapter extends SybaseAdapter {
 		this.setSupportsBatchUpdates(true);
 	}
 
-	/**
-	 * @since 4.0
-	 */
-//	@Override
-//	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-//		return new SQLServerSelectTranslator(query, this, entityResolver);
-//	}
-
-
 	@Override
 	public Function<Node, Node> getSqlTreeProcessor() {
 		return new SQLServerTreeProcessor();
@@ -113,15 +102,5 @@ public class SQLServerAdapter extends SybaseAdapter {
 		return query.createSQLAction(new SQLServerActionBuilder(node));
 	}
 
-	/**
-	 * Returns a trimming translator.
-	 */
-	@Override
-	public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-		QualifierTranslator translator = new SQLServerTrimmingQualifierTranslator(queryAssembler,
-				SQLServerAdapter.TRIM_FUNCTION);
-		translator.setCaseInsensitive(caseInsensitiveCollations);
-		return translator;
-	}
 
 }

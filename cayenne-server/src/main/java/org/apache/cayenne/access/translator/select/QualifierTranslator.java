@@ -49,6 +49,7 @@ import org.apache.cayenne.reflect.ClassDescriptor;
  * Translates query qualifier to SQL. Used as a helper class by query
  * translators.
  */
+@Deprecated
 public class QualifierTranslator extends QueryAssemblerHelper implements TraversalHandler {
 
 	protected DataObjectMatchTranslator objectMatchTranslator;

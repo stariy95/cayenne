@@ -16,29 +16,31 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
-package org.apache.cayenne.dba.sybase;
 
-import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
-import org.apache.cayenne.dba.DbAdapter;
-import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.query.Query;
+package org.apache.cayenne.dba.postgres.sqltree;
 
-public class SybaseSelectTranslator extends DefaultSelectTranslator {
-	/**
-	 * @since 4.0
-	 */
-	public SybaseSelectTranslator(Query query, DbAdapter adapter, EntityResolver entityResolver) {
-		super(query, adapter, entityResolver);
-	}
+import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
 
-	@Override
-	protected void appendLimitAndOffsetClauses() {
+/**
+ * @since 4.1
+ */
+public class PostgresLikeNode extends LikeNode {
+    public PostgresLikeNode(boolean isNot, char escape) {
+        super(false, isNot, escape);
+    }
 
-		int limit = queryMetadata.getFetchLimit();
-		int offset = queryMetadata.getFetchOffset();
+    @Override
+    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+        if (not) {
+            builder.append(" NOT");
+        }
+        builder.append(" ILIKE ");
+    }
 
-		if (limit > 0) {
-			selectBuilder.top(offset + limit);
-		}
-	}
+    @Override
+    public Node copy() {
+        return new PostgresLikeNode(isNot(), getEscape());
+    }
 }

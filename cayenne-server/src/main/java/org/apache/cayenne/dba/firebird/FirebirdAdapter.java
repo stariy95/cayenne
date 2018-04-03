@@ -23,8 +23,6 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
-import org.apache.cayenne.access.translator.select.QualifierTranslator;
-import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.types.ByteArrayType;
 import org.apache.cayenne.access.types.CharType;
 import org.apache.cayenne.access.types.ExtendedType;
@@ -109,11 +107,6 @@ public class FirebirdAdapter extends JdbcAdapter {
         }
 
         sqlBuffer.append(column.isMandatory() ? " NOT NULL" : "");
-    }
-    
-    @Override
-    public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-        return new FirebirdQualifierTranslator(queryAssembler);
     }
 
     @Override

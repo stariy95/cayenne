@@ -25,8 +25,6 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.ParameterBinding;
 import org.apache.cayenne.access.translator.ejbql.EJBQLTranslatorFactory;
 import org.apache.cayenne.access.translator.ejbql.JdbcEJBQLTranslatorFactory;
-import org.apache.cayenne.access.translator.select.QualifierTranslator;
-import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.types.ByteType;
 import org.apache.cayenne.access.types.CharType;
 import org.apache.cayenne.access.types.ExtendedType;
@@ -169,18 +167,6 @@ public class DerbyAdapter extends JdbcAdapter {
             default:
                 return super.typeSupportsLength(type);
         }
-    }
-
-    /**
-     * Returns a trimming translator.
-     */
-    @Override
-    public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-        QualifierTranslator translator = new DerbyQualifierTranslator(
-                queryAssembler,
-                "RTRIM");
-        translator.setCaseInsensitive(caseInsensitiveCollations);
-        return translator;
     }
 
     @Override

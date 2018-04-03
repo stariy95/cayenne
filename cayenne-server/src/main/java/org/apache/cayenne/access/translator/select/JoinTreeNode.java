@@ -29,6 +29,7 @@ import java.util.Collections;
 /**
  * @since 3.0
  */
+@Deprecated
 public final class JoinTreeNode {
 
     private String targetTableAlias;

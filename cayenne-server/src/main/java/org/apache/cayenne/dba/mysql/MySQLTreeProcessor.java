@@ -20,9 +20,11 @@
 package org.apache.cayenne.dba.mysql;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
+import org.apache.cayenne.dba.mysql.sqltree.MysqlLikeNode;
 import org.apache.cayenne.dba.mysql.sqltree.MysqlLimitOffsetNode;
 
 /**
@@ -37,6 +39,13 @@ public class MySQLTreeProcessor extends BaseSQLTreeProcessor {
     }
 
     private MySQLTreeProcessor() {
+    }
+
+    @Override
+    protected void onLikeNode(Node parent, LikeNode child, int index) {
+        if(!child.isIgnoreCase()) {
+            replaceChild(parent, index, new MysqlLikeNode(child.isNot(), child.getEscape()));
+        }
     }
 
     @Override
@@ -55,4 +64,5 @@ public class MySQLTreeProcessor extends BaseSQLTreeProcessor {
             replaceChild(parent, index, replacement);
         }
     }
+
 }

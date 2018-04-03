@@ -16,35 +16,32 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
-package org.apache.cayenne.dba.ingres;
 
-import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
-import org.apache.cayenne.dba.DbAdapter;
-import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.query.Query;
+package org.apache.cayenne.dba.mysql.sqltree;
 
-public class IngresSelectTranslator extends DefaultSelectTranslator {
-    
-    /**
-     * @since 4.0
-     */
-    public IngresSelectTranslator(Query query, DbAdapter adapter, EntityResolver entityResolver) {
-        super(query, adapter, entityResolver);
+import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+import org.apache.cayenne.dba.mysql.MySQLTreeProcessor;
+
+/**
+ * @since 4.1
+ */
+public class MysqlLikeNode extends LikeNode {
+    public MysqlLikeNode(boolean isNot, char escape) {
+        super(false, isNot, escape);
     }
 
     @Override
-    protected void appendLimitAndOffsetClauses() {
-        // limit results
-        int offset = queryMetadata.getFetchOffset();
-        int limit = queryMetadata.getFetchLimit();
-
-        if (offset > 0) {
-//            buffer.append(" OFFSET ").append(offset);
+    public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
+        if (not) {
+            builder.append(" NOT");
         }
+        builder.append(" LIKE BINARY ");
+    }
 
-        // TODO: limit
-        if (limit > 0) {
-//            buffer.append(" FETCH NEXT ").append(limit).append(" ROWS ONLY ");
-        }
+    @Override
+    public Node copy() {
+        return new MysqlLikeNode(isNot(), getEscape());
     }
 }

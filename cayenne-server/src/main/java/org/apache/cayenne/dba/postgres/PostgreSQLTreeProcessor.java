@@ -25,11 +25,14 @@ import java.util.Set;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
 import org.apache.cayenne.access.translator.select.next.BaseSQLTreeProcessor;
-import org.apache.cayenne.access.translator.select.next.QuotingAppendable;
+import org.apache.cayenne.dba.postgres.sqltree.PositionFunctionNode;
+import org.apache.cayenne.dba.postgres.sqltree.PostgresExtractFunctionNode;
+import org.apache.cayenne.dba.postgres.sqltree.PostgresLikeNode;
 import org.apache.cayenne.dba.postgres.sqltree.PostgresLimitOffsetNode;
 
 /**
@@ -52,6 +55,13 @@ public class PostgreSQLTreeProcessor extends BaseSQLTreeProcessor {
     }
 
     @Override
+    protected void onLikeNode(Node parent, LikeNode child, int index) {
+        if(child.isIgnoreCase()) {
+            replaceChild(parent, index, new PostgresLikeNode(child.isNot(), child.getEscape()));
+        }
+    }
+
+    @Override
     protected void onFunctionNode(Node parent, FunctionNode child, int index) {
         Node replacement = null;
         String functionName = child.getFunctionName();
@@ -70,52 +80,4 @@ public class PostgreSQLTreeProcessor extends BaseSQLTreeProcessor {
         }
     }
 
-    private static class PostgresExtractFunctionNode extends Node {
-        private final String functionName;
-
-        public PostgresExtractFunctionNode(String functionName) {
-            this.functionName = functionName;
-        }
-
-        @Override
-        public void append(QuotingAppendable buffer) {
-            buffer.append("EXTRACT(");
-            if("DAY_OF_MONTH".equals(functionName)) {
-                buffer.append("day");
-            } else if("DAY_OF_WEEK".equals(functionName)) {
-                buffer.append("dow");
-            } else if("DAY_OF_YEAR".equals(functionName)) {
-                buffer.append("doy");
-            } else {
-                buffer.append(functionName);
-            }
-            buffer.append(" FROM ");
-        }
-
-        @Override
-        public void appendChildrenEnd(QuotingAppendable builder) {
-            builder.append(")");
-        }
-
-        @Override
-        public Node copy() {
-            return new PostgresExtractFunctionNode(functionName);
-        }
-    }
-
-    private static class PositionFunctionNode extends FunctionNode {
-        public PositionFunctionNode(String alias) {
-            super("POSITION", alias, true);
-        }
-
-        @Override
-        public void appendChildSeparator(QuotingAppendable builder, int childIdx) {
-            builder.append(" IN ");
-        }
-
-        @Override
-        public Node copy() {
-            return new PositionFunctionNode(getAlias());
-        }
-    }
 }

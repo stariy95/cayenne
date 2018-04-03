@@ -33,6 +33,7 @@ import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
 /**
  * @since 3.0
  */
+@Deprecated
 // cloned from OpenBaseJoin stack... need better strategies of reuse...
 class Oracle8JoinStack extends JoinStack {
 

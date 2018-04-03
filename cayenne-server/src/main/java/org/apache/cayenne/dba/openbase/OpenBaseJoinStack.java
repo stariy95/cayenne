@@ -38,6 +38,7 @@ import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
  *      400_OpenBaseSQL/401_SelectStatements.html
  * @since 3.0
  */
+@Deprecated
 class OpenBaseJoinStack extends JoinStack {
 
 	protected OpenBaseJoinStack(DbAdapter dbAdapter, QueryAssembler assembler) {

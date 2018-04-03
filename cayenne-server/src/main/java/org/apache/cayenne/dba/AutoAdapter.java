@@ -113,8 +113,9 @@ public class AutoAdapter implements DbAdapter {
 	}
 
 	@Override
+	@Deprecated
 	public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-		return getAdapter().getQualifierTranslator(queryAssembler);
+		return null;
 	}
 
 	@Override
