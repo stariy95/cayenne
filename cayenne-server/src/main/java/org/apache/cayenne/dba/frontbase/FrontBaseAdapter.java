@@ -20,6 +20,7 @@
 package org.apache.cayenne.dba.frontbase;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
@@ -45,6 +46,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * DbAdapter implementation for <a href="http://www.frontbase.com/">FrontBase
@@ -79,20 +81,9 @@ public class FrontBaseAdapter extends JdbcAdapter {
 		setSupportsBatchUpdates(true);
 	}
 
-	/**
-	 * @since 4.0
-	 */
 	@Override
-	public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-		return new FrontBaseSelectTranslator(query, this, entityResolver);
-	}
-
-	/**
-	 * @since 4.0
-	 */
-	@Override
-	public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-		return new FrontBaseQualifierTranslator(queryAssembler);
+	public Function<Node, Node> getSqlTreeProcessor() {
+		return new FrontBaseSQLTreeProcessor();
 	}
 
 	@Override

@@ -25,8 +25,10 @@ import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.access.translator.select.QualifierTranslator;
 import org.apache.cayenne.access.translator.select.QueryAssembler;
 import org.apache.cayenne.access.translator.select.SelectTranslator;
@@ -77,12 +79,9 @@ public class OpenBaseAdapter extends JdbcAdapter {
         this.setSupportsUniqueConstraints(false);
     }
 
-    /**
-     * @since 4.0
-     */
     @Override
-    public SelectTranslator getSelectTranslator(SelectQuery<?> query, EntityResolver entityResolver) {
-        return new OpenBaseSelectTranslator(query, this, entityResolver);
+    public Function<Node, Node> getSqlTreeProcessor() {
+        return new OpenBaseSQLTreeProcessor();
     }
 
     @Override
@@ -123,14 +122,6 @@ public class OpenBaseAdapter extends JdbcAdapter {
     public String tableTypeForView() {
         // TODO: according to OpenBase docs views *ARE* supported.
         return null;
-    }
-
-    /**
-     * Returns OpenBase-specific translator for queries.
-     */
-    @Override
-    public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-        return new OpenBaseQualifierTranslator(queryAssembler);
     }
 
     /**

@@ -20,10 +20,6 @@ package org.apache.cayenne.dba.sqlite;
 
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
-import org.apache.cayenne.access.translator.select.QualifierTranslator;
-import org.apache.cayenne.access.translator.select.QueryAssembler;
-import org.apache.cayenne.access.translator.select.SelectTranslator;
 import org.apache.cayenne.access.types.ExtendedType;
 import org.apache.cayenne.access.types.ExtendedTypeFactory;
 import org.apache.cayenne.access.types.ExtendedTypeMap;
@@ -35,13 +31,10 @@ import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
-import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.Query;
 import org.apache.cayenne.query.SQLAction;
-import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.resource.ResourceLocator;
 
-import java.sql.Types;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -93,14 +86,6 @@ public class SQLiteAdapter extends JdbcAdapter {
     }
 
     /**
-     * @since 4.0
-     */
-    @Override
-    public QualifierTranslator getQualifierTranslator(QueryAssembler queryAssembler) {
-        return new SQLiteQualifierTranslator(queryAssembler);
-    }
-
-    /**
      * @since 4.1
      */
     @Override
@@ -124,18 +109,6 @@ public class SQLiteAdapter extends JdbcAdapter {
     @Override
     public SQLAction getAction(Query query, DataNode node) {
         return query.createSQLAction(new SQLiteActionBuilder(node));
-    }
-
-    private int mapNTypes(int sqlType) {
-        switch (sqlType) {
-            case Types.NCHAR : return Types.CHAR;
-            case Types.NCLOB : return Types.CLOB;
-            case Types.NVARCHAR : return Types.VARCHAR;
-            case Types.LONGNVARCHAR : return Types.LONGVARCHAR;
-
-            default:
-                return sqlType;
-        }
     }
 
     /**

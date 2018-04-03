@@ -80,4 +80,16 @@ public class LikeNode extends ExpressionNode {
     public NodeType getType() {
         return NodeType.LIKE;
     }
+
+    public boolean isIgnoreCase() {
+        return ignoreCase;
+    }
+
+    public boolean isNot() {
+        return not;
+    }
+
+    public char getEscape() {
+        return escape;
+    }
 }
