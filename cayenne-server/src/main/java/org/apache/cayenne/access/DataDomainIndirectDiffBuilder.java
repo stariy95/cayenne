@@ -90,12 +90,19 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
                             , relationship.getName(), relationship.getSourceEntity().getName());
                 }
 
-                // Register this combination (so we can remove it later if an insert occurs before commit)
-                FlattenedArcKey key = new FlattenedArcKey((ObjectId) nodeId, (ObjectId) targetNodeId, relationship);
+                String path = relationship.getDbRelationshipPath();
+                if(path.contains(".")) {
+                    path = path.substring(0, path.lastIndexOf('.'));
+                }
+                ObjectId objectId = parent.getContext().getObjectStore().getObjectId((ObjectId)nodeId, path);
+                if(objectId == null) {
+                    // Register this combination (so we can remove it later if an insert occurs before commit)
+                    FlattenedArcKey key = new FlattenedArcKey((ObjectId) nodeId, (ObjectId) targetNodeId, relationship);
 
-                // If this combination has already been deleted, simply undelete it.
-                if (!flattenedDeletes.remove(key)) {
-                    flattenedInserts.add(key);
+                    // If this combination has already been deleted, simply undelete it.
+                    if (!flattenedDeletes.remove(key)) {
+                        flattenedInserts.add(key);
+                    }
                 }
             }
         }
@@ -120,12 +127,19 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
                             , relationship.getName());
                 }
 
-                // Register this combination (so we can remove it later if an insert occurs before commit)
-                FlattenedArcKey key = new FlattenedArcKey((ObjectId) nodeId, (ObjectId) targetNodeId, relationship);
+                String path = relationship.getDbRelationshipPath();
+                if(path.contains(".")) {
+                    path = path.substring(0, path.lastIndexOf('.'));
+                }
+                ObjectId objectId = parent.getContext().getObjectStore().getObjectId((ObjectId)nodeId, path);
+                if(objectId == null) {
+                    // Register this combination (so we can remove it later if an insert occurs before commit)
+                    FlattenedArcKey key = new FlattenedArcKey((ObjectId) nodeId, (ObjectId) targetNodeId, relationship);
 
-                // If this combination has already been inserted, simply "uninsert" it also do not delete it twice
-                if (!flattenedInserts.remove(key)) {
-                    flattenedDeletes.add(key);
+                    // If this combination has already been inserted, simply "uninsert" it also do not delete it twice
+                    if (!flattenedInserts.remove(key)) {
+                        flattenedDeletes.add(key);
+                    }
                 }
             }
         }

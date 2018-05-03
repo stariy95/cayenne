@@ -234,7 +234,6 @@ public class VerticalInheritanceIT extends ServerCase {
 	/**
 	 * @link https://issues.apache.org/jira/browse/CAY-2282
 	 */
-	@Ignore("Test case for unfixed issue CAY-2282")
 	@Test
 	public void testUpdateRelation_Sub3() throws Exception {
 		TableHelper ivRootTable = new TableHelper(dbHelper, "IV_ROOT");
@@ -679,7 +678,6 @@ public class VerticalInheritanceIT extends ServerCase {
 	/**
 	 * @link https://issues.apache.org/jira/browse/CAY-2282
 	 */
-	@Ignore("Test case for unfixed issue CAY-2282")
 	@Test
 	public void testUpdateTwoObjectsWithMultipleAttributeAndMultipleRelationship() throws SQLException {
 		TableHelper ivOtherTable = new TableHelper(dbHelper, "IV_OTHER");
@@ -707,7 +705,8 @@ public class VerticalInheritanceIT extends ServerCase {
 		IvOther other1 = ObjectSelect.query(IvOther.class).where(IvOther.NAME.eq("other1")).selectOne(context);
 		IvOther other2 = ObjectSelect.query(IvOther.class).where(IvOther.NAME.eq("other2")).selectOne(context);
 
-		for(IvImpl record : ObjectSelect.query(IvImpl.class).select(context)) {
+		List<IvImpl> implResult = ObjectSelect.query(IvImpl.class).select(context);
+		for(IvImpl record : implResult) {
 			record.setName(record.getName() + "-Change");
 			record.setAttr1(record.getAttr1() + "-Change");
 			record.setAttr2(record.getAttr2() + "-Change");

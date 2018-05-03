@@ -112,14 +112,15 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
                 if (relation == null) {
                     dbRelation = dbEntity.getRelationship(arcIdString.substring(ASTDbPath.DB_PREFIX.length()));
                 } else {
-                    dbRelation = relation.getDbRelationships().get(0);
+                    dbRelation = relation.getDbRelationships().get(relation.getDbRelationships().size() - 1);
                 }
 
                 // In case of a vertical inheritance, ensure that it belongs to this bucket...
                 if (dbRelation.getSourceEntity() == dbEntity) {
                     ObjectId targetId = (ObjectId) entry.getValue();
                     for (DbJoin join : dbRelation.getJoins()) {
-                        Object value = (targetId != null) ? new PropagatedValueFactory(targetId, join.getTargetName())
+                        Object value = (targetId != null)
+                                ? new PropagatedValueFactory(targetId, join.getTargetName())
                                 : null;
 
                         dbDiff.put(join.getSourceName(), value);
@@ -161,18 +162,21 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
         if (relationship == null) {
             // phantom FK
             if (arcIdString.startsWith(ASTDbPath.DB_PREFIX)) {
-
-                DbRelationship dbRelationship = dbEntity.getRelationship(arcIdString.substring(ASTDbPath.DB_PREFIX
-                        .length()));
-                if (!dbRelationship.isSourceIndependentFromTargetChange()) {
+                String relName = arcIdString.substring(ASTDbPath.DB_PREFIX.length());
+                DbRelationship dbRelationship = dbEntity.getRelationship(relName);
+                if (!dbRelationship.isSourceIndependentFromTargetChange()
+                        && dbRelationship.getSourceEntity().equals(dbEntity)) {
                     doArcCreated(targetNodeId, arcId);
                 }
             } else {
                 throw new IllegalArgumentException("Bad arcId: " + arcId);
             }
 
-        } else if (!relationship.isSourceIndependentFromTargetChange()) {
-            doArcCreated(targetNodeId, arcId);
+        } else {
+            DbRelationship lastRel = relationship.getDbRelationships().get(relationship.getDbRelationships().size() - 1);
+            if(!lastRel.isSourceIndependentFromTargetChange() && lastRel.getSourceEntity().equals(dbEntity)) {
+                doArcCreated(targetNodeId, arcId);
+            }
         }
     }
 

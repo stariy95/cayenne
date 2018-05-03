@@ -52,6 +52,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ObjectStore stores objects using their ObjectId as a key. It works as a dedicated
@@ -65,6 +67,11 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
 
     protected Map<Object, Persistent> objectMap;
     protected Map<Object, ObjectDiff> changes;
+
+    /**
+     * @since 4.1
+     */
+    protected Map<Object, Map<String, ObjectId>> additionalObjectIds;
 
     // a sequential id used to tag GraphDiffs so that they can later be sorted in the
     // original creation order
@@ -106,6 +113,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             throw new CayenneRuntimeException("Object map is null.");
         }
         this.changes = new HashMap<>();
+        this.additionalObjectIds = new ConcurrentHashMap<>();
     }
 
     /**
@@ -293,6 +301,9 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             // remove object but not snapshot
             objectMap.remove(id);
             changes.remove(id);
+            if(id != null) {
+                additionalObjectIds.remove(id);
+            }
             ids.add(id);
 
             object.setObjectContext(null);
@@ -965,7 +976,22 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             registerLifecycleEventInducedChange(diff);
         }
 
-        registerDiff((ObjectId)nodeId, diff);
+        registerDiff(nodeId, diff);
+    }
+
+    /**
+     * @since 4.1
+     */
+    public ObjectId getObjectId(ObjectId objectId, String path) {
+        return additionalObjectIds.getOrDefault(objectId, Collections.emptyMap()).get(path);
+    }
+
+    /**
+     * @since 4.1
+     */
+    public void registerAdditionalObjectId(Persistent root, String path, ObjectId objectId) {
+        Objects.requireNonNull(root, "Null object");
+        additionalObjectIds.computeIfAbsent(root.getObjectId(), o -> new ConcurrentHashMap<>()).put(path, objectId);
     }
 
     // an ObjectIdQuery optimized for retrieval of multiple snapshots - it can be reset
