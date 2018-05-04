@@ -52,7 +52,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -69,9 +69,11 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
     protected Map<Object, ObjectDiff> changes;
 
     /**
+     * Map that tracks flattened paths for given object Id that is present in db.
+     * Presence of path in this map is used to separate insert from update case of flattened records.
      * @since 4.1
      */
-    protected Map<Object, Map<String, ObjectId>> additionalObjectIds;
+    protected Map<Object, Set<String>> trackedFlattenedPaths;
 
     // a sequential id used to tag GraphDiffs so that they can later be sorted in the
     // original creation order
@@ -113,7 +115,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             throw new CayenneRuntimeException("Object map is null.");
         }
         this.changes = new HashMap<>();
-        this.additionalObjectIds = new ConcurrentHashMap<>();
+        this.trackedFlattenedPaths = new ConcurrentHashMap<>();
     }
 
     /**
@@ -302,7 +304,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             objectMap.remove(id);
             changes.remove(id);
             if(id != null) {
-                additionalObjectIds.remove(id);
+                trackedFlattenedPaths.remove(id);
             }
             ids.add(id);
 
@@ -601,9 +603,9 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             }
         }
 
-        Map<String, ObjectId> additionalIds = additionalObjectIds.remove(nodeId);
-        if(additionalIds != null) {
-            additionalObjectIds.put(newId, additionalIds);
+        Set<String> paths = trackedFlattenedPaths.remove(nodeId);
+        if(paths != null) {
+            trackedFlattenedPaths.put(newId, paths);
         }
     }
 
@@ -985,18 +987,22 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
     }
 
     /**
+     * Check that flattened path for given object ID has data row in DB.
      * @since 4.1
      */
-    public ObjectId getObjectId(ObjectId objectId, String path) {
-        return additionalObjectIds.getOrDefault(objectId, Collections.emptyMap()).get(path);
+    boolean hasFlattenedPath(ObjectId objectId, String path) {
+        return trackedFlattenedPaths
+                .getOrDefault(objectId, Collections.emptySet()).contains(path);
     }
 
     /**
+     * Mark that flattened path for object has data row in DB.
      * @since 4.1
      */
-    public void registerAdditionalObjectId(Persistent root, String path, ObjectId objectId) {
-        Objects.requireNonNull(root, "Null object");
-        additionalObjectIds.computeIfAbsent(root.getObjectId(), o -> new ConcurrentHashMap<>()).put(path, objectId);
+    void markFlattenedPath(ObjectId objectId, String path) {
+        trackedFlattenedPaths
+                .computeIfAbsent(objectId, o -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+                .add(path);
     }
 
     // an ObjectIdQuery optimized for retrieval of multiple snapshots - it can be reset

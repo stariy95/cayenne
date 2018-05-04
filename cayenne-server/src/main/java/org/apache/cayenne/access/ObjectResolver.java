@@ -187,7 +187,6 @@ class ObjectResolver {
 	        return;
         }
 
-	    ObjectStore store = context.getObjectStore();
 	    for(Map.Entry<String, DbEntity> entry : classDescriptor.getAdditionalDbEntities().entrySet()) {
             DbEntity dbEntity = entry.getValue();
             String path = entry.getKey();
@@ -195,7 +194,7 @@ class ObjectResolver {
             String prefix = lastDot == -1 ? path : path.substring(lastDot + 1);
             ObjectId objectId = createObjectId(row, dbEntity.getName(), dbEntity.getPrimaryKeys(), prefix + '.', false);
             if(objectId != null) {
-                store.registerAdditionalObjectId(object, path, objectId);
+				context.getObjectStore().markFlattenedPath(object.getObjectId(), path);
             }
         }
     }

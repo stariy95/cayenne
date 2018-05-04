@@ -228,7 +228,7 @@ class DataDomainInsertBucket extends DataDomainSyncBucket {
         }
 
         private void register(ObjectStore objectStore) {
-            objectStore.registerAdditionalObjectId(object, path, object.getObjectId());
+            objectStore.markFlattenedPath(object.getObjectId(), path);
         }
     }
 }
