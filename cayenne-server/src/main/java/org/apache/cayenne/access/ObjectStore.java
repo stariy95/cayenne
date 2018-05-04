@@ -600,6 +600,11 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
                 changes.put(newId, change);
             }
         }
+
+        Map<String, ObjectId> additionalIds = additionalObjectIds.remove(nodeId);
+        if(additionalIds != null) {
+            additionalObjectIds.put(newId, additionalIds);
+        }
     }
 
     /**
