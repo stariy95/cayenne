@@ -24,7 +24,13 @@ import org.apache.cayenne.access.DataDomainSyncBucket.PropagatedValueFactory;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.graph.GraphDiff;
-import org.apache.cayenne.map.*;
+import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.DbJoin;
+import org.apache.cayenne.map.DbRelationship;
+import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjEntity;
+import org.apache.cayenne.map.ObjRelationship;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -112,7 +118,7 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
                 if (relation == null) {
                     dbRelation = dbEntity.getRelationship(arcIdString.substring(ASTDbPath.DB_PREFIX.length()));
                 } else {
-                    dbRelation = relation.getDbRelationships().get(relation.getDbRelationships().size() - 1);
+                    dbRelation = relation.getDbRelationships().get(0);
                 }
 
                 // In case of a vertical inheritance, ensure that it belongs to this bucket...
@@ -164,8 +170,7 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
             if (arcIdString.startsWith(ASTDbPath.DB_PREFIX)) {
                 String relName = arcIdString.substring(ASTDbPath.DB_PREFIX.length());
                 DbRelationship dbRelationship = dbEntity.getRelationship(relName);
-                if (!dbRelationship.isSourceIndependentFromTargetChange()
-                        && dbRelationship.getSourceEntity().equals(dbEntity)) {
+                if (!dbRelationship.isSourceIndependentFromTargetChange()) {
                     doArcCreated(targetNodeId, arcId);
                 }
             } else {
@@ -173,8 +178,10 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
             }
 
         } else {
-            DbRelationship lastRel = relationship.getDbRelationships().get(relationship.getDbRelationships().size() - 1);
-            if(!lastRel.isSourceIndependentFromTargetChange() && lastRel.getSourceEntity().equals(dbEntity)) {
+            // !isSourceIndependentFromTargetChange() excluding isFlattened()
+            if (!relationship.isToMany()
+                    && !relationship.isToDependentEntity()
+                    && relationship.isToPK()) {
                 doArcCreated(targetNodeId, arcId);
             }
         }
