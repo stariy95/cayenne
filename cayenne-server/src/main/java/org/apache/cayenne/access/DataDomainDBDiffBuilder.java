@@ -118,7 +118,7 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
                 if (relation == null) {
                     dbRelation = dbEntity.getRelationship(arcIdString.substring(ASTDbPath.DB_PREFIX.length()));
                 } else {
-                    dbRelation = relation.getDbRelationships().get(0);
+                    dbRelation = relation.getDbRelationships().get(relation.getDbRelationships().size() - 1);
                 }
 
                 // In case of a vertical inheritance, ensure that it belongs to this bucket...
@@ -178,10 +178,7 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
             }
 
         } else {
-            // !isSourceIndependentFromTargetChange() excluding isFlattened()
-            if (!relationship.isToMany()
-                    && !relationship.isToDependentEntity()
-                    && relationship.isToPK()) {
+            if (!relationship.isToMany() && relationship.isToPK()) {
                 doArcCreated(targetNodeId, arcId);
             }
         }

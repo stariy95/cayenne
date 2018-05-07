@@ -59,7 +59,7 @@ public class VerticalInheritanceMultipleAttributes extends ServerCase {
     TableHelper ivOtherTable, ivBaseTable, ivImplTable;
 
     @Before
-    public void setupTableHelpers() {
+    public void setupTableHelpers() throws Exception {
         ivOtherTable = new TableHelper(dbHelper, "IV_OTHER");
         ivOtherTable.setColumns("ID", "NAME")
                 .setColumnTypes(Types.INTEGER, Types.VARCHAR);
@@ -71,6 +71,10 @@ public class VerticalInheritanceMultipleAttributes extends ServerCase {
         ivImplTable = new TableHelper(dbHelper, "IV_IMPL");
         ivImplTable.setColumns("ID", "ATTR1", "ATTR2", "OTHER1_ID", "OTHER2_ID")
                 .setColumnTypes(Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.INTEGER);
+
+        ivImplTable.deleteAll();
+        ivBaseTable.deleteAll();
+        ivOtherTable.deleteAll();
     }
 
     /**
