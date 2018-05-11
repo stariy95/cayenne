@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
@@ -123,6 +124,20 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
                         ? columnLabelPrefix + '.' + attribute.getName()
                         : attribute.getName();
                 context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute);
+            }
+        }
+
+        for(Map.Entry<String, DbEntity> entry : descriptor.getAdditionalDbEntities().entrySet()) {
+            alias = context.getTableTree().aliasForPath(entry.getKey());
+            for(DbAttribute attribute : entry.getValue().getPrimaryKeys()) {
+                String columnUniqueName = alias + '.' + attribute.getName();
+                if(columnTracker.add(columnUniqueName)) {
+                    Node columnNode = table(alias).column(attribute).build();
+                    String dataRowKey = columnLabelPrefix != null
+                            ? columnLabelPrefix + '.' + attribute.getName()
+                            : attribute.getName();
+                    context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute);
+                }
             }
         }
 

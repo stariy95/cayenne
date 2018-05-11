@@ -69,11 +69,11 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
     }
 
     @Override
-    protected void processAliasedAttribute(String next) {
-        currentDbPath.append(pathIterator.getNonAliasedName()).append('$');
-        ObjRelationship relationship = entity.getRelationship(next);
+    protected void processAliasedAttribute(String next, String alias) {
+        currentDbPath.append(next).append(SPLIT_PATH_INDICATOR);
+        ObjRelationship relationship = entity.getRelationship(alias);
         if(relationship == null) {
-            throw new IllegalStateException("Non-relationship aliased path part: " + next);
+            throw new IllegalStateException("Non-relationship aliased path part: " + alias);
         }
 
         processRelationship(relationship);
@@ -95,24 +95,16 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
             return;
         }
 
-        Iterator<CayenneMapEntry> dbPathIterator = attribute.getDbPathIterator();
-        while (dbPathIterator.hasNext()) {
-            Object pathPart = dbPathIterator.next();
-            if (pathPart == null) {
-                throw new CayenneRuntimeException("ObjAttribute has no component: %s", attribute.getName());
-            } else if (pathPart instanceof DbRelationship) {
-                appendDbPathSegment(((DbRelationship) pathPart).getName());
-                context.getTableTree().addJoinTable(currentDbPath.toString(), (DbRelationship) pathPart, JoinType.LEFT_OUTER);
-            } else if (pathPart instanceof DbAttribute) {
-                appendDbPathSegment(((DbAttribute) pathPart).getName());
-                dbAttributeList.add((DbAttribute)pathPart);
-            }
-        }
+        PathTranslationResult result = context.getPathTranslator()
+                .translatePath(entity.getDbEntity(), attribute.getDbAttributePath());
+        dbAttributeList.addAll(result.getDbAttributes());
+        relationship = result.getDbRelationship().orElse(relationship);
+        appendDbPathSegment(result.getFinalPath());
     }
 
     protected void processRelationship(ObjRelationship relationship) {
         entity = relationship.getTargetEntity();
-        if (!pathIterator.hasNext()) {
+        if (lastComponent) {
             // if this is a last relationship in the path, it needs special handling
             processRelTermination(relationship);
         } else {
@@ -122,7 +114,7 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
                 DbRelationship dbRel = relationship.getDbRelationships().get(i);
                 appendDbPathSegment(dbRel.getName());
                 context.getTableTree().addJoinTable(currentDbPath.toString(), dbRel,
-                        pathIterator.isOuterJoin() ? JoinType.LEFT_OUTER : JoinType.INNER);
+                        isOuterJoin ? JoinType.LEFT_OUTER : JoinType.INNER);
             }
         }
     }
@@ -167,12 +159,12 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
     }
 
     protected void appendDbPathSegment(String pathSegment) {
-        if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != '$') {
+        if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != SPLIT_PATH_INDICATOR) {
             currentDbPath.append('.');
         }
         currentDbPath.append(pathSegment);
-        if(pathIterator.isOuterJoin()) {
-            currentDbPath.append('+');
+        if(isOuterJoin) {
+            currentDbPath.append(OUTER_JOIN_INDICATOR);
         }
     }
 }

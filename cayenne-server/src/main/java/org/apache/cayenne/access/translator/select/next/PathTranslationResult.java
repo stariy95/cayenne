@@ -26,39 +26,20 @@ import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbRelationship;
 
 /**
- * Immutable object that describes result of path translation
+ * Interface that describes result of path translation
  *
  * @since 4.1
  */
-class PathTranslationResult {
+interface PathTranslationResult {
 
-    private final String finalPath;
-    private final List<DbAttribute> dbAttributes;
-    private final DbRelationship dbRelationship;
-    // TODO: to cache result it should also contain some form of pre-compiled joins
+    String getFinalPath();
 
-    PathTranslationResult(PathProcessor<?> processor) {
-        this.finalPath = processor.getFinalPath();
-        this.dbAttributes = processor.getDbAttributeList();
-        this.dbRelationship = processor.getRelationship();
+    Optional<DbRelationship> getDbRelationship();
+
+    List<DbAttribute> getDbAttributes();
+
+    default DbAttribute getLastAttribute() {
+        return getDbAttributes().get(getDbAttributes().size() - 1);
     }
 
-    Optional<DbRelationship> getDbRelationship() {
-        if (dbRelationship == null) {
-            return Optional.empty();
-        }
-        return Optional.of(dbRelationship);
-    }
-
-    List<DbAttribute> getDbAttributes() {
-        return dbAttributes;
-    }
-
-    DbAttribute getLastAttribute() {
-        return dbAttributes.get(dbAttributes.size() - 1);
-    }
-
-    public String getFinalPath() {
-        return finalPath;
-    }
 }

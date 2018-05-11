@@ -39,17 +39,12 @@ class PathTranslator {
 
     PathTranslationResult translatePath(ObjEntity entity, String path) {
         return resultCache.computeIfAbsent(entity.getName() + '.' + path,
-                (k) -> translate(new ObjPathProcessor(context, entity, path)));
+                (k) -> new ObjPathProcessor(context, entity, path).process());
     }
 
     PathTranslationResult translatePath(DbEntity entity, String path) {
         return resultCache.computeIfAbsent(':' + entity.getName() + '.' + path,
-                (k) -> translate(new DbPathProcessor(context, entity, path)));
-    }
-
-    private static PathTranslationResult translate(PathProcessor<?> processor) {
-        processor.process();
-        return new PathTranslationResult(processor);
+                (k) -> new DbPathProcessor(context, entity, path).process());
     }
 
 }

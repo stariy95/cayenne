@@ -21,6 +21,8 @@ package org.apache.cayenne.access.translator.select.next;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbRelationship;
@@ -29,47 +31,70 @@ import org.apache.cayenne.map.Entity;
 /**
  * @since 4.1
  */
-public abstract class PathProcessor<T extends Entity> {
+public abstract class PathProcessor<T extends Entity> implements PathTranslationResult {
 
-    protected final PathIterator pathIterator;
+    public static final char OUTER_JOIN_INDICATOR = '+';
+    public static final char SPLIT_PATH_INDICATOR = '$';
+
+    protected final PathComponents components;
+    protected final Map<String, String> pathSplitAliases;
     protected final TranslatorContext context;
     protected final List<DbAttribute> dbAttributeList;
     protected final StringBuilder currentDbPath;
 
+    protected boolean lastComponent;
+    protected boolean isOuterJoin;
     protected T entity;
     protected DbRelationship relationship;
 
     public PathProcessor(TranslatorContext context, T entity, String path) {
         this.context = context;
         this.entity = entity;
-        this.pathIterator = new PathIterator(path, context.getMetadata().getPathSplitAliases());
+        this.components = new PathComponents(path);
+        this.pathSplitAliases = context.getMetadata().getPathSplitAliases();
         this.currentDbPath = new StringBuilder();
         this.dbAttributeList = new ArrayList<>(1);
     }
 
-    public void process() {
-        while(pathIterator.hasNext()) {
-            String next = pathIterator.next();
-            if (pathIterator.isAlias()) {
-                processAliasedAttribute(next);
+    public PathTranslationResult process() {
+        String[] rawComponents = components.getAll();
+        for(int i=0; i<rawComponents.length; i++) {
+            String next = rawComponents[i];
+            isOuterJoin = false;
+            lastComponent = i == rawComponents.length - 1;
+            String alias = pathSplitAliases.get(next);
+            if(alias != null) {
+                processAliasedAttribute(next, alias);
             } else {
+                if(next.charAt(next.length() - 1) == OUTER_JOIN_INDICATOR) {
+                    isOuterJoin = true;
+                    next = next.substring(0, next.length() - 1);
+                }
                 processNormalAttribute(next);
             }
         }
+
+        return this;
     }
 
-    abstract protected void processAliasedAttribute(String next);
+    abstract protected void processAliasedAttribute(String next, String alias);
 
     abstract protected void processNormalAttribute(String next);
 
-    public List<DbAttribute> getDbAttributeList() {
+    @Override
+    public List<DbAttribute> getDbAttributes() {
         return dbAttributeList;
     }
 
-    public DbRelationship getRelationship() {
-        return relationship;
+    @Override
+    public Optional<DbRelationship> getDbRelationship() {
+        if(relationship == null) {
+            return Optional.empty();
+        }
+        return Optional.of(relationship);
     }
 
+    @Override
     public String getFinalPath() {
         return currentDbPath.toString();
     }

@@ -53,13 +53,13 @@ public class DbPathProcessor extends PathProcessor<DbEntity> {
     }
 
     @Override
-    protected void processAliasedAttribute(String next) {
-        DbRelationship relationship = entity.getRelationship(next);
+    protected void processAliasedAttribute(String next, String alias) {
+        DbRelationship relationship = entity.getRelationship(alias);
         if(relationship == null) {
-            throw new IllegalStateException("Non-relationship aliased path part: " + next);
+            throw new IllegalStateException("Non-relationship aliased path part: " + alias);
         }
 
-        // todo resolve path
+        processRelationship(relationship);
     }
 
     private void processAttribute(DbAttribute attribute) {
@@ -68,13 +68,12 @@ public class DbPathProcessor extends PathProcessor<DbEntity> {
     }
 
     private void processRelationship(DbRelationship relationship) {
-        if (!pathIterator.hasNext()) {
+        if (lastComponent) {
             // if this is a last relationship in the path, it needs special handling
             processRelTermination(relationship);
         } else {
             appendCurrentPath(relationship.getName());
-            context.getTableTree().addJoinTable(currentDbPath.toString(), relationship,
-                    pathIterator.isOuterJoin() ? JoinType.LEFT_OUTER : JoinType.INNER);
+            context.getTableTree().addJoinTable(currentDbPath.toString(), relationship, JoinType.LEFT_OUTER);
         }
     }
 
@@ -93,12 +92,12 @@ public class DbPathProcessor extends PathProcessor<DbEntity> {
     }
 
     private void appendCurrentPath(String nextSegment) {
-        if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != '$') {
+        if(currentDbPath.length() > 0 && currentDbPath.charAt(currentDbPath.length() - 1) != SPLIT_PATH_INDICATOR) {
             currentDbPath.append('.');
         }
         currentDbPath.append(nextSegment);
-        if(pathIterator.isOuterJoin()) {
-            currentDbPath.append('+');
+        if(isOuterJoin) {
+            currentDbPath.append(OUTER_JOIN_INDICATOR);
         }
     }
 
