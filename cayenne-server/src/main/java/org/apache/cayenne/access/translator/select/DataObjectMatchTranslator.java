@@ -35,6 +35,7 @@ import org.apache.cayenne.map.DbRelationship;
 
 /**
  */
+@Deprecated
 public class DataObjectMatchTranslator {
 
 	protected Map<String, DbAttribute> attributes;

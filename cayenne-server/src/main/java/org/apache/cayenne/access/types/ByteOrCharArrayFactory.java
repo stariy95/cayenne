@@ -43,20 +43,20 @@ class ByteOrCharArrayFactory implements ExtendedTypeFactory {
             Class<?> elementType = objectClass.getComponentType();
             if (Character.class.isAssignableFrom(elementType)) {
                 // can't use "getRegisteredType" as it causes infinite recursion
-                ExtendedType<String> stringType = map.getExplictlyRegisteredType("java.lang.String");
+                ExtendedType<String> stringType = map.getExplicitlyRegisteredType("java.lang.String");
                 return new CharacterArrayType(stringType);
             } else if (Character.TYPE.isAssignableFrom(elementType)) {
                 // can't use "getRegisteredType" as it causes infinite recursion
-                ExtendedType<String> stringType = map.getExplictlyRegisteredType("java.lang.String");
+                ExtendedType<String> stringType = map.getExplicitlyRegisteredType("java.lang.String");
                 return new CharArrayType(stringType);
             } else if (Byte.class.isAssignableFrom(elementType)) {
                 // can't use "getRegisteredType" as it causes infinite recursion
-                ExtendedType<byte[]> bytesType = map.getExplictlyRegisteredType("byte[]");
+                ExtendedType<byte[]> bytesType = map.getExplicitlyRegisteredType("byte[]");
                 return new ByteWrapperArrayType(bytesType);
             }
         } else if (Character.class.isAssignableFrom(objectClass)) {
             // can't use "getRegisteredType" as it causes infinite recursion
-            ExtendedType<String> stringType = map.getExplictlyRegisteredType("java.lang.String");
+            ExtendedType<String> stringType = map.getExplicitlyRegisteredType("java.lang.String");
             return new CharacterType(stringType);
         }
 

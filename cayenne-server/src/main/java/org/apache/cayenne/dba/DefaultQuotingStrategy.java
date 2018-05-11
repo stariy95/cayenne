@@ -29,8 +29,8 @@ import org.apache.cayenne.map.Entity;
  */
 public class DefaultQuotingStrategy implements QuotingStrategy {
 
-    private String endQuote;
-    private String startQuote;
+    private final String endQuote;
+    private final String startQuote;
 
     public DefaultQuotingStrategy(String startQuote, String endQuote) {
         this.startQuote = startQuote;
@@ -59,6 +59,31 @@ public class DefaultQuotingStrategy implements QuotingStrategy {
         return quotedIdentifier(dataMap, join.getTargetName());
     }
 
+    /**
+     * @since 4.1
+     */
+    @Override
+    public String quotedIdentifier(Entity entity, String identifier) {
+        return quotedIdentifier(entity.getDataMap(), identifier);
+    }
+
+    /**
+     * @since 4.1
+     */
+    @Override
+    public String quotedIdentifier(DataMap dataMap, String identifier) {
+        if (identifier == null) {
+            return null;
+        }
+
+        boolean quoting = dataMap != null && dataMap.isQuotingSQLIdentifiers();
+        if(quoting) {
+            return startQuote + identifier + endQuote;
+        } else {
+            return identifier;
+        }
+    }
+
     @Override
     public String quotedIdentifier(Entity entity, String... identifierParts) {
         return quotedIdentifier(entity.getDataMap(), identifierParts);
@@ -66,30 +91,21 @@ public class DefaultQuotingStrategy implements QuotingStrategy {
 
     @Override
     public String quotedIdentifier(DataMap dataMap, String... identifierParts) {
-
-        String startQuote, endQuote;
-
-        if (dataMap != null && dataMap.isQuotingSQLIdentifiers()) {
-            startQuote = this.startQuote;
-            endQuote = this.endQuote;
-        } else {
-            startQuote = "";
-            endQuote = "";
-        }
-
+        boolean quoting = dataMap != null && dataMap.isQuotingSQLIdentifiers();
         StringBuilder buffer = new StringBuilder();
 
         for (String part : identifierParts) {
-
             if (part == null) {
                 continue;
             }
-
             if (buffer.length() > 0) {
                 buffer.append('.');
             }
-
-            buffer.append(startQuote).append(part).append(endQuote);
+            if(quoting) {
+                buffer.append(startQuote).append(part).append(endQuote);
+            } else {
+                buffer.append(part);
+            }
         }
 
         return buffer.toString();

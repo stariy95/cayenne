@@ -1,0 +1,93 @@
+/*****************************************************************
+ *   Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ ****************************************************************/
+
+package org.apache.cayenne.access.sqlbuilder;
+
+import org.apache.cayenne.access.DataContext;
+import org.apache.cayenne.access.translator.select.next.SQLGenerationVisitor;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.query.SelectQuery;
+import org.apache.cayenne.testdo.testmap.Artist;
+import org.apache.cayenne.testdo.testmap.Painting;
+import org.apache.cayenne.unit.di.server.CayenneProjects;
+import org.apache.cayenne.unit.di.server.ServerCase;
+import org.apache.cayenne.unit.di.server.UseServerRuntime;
+import org.junit.Test;
+
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
+import static org.junit.Assert.assertEquals;
+
+
+/**
+ * @since 4.1
+ */
+@UseServerRuntime(CayenneProjects.TESTMAP_PROJECT)
+public class SqlBuilderIT extends ServerCase {
+
+    @Inject
+    DataContext context;
+
+    @Test
+    public void testTranslation() {
+        SelectQuery<Artist> selectQuery = SelectQuery.query(Artist.class);
+        selectQuery.setQualifier(Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE).like("painting%"));
+        selectQuery.select(context);
+    }
+
+    @Test
+    public void selectDemo() {
+
+        SQLGenerationVisitor visitor = new SQLGenerationVisitor(null);
+
+        select(table("a").column("ARTIST_ID").as("a_id"),
+                count(table("p").column("PAINTING_TITLE")).as("p_count"))
+                .distinct()
+                .from(table("ARTIST").as("a"))
+                .from(leftJoin(table("PAINTING").as("p"))
+                                .on(table("a").column("ARTIST_ID")
+                                        .eq(table("p").column("ARTIST_ID"))
+                                        .and(table("p").column("ESTIMATED_PRICE").gt(value(10)))))
+                .where(
+                        table("a").column("ARTIST_NAME")
+                                .eq(value("Picasso"))
+                                .and(exists(select(all())
+                                                .from(table("GALLERY").as("g"))
+                                                .where(table("g").column("GALLERY_ID").eq(table("p").column("GALLERY_ID")))))
+                                .and(value(1).eq(value(1)))
+                                .or(value(false)))
+                .groupBy(table("a").column("ARTIST_ID"))
+                .having(not(count(table("p").column("PAINTING_TITLE")).gt(value(3))))
+                .orderBy(column("p_count").desc())
+                .build()
+                .visit(visitor);
+
+        assertEquals("SELECT DISTINCT   " +
+                "a.ARTIST_ID a_id ,COUNT(p.PAINTING_TITLE ) AS p_count  " +
+                "FROM ARTIST a  " +
+                "LEFT JOIN PAINTING p  ON ((a.ARTIST_ID  =  p.ARTIST_ID ) AND  (p.ESTIMATED_PRICE  >  ? )) " +
+                "WHERE ((((a.ARTIST_NAME  =  ? ) " +
+                "AND  EXISTS((SELECT  *  FROM GALLERY g  WHERE (g.GALLERY_ID  =  p.GALLERY_ID )))) " +
+                "AND  (?  =  ? )) OR  ? ) " +
+                "GROUP BY a.ARTIST_ID  " +
+                "HAVING NOT  (COUNT(p.PAINTING_TITLE ) >  ? ) " +
+                "ORDER BY  p_count  DESC", visitor.getSQLString().trim());
+
+    }
+
+}

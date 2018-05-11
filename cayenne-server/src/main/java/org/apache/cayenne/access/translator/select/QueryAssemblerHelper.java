@@ -39,6 +39,7 @@ import java.util.Map;
  * Translates parts of the query to SQL. Always works in the context of parent
  * Translator.
  */
+@Deprecated
 public abstract class QueryAssemblerHelper {
 
 	protected QueryAssembler queryAssembler;

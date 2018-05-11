@@ -57,7 +57,7 @@ class SerializableTypeFactory implements ExtendedTypeFactory {
 
 			// note - can't use "getRegisteredType" as it causes infinite recursion
 			@SuppressWarnings("unchecked")
-			ExtendedType<byte[]> bytesType = map.getExplictlyRegisteredType("byte[]");
+			ExtendedType<byte[]> bytesType = map.getExplicitlyRegisteredType("byte[]");
 			return new SerializableType(objectClass, bytesType);
 		}
 

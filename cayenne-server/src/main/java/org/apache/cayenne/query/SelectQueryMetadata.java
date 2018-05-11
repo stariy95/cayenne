@@ -186,7 +186,7 @@ class SelectQueryMetadata extends BaseQueryMetadata {
 	 */
 	@Override
 	public Map<String, String> getPathSplitAliases() {
-		return pathSplitAliases != null ? pathSplitAliases : Collections.<String, String> emptyMap();
+		return pathSplitAliases != null ? pathSplitAliases : Collections.emptyMap();
 	}
 
 	/**
@@ -283,7 +283,7 @@ class SelectQueryMetadata extends BaseQueryMetadata {
 	 * This information will be used to correctly create Persistent object back from raw result.
 	 *
 	 * This method is actually repeating logic of
-	 * {@link org.apache.cayenne.access.translator.select.DefaultSelectTranslator#appendQueryColumns}.
+	 * {@link org.apache.cayenne.access.translator.select.next.DescriptorColumnExtractor}.
 	 * Here we don't care about intermediate joins and few other things so it's shorter.
 	 * Logic of these methods should be unified and simplified, possibly to a single source of metadata,
 	 * generated only once and used everywhere.

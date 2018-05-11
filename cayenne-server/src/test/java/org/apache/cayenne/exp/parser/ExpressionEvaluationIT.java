@@ -237,6 +237,15 @@ public class ExpressionEvaluationIT extends ServerCase {
                 .nin(new BigDecimal(800), new BigDecimal(200), new BigDecimal(300), new BigDecimal(400), new BigDecimal(700));
 
         compareSqlAndEval(exp, 3);
+
+        // SELECT
+        //      t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID
+        // FROM
+        //      ARTIST t0
+        //      JOIN PAINTING t1  ON ((t0.ARTIST_ID  =  t1.ARTIST_ID ))
+        // WHERE
+        //      t1.ESTIMATED_PRICE NOT IN (?, ?, ?, ?, ?)
+        // ORDER BY t0.ARTIST_ID
     }
 
     @Test
@@ -382,11 +391,12 @@ public class ExpressionEvaluationIT extends ServerCase {
         List<Artist> filteredInSQL = ObjectSelect.query(Artist.class, exp).orderBy(ordering).select(context);
         // apply exp to in-memory collection
         List<Artist> filteredInMemory = exp.filterObjects(
-                ObjectSelect.query(Artist.class).prefetch(Artist.PAINTING_ARRAY.disjoint()).select(context)
+                ObjectSelect.query(Artist.class).prefetch(Artist.PAINTING_ARRAY.joint()).select(context)
         );
         ordering.orderList(filteredInMemory);
 
         assertEquals(expectedCount, filteredInMemory.size());
+        assertEquals(expectedCount, filteredInSQL.size());
         assertEquals(filteredInSQL, filteredInMemory);
     }
 }

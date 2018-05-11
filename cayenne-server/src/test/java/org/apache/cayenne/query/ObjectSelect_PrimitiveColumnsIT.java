@@ -86,7 +86,7 @@ public class ObjectSelect_PrimitiveColumnsIT extends ServerCase {
 
     @Test
     public void test_SelectIntegerExpColumn() throws Exception {
-        Property<Integer> property = Property.create("intColumn",
+        Property<Integer> property = Property.create(
                 ExpressionFactory.exp("(obj:intColumn + obj:intColumn)"), Integer.class);
 
         int intColumn2 = ObjectSelect.query(PrimitivesTestEntity.class)
@@ -121,7 +121,7 @@ public class ObjectSelect_PrimitiveColumnsIT extends ServerCase {
             return;
         }
 
-        Property<Boolean> property = Property.create("boolColumn",
+        Property<Boolean> property = Property.create(
                 ExpressionFactory.exp("(obj:intColumn < 10)"), Boolean.class);
 
         boolean boolColumn = ObjectSelect.query(PrimitivesTestEntity.class)
@@ -149,10 +149,10 @@ public class ObjectSelect_PrimitiveColumnsIT extends ServerCase {
             return;
         }
 
-        Property<Integer> intProperty = Property.create("intColumn",
+        Property<Integer> intProperty = Property.create(
                 ExpressionFactory.exp("(obj:intColumn + 1)"), Integer.class);
 
-        Property<Boolean> boolProperty = Property.create("boolColumn",
+        Property<Boolean> boolProperty = Property.create(
                 ExpressionFactory.exp("(obj:intColumn = 10)"), Boolean.class);
 
         List<Object[]> columns = ObjectSelect.query(PrimitivesTestEntity.class)

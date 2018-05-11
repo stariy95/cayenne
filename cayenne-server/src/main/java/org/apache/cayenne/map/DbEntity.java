@@ -34,6 +34,7 @@ import org.apache.cayenne.map.event.EntityEvent;
 import org.apache.cayenne.map.event.MapEvent;
 import org.apache.cayenne.map.event.RelationshipEvent;
 import org.apache.cayenne.util.CayenneMapEntry;
+import org.apache.cayenne.util.Util;
 import org.apache.cayenne.util.XMLEncoder;
 
 import java.util.ArrayList;
@@ -603,7 +604,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
     }
 
     public Collection<ObjEntity> mappedObjEntities() {
-        Collection<ObjEntity> objEntities = new HashSet<ObjEntity>();
+        Collection<ObjEntity> objEntities = new HashSet<>();
         MappingNamespace mns = getDataMap().getNamespace();
         if (mns != null) {
             for (ObjEntity objEntity : mns.getObjEntities()) {
@@ -675,7 +676,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
         }
 
         private PathComponentIterator createPathIterator(String path) {
-            return new PathComponentIterator(DbEntity.this, path, new HashMap<String, String>());
+            return new PathComponentIterator(DbEntity.this, path, Collections.emptyMap());
             // TODO: do we need aliases here?
         }
 
@@ -705,7 +706,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
                 Iterator<CayenneMapEntry> relationshipIt = resolvePathComponents(relationshipPath);
 
                 // for inserts from the both ends use LinkedList
-                LinkedList<String> finalPath = new LinkedList<String>();
+                LinkedList<String> finalPath = new LinkedList<>();
 
                 // append remainder of the relationship, reversing it
                 while (relationshipIt.hasNext()) {
@@ -719,12 +720,12 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
                     appendPath(finalPath, component);
                 }
 
-                return convertToPath(finalPath);
+                return Util.join(finalPath, Entity.PATH_SEPARATOR);
             }
             // case (1)
             if (path.equals(relationshipPath)) {
 
-                LinkedList<String> finalPath = new LinkedList<String>();
+                LinkedList<String> finalPath = new LinkedList<>();
                 PathComponentIterator pathIt = createPathIterator(path);
 
                 // just do one step back and one step forward to create correct
@@ -742,7 +743,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
                     appendPath(finalPath, lastDBR);
                 }
 
-                return convertToPath(finalPath);
+                return Util.join(finalPath, Entity.PATH_SEPARATOR);
             }
 
             // case (2)
@@ -756,8 +757,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
             Iterator<CayenneMapEntry> relationshipIt = resolvePathComponents(relationshipPath);
 
             // for inserts from the both ends use LinkedList
-            LinkedList<String> finalPath = new LinkedList<String>();
-
+            LinkedList<String> finalPath = new LinkedList<>();
             while (relationshipIt.hasNext() && pathIt.hasNext()) {
                 // relationship path components must be DbRelationships
                 DbRelationship nextDBR = (DbRelationship) relationshipIt.next();
@@ -789,21 +789,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
                 appendPath(finalPath, component);
             }
 
-            return convertToPath(finalPath);
-        }
-
-        private String convertToPath(List<String> path) {
-            StringBuilder converted = new StringBuilder();
-            int len = path.size();
-            for (int i = 0; i < len; i++) {
-                if (i > 0) {
-                    converted.append(Entity.PATH_SEPARATOR);
-                }
-
-                converted.append(path.get(i));
-            }
-
-            return converted.toString();
+            return Util.join(finalPath, Entity.PATH_SEPARATOR);
         }
 
         private void prependReversedPath(LinkedList<String> finalPath, DbRelationship relationship) {

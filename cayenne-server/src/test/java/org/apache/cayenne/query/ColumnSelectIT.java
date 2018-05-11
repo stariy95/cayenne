@@ -33,7 +33,6 @@ import org.apache.cayenne.Fault;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.ResultBatchIterator;
-import org.apache.cayenne.ResultIteratorCallback;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.di.Inject;
@@ -56,6 +55,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 /**
@@ -131,7 +131,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test(expected = Exception.class)
-    public void testHavingOnNonGroupByColumn() throws Exception {
+    public void testHavingOnNonGroupByColumn() {
         Property<String> nameSubstr = Artist.ARTIST_NAME.substring(1, 6);
 
         Object[] q = ObjectSelect.columnQuery(Artist.class, nameSubstr, Property.COUNT)
@@ -152,7 +152,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectHavingWithExpressionAlias() throws Exception {
+    public void testSelectHavingWithExpressionAlias() {
 
         Object[] q = null;
         try {
@@ -173,7 +173,7 @@ public class ColumnSelectIT extends ServerCase {
 
     @Ignore("Need to figure out a better way to handle alias / no alias case for expression in having")
     @Test
-    public void testSelectHavingWithExpressionNoAlias() throws Exception {
+    public void testSelectHavingWithExpressionNoAlias() {
 
         Object[] q = null;
         try {
@@ -192,7 +192,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectWhereAndHaving() throws Exception {
+    public void testSelectWhereAndHaving() {
         Object[] q = null;
         try {
             q = ObjectSelect.columnQuery(Artist.class, Artist.ARTIST_NAME.substring(1, 6).alias("name_substr"), Property.COUNT)
@@ -211,7 +211,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testHavingWithoutAggregate() throws Exception {
+    public void testHavingWithoutAggregate() {
         Object date = ObjectSelect.columnQuery(Artist.class, Artist.DATE_OF_BIRTH, Artist.ARTIST_NAME)
                 .having(Artist.ARTIST_NAME.like("a%"))
                 .selectFirst(context);
@@ -228,7 +228,7 @@ public class ColumnSelectIT extends ServerCase {
      */
     @Ignore
     @Test
-    public void testHavingWithoutSelect() throws Exception {
+    public void testHavingWithoutSelect() {
         Object date = ObjectSelect.columnQuery(Artist.class, Artist.DATE_OF_BIRTH)
                 .having(Artist.ARTIST_NAME.like("a%"))
                 .selectFirst(context);
@@ -241,7 +241,7 @@ public class ColumnSelectIT extends ServerCase {
      *      SELECT a.name FROM artist a JOIN painting p ON (..) HAVING COUNT(p.id) > 4
      */
     @Test
-    public void testSelectRelationshipCountHavingWithoutFieldSelect() throws Exception {
+    public void testSelectRelationshipCountHavingWithoutFieldSelect() {
         Object[] result = null;
         try {
             result = ObjectSelect.query(Artist.class)
@@ -260,7 +260,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectRelationshipCountHaving() throws Exception {
+    public void testSelectRelationshipCountHaving() {
         Property<Long> paintingCount = Artist.PAINTING_ARRAY.count();
 
         Object[] result = null;
@@ -281,7 +281,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectWithQuoting() throws Exception {
+    public void testSelectWithQuoting() {
         if(unitDbAdapter instanceof PostgresUnitDbAdapter) {
             // we need to convert somehow all names to lowercase on postgres, so skip it for now
             return;
@@ -331,7 +331,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testAgregateOnRelation() throws Exception {
+    public void testAgregateOnRelation() {
         BigDecimal min = new BigDecimal(3);
         BigDecimal max = new BigDecimal(30);
         BigDecimal avg = new BigDecimal(BigInteger.valueOf(1290L), 2);
@@ -354,7 +354,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testQueryCount() throws Exception {
+    public void testQueryCount() {
         long count = ObjectSelect
                 .columnQuery(Artist.class, Property.COUNT)
                 .selectOne(context);
@@ -399,7 +399,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectFirst_MultiColumns() throws Exception {
+    public void testSelectFirst_MultiColumns() {
         Object[] a = ObjectSelect.query(Artist.class)
                 .columns(Artist.ARTIST_NAME, Artist.DATE_OF_BIRTH)
                 .columns(Artist.ARTIST_NAME, Artist.DATE_OF_BIRTH)
@@ -413,7 +413,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectFirst_SingleValueInColumns() throws Exception {
+    public void testSelectFirst_SingleValueInColumns() {
         Object[] a = ObjectSelect.query(Artist.class)
                 .columns(Artist.ARTIST_NAME)
                 .where(Artist.ARTIST_NAME.like("artist%"))
@@ -424,7 +424,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectFirst_SubstringName() throws Exception {
+    public void testSelectFirst_SubstringName() {
         Expression exp = FunctionExpressionFactory.substringExp(Artist.ARTIST_NAME.path(), 5, 3);
         Property<String> substrName = Property.create("substrName", exp, String.class);
         Object[] a = ObjectSelect.query(Artist.class)
@@ -438,7 +438,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectFirst_RelColumns() throws Exception {
+    public void testSelectFirst_RelColumns() {
         // set shorter than painting_array.paintingTitle alias as some DBs doesn't support dot in alias
         Property<String> paintingTitle = Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE).alias("paintingTitle");
 
@@ -451,7 +451,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectFirst_RelColumn() throws Exception {
+    public void testSelectFirst_RelColumn() {
         // set shorter than painting_array.paintingTitle alias as some DBs doesn't support dot in alias
         Property<String> paintingTitle = Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE).alias("paintingTitle");
 
@@ -464,7 +464,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testSelectFirst_RelColumnWithFunction() throws Exception {
+    public void testSelectFirst_RelColumnWithFunction() {
         Property<String> altTitle = Artist.PAINTING_ARRAY.dot(Painting.PAINTING_TITLE)
                 .substring(7, 3).concat(" ", Artist.ARTIST_NAME)
                 .alias("altTitle");
@@ -492,6 +492,7 @@ public class ColumnSelectIT extends ServerCase {
                 Property.createSelf(Artist.class)
         ).select(context);
         assertEquals(21, result.size());
+
         for(Object[] next : result) {
             long count = (Long)next[0];
             Artist artist = (Artist)next[1];
@@ -502,11 +503,12 @@ public class ColumnSelectIT extends ServerCase {
             Artist artist3 = (Artist)next[6];
 
             assertTrue(paintingTitle.startsWith("painting"));
-            assertTrue(count == 4L || count == 5L);
             assertEquals("tate modern", galleryName);
             assertEquals(PersistenceState.COMMITTED, artist.getPersistenceState());
             assertEquals(PersistenceState.COMMITTED, artist2.getPersistenceState());
             assertEquals(PersistenceState.COMMITTED, artist3.getPersistenceState());
+            assertEquals(artistName, artist.getArtistName());
+            assertTrue(count == 4L || count == 5L);
         }
     }
 
@@ -515,23 +517,20 @@ public class ColumnSelectIT extends ServerCase {
      */
 
     @Test
-    public void testIterationSingleColumn() throws Exception {
+    public void testIterationSingleColumn() {
         ColumnSelect<String> columnSelect = ObjectSelect.query(Artist.class).column(Artist.ARTIST_NAME);
 
         final int[] count = new int[1];
-        columnSelect.iterate(context, new ResultIteratorCallback<String>() {
-            @Override
-            public void next(String object) {
-                count[0]++;
-                assertTrue(object.startsWith("artist"));
-            }
+        columnSelect.iterate(context, object -> {
+            count[0]++;
+            assertTrue(object.startsWith("artist"));
         });
 
         assertEquals(20, count[0]);
     }
 
     @Test
-    public void testBatchIterationSingleColumn() throws Exception {
+    public void testBatchIterationSingleColumn() {
         ColumnSelect<String> columnSelect = ObjectSelect.query(Artist.class).column(Artist.ARTIST_NAME);
 
         try(ResultBatchIterator<String> it = columnSelect.batchIterator(context, 10)) {
@@ -542,24 +541,21 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testIterationMultiColumns() throws Exception {
+    public void testIterationMultiColumns() {
         ColumnSelect<Object[]> columnSelect = ObjectSelect.query(Artist.class).columns(Artist.ARTIST_NAME, Artist.DATE_OF_BIRTH);
 
         final int[] count = new int[1];
-        columnSelect.iterate(context, new ResultIteratorCallback<Object[]>() {
-            @Override
-            public void next(Object[] object) {
-                count[0]++;
-                assertTrue(object[0] instanceof String);
-                assertTrue(object[1] instanceof java.util.Date);
-            }
+        columnSelect.iterate(context, object -> {
+            count[0]++;
+            assertTrue(object[0] instanceof String);
+            assertTrue(object[1] instanceof Date);
         });
 
         assertEquals(20, count[0]);
     }
 
     @Test
-    public void testBatchIterationMultiColumns() throws Exception {
+    public void testBatchIterationMultiColumns() {
         ColumnSelect<Object[]> columnSelect = ObjectSelect.query(Artist.class).columns(Artist.ARTIST_NAME, Artist.DATE_OF_BIRTH);
 
         try(ResultBatchIterator<Object[]> it = columnSelect.batchIterator(context, 10)) {
@@ -612,7 +608,7 @@ public class ColumnSelectIT extends ServerCase {
                 .pageSize(10)
                 .select(context);
         assertNotNull(a);
-        assertEquals(5, a.size());
+        assertEquals(20, a.size());
         int idx = 0;
         for(Object[] next : a) {
             assertNotNull(next);
@@ -660,7 +656,7 @@ public class ColumnSelectIT extends ServerCase {
                 .pageSize(10)
                 .select(context);
         assertNotNull(a);
-        assertEquals(5, a.size());
+        assertEquals(20, a.size());
         int idx = 0;
         for(Object[] next : a) {
             assertNotNull(next);
@@ -678,14 +674,17 @@ public class ColumnSelectIT extends ServerCase {
                 .columns(Artist.ARTIST_NAME, artistFull, Artist.PAINTING_ARRAY.flat(Painting.class))
                 .pageSize(10)
                 .select(context);
+
         assertNotNull(a);
-        assertEquals(21, a.size());
+        assertEquals(36, a.size());
         int idx = 0;
         for(Object[] next : a) {
             assertNotNull(next);
             assertEquals("" + idx, String.class, next[0].getClass());
             assertEquals("" + idx, Artist.class, next[1].getClass());
-            assertEquals("" + idx, Painting.class, next[2].getClass());
+            if(next[2] != null) {
+                assertEquals("" + idx, Painting.class, next[2].getClass());
+            }
             idx++;
         }
     }
@@ -733,9 +732,9 @@ public class ColumnSelectIT extends ServerCase {
     private void checkPrefetchResults(List<Object[]> result) {
         assertEquals(21, result.size());
         for(Object[] next : result) {
-            assertTrue(next[0] instanceof Artist);
-            assertTrue(next[1] instanceof java.util.Date);
-            assertTrue(next[2] instanceof String);
+            assertThat(next[0], instanceOf(Artist.class));
+            assertThat(next[1], instanceOf(java.util.Date.class));
+            assertThat(next[2], instanceOf(String.class));
             Artist artist = (Artist)next[0];
             assertEquals(PersistenceState.COMMITTED, artist.getPersistenceState());
 
@@ -753,6 +752,16 @@ public class ColumnSelectIT extends ServerCase {
                 .columns(artistFull, Artist.PAINTING_ARRAY.count())
                 .prefetch(Artist.PAINTING_ARRAY.joint())
                 .select(context);
+
+        // SELECT DISTINCT
+        //      RTRIM(t0.ARTIST_NAME) ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,
+        //      COUNT(t1.PAINTING_ID ),
+        //      t2.ESTIMATED_PRICE ,t2.PAINTING_DESCRIPTION ,t2.PAINTING_TITLE ,t2.ARTIST_ID ,t2.GALLERY_ID ,t2.PAINTING_ID
+        // FROM
+        //      ARTIST t0
+        //      LEFT JOIN PAINTING t1  ON  (t0.ARTIST_ID  =  t1.ARTIST_ID )
+        //      LEFT JOIN PAINTING t2  ON  (t0.ARTIST_ID  =  t2.ARTIST_ID )
+        // GROUP BY t0.ARTIST_NAME ,t0.DATE_OF_BIRTH ,t0.ARTIST_ID ,t2.ESTIMATED_PRICE ,t2.PAINTING_DESCRIPTION ,t2.PAINTING_TITLE ,t2.ARTIST_ID ,t2.GALLERY_ID ,t2.PAINTING_ID
 
         checkAggregatePrefetchResults(result);
     }
@@ -782,7 +791,7 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     private void checkAggregatePrefetchResults(List<Object[]> result) {
-        assertEquals(5, result.size());
+        assertEquals(20, result.size());
         for(Object[] next : result) {
             assertTrue(next[0] instanceof Artist);
             assertTrue(next[1] instanceof Long);
@@ -852,7 +861,7 @@ public class ColumnSelectIT extends ServerCase {
         List<Object[]> result = ObjectSelect.query(Artist.class)
                 .columns(artistFull, Artist.ARTIST_NAME, Artist.PAINTING_ARRAY.count())
                 .select(context);
-        assertEquals(5, result.size());
+        assertEquals(20, result.size());
 
         for(Object[] next : result) {
             assertTrue(next[0] instanceof Artist);
@@ -897,21 +906,25 @@ public class ColumnSelectIT extends ServerCase {
     }
 
     @Test
-    public void testObjectColumnToMany() throws Exception {
+    public void testObjectColumnToMany() {
         Property<Artist> artist = Property.createSelf(Artist.class);
 
         List<Object[]> result = ObjectSelect.query(Artist.class)
                 .columns(artist, Artist.PAINTING_ARRAY.flat(Painting.class), Artist.PAINTING_ARRAY.dot(Painting.TO_GALLERY))
                 .select(context);
-        assertEquals(21, result.size());
+        assertEquals(36, result.size());
 
         for(Object[] next : result) {
             assertTrue(next[0] instanceof Artist);
-            assertTrue(next[1] instanceof Painting);
-            assertTrue(next[2] instanceof Gallery);
             assertEquals(PersistenceState.COMMITTED, ((Artist)next[0]).getPersistenceState());
-            assertEquals(PersistenceState.COMMITTED, ((Painting)(next[1])).getPersistenceState());
-            assertEquals(PersistenceState.COMMITTED, ((Gallery)(next[2])).getPersistenceState());
+            if(next[1] != null) {
+                assertTrue(next[1] instanceof Painting);
+                assertEquals(PersistenceState.COMMITTED, ((Painting)(next[1])).getPersistenceState());
+            }
+            if(next[2] != null) {
+                assertTrue(next[2] instanceof Gallery);
+                assertEquals(PersistenceState.COMMITTED, ((Gallery) (next[2])).getPersistenceState());
+            }
         }
     }
 
@@ -936,7 +949,7 @@ public class ColumnSelectIT extends ServerCase {
     public void testSelfPropertyInWhere() {
         Artist artist = ObjectSelect.query(Artist.class).selectFirst(context);
         Property<Artist> artistProperty = Property.createSelf(Artist.class);
-        List<Artist> result = ObjectSelect.query(Artist.class)
+        ObjectSelect.query(Artist.class)
                 .column(artistProperty)
                 .where(artistProperty.eq(artist))
                 .select(context);

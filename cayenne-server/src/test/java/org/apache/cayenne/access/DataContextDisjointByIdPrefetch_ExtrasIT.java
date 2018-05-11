@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.*;
 
 @UseServerRuntime(CayenneProjects.THINGS_PROJECT)
@@ -123,27 +124,44 @@ public class DataContextDisjointByIdPrefetch_ExtrasIT extends ServerCase {
     public void testFlattenedRelationship() throws Exception {
         createBagWithTwoBoxesAndPlentyOfBallsDataSet();
 
-        SelectQuery query = new SelectQuery(Bag.class);
+        SelectQuery<Bag> query = SelectQuery.query(Bag.class);
         query.addPrefetch(Bag.BALLS.disjointById());
-        final List<Bag> result = context.performQuery(query);
 
-        queryInterceptor.runWithQueriesBlocked(new UnitTestClosure() {
+        final List<Bag> result = query.select(context);
 
-            public void execute() {
-                assertFalse(result.isEmpty());
-                Bag b1 = result.get(0);
-                List<Ball> balls = (List<Ball>) b1.readPropertyDirectly(Bag.BALLS.getName());
-                assertNotNull(balls);
-                assertFalse(((ValueHolder) balls).isFault());
-                assertEquals(6, balls.size());
+        // SELECT
+        //      t0.THING_VOLUME ,t0.THING_WEIGHT ,t0.BOX_ID ,t0.ID
+        //      ,t2.ID
+        // FROM
+        //      BALL t0
+        //      JOIN BOX t1  ON ((t0.BOX_ID  =  t1.ID ))
+        //      JOIN BAG t2  ON ((t1.BAG_ID  =  t2.ID ))
+        // WHERE t1.BAG_ID = ?  [bind: 1->BAG_ID:1]
 
-                List<Integer> volumes = new ArrayList<Integer>();
-                for (Ball b : balls) {
-                    assertEquals(PersistenceState.COMMITTED, b.getPersistenceState());
-                    volumes.add(b.getThingVolume());
-                }
-                assertTrue(volumes.containsAll(Arrays.asList(10, 20, 30, 40, 20, 40)));
+        // SELECT DISTINCT
+        //      t0.THING_VOLUME ,t0.THING_WEIGHT ,t0.BOX_ID ,t0.ID
+        //      ,t2.ID
+        // FROM
+        //      BALL t0
+        //      JOIN BOX t1  ON ((t0.BOX_ID  =  t1.ID ))
+        //      JOIN BAG t2  ON ((t1.BAG_ID  =  t2.ID ))
+        // WHERE  (t1.BAG_ID  = ? )   [bind: 1->BAG_ID:1]
+
+        queryInterceptor.runWithQueriesBlocked(() -> {
+            assertFalse(result.isEmpty());
+            Bag b1 = result.get(0);
+            @SuppressWarnings("unchecked")
+            List<Ball> balls = (List<Ball>) b1.readPropertyDirectly(Bag.BALLS.getName());
+            assertNotNull(balls);
+            assertFalse(((ValueHolder) balls).isFault());
+            assertEquals(6, balls.size());
+
+            List<Integer> volumes = new ArrayList<>();
+            for (Ball b : balls) {
+                assertEquals(PersistenceState.COMMITTED, b.getPersistenceState());
+                volumes.add(b.getThingVolume());
             }
+            assertThat(volumes, hasItems(10, 20, 30, 40, 20, 40));
         });
     }
 
@@ -207,22 +225,35 @@ public class DataContextDisjointByIdPrefetch_ExtrasIT extends ServerCase {
     public void testMultiColumnRelationship() throws Exception {
         createBagWithTwoBoxesAndPlentyOfBallsDataSet();
 
-        SelectQuery query = new SelectQuery(Ball.class);
+        SelectQuery<Ball> query = SelectQuery.query(Ball.class);
         query.orQualifier(Ball.THING_VOLUME.eq(40).andExp(Ball.THING_WEIGHT.eq(30)));
         query.orQualifier(Ball.THING_VOLUME.eq(20).andExp(Ball.THING_WEIGHT.eq(10)));
 
         query.addPrefetch(Ball.THING.disjointById());
 
-        final List<Ball> balls = context.performQuery(query);
+        final List<Ball> balls = query.select(context);
 
-        queryInterceptor.runWithQueriesBlocked(new UnitTestClosure() {
 
-            public void execute() {
+        // SELECT
+        //      t0.THING_VOLUME ,t0.THING_WEIGHT ,t0.BOX_ID ,
+        //      t0.THING_VOLUME ,t0.THING_WEIGHT ,t0.ID
+        // FROM BALL t0
+        // WHERE  (((t0.THING_VOLUME  = ? ) AND (t0.THING_WEIGHT  = ? )) OR ((t0.THING_VOLUME  = ? ) AND (t0.THING_WEIGHT  = ? )))   [bind: 1->THING_VOLUME:40, 2->THING_WEIGHT:30, 3->THING_VOLUME:20, 4->THING_WEIGHT:10]
 
-                assertEquals(2, balls.size());
+        // SELECT DISTINCT
+        //      t0.VOLUME ,t0.WEIGHT ,
+        //      t0.VOLUME ,t0.WEIGHT ,t0.ID ,
+        //      t1.ID
+        // FROM
+        //      THING t0
+        //      JOIN BALL t1  ON (((t0.VOLUME  =  t1.THING_VOLUME ) AND  (t0.WEIGHT  =  t1.THING_WEIGHT )))
+        // WHERE  (((t0.VOLUME  = ? ) AND (t0.WEIGHT  = ? )) OR ((t0.VOLUME  = ? ) AND (t0.WEIGHT  = ? )))   [bind: 1->VOLUME:20, 2->WEIGHT:10, 3->VOLUME:40, 4->WEIGHT:30]
 
-                balls.get(0).getThing().getVolume();
-                balls.get(1).getThing().getVolume();
+        queryInterceptor.runWithQueriesBlocked(() -> {
+            assertEquals(2, balls.size());
+            for(Ball next : balls) {
+                assertNotNull(balls.get(0).getThing());
+                next.getThing().getVolume();
             }
         });
     }
