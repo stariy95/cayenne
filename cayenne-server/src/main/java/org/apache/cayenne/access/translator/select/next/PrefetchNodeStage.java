@@ -91,7 +91,7 @@ class PrefetchNodeStage implements TranslationStage {
             ObjRelationship targetRel = (ObjRelationship) prefetchExp.evaluate(objEntity);
             ClassDescriptor prefetchClassDescriptor = context.getResolver().getClassDescriptor(targetRel.getTargetEntityName());
 
-            DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor, dbPath);
+            DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor);
             columnExtractor.extract("p:" + dbPath);
         }
     }

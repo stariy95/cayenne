@@ -30,8 +30,11 @@ import org.apache.cayenne.map.JoinType;
  */
 public class DbPathProcessor extends PathProcessor<DbEntity> {
 
-    DbPathProcessor(TranslatorContext context, DbEntity entity, String path) {
-        super(context, entity, path);
+    DbPathProcessor(TranslatorContext context, DbEntity entity, String parentPath) {
+        super(context, entity);
+        if(parentPath != null) {
+            currentDbPath.append(parentPath);
+        }
     }
 
     @Override
@@ -49,7 +52,7 @@ public class DbPathProcessor extends PathProcessor<DbEntity> {
             return;
         }
 
-        throw new IllegalStateException("Unable to resolve path: " + currentDbPath.toString());
+        throw new IllegalStateException("Unable to resolve path: " + currentDbPath.toString() + "." + next);
     }
 
     @Override
@@ -63,8 +66,8 @@ public class DbPathProcessor extends PathProcessor<DbEntity> {
     }
 
     private void processAttribute(DbAttribute attribute) {
+        addAttribute(currentDbPath.toString(), attribute);
         appendCurrentPath(attribute.getName());
-        dbAttributeList.add(attribute);
     }
 
     private void processRelationship(DbRelationship relationship) {
@@ -74,19 +77,30 @@ public class DbPathProcessor extends PathProcessor<DbEntity> {
         } else {
             appendCurrentPath(relationship.getName());
             context.getTableTree().addJoinTable(currentDbPath.toString(), relationship, JoinType.LEFT_OUTER);
+            if(!relationship.isToMany()) {
+                String path = currentDbPath.toString();
+                for (DbAttribute attribute : relationship.getTargetEntity().getPrimaryKeys()) {
+                    addAttribute(path, attribute);
+                }
+            }
         }
     }
 
     protected void processRelTermination(DbRelationship rel) {
         this.relationship = rel;
+        String path = currentDbPath.toString();
         appendCurrentPath(rel.getName());
 
         if (rel.isToMany() || !rel.isToPK()) {
             // match on target PK
-            dbAttributeList.addAll(rel.getTargetEntity().getPrimaryKeys());
+            context.getTableTree().addJoinTable(currentDbPath.toString(), rel, JoinType.LEFT_OUTER);
+            path = currentDbPath.toString();
+            for(DbAttribute attribute : rel.getTargetEntity().getPrimaryKeys()) {
+                addAttribute(path, attribute);
+            }
         } else {
             for(DbJoin join : rel.getJoins()) {
-                dbAttributeList.add(join.getSource());
+                addAttribute(path, join.getSource());
             }
         }
     }

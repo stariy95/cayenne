@@ -233,7 +233,6 @@ public class VerticalInheritanceIT extends ServerCase {
 	/**
 	 * @link https://issues.apache.org/jira/browse/CAY-2282
 	 */
-	@Ignore // FIXME: broken with latest flattened attributes fix
 	@Test
 	public void testUpdateRelation_Sub3() throws Exception {
 		TableHelper ivRootTable = new TableHelper(dbHelper, "IV_ROOT");
@@ -245,60 +244,6 @@ public class VerticalInheritanceIT extends ServerCase {
 		TableHelper ivSub3Table = new TableHelper(dbHelper, "IV_SUB3");
 		ivSub3Table.setColumns("ID", "IV_ROOT_ID");
 		ivSub3Table.insert(3, 1);
-
-		// SELECT DISTINCT   t0.DISCRIMINATOR ,t0.NAME ,t2.SUB1_SUB1_NAME ,t3.SUB2_ATTR ,t3.SUB2_NAME ,t4.IV_ROOT_ID ,t1.SUB1_NAME ,t0.ID
-		// FROM IV_ROOT t0
-		// LEFT JOIN IV_SUB1 t1  ON (t0.ID  =  t1.ID )
-		// LEFT JOIN IV_SUB1_SUB1 t2  ON (t1.ID  =  t2.ID )
-		// LEFT JOIN IV_SUB2 t3  ON (t0.ID  =  t3.ID )
-		// LEFT JOIN IV_SUB3 t4  ON (t0.ID  =  t4.ID )
-		// WHERE  (t0.ID  = ? )
-		// [bind: 1->ID:2]
-
-		// SELECT            t0.DISCRIMINATOR, t0.NAME, t2.SUB1_SUB1_NAME, t3.SUB2_ATTR, t3.SUB2_NAME, t0.ID, t4.ID, t1.SUB1_NAME
-		// FROM IV_ROOT t0
-		// LEFT JOIN IV_SUB1 t1 ON (t0.ID = t1.ID)
-		// LEFT JOIN IV_SUB1_SUB1 t2 ON (t1.ID = t2.ID)
-		// LEFT JOIN IV_SUB2 t3 ON (t0.ID = t3.ID)
-		// LEFT JOIN IV_SUB3 t4 ON (t0.ID = t4.ID)
-		// WHERE t0.ID = ?
-		// [bind: 1->ID:2]
-
-
-
-
-		// SELECT DISTINCT   t0.DISCRIMINATOR ,t0.NAME ,t1.IV_ROOT_ID ,t0.ID
-		// FROM IV_ROOT t0
-		// LEFT JOIN IV_SUB3 t1  ON (t0.ID  =  t1.ID )
-		// WHERE  ((t0.ID  = ? ) AND (t0.DISCRIMINATOR  = ? ))
-		// [bind: 1->ID:3, 2->DISCRIMINATOR:'IvSub3']
-
-		// SELECT 			 t0.DISCRIMINATOR, t0.NAME, t0.ID, t1.ID
-		// FROM IV_ROOT t0
-		// LEFT JOIN IV_SUB3 t1 ON (t0.ID = t1.ID)
-		// WHERE (t0.ID = ?) AND (t0.DISCRIMINATOR = ?)
-		// [bind: 1->ID:3, 2->DISCRIMINATOR:'IvSub3']
-
-
-
-
-		// SELECT DISTINCT   t0.DISCRIMINATOR ,t0.NAME ,t2.SUB1_SUB1_NAME ,t3.SUB2_ATTR ,t3.SUB2_NAME ,t4.IV_ROOT_ID ,t1.SUB1_NAME ,t0.ID
-		// FROM IV_ROOT t0
-		// LEFT JOIN IV_SUB1 t1  ON (t0.ID  =  t1.ID )
-		// LEFT JOIN IV_SUB1_SUB1 t2  ON (t1.ID  =  t2.ID )
-		// LEFT JOIN IV_SUB2 t3  ON (t0.ID  =  t3.ID )
-		// LEFT JOIN IV_SUB3 t4  ON (t0.ID  =  t4.ID )
-		// LEFT JOIN IV_SUB3 t5  ON (t0.ID  =  t5.IV_ROOT_ID )
-		// WHERE  (t5.ID  = ? )   [bind: 1->ID:3]
-
-		// SELECT DISTINCT   t0.DISCRIMINATOR, t0.NAME, t2.SUB1_SUB1_NAME, t3.SUB2_ATTR, t3.SUB2_NAME, t0.ID, t4.ID, t1.SUB1_NAME
-		// FROM IV_ROOT t0
-		// LEFT JOIN IV_SUB1 t1 ON (t0.ID = t1.ID)
-		// LEFT JOIN IV_SUB1_SUB1 t2 ON (t1.ID = t2.ID)
-		// LEFT JOIN IV_SUB2 t3 ON (t0.ID = t3.ID)
-		// LEFT JOIN IV_SUB3 t4 ON (t0.ID = t4.ID)
-		// JOIN IV_SUB3 t5 ON (t0.ID = t5.IV_ROOT_ID)
-		// WHERE t5.ID = ? [bind: 1->ID:3]
 
 		IvRoot root = SelectById.query(IvRoot.class, 2).selectOne(context);
 		IvSub3 sub3 = SelectById.query(IvSub3.class, 3).selectOne(context);

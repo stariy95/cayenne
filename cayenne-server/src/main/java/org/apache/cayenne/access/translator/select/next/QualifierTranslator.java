@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.translator.select.next;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.cayenne.CayenneRuntimeException;
@@ -199,30 +200,21 @@ class QualifierTranslator implements TraversalHandler {
     }
 
     private Node processPathTranslationResult(Expression node, Expression parentNode, PathTranslationResult result) {
-        StringBuilder path = new StringBuilder(result.getFinalPath());
-        DbAttribute[] lastDbAttribute = new DbAttribute[]{result.getLastAttribute()};
-        result.getDbRelationship().ifPresent(r -> {
-            if(r.isToMany() || !r.isToPK() || forceJoin) {
-                context.getTableTree().addJoinTable(path.toString(), r, JoinType.LEFT_OUTER);
-                path.append('.').append(lastDbAttribute[0].getName());
-            }
-        });
-
-        if(result.getDbAttributes().size() > 1) {
+        if(result.getDbRelationship().isPresent()
+                && result.getDbAttributes().size() > 1
+                && result.getDbRelationship().get().getTargetEntity().getPrimaryKeys().size() > 1) {
             return createMultiAttributeMatch(node, parentNode, result);
         } else if(result.getDbAttributes().isEmpty()) {
             return new EmptyNode();
         } else {
-            String alias = topLevelAlias;
+            String columnAlias = topLevelAlias;
             topLevelAlias = null;
-            ColumnNodeBuilder column = table(context.getTableTree().aliasForAttributePath(path.toString()))
-                    .column(lastDbAttribute[0]).as(alias);
-            return column.build();
+            String alias = context.getTableTree().aliasForPath(result.getLastAttributePath());
+            return table(alias).column(result.getLastAttribute()).as(columnAlias).build();
         }
     }
 
     private Node createMultiAttributeMatch(Expression node, Expression parentNode, PathTranslationResult result) {
-        DbRelationship relationship = result.getDbRelationship().orElseThrow(() -> new CayenneRuntimeException("No relationship found"));
         ObjectId objectId = null;
         expressionsToSkip.add(node);
         expressionsToSkip.add(parentNode);
@@ -254,28 +246,20 @@ class QualifierTranslator implements TraversalHandler {
         ExpressionNodeBuilder expressionNodeBuilder = null;
         ExpressionNodeBuilder eq;
 
-        if(relationship.isToMany()) {
-            String alias = context.getTableTree().aliasForPath(relationship.getName());
-            for (DbAttribute attribute : relationship.getTargetEntity().getPrimaryKeys()) {
-                Object nextValue = objectId.getIdSnapshot().get(attribute.getName());
-                eq = table(alias).column(attribute).eq(value(nextValue));
-                if (expressionNodeBuilder == null) {
-                    expressionNodeBuilder = eq;
-                } else {
-                    expressionNodeBuilder = expressionNodeBuilder.and(eq);
-                }
-            }
-        } else {
-            String path = (String)node.getOperand(0);
-            String alias = context.getTableTree().aliasForAttributePath(path);
-            for (DbJoin join : relationship.getJoins()) {
-                Object nextValue = objectId.getIdSnapshot().get(join.getTargetName());
-                eq = table(alias).column(join.getSource()).eq(value(nextValue));
-                if (expressionNodeBuilder == null) {
-                    expressionNodeBuilder = eq;
-                } else {
-                    expressionNodeBuilder = expressionNodeBuilder.and(eq);
-                }
+        Iterator<DbAttribute> pkIt = result.getDbRelationship().get().getTargetEntity().getPrimaryKeys().iterator();
+        int count = result.getDbAttributes().size();
+
+        for(int i=0; i<count; i++) {
+            String path = result.getAttributePaths().get(i);
+            DbAttribute attribute = result.getDbAttributes().get(i);
+            DbAttribute pk = pkIt.next();
+            String alias = context.getTableTree().aliasForPath(path);
+            Object nextValue = objectId.getIdSnapshot().get(pk.getName());
+            eq = table(alias).column(attribute).eq(value(nextValue));
+            if (expressionNodeBuilder == null) {
+                expressionNodeBuilder = eq;
+            } else {
+                expressionNodeBuilder = expressionNodeBuilder.and(eq);
             }
         }
 

@@ -34,10 +34,10 @@ import org.apache.cayenne.map.DbAttribute;
 class ResultNodeDescriptor {
     private final Node node;
     private final boolean inDataRow;
-    private final String dataRowKey;
     private final boolean isAggregate;
     private final Property<?> property;
 
+    private String dataRowKey;
     private DbAttribute dbAttribute;
     private String javaType;
 
@@ -77,6 +77,10 @@ class ResultNodeDescriptor {
             return getDbAttribute().getName();
         }
         return null;
+    }
+
+    public void setDataRowKey(String dataRowKey) {
+        this.dataRowKey = dataRowKey;
     }
 
     public ResultNodeDescriptor setJavaType(String javaType) {

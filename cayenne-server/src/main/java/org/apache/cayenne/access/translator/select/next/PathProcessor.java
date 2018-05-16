@@ -22,6 +22,7 @@ package org.apache.cayenne.access.translator.select.next;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.cayenne.map.DbAttribute;
@@ -36,10 +37,10 @@ public abstract class PathProcessor<T extends Entity> implements PathTranslation
     public static final char OUTER_JOIN_INDICATOR = '+';
     public static final char SPLIT_PATH_INDICATOR = '$';
 
-    protected final PathComponents components;
     protected final Map<String, String> pathSplitAliases;
     protected final TranslatorContext context;
-    protected final List<DbAttribute> dbAttributeList;
+    protected final List<String> attributePaths;
+    protected final List<DbAttribute> attributes;
     protected final StringBuilder currentDbPath;
 
     protected boolean lastComponent;
@@ -47,16 +48,17 @@ public abstract class PathProcessor<T extends Entity> implements PathTranslation
     protected T entity;
     protected DbRelationship relationship;
 
-    public PathProcessor(TranslatorContext context, T entity, String path) {
-        this.context = context;
-        this.entity = entity;
-        this.components = new PathComponents(path);
+    public PathProcessor(TranslatorContext context, T entity) {
+        this.context = Objects.requireNonNull(context);
+        this.entity = Objects.requireNonNull(entity);
         this.pathSplitAliases = context.getMetadata().getPathSplitAliases();
         this.currentDbPath = new StringBuilder();
-        this.dbAttributeList = new ArrayList<>(1);
+        this.attributes = new ArrayList<>(1);
+        this.attributePaths = new ArrayList<>(1);
     }
 
-    public PathTranslationResult process() {
+    public PathTranslationResult process(String path) {
+        PathComponents components = new PathComponents(path);
         String[] rawComponents = components.getAll();
         for(int i=0; i<rawComponents.length; i++) {
             String next = rawComponents[i];
@@ -77,13 +79,23 @@ public abstract class PathProcessor<T extends Entity> implements PathTranslation
         return this;
     }
 
+    protected void addAttribute(String path, DbAttribute attribute) {
+        attributePaths.add(path);
+        attributes.add(attribute);
+    }
+
     abstract protected void processAliasedAttribute(String next, String alias);
 
     abstract protected void processNormalAttribute(String next);
 
     @Override
     public List<DbAttribute> getDbAttributes() {
-        return dbAttributeList;
+        return attributes;
+    }
+
+    @Override
+    public List<String> getAttributePaths() {
+        return attributePaths;
     }
 
     @Override

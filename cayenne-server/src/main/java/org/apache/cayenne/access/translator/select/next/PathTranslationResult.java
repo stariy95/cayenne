@@ -38,8 +38,14 @@ interface PathTranslationResult {
 
     List<DbAttribute> getDbAttributes();
 
+    List<String> getAttributePaths();
+
     default DbAttribute getLastAttribute() {
         return getDbAttributes().get(getDbAttributes().size() - 1);
+    }
+
+    default String getLastAttributePath() {
+        return getAttributePaths().get(getAttributePaths().size() - 1);
     }
 
 }

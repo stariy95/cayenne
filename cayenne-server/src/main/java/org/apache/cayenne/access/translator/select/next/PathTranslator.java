@@ -19,7 +19,8 @@
 
 package org.apache.cayenne.access.translator.select.next;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.ObjEntity;
@@ -29,7 +30,8 @@ import org.apache.cayenne.map.ObjEntity;
  */
 class PathTranslator {
 
-    private final HashMap<String, PathTranslationResult> resultCache = new HashMap<>();
+    private final Map<String, PathTranslationResult> objResultCache = new ConcurrentHashMap<>();
+    private final Map<String, PathTranslationResult> dbResultCache = new ConcurrentHashMap<>();
 
     private final TranslatorContext context;
 
@@ -37,14 +39,22 @@ class PathTranslator {
         this.context = context;
     }
 
+    PathTranslationResult translatePath(ObjEntity entity, String path, String parentPath) {
+        return objResultCache.computeIfAbsent(parentPath + '.' + entity.getName() + '.' + path,
+                (k) -> new ObjPathProcessor(context, entity, parentPath).process(path));
+    }
+
     PathTranslationResult translatePath(ObjEntity entity, String path) {
-        return resultCache.computeIfAbsent(entity.getName() + '.' + path,
-                (k) -> new ObjPathProcessor(context, entity, path).process());
+        return translatePath(entity, path, null);
+    }
+
+    PathTranslationResult translatePath(DbEntity entity, String path, String parentPath) {
+        return dbResultCache.computeIfAbsent(parentPath + '.' + entity.getName() + '.' + path,
+                (k) -> new DbPathProcessor(context, entity, parentPath).process(path));
     }
 
     PathTranslationResult translatePath(DbEntity entity, String path) {
-        return resultCache.computeIfAbsent(':' + entity.getName() + '.' + path,
-                (k) -> new DbPathProcessor(context, entity, path).process());
+        return translatePath(entity, path, null);
     }
 
 }

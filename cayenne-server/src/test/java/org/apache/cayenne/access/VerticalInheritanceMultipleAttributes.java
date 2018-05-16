@@ -81,7 +81,6 @@ public class VerticalInheritanceMultipleAttributes extends ServerCase {
     /**
      * @link https://issues.apache.org/jira/browse/CAY-2282
      */
-    @Ignore // FIXME
     @Test
     public void testUpdateTwoObjects() throws SQLException {
         // Insert records we want to update

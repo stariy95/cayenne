@@ -26,7 +26,6 @@ import java.util.Set;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.reflect.AttributeProperty;
@@ -42,25 +41,28 @@ import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.table;
  */
 class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyVisitor {
 
+    private static final char[] PREFETCH_PREFIX = {'p', ':'};
+
     private final ClassDescriptor descriptor;
     private final PathTranslator pathTranslator;
-    private final String columnLabelPrefix;
 
     private String prefix;
     private Set<String> columnTracker = new HashSet<>();
 
-    DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor, String columnLabelPrefix) {
+    DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor) {
         super(context);
         this.descriptor = descriptor;
         this.pathTranslator = context.getPathTranslator();
-        this.columnLabelPrefix = columnLabelPrefix;
     }
 
     public void extract(String prefix) {
         this.prefix = prefix;
+        String labelPrefix = prefix;
         TranslatorContext.DescriptorType type = TranslatorContext.DescriptorType.OTHER;
-        if(columnLabelPrefix != null) {
+        if(prefix != null && prefix.length() > 2
+                && prefix.charAt(0) == PREFETCH_PREFIX[0] && prefix.charAt(1) == PREFETCH_PREFIX[1]) {
             type = TranslatorContext.DescriptorType.PREFETCH;
+            labelPrefix = prefix.substring(2);
         } else if(descriptor.getEntity().getDbEntity() == context.getRootDbEntity()) {
             type = TranslatorContext.DescriptorType.ROOT;
         }
@@ -74,7 +76,7 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
         for (DbAttribute dba : table.getPrimaryKeys()) {
             String columnUniqueName = alias + '.' + dba.getName();
             if(columnTracker.add(columnUniqueName)) {
-                addDbAttribute(prefix, columnLabelPrefix, dba);
+                addDbAttribute(prefix, labelPrefix, dba);
             }
         }
         context.markDescriptorEnd(type);
@@ -83,23 +85,14 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     @Override
     public boolean visitAttribute(AttributeProperty property) {
         ObjAttribute oa = property.getAttribute();
-        PathTranslationResult result = pathTranslator.translatePath(oa.getEntity(), property.getName());
+        PathTranslationResult result = pathTranslator.translatePath(oa.getEntity(), property.getName(), prefix);
 
-        DbAttribute attribute = result.getLastAttribute();
-
-        String path = result.getFinalPath();
-        if(prefix != null) {
-            path = prefix + '.' + path;
-        }
-        String alias = context.getTableTree().aliasForAttributePath(path);
-
-        String columnUniqueName = alias + '.' + attribute.getName();
-        if(columnTracker.add(columnUniqueName)) {
-            Node columnNode = table(alias).column(attribute).build();
-            String dataRowKey = columnLabelPrefix != null
-                    ? columnLabelPrefix + '.' + oa.getDbAttributePath()
-                    : oa.getDbAttributePath();
-            context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute).setJavaType(oa.getType());
+        int count = result.getDbAttributes().size();
+        for(int i=0; i<count; i++) {
+            ResultNodeDescriptor resultNodeDescriptor = processTranslationResult(result, i);
+            if(resultNodeDescriptor != null && i == count - 1) {
+                resultNodeDescriptor.setJavaType(oa.getType());
+            }
         }
 
         return true;
@@ -108,40 +101,38 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
     @Override
     public boolean visitToOne(ToOneProperty property) {
         ObjRelationship rel = property.getRelationship();
-        PathTranslationResult result = pathTranslator.translatePath(rel.getSourceEntity(), property.getName());
+        PathTranslationResult result = pathTranslator.translatePath(rel.getSourceEntity(), property.getName(), prefix);
 
-        String path = rel.getDbRelationshipPath();
-        if(prefix != null) {
-            path = prefix + '.' + path;
-        }
-        String alias = context.getTableTree().aliasForAttributePath(path);
-
-        for(DbAttribute attribute : result.getDbAttributes()) {
-            String columnUniqueName = alias + '.' + attribute.getName();
-            if(columnTracker.add(columnUniqueName)) {
-                Node columnNode = table(alias).column(attribute).build();
-                String dataRowKey = columnLabelPrefix != null
-                        ? columnLabelPrefix + '.' + attribute.getName()
-                        : attribute.getName();
-                context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute);
-            }
-        }
-
-        for(Map.Entry<String, DbEntity> entry : descriptor.getAdditionalDbEntities().entrySet()) {
-            alias = context.getTableTree().aliasForPath(entry.getKey());
-            for(DbAttribute attribute : entry.getValue().getPrimaryKeys()) {
-                String columnUniqueName = alias + '.' + attribute.getName();
-                if(columnTracker.add(columnUniqueName)) {
-                    Node columnNode = table(alias).column(attribute).build();
-                    String dataRowKey = columnLabelPrefix != null
-                            ? columnLabelPrefix + '.' + attribute.getName()
-                            : attribute.getName();
-                    context.addResultNode(columnNode, dataRowKey).setDbAttribute(attribute);
-                }
-            }
+        int count = result.getDbAttributes().size();
+        for(int i=0; i<count; i++) {
+            processTranslationResult(result, i);
         }
 
         return true;
+    }
+
+    private ResultNodeDescriptor processTranslationResult(PathTranslationResult result, int i) {
+        String path = result.getAttributePaths().get(i);
+        String alias = context.getTableTree().aliasForPath(path);
+        DbAttribute attribute = result.getDbAttributes().get(i);
+
+        String columnUniqueName = alias + '.' + attribute.getName();
+        if(columnTracker.add(columnUniqueName)) {
+            String columnLabelPrefix = path;
+            if(columnLabelPrefix.length() > 2) {
+                if(columnLabelPrefix.charAt(0) == PREFETCH_PREFIX[0] && columnLabelPrefix.charAt(1) == PREFETCH_PREFIX[1]) {
+                    columnLabelPrefix = columnLabelPrefix.substring(2);
+                }
+            }
+            String attributeName = columnLabelPrefix.isEmpty()
+                    ? attribute.getName()
+                    : columnLabelPrefix + '.' + attribute.getName();
+
+            Node columnNode = table(alias).column(attribute).build();
+            return context.addResultNode(columnNode, attributeName).setDbAttribute(attribute);
+        }
+
+        return null;
     }
 
     @Override
