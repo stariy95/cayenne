@@ -16,6 +16,7 @@ Changes/New Features:
 
 Bug Fixes:
 
+CAY-2408 Cayenne JDK 10 compatibility
 CAY-2435 cdbimport: procedure parameters are not imported
 CAY-2436 NPE in CayenneRuntimeException constructor
 

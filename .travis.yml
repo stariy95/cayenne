@@ -34,15 +34,22 @@ env:
   - DB_PROFILE=sqlserver-docker
 
 jdk:
-  - oraclejdk8
   - oraclejdk7
+  - oraclejdk8
+  - oraclejdk9
+  - oraclejdk10
+  - oraclejdk-ea
+
+matrix:
+  allow_failures:
+    - jdk: oraclejdk-ea
 
 script:
   - mvn verify -q -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 # prevent Travis from unneeded "mvn install" run
-install: /bin/true
+install: true
 
-cache:
-  directories:
-    - $HOME/.m2
+#cache:
+#  directories:
+#    - $HOME/.m2
