@@ -51,6 +51,7 @@ matrix:
     - jdk: oraclejdk-ea
 
 script:
+  # exclude JavaDocs and assembly from build, to pass on Java 11
   - mvn verify -q -pl !docs/doc,!assembly -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 # prevent Travis from unneeded "mvn install" run
