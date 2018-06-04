@@ -24,6 +24,7 @@ services:
   - docker
 
 before_install:
+# use new maven to support "-pl" exclude option
   - wget https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.zip
   - unzip -qq apache-maven-3.5.0-bin.zip
   - export M2_HOME=$PWD/apache-maven-3.5.0
@@ -49,16 +50,16 @@ language: java
 matrix:
   include:
     - jdk: oraclejdk7
-      env: DB_PROFILE=hsql EXCLUDE_MODULES=!docs/doc
+      env: DB_PROFILE=hsql EXCLUDE_MODULES=""
     - jdk: oraclejdk-ea
-      env: DB_PROFILE=hsql EXCLUDE_MODULES=!docs/doc,!assembly
+      env: DB_PROFILE=hsql EXCLUDE_MODULES="-pl !docs/doc,!assembly"
 
   allow_failures:
     - jdk: oraclejdk-ea
 
 script:
   # exclude JavaDocs and assembly from build, to pass on Java 11
-  - mvn verify -X -pl $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+  - mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 # prevent Travis from unneeded "mvn install" run
 install: true
