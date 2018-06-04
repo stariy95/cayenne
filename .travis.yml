@@ -51,7 +51,7 @@ matrix:
     - jdk: oraclejdk-ea
 
 script:
-  - mvn verify -q -pl !docs/doc -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+  - mvn verify -q -pl !docs/doc,!assembly -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 # prevent Travis from unneeded "mvn install" run
 install: true
