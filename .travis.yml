@@ -24,7 +24,7 @@ services:
   - docker
 
 before_install:
-# use new maven to support "-pl" exclude option
+  # use new maven to support "-pl" exclude option
   - wget https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.zip
   - unzip -qq apache-maven-3.5.0-bin.zip
   - export M2_HOME=$PWD/apache-maven-3.5.0
@@ -32,27 +32,26 @@ before_install:
 
 language: java
 
-#env:
-#  - DB_PROFILE=hsql
-#  - DB_PROFILE=h2
-#  - DB_PROFILE=derby
-#  - DB_PROFILE=mysql-docker
-#  - DB_PROFILE=postgres-docker
-#  - DB_PROFILE=sqlserver-docker
+env:
+  - DB_PROFILE=hsql EXCLUDE_MODULES=""
+  - DB_PROFILE=h2 EXCLUDE_MODULES=""
+  - DB_PROFILE=derby EXCLUDE_MODULES=""
+  - DB_PROFILE=mysql-docker EXCLUDE_MODULES=""
+  - DB_PROFILE=postgres-docker EXCLUDE_MODULES=""
+  - DB_PROFILE=sqlserver-docker EXCLUDE_MODULES=""
 
-#jdk:
-#  - oraclejdk7
-#  - oraclejdk8
+jdk:
+  - oraclejdk7
+  - oraclejdk8
 #  - oraclejdk9 -- broken version on deprecated travis image
-#  - oraclejdk10
-#  - oraclejdk-ea
+  - oraclejdk10
 
 matrix:
   include:
-    - jdk: oraclejdk7
-      env: DB_PROFILE=hsql EXCLUDE_MODULES=""
     - jdk: oraclejdk-ea
-      env: DB_PROFILE=hsql EXCLUDE_MODULES="-pl !docs/doc,!assembly"
+      env: DB_PROFILE=derby EXCLUDE_MODULES="-pl !docs/doc,!assembly"
+    - jdk: oraclejdk-ea
+      env: DB_PROFILE=mysql-docker EXCLUDE_MODULES="-pl !docs/doc,!assembly"
 
   allow_failures:
     - jdk: oraclejdk-ea
