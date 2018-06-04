@@ -33,17 +33,17 @@ language: java
 
 env:
   - DB_PROFILE=hsql
-  - DB_PROFILE=h2
-  - DB_PROFILE=derby
-  - DB_PROFILE=mysql-docker
-  - DB_PROFILE=postgres-docker
-  - DB_PROFILE=sqlserver-docker
+#  - DB_PROFILE=h2
+#  - DB_PROFILE=derby
+#  - DB_PROFILE=mysql-docker
+#  - DB_PROFILE=postgres-docker
+#  - DB_PROFILE=sqlserver-docker
 
 jdk:
   - oraclejdk7
-  - oraclejdk8
+#  - oraclejdk8
 #  - oraclejdk9 -- broken version on deprecated travis image
-  - oraclejdk10
+#  - oraclejdk10
   - oraclejdk-ea
 
 matrix:
@@ -52,7 +52,7 @@ matrix:
 
 script:
   # exclude JavaDocs and assembly from build, to pass on Java 11
-  - mvn verify -q -pl !docs/doc,!assembly -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+  - mvn verify -X -pl !docs/doc,!assembly -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 # prevent Travis from unneeded "mvn install" run
 install: true
