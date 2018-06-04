@@ -1653,7 +1653,7 @@
 							<!-- Java 8 is too strict about Javadoc omissions -->
 							<doclint>${javadoc.doclint}</doclint>
 							<additionalOptions>
-								<additionalOption>html5</additionalOption>
+								<additionalOption>-html5</additionalOption>
 							</additionalOptions>
 						</configuration>
 					</plugin>
