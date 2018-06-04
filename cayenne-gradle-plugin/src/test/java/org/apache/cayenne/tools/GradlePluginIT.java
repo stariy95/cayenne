@@ -56,7 +56,7 @@ public class GradlePluginIT extends BaseTaskIT {
         // Old gradle versions will fail on new JDK
         int javaMajorVersion = getJavaMajorVersion(System.getProperty("java.version"));
         if(javaMajorVersion >= 11) {
-            versions = new String[]{"4.8-rc-3"};
+            versions = new String[]{"4.8"};
         } else if (javaMajorVersion < 9) {
             versions = new String[]{"4.3", "4.0", "3.5", "3.3", "3.0", "2.12", "2.8"};
         } else {
