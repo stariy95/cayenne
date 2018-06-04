@@ -49,7 +49,7 @@ language: java
 matrix:
   include:
     - jdk: oraclejdk7
-      env: EXCLUDE_MODULES= DB_PROFILE=hsql
+      env: DB_PROFILE=hsql EXCLUDE_MODULES=!docs/doc
     - jdk: oraclejdk-ea
       env: DB_PROFILE=hsql EXCLUDE_MODULES=!docs/doc,!assembly
 
