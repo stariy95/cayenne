@@ -18,7 +18,7 @@
 # How to fix: Change build setting or fix code.
 # https://docs.travis-ci.com/user/ci-environment/#Virtualization-environments
 sudo: required
-group: deprecated-2017Q2
+group: deprecated-2017Q2 # needed for jdk 7
 
 services:
   - docker
@@ -36,7 +36,7 @@ env:
 jdk:
   - oraclejdk7
   - oraclejdk8
-  - oraclejdk9
+#  - oraclejdk9 -- broken version on deprecated travis image
   - oraclejdk10
   - oraclejdk-ea
 

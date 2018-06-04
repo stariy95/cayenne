@@ -1637,7 +1637,6 @@
 			</activation>
 			<properties>
 				<javadoc.doclint>none</javadoc.doclint>
-				<javadoc.additionalOptions></javadoc.additionalOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -1645,9 +1644,21 @@
 			<activation>
 				<jdk>[9,)</jdk>
 			</activation>
-			<properties>
-				<javadoc.additionalOptions>-html5</javadoc.additionalOptions>
-			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>3.0.0</version>
+						<configuration>
+							<!-- Java 8 is too strict about Javadoc omissions -->
+							<doclint>${javadoc.doclint}</doclint>
+							<additionalOptions>
+								<additionalOption>html5</additionalOption>
+							</additionalOptions>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>cayenne-java8-module-to-build</id>
