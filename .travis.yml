@@ -33,12 +33,12 @@ before_install:
 language: java
 
 env:
-  - DB_PROFILE=hsql EXCLUDE_MODULES=""
-  - DB_PROFILE=h2 EXCLUDE_MODULES=""
-  - DB_PROFILE=derby EXCLUDE_MODULES=""
-  - DB_PROFILE=mysql-docker EXCLUDE_MODULES=""
-  - DB_PROFILE=postgres-docker EXCLUDE_MODULES=""
-  - DB_PROFILE=sqlserver-docker EXCLUDE_MODULES=""
+  - DB_PROFILE=hsql
+  - DB_PROFILE=h2
+  - DB_PROFILE=derby
+  - DB_PROFILE=mysql-docker
+  - DB_PROFILE=postgres-docker
+  - DB_PROFILE=sqlserver-docker
 
 jdk:
   - oraclejdk7
@@ -58,11 +58,11 @@ matrix:
 
 script:
   # exclude JavaDocs and assembly from build, to pass on Java 11
-  - mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+  - travis_wait mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 # prevent Travis from unneeded "mvn install" run
 install: true
 
-#cache:
-#  directories:
-#    - $HOME/.m2
+cache:
+  directories:
+    - $HOME/.m2
