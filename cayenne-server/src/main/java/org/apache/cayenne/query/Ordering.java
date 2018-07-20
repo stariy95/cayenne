@@ -187,14 +187,38 @@ public class Ordering implements Comparator<Object>, Serializable, XMLSerializab
 	/**
 	 * Sets sort order for whether nulls are at the top or bottom of the
 	 * resulting list. Default is true.
-	 * Affects only in-memory sorting.
+	 * Sine 4.2 this also affects SQL on databases that support nulls ordering.
 	 * 
 	 * @param nullSortedFirst
-	 *            true sorts nulls to the top of the list, false sorts nulls to
-	 *            the bottom
+	 *            true sorts nulls to the top of the list,
+	 *            false sorts nulls to the bottom
 	 */
 	public void setNullSortedFirst(boolean nullSortedFirst) {
 		this.nullSortedFirst = nullSortedFirst;
+	}
+
+	/**
+	 * Sets null ordering first to true
+	 *
+	 * @see #setNullSortedFirst(boolean)
+	 * @since 4.2
+	 * @return this
+	 */
+	public Ordering nullsFirst() {
+		setNullSortedFirst(true);
+		return this;
+	}
+
+	/**
+	 * Sets null ordering first to false
+	 *
+	 * @see #setNullSortedFirst(boolean)
+	 * @since 4.2
+	 * @return this
+	 */
+	public Ordering nullsLast() {
+		setNullSortedFirst(false);
+		return this;
 	}
 
 	/**

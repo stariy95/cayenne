@@ -49,4 +49,9 @@ public class SQLiteUnitDbAdapter extends UnitDbAdapter {
     public boolean supportsEscapeInLike() {
         return false;
     }
+
+    @Override
+    public boolean supportsNullsOrdering() {
+        return false;
+    }
 }

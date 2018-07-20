@@ -59,7 +59,7 @@ public class OrderingTranslator extends QueryAssemblerHelper {
 		Query q = queryAssembler.getQuery();
 
 		// only select queries can have ordering...
-		if (q == null || !(q instanceof SelectQuery)) {
+		if (!(q instanceof SelectQuery)) {
 			return;
 		}
 

@@ -403,4 +403,8 @@ public class UnitDbAdapter {
     public boolean supportsExtractPart(ASTExtract.DateTimePart part) {
         return true;
     }
+
+    public boolean supportsNullsOrdering() {
+        return true;
+    }
 }

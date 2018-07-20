@@ -160,4 +160,9 @@ public class SybaseUnitDbAdapter extends UnitDbAdapter {
 	public boolean supportsNullBoolean() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsNullsOrdering() {
+		return false;
+	}
 }

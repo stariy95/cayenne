@@ -55,4 +55,9 @@ public class OpenBaseUnitDbAdapter extends UnitDbAdapter {
         // TODO: andrus, 7/1/2007 I am trying to follow up with openbase on this...
         return false;
     }
+
+    @Override
+    public boolean supportsNullsOrdering() {
+        return false;
+    }
 }

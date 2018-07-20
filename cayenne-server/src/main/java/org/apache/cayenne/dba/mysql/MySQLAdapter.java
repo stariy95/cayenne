@@ -123,7 +123,7 @@ public class MySQLAdapter extends JdbcAdapter {
 	}
 
 	/**
-	 * @since 4.1
+	 * @since 4.2
 	 */
 	@Override
 	public OrderingTranslator getOrderingTranslator(QueryAssembler queryAssembler) {

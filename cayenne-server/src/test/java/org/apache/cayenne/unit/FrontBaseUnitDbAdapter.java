@@ -97,4 +97,9 @@ public class FrontBaseUnitDbAdapter extends UnitDbAdapter {
         }
         return true;
     }
+
+    @Override
+    public boolean supportsNullsOrdering() {
+        return false;
+    }
 }

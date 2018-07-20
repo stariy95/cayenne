@@ -31,7 +31,7 @@ import org.apache.cayenne.query.Ordering;
  * E.g.: "ORDER BY column" implies ascending order with nulls first,
  * while "ORDER BY -column DESC" will be ascending order with nulls last.
  *
- * @since 4.1
+ * @since 4.2
  */
 public class MySQLOrderingTranslator extends OrderingTranslator {
 
@@ -40,7 +40,7 @@ public class MySQLOrderingTranslator extends OrderingTranslator {
     }
 
     protected void appendColumn(Ordering ordering, String columnSQL) {
-        if(!ordering.isNullSortedFirst()) {
+        if(ordering.isAscending() != ordering.isNullSortedFirst()) {
             mainBuffer.append('-');
         }
         mainBuffer.append(columnSQL);
@@ -49,7 +49,7 @@ public class MySQLOrderingTranslator extends OrderingTranslator {
 
     protected void appendDirection(Ordering ordering) {
         // DESC will be for NOT ASC and NULLS FIRST, or for ASC and NOT NULLS FIRST
-        if (ordering.isAscending() == !ordering.isNullSortedFirst()) {
+        if (!ordering.isNullSortedFirst()) {
             mainBuffer.append(" DESC");
         }
     }
