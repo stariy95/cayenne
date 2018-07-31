@@ -59,6 +59,8 @@ public class ExtendedTypeMap {
 	// standard type factories registered by Cayenne that are consulted after the user factories.
 	Collection<ExtendedTypeFactory> internalTypeFactories;
 
+	private ConcurrentHashMap<Class<?>, String> classToNameCache = new ConcurrentHashMap<>();
+
 	/**
 	 * Creates new ExtendedTypeMap, populating it with default JDBC-compatible
 	 * types. If JDK version is at least 1.5, also loads support for enumerated
@@ -160,12 +162,17 @@ public class ExtendedTypeMap {
 	 * 'MyClass[]'</i>.
 	 */
 	public ExtendedType getRegisteredType(String javaClassName) {
+		return getRegisteredType(javaClassName, false);
+	}
 
+	ExtendedType getRegisteredType(String javaClassName, boolean direct) {
 		if (javaClassName == null) {
 			return getDefaultType();
 		}
 
-		javaClassName = canonicalizedTypeName(javaClassName);
+		if(!direct) {
+			javaClassName = canonicalizedTypeName(javaClassName);
+		}
 
 		ExtendedType type = getExplictlyRegisteredType(javaClassName);
 		if (type != null) {
@@ -197,7 +204,11 @@ public class ExtendedTypeMap {
 	 * non-null ExtendedType instance.
 	 */
 	public ExtendedType getRegisteredType(Class<?> javaClass) {
-		return getRegisteredType(javaClass.getCanonicalName());
+		return getRegisteredType(getCanonicalName(javaClass), true);
+	}
+
+	private String getCanonicalName(Class<?> clazz) {
+		return classToNameCache.computeIfAbsent(clazz, c -> canonicalizedTypeName(c.getCanonicalName()));
 	}
 
 	/**
