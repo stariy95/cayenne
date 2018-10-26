@@ -23,6 +23,7 @@ import javax.swing.JTabbedPane;
 
 import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.editor.dbimport.DbImportView;
+import org.apache.cayenne.modeler.editor.fasteditor.FastEditorView;
 
 
 /**
@@ -53,10 +54,9 @@ public class DataMapTabbedView extends JTabbedPane {
         // add panels to tabs
         // note that those panels that have no internal scrollable tables
         // must be wrapped in a scroll pane
-        JScrollPane dataMapView = new JScrollPane(new DataMapView(mediator));
-        JScrollPane dbImportView = new JScrollPane(new DbImportView(mediator));
-        addTab("DataMap", dataMapView);
-        addTab("DbImport", dbImportView);
+        addTab("DataMap", new JScrollPane(new DataMapView(mediator)));
+        addTab("Fast Editor", new JScrollPane(new FastEditorView(mediator)));
+        addTab("DbImport", new JScrollPane(new DbImportView(mediator)));
     }
 }
 

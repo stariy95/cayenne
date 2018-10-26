@@ -334,4 +334,14 @@ public class UtilTest {
 	public void testUnderscoredToJavaSpecialChars() throws Exception {
 		assertEquals("ABCpoundXyz", Util.underscoredToJava("ABC#_XYZ", true));
 	}
+
+	@Test
+	public void testJavaToUnderscored() {
+		assertEquals("artist", Util.javaToUnderscored("Artist"));
+		assertEquals("artist2", Util.javaToUnderscored("Artist2"));
+		assertEquals("artist_info", Util.javaToUnderscored("ArtistInfo"));
+		assertEquals("artist2_info", Util.javaToUnderscored("Artist2Info"));
+		assertEquals("artist_name", Util.javaToUnderscored("ArtistName"));
+		assertEquals("artist_xml_info", Util.javaToUnderscored("ArtistXMLInfo"));
+	}
 }

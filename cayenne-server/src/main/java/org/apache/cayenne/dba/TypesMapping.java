@@ -34,36 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.sql.Types.ARRAY;
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.BINARY;
-import static java.sql.Types.BIT;
-import static java.sql.Types.BLOB;
-import static java.sql.Types.BOOLEAN;
-import static java.sql.Types.CHAR;
-import static java.sql.Types.CLOB;
-import static java.sql.Types.DATE;
-import static java.sql.Types.DECIMAL;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.FLOAT;
-import static java.sql.Types.INTEGER;
-import static java.sql.Types.LONGNVARCHAR;
-import static java.sql.Types.LONGVARBINARY;
-import static java.sql.Types.LONGVARCHAR;
-import static java.sql.Types.NCHAR;
-import static java.sql.Types.NCLOB;
-import static java.sql.Types.NULL;
-import static java.sql.Types.NUMERIC;
-import static java.sql.Types.NVARCHAR;
-import static java.sql.Types.OTHER;
-import static java.sql.Types.REAL;
-import static java.sql.Types.SMALLINT;
-import static java.sql.Types.SQLXML;
-import static java.sql.Types.TIME;
-import static java.sql.Types.TIMESTAMP;
-import static java.sql.Types.TINYINT;
-import static java.sql.Types.VARBINARY;
-import static java.sql.Types.VARCHAR;
+import static java.sql.Types.*;
 
 /**
  * A utility class that handles mappings of JDBC data types to the database
@@ -129,6 +100,9 @@ public class TypesMapping {
 	public static final String JAVA_TIME = "java.sql.Time";
 	public static final String JAVA_TIMESTAMP = "java.sql.Timestamp";
 	public static final String JAVA_BLOB = "java.sql.Blob";
+	public static final String JAVA_LOCAL_TIME = "java.time.LocalTime";
+	public static final String JAVA_LOCAL_DATE = "java.time.LocalDate";
+	public static final String JAVA_LOCAL_DATETIME = "java.time.LocalDateTime";
 
 	/**
 	 * Keys: SQL string type names, Values: SQL int type definitions from
@@ -250,15 +224,17 @@ public class TypesMapping {
 		JAVA_SQL_ENUM.put(JAVA_STRING, VARCHAR);
 		JAVA_SQL_ENUM.put(JAVA_SQLDATE, DATE);
 		JAVA_SQL_ENUM.put(JAVA_UTILDATE, DATE);
+		JAVA_SQL_ENUM.put(JAVA_LOCAL_TIME, TIME);
+		JAVA_SQL_ENUM.put(JAVA_LOCAL_DATE, DATE);
+		JAVA_SQL_ENUM.put(JAVA_LOCAL_DATETIME, TIMESTAMP);
 		JAVA_SQL_ENUM.put(JAVA_TIMESTAMP, TIMESTAMP);
+		JAVA_SQL_ENUM.put(JAVA_TIME, TIME);
 		JAVA_SQL_ENUM.put(JAVA_BIGDECIMAL, DECIMAL);
 		JAVA_SQL_ENUM.put(JAVA_DOUBLE, DOUBLE);
 		JAVA_SQL_ENUM.put(JAVA_FLOAT, FLOAT);
 		JAVA_SQL_ENUM.put(JAVA_INTEGER, INTEGER);
 		JAVA_SQL_ENUM.put(JAVA_SHORT, SMALLINT);
 		JAVA_SQL_ENUM.put(JAVA_BYTE, SMALLINT);
-		JAVA_SQL_ENUM.put(JAVA_TIME, TIME);
-		JAVA_SQL_ENUM.put(JAVA_TIMESTAMP, TIMESTAMP);
 
 		// add primitives
 		JAVA_SQL_ENUM.put("byte", TINYINT);
@@ -462,9 +438,9 @@ public class TypesMapping {
 				name = aClass.getName();
 			}
 
-			Object type = JAVA_SQL_ENUM.get(name);
+			Integer type = JAVA_SQL_ENUM.get(name);
 			if (type != null) {
-				return ((Number) type).intValue();
+				return type;
 			}
 
 			aClass = aClass.getSuperclass();
@@ -524,13 +500,7 @@ public class TypesMapping {
 				info.precision = rs.getLong("PRECISION");
 
 				Integer key = info.jdbcType;
-				List<TypeInfo> infos = databaseTypes.get(key);
-
-				if (infos == null) {
-					infos = new ArrayList<>();
-					databaseTypes.put(key, infos);
-				}
-
+				List<TypeInfo> infos = databaseTypes.computeIfAbsent(key, k -> new ArrayList<>());
 				infos.add(info);
 			}
 		}

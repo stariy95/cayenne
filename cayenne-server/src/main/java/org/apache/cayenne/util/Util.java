@@ -685,9 +685,29 @@ public class Util {
 			}
 
 			if (len > 1) {
-				buf.append(token.substring(1, len));
+				buf.append(token, 1, len);
 			}
 		}
+		return buf.toString();
+	}
+
+	public static String javaToUnderscored(String name) {
+		StringBuilder buf = new StringBuilder();
+		for(int i=0; i<name.length(); i++) {
+			char next = name.charAt(i);
+			if(Character.isUpperCase(next)) {
+				if(i > 0 && i < name.length() - 1) {
+					if (!Character.isUpperCase(name.charAt(i - 1))
+							|| (Character.isUpperCase(name.charAt(i - 1)) && !Character.isUpperCase(name.charAt(i + 1)))) {
+						buf.append('_');
+					}
+				}
+				buf.append(Character.toLowerCase(next));
+			} else {
+				buf.append(next);
+			}
+		}
+
 		return buf.toString();
 	}
 
