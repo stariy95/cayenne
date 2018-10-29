@@ -35,6 +35,7 @@ import org.apache.cayenne.modeler.action.dbimport.EditNodeAction;
 import org.apache.cayenne.modeler.action.dbimport.MoveImportNodeAction;
 import org.apache.cayenne.modeler.action.dbimport.MoveInvertNodeAction;
 import org.apache.cayenne.modeler.action.dbimport.ReverseEngineeringToolMenuAction;
+import org.apache.cayenne.modeler.action.fasteditor.NewEntityAction;
 import org.apache.cayenne.modeler.action.fasteditor.SyncModelAction;
 import org.apache.cayenne.modeler.graph.action.ShowGraphEntityAction;
 import org.apache.cayenne.modeler.util.CayenneAction;
@@ -170,6 +171,7 @@ public class DefaultActionManager implements ActionManager {
         registerAction(new LinkDataMapsAction(application));
 
         registerAction(new SyncModelAction(application)).setAlwaysOn(true);
+        registerAction(new NewEntityAction(application)).setAlwaysOn(true);
     }
 
     private void initActions() {

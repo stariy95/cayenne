@@ -19,12 +19,18 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor;
 
-import javafx.geometry.Point2D;
+import java.util.Collections;
+
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
+import org.apache.cayenne.modeler.editor.fasteditor.layout.DefaultLayout;
+import org.apache.cayenne.modeler.editor.fasteditor.layout.Layout;
+import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
+import org.apache.cayenne.modeler.editor.fasteditor.render.LayerType;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.ResizableCanvas;
+import org.apache.cayenne.modeler.editor.fasteditor.ui.Background;
+import org.apache.cayenne.modeler.editor.fasteditor.ui.EntityNode;
 
 /**
  * @since 4.2
@@ -32,35 +38,22 @@ import org.apache.cayenne.modeler.editor.fasteditor.render.ResizableCanvas;
 public class FastEditorScene extends Scene {
 
     private final ResizableCanvas canvas;
+    private final Renderer renderer;
+    private final Layout layout;
 
     public FastEditorScene() {
         super(new Group());
-        canvas = new ResizableCanvas(new Renderer() {
-            @Override
-            protected void doRender() {
-                context.fillRect(10, 10, 100, 100);
-            }
-        }, new CanvasEventListener() {
-            @Override
-            public void onClick(Point2D screenPoint) {
-            }
-
-            @Override
-            public void onMouseUp(Point2D screenPoint) {
-            }
-
-            @Override
-            public void onDragStart(Point2D screenPoint) {
-            }
-
-            @Override
-            public void onDragMove(Point2D screenPoint) {
-            }
-        });
+        renderer = new Renderer();
+        layout = new DefaultLayout();
+        canvas = new ResizableCanvas(renderer, new EmptyCanvasEventListener());
         ((Group)getRoot()).getChildren().add(canvas);
-
         canvas.startRenderer();
+        renderer.addObject(LayerType.BACKGROUND, new Background());
     }
 
-
+    public void addEntity(ObjEntityWrapper entity) {
+        EntityNode entityNode = new EntityNode(entity);
+        layout.doLayout(Collections.emptyList(), entityNode);
+        renderer.addObject(LayerType.SCENE_BACK, entityNode);
+    }
 }

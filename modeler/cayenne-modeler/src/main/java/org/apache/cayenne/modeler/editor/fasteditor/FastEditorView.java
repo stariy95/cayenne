@@ -21,6 +21,7 @@ package org.apache.cayenne.modeler.editor.fasteditor;
 
 import java.awt.BorderLayout;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
@@ -32,6 +33,7 @@ import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.action.ActionManager;
 import org.apache.cayenne.modeler.action.CreateObjEntityAction;
 import org.apache.cayenne.modeler.action.CreateRelationshipAction;
+import org.apache.cayenne.modeler.action.fasteditor.NewEntityAction;
 import org.apache.cayenne.modeler.action.fasteditor.SyncModelAction;
 
 /**
@@ -43,10 +45,10 @@ public class FastEditorView extends JPanel {
 
     private final JFXPanel jfxPanel = new JFXPanel();
     private final JToolBar toolBar = new JToolBar();
+    private volatile FastEditorScene editorScene;
 
     public FastEditorView(ProjectController mediator) {
         this.mediator = mediator;
-
         initView();
     }
 
@@ -57,20 +59,23 @@ public class FastEditorView extends JPanel {
     }
 
     private void initJfxPanel() {
-        Platform.runLater(() -> {
-            jfxPanel.setScene(new FastEditorScene());
-        });
-
+        Platform.runLater(()
+                -> jfxPanel.setScene(editorScene = new FastEditorScene()));
         add(new JScrollPane(jfxPanel), BorderLayout.CENTER);
     }
 
+    public FastEditorScene getEditorScene() {
+        return editorScene;
+    }
 
     private void initToolBar() {
         toolBar.setBorder(BorderFactory.createEmptyBorder());
         toolBar.setFloatable(false);
         ActionManager actionManager = Application.getInstance().getActionManager();
 
-        toolBar.add(actionManager.getAction(CreateObjEntityAction.class).buildButton(1));
+        NewEntityAction action = actionManager.getAction(NewEntityAction.class);
+        action.setEditor(this);
+        toolBar.add(action.buildButton(1));
         toolBar.add(actionManager.getAction(CreateRelationshipAction.class).buildButton(3));
         toolBar.addSeparator();
 

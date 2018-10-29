@@ -19,19 +19,35 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.render;
 
+import java.util.EnumMap;
+import java.util.Objects;
+
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 /**
  * @since 4.2
  */
-public abstract class Renderer {
+public class Renderer {
 
-    protected GraphicsContext context;
-    protected boolean isDirty;
+    protected final EnumMap<LayerType, RenderLayer> layerMap = new EnumMap<>(LayerType.class);
+    protected /*final*/ GraphicsContext context;
+    protected volatile boolean isDirty = true;
+    protected long lastFrameTime;
+
+    public Renderer() {
+        for(LayerType type: LayerType.values()) {
+            layerMap.put(type, new RenderLayer(type));
+        }
+        lastFrameTime = System.currentTimeMillis();
+    }
 
     public void setContext(GraphicsContext context) {
-        this.context = context;
+        this.context = Objects.requireNonNull(context);
+    }
+
+    public GraphicsContext getContext() {
+        return context;
     }
 
     public void markDirty() {
@@ -39,21 +55,31 @@ public abstract class Renderer {
     }
 
     public void render(long now, double width, double height) {
-        if(!isDirty) {
-            return;
+        advanceAnimation(lastFrameTime - now);
+        lastFrameTime = now;
+        if(isDirty) {
+            clear(width, height);
+            doRender();
+            isDirty = false;
         }
-
-        clear(width, height);
-        doRender();
-
-        isDirty = false;
     }
 
-    protected abstract void doRender();
+    protected void advanceAnimation(long delta) {
+        layerMap.values().forEach(l -> l.advanceAnimation(delta));
+    }
+
+    protected void doRender() {
+        layerMap.values().forEach(l -> l.render(this));
+    }
 
     protected void clear(double width, double height) {
         context.clearRect(0, 0, width, height);
         context.setFill(Color.BLACK);
         context.fillText(width + "x" + height,0, 10);
+    }
+
+    public void addObject(LayerType layer, RenderObject object) {
+        layerMap.get(layer).addRenderObject(object);
+        markDirty();
     }
 }
