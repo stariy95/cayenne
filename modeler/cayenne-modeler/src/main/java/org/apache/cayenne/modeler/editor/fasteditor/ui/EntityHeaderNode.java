@@ -19,16 +19,56 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
-import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
+import javafx.geometry.Point2D;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
  * @since 4.2
  */
-public class EntityHeaderNode implements RenderObject {
+public class EntityHeaderNode extends Node {
+
+    private final ObjEntityWrapper entityWrapper;
+    private boolean editMode = false;
+
+    public EntityHeaderNode(ObjEntityWrapper entityWrapper) {
+        this.entityWrapper = entityWrapper;
+    }
 
     @Override
-    public void render(Renderer renderer) {
+    protected void doRender(Renderer renderer) {
+        GraphicsContext gc = renderer.getContext();
 
+        final Text text = new Text("SomeCayenneEntityName");
+        double captionWidth = text.getLayoutBounds().getWidth();
+        double captionHeight = text.getLayoutBounds().getHeight();
+
+        double captionX = parent.getWidth() / 2 - captionWidth / 2;
+        double captionY = captionHeight + 2;
+
+        gc.setFill(Color.BLACK);
+        gc.fillText("SomeCayenneEntityName", captionX, captionY);
+    }
+
+    @Override
+    public void advanceAnimation(long delta) {
+
+    }
+
+    @Override
+    public void onDoubleClick(Point2D screenPoint) {
+        switchEditMode();
+    }
+
+    private void switchEditMode() {
+        if(editMode) {
+            editMode = false;
+        } else {
+            editMode = true;
+        }
     }
 }

@@ -21,7 +21,6 @@ package org.apache.cayenne.modeler.editor.fasteditor;
 
 import java.awt.BorderLayout;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
@@ -31,7 +30,6 @@ import javafx.embed.swing.JFXPanel;
 import org.apache.cayenne.modeler.Application;
 import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.action.ActionManager;
-import org.apache.cayenne.modeler.action.CreateObjEntityAction;
 import org.apache.cayenne.modeler.action.CreateRelationshipAction;
 import org.apache.cayenne.modeler.action.fasteditor.NewEntityAction;
 import org.apache.cayenne.modeler.action.fasteditor.SyncModelAction;

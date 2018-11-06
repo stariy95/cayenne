@@ -29,6 +29,7 @@ import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.LayerType;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.ResizableCanvas;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 import org.apache.cayenne.modeler.editor.fasteditor.ui.Background;
 import org.apache.cayenne.modeler.editor.fasteditor.ui.EntityNode;
 
@@ -38,14 +39,16 @@ import org.apache.cayenne.modeler.editor.fasteditor.ui.EntityNode;
 public class FastEditorScene extends Scene {
 
     private final ResizableCanvas canvas;
+    private final NodeContainer container;
     private final Renderer renderer;
     private final Layout layout;
 
     public FastEditorScene() {
         super(new Group());
         renderer = new Renderer();
+        container = new NodeContainer(renderer);
         layout = new DefaultLayout();
-        canvas = new ResizableCanvas(renderer, new EmptyCanvasEventListener());
+        canvas = new ResizableCanvas(renderer, container);
         ((Group)getRoot()).getChildren().add(canvas);
         canvas.startRenderer();
         renderer.addObject(LayerType.BACKGROUND, new Background());
@@ -53,6 +56,7 @@ public class FastEditorScene extends Scene {
 
     public void addEntity(ObjEntityWrapper entity) {
         EntityNode entityNode = new EntityNode(entity);
+        container.addNode(entityNode);
         layout.doLayout(Collections.emptyList(), entityNode);
         renderer.addObject(LayerType.SCENE_BACK, entityNode);
     }

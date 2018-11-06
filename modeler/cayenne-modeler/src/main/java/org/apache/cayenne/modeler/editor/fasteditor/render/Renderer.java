@@ -73,6 +73,7 @@ public class Renderer {
     }
 
     protected void clear(double width, double height) {
+        context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, width, height);
         context.setFill(Color.BLACK);
         context.fillText(width + "x" + height,0, 10);
@@ -80,6 +81,11 @@ public class Renderer {
 
     public void addObject(LayerType layer, RenderObject object) {
         layerMap.get(layer).addRenderObject(object);
+        markDirty();
+    }
+
+    public void removeObject(LayerType layer, RenderObject object) {
+        layerMap.get(layer).removeRenderObject(object);
         markDirty();
     }
 }

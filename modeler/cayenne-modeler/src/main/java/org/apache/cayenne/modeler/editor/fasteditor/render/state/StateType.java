@@ -17,19 +17,11 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.modeler.editor.fasteditor.render;
+package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
-import javafx.geometry.Point2D;
-
-public interface CanvasEventListener {
-
-    void onClick(Point2D screenPoint);
-
-    void onMouseUp(Point2D screenPoint);
-
-    void onDragStart(Point2D screenPoint);
-
-    void onDragMove(Point2D screenPoint);
-
-    void onDoubleClick(Point2D screenPoint);
+public enum StateType {
+    DEFAULT,
+    SINGLE_SELECTION,
+    MULTI_SELECTION,
+    DRAG
 }

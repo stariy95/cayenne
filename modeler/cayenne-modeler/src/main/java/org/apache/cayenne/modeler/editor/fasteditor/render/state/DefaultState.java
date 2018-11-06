@@ -17,33 +17,40 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.modeler.editor.fasteditor;
+package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
-import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 
-/**
- * @since 4.2
- */
-class EmptyCanvasEventListener implements CanvasEventListener {
+public class DefaultState extends ControlState {
+
+    public DefaultState(NodeContainer container) {
+        super(container);
+    }
+
     @Override
     public void onClick(Point2D screenPoint) {
-    }
-
-    @Override
-    public void onMouseUp(Point2D screenPoint) {
-    }
-
-    @Override
-    public void onDragStart(Point2D screenPoint) {
-    }
-
-    @Override
-    public void onDragMove(Point2D screenPoint) {
+        moveToState(StateType.SINGLE_SELECTION).onClick(screenPoint);
     }
 
     @Override
     public void onDoubleClick(Point2D screenPoint) {
+        moveToState(StateType.SINGLE_SELECTION).onDoubleClick(screenPoint);
+    }
 
+    @Override
+    public void onDragStart(Point2D screenPoint) {
+        Node selectedNode = nodeContainer.findNode(screenPoint);
+        if(selectedNode != null) {
+            moveToState(StateType.DRAG).onDragStart(screenPoint);
+        } else {
+            moveToState(StateType.MULTI_SELECTION).onDragStart(screenPoint);
+        }
+    }
+
+    @Override
+    public void onStateExit(ControlState nextState) {
+        // Do nothing on exit from default state
     }
 }

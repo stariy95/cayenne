@@ -19,45 +19,35 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
-import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
 
 /**
  * @since 4.2
  */
-public class EntityNode implements RenderObject {
-
-    private Point2D position = Point2D.ZERO;
+public class EntityNode extends Node {
 
     private final ObjEntityWrapper entityWrapper;
-    private EntityHeaderNode header;
-    private final List<AttributeNode> attributes = new ArrayList<>();
-
 
     public EntityNode(ObjEntityWrapper entityWrapper) {
         this.entityWrapper = entityWrapper;
-    }
-
-    public void setPosition(Point2D position) {
-        this.position = position;
+        addChild(new EntityHeaderNode(entityWrapper));
     }
 
     @Override
-    public void render(Renderer renderer) {
+    public void doRender(Renderer renderer) {
         GraphicsContext context = renderer.getContext();
-
         context.setLineWidth(1.5);
-        context.setFill(Color.gray(0.9));
-        context.setStroke(Color.gray(0.7));
-        context.fillRoundRect(position.getX(), position.getY(),250, 100, 15, 15);
+        if(getNodeState().haveState(NodeState.STATE_SELECTED)) {
+            context.setFill(Color.rgb(230, 230, 240));
+        } else {
+            context.setFill(Color.gray(0.9));
+        }
+        context.fillRoundRect(getBoundingRect().getMinX(), getBoundingRect().getMinY(),getWidth(), getHeight(), 15, 15);
 
-        attributes.forEach(a -> a.render(renderer));
     }
 }

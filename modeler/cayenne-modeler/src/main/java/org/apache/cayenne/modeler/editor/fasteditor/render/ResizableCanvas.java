@@ -61,20 +61,20 @@ public class ResizableCanvas extends Canvas {
             renderer.markDirty();
         });
 
-        setOnMouseClicked(event -> {
-            eventListener.onClick(new Point2D(event.getSceneX(), event.getSceneY()));
-            renderer.markDirty();
+        setOnMousePressed(event -> {
+            Point2D screenPoint = new Point2D(event.getSceneX(), event.getSceneY());
+            System.out.println(event);
+            switch (event.getClickCount()) {
+                case 2:
+                    eventListener.onDoubleClick(screenPoint);
+                    break;
+                default:
+                    eventListener.onClick(screenPoint);
+            }
         });
 
-        widthProperty().addListener(evt -> {
-            renderer.markDirty();
-            draw(System.currentTimeMillis());
-        });
-
-        heightProperty().addListener(evt -> {
-            renderer.markDirty();
-            draw(System.currentTimeMillis());
-        });
+        widthProperty().addListener(evt -> renderer.markDirty());
+        heightProperty().addListener(evt -> renderer.markDirty());
     }
 
     private void draw(long now) {

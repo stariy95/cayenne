@@ -17,19 +17,29 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.modeler.editor.fasteditor.render;
+package org.apache.cayenne.modeler.editor.fasteditor.render.node;
 
-import javafx.geometry.Point2D;
+public class NodeState {
 
-public interface CanvasEventListener {
+    public static final long STATE_NORMAL         = 1 << 0;
+    public static final long STATE_SELECTED       = 1 << 1;
+    public static final long STATE_MULTI_SELECTED = 1 << 2;
+    public static final long STATE_DRAG           = 1 << 3;
 
-    void onClick(Point2D screenPoint);
+    private long state = STATE_NORMAL;
 
-    void onMouseUp(Point2D screenPoint);
+    public boolean haveState(long state) {
+        return (this.state & state) > 0;
+    }
 
-    void onDragStart(Point2D screenPoint);
+    public NodeState addState(long state) {
+        this.state |= state;
+        return this;
+    }
 
-    void onDragMove(Point2D screenPoint);
+    public NodeState removeState(long state) {
+        this.state &= this.state ^ state;
+        return this;
+    }
 
-    void onDoubleClick(Point2D screenPoint);
 }

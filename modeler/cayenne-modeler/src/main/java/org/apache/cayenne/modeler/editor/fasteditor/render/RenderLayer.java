@@ -46,7 +46,10 @@ public class RenderLayer implements RenderObject {
 
     @Override
     public void render(Renderer renderer) {
-        objectSet.forEach(o -> o.render(renderer));
+        objectSet.forEach(o -> {
+            renderer.getContext().setTransform(1, 0, 0, 1, 0, 0);
+            o.render(renderer);
+        });
     }
 
     @Override

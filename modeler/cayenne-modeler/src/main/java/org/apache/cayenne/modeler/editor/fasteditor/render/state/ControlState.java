@@ -17,17 +17,26 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.modeler.editor.fasteditor;
+package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
 import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 
-/**
- * @since 4.2
- */
-class EmptyCanvasEventListener implements CanvasEventListener {
+public abstract class ControlState implements CanvasEventListener {
+
+    protected final NodeContainer nodeContainer;
+
+    public ControlState(NodeContainer container) {
+        this.nodeContainer = container;
+    }
+
     @Override
     public void onClick(Point2D screenPoint) {
+    }
+
+    @Override
+    public void onDoubleClick(Point2D screenPoint) {
     }
 
     @Override
@@ -42,8 +51,13 @@ class EmptyCanvasEventListener implements CanvasEventListener {
     public void onDragMove(Point2D screenPoint) {
     }
 
-    @Override
-    public void onDoubleClick(Point2D screenPoint) {
+    public abstract void onStateExit(ControlState nextState);
 
+    protected ControlState moveToState(StateType stateType) {
+        System.out.println("move to state " + stateType);
+        ControlState nextState = nodeContainer.moveToState(stateType);
+        onStateExit(nextState);
+        return nextState;
     }
+
 }

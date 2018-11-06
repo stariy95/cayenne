@@ -21,7 +21,7 @@ package org.apache.cayenne.modeler.editor.fasteditor.layout;
 
 import java.util.Collection;
 
-import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import org.apache.cayenne.modeler.editor.fasteditor.ui.EntityNode;
 
 /**
@@ -31,6 +31,6 @@ public class DefaultLayout implements Layout {
 
     @Override
     public void doLayout(Collection<EntityNode> nodes, EntityNode newNode) {
-        newNode.setPosition(new Point2D(20, 20));
+        newNode.setBoundingRect(new Rectangle2D(20, 20, 200, 150));
     }
 }
