@@ -94,6 +94,7 @@ public abstract class Node implements RenderObject, CanvasEventListener {
     @Override
     public void render(Renderer renderer) {
         doRender(renderer);
+        renderer.getContext().strokeRect(getX(), getY(), getWidth(), getHeight());
         if(!children.isEmpty()) {
             children.forEach(c -> {
                 renderer.getContext().setTransform(1, 0, 0, 1, boundingRect.getMinX(), boundingRect.getMinY());
@@ -122,8 +123,20 @@ public abstract class Node implements RenderObject, CanvasEventListener {
 
     @Override
     public void onDoubleClick(Point2D screenPoint) {
+        Point2D childPoint = screenPoint.subtract(getX(), getY());
+        System.out.println(screenPoint + " : " + childPoint + " : " + getBoundingRect());
         for(Node child: children) {
-
+            System.out.println(child.getBoundingRect());
+            if(child.getBoundingRect() != null && child.getBoundingRect().contains(childPoint)) {
+                child.onDoubleClick(childPoint);
+            }
         }
+    }
+
+    public void onFocusLost() {
+
+    }
+
+    public void onFocus() {
     }
 }

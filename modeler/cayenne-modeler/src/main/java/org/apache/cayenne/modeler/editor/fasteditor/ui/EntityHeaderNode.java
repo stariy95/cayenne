@@ -20,6 +20,7 @@
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -39,23 +40,27 @@ public class EntityHeaderNode extends Node {
         this.entityWrapper = entityWrapper;
     }
 
+    private void initBoundingRect() {
+        if(boundingRect == null) {
+            final Text text = new Text("SomeCayenneEntityName");
+            double captionWidth = text.getLayoutBounds().getWidth();
+            double captionHeight = text.getLayoutBounds().getHeight();
+            double captionX = parent.getWidth() / 2 - captionWidth / 2;
+            double captionY = 4;
+            boundingRect = new Rectangle2D(captionX, captionY, captionWidth, captionHeight);
+        }
+    }
+
     @Override
     protected void doRender(Renderer renderer) {
+        initBoundingRect();
         GraphicsContext gc = renderer.getContext();
-
-        final Text text = new Text("SomeCayenneEntityName");
-        double captionWidth = text.getLayoutBounds().getWidth();
-        double captionHeight = text.getLayoutBounds().getHeight();
-
-        double captionX = parent.getWidth() / 2 - captionWidth / 2;
-        double captionY = captionHeight + 2;
-
         if(editMode) {
             gc.setFill(Color.BLUE);
         } else {
             gc.setFill(Color.BLACK);
         }
-        gc.fillText("SomeCayenneEntityName", captionX, captionY);
+        gc.fillText("SomeCayenneEntityName", getX(), getY() + getHeight());
     }
 
     @Override

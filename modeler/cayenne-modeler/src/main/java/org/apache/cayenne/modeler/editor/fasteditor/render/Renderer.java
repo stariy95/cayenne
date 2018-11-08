@@ -37,8 +37,10 @@ public class Renderer implements CanvasEventListener {
     protected /*final*/ GraphicsContext context;
     protected volatile boolean isDirty = true;
     protected long lastFrameTime;
+    protected final FocusController focusController;
 
     public Renderer() {
+        this.focusController = new FocusController();
         for(LayerType type: LayerType.values()) {
             layerMap.put(type, new RenderLayer(this, type));
         }
@@ -65,6 +67,14 @@ public class Renderer implements CanvasEventListener {
             doRender();
             isDirty = false;
         }
+    }
+
+    public void requestFocus(Node node) {
+        focusController.setFocus(node);
+    }
+
+    public void resetFocus() {
+        focusController.resetFocus();
     }
 
     protected void advanceAnimation(long delta) {
