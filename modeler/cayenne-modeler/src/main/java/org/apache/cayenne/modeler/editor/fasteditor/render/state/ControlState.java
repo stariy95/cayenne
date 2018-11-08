@@ -21,13 +21,13 @@ package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
 import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
-import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
 
 public abstract class ControlState implements CanvasEventListener {
 
-    protected final NodeContainer nodeContainer;
+    protected final RenderLayer nodeContainer;
 
-    public ControlState(NodeContainer container) {
+    public ControlState(RenderLayer container) {
         this.nodeContainer = container;
     }
 

@@ -26,9 +26,9 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.paint.Color;
 import org.apache.cayenne.modeler.editor.fasteditor.render.LayerType;
+import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
-import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
 
 public class MultiSelectionState extends ControlState {
@@ -38,7 +38,7 @@ public class MultiSelectionState extends ControlState {
     private Rectangle2D selectionRect;
     private RenderObject selectionRenderObject;
 
-    public MultiSelectionState(NodeContainer container) {
+    public MultiSelectionState(RenderLayer container) {
         super(container);
         selectionRenderObject = renderer -> {
             if(selectionRect != null) {

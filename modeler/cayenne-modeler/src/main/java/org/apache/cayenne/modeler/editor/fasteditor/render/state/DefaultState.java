@@ -20,12 +20,12 @@
 package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
+import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
-import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 
 public class DefaultState extends ControlState {
 
-    public DefaultState(NodeContainer container) {
+    public DefaultState(RenderLayer container) {
         super(container);
     }
 

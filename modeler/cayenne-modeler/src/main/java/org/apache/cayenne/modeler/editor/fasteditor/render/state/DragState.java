@@ -21,8 +21,8 @@ package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
+import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
-import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
 
 public class DragState extends ControlState {
@@ -30,7 +30,7 @@ public class DragState extends ControlState {
     private Node dragNode;
     private Point2D offset;
 
-    public DragState(NodeContainer container) {
+    public DragState(RenderLayer container) {
         super(container);
     }
 

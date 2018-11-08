@@ -25,15 +25,13 @@ import javafx.scene.canvas.Canvas;
 
 public class ResizableCanvas extends Canvas {
 
-    private final CanvasEventListener eventListener;
     private final Renderer renderer;
     private final AnimationTimer timer;
 
-    public ResizableCanvas(Renderer renderer, CanvasEventListener eventListener) {
+    public ResizableCanvas(Renderer renderer) {
         super(700, 500);
 
         this.renderer = renderer;
-        this.eventListener = eventListener;
         this.timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -47,17 +45,17 @@ public class ResizableCanvas extends Canvas {
 
     private void setupListeners() {
         setOnDragDetected(event -> {
-            eventListener.onDragStart(new Point2D(event.getSceneX(), event.getSceneY()));
+            renderer.onDragStart(new Point2D(event.getSceneX(), event.getSceneY()));
             renderer.markDirty();
         });
 
         setOnMouseDragged(event -> {
-            eventListener.onDragMove(new Point2D(event.getSceneX(), event.getSceneY()));
+            renderer.onDragMove(new Point2D(event.getSceneX(), event.getSceneY()));
             renderer.markDirty();
         });
 
         setOnMouseReleased(event -> {
-            eventListener.onMouseUp(new Point2D(event.getSceneX(), event.getSceneY()));
+            renderer.onMouseUp(new Point2D(event.getSceneX(), event.getSceneY()));
             renderer.markDirty();
         });
 
@@ -66,10 +64,10 @@ public class ResizableCanvas extends Canvas {
             System.out.println(event);
             switch (event.getClickCount()) {
                 case 2:
-                    eventListener.onDoubleClick(screenPoint);
+                    renderer.onDoubleClick(screenPoint);
                     break;
                 default:
-                    eventListener.onClick(screenPoint);
+                    renderer.onClick(screenPoint);
             }
         });
 

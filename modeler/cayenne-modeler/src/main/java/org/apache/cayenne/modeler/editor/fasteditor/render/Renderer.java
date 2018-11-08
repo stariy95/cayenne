@@ -21,14 +21,17 @@ package org.apache.cayenne.modeler.editor.fasteditor.render;
 
 import java.util.EnumMap;
 import java.util.Objects;
+import java.util.Optional;
 
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
  * @since 4.2
  */
-public class Renderer {
+public class Renderer implements CanvasEventListener {
 
     protected final EnumMap<LayerType, RenderLayer> layerMap = new EnumMap<>(LayerType.class);
     protected /*final*/ GraphicsContext context;
@@ -37,7 +40,7 @@ public class Renderer {
 
     public Renderer() {
         for(LayerType type: LayerType.values()) {
-            layerMap.put(type, new RenderLayer(type));
+            layerMap.put(type, new RenderLayer(this, type));
         }
         lastFrameTime = System.currentTimeMillis();
     }
@@ -87,5 +90,46 @@ public class Renderer {
     public void removeObject(LayerType layer, RenderObject object) {
         layerMap.get(layer).removeRenderObject(object);
         markDirty();
+    }
+
+    private Optional<Node> findActiveNode(Point2D screenPoint) {
+        LayerType[] types = LayerType.values();
+        for(int i=types.length - 1; i >= 0; i--) {
+            Node node = layerMap.get(types[i]).findNode(screenPoint);
+            if(node != null) {
+                return Optional.of(node);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public void onClick(Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onClick(screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onClick(screenPoint));
+    }
+
+    @Override
+    public void onMouseUp(Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onMouseUp(screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onMouseUp(screenPoint));
+    }
+
+    @Override
+    public void onDragStart(Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onDragStart(screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onDragStart(screenPoint));
+    }
+
+    @Override
+    public void onDragMove(Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onDragMove(screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onDragMove(screenPoint));
+    }
+
+    @Override
+    public void onDoubleClick(Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onDoubleClick(screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onDoubleClick(screenPoint));
     }
 }

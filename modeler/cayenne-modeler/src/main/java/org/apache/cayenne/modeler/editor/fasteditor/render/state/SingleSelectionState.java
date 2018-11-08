@@ -20,15 +20,15 @@
 package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
+import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
-import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeContainer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
 
 public class SingleSelectionState extends ControlState {
 
     private Node selectedNode;
 
-    public SingleSelectionState(NodeContainer container) {
+    public SingleSelectionState(RenderLayer container) {
         super(container);
     }
 

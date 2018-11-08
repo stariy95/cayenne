@@ -122,5 +122,8 @@ public abstract class Node implements RenderObject, CanvasEventListener {
 
     @Override
     public void onDoubleClick(Point2D screenPoint) {
+        for(Node child: children) {
+
+        }
     }
 }

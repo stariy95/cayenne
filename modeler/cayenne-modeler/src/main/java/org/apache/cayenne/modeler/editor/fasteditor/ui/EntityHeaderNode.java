@@ -50,7 +50,11 @@ public class EntityHeaderNode extends Node {
         double captionX = parent.getWidth() / 2 - captionWidth / 2;
         double captionY = captionHeight + 2;
 
-        gc.setFill(Color.BLACK);
+        if(editMode) {
+            gc.setFill(Color.BLUE);
+        } else {
+            gc.setFill(Color.BLACK);
+        }
         gc.fillText("SomeCayenneEntityName", captionX, captionY);
     }
 
