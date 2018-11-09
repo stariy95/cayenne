@@ -49,6 +49,7 @@ public class FastEditorScene extends Scene {
         ((Group)getRoot()).getChildren().add(canvas);
         canvas.startRenderer();
         renderer.addObject(LayerType.BACKGROUND, new Background());
+        canvas.requestFocus();
     }
 
     public void addEntity(ObjEntityWrapper entity) {

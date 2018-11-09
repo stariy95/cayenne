@@ -37,15 +37,14 @@ import org.apache.cayenne.modeler.editor.fasteditor.render.state.StateType;
 /**
  * @since 4.2
  */
-public class RenderLayer implements RenderObject, CanvasEventListener {
+public class RenderLayer extends Node {
 
     private final LayerType type;
     private final Renderer renderer;
     private final Map<StateType, ControlState> stateMap;
+    private final Set<RenderObject> objectSet = new LinkedHashSet<>();
 
     private ControlState currentState;
-
-    private final Set<RenderObject> objectSet = new LinkedHashSet<>();
 
     public RenderLayer(Renderer renderer, LayerType type) {
         this.type = Objects.requireNonNull(type);
@@ -54,24 +53,14 @@ public class RenderLayer implements RenderObject, CanvasEventListener {
         moveToState(StateType.DEFAULT);
     }
 
-    public void addRenderObject(RenderObject object) {
-        objectSet.add(object);
-    }
-
-    public void removeRenderObject(RenderObject object) {
-        objectSet.remove(object);
-    }
-
     @Override
-    public void render(Renderer renderer) {
-        objectSet.forEach(o -> {
-            renderer.getContext().setTransform(1, 0, 0, 1, 0, 0);
-            o.render(renderer);
-        });
+    protected void doRender(Renderer renderer) {
+        objectSet.forEach(o -> o.render(renderer));
     }
 
     @Override
     public void advanceAnimation(long delta) {
+        super.advanceAnimation(delta);
         objectSet.forEach(o -> o.advanceAnimation(delta));
     }
 
@@ -91,18 +80,6 @@ public class RenderLayer implements RenderObject, CanvasEventListener {
         }
 
         throw new IllegalArgumentException("Unknown state : " + stateType);
-    }
-
-    public Node findNode(Point2D point) {
-        for (RenderObject object: objectSet) {
-            if(object instanceof Node) {
-                Node node = (Node) object;
-                if (node.getBoundingRect().contains(point)) {
-                    return node;
-                }
-            }
-        }
-        return null;
     }
 
     public Renderer getRenderer() {
@@ -130,8 +107,32 @@ public class RenderLayer implements RenderObject, CanvasEventListener {
     }
 
     @Override
-    public void onDoubleClick(Point2D screenPoint) {
-        currentState.onDoubleClick(screenPoint);
+    public void onDoubleClick(Renderer source, Point2D screenPoint) {
+        currentState.onDoubleClick(source, screenPoint);
     }
 
+    public void addRenderObject(RenderObject object) {
+        if(object instanceof Node) {
+            addChild((Node)object);
+        } else {
+            objectSet.add(object);
+        }
+    }
+
+    public void removeRenderObject(RenderObject object) {
+        if(object instanceof Node) {
+            children.remove(object);
+        } else {
+            objectSet.remove(object);
+        }
+    }
+
+    @Override
+    public Node findChild(Point2D screenPoint) {
+        Node child = super.findChild(screenPoint);
+        if(child == this) {
+            return null;
+        }
+        return child;
+    }
 }

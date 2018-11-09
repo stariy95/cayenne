@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.render;
 
+import java.util.Optional;
+
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
@@ -41,4 +43,13 @@ public class FocusController {
         focusedNode = null;
     }
 
+    public void resetFocusIfNot(Node node) {
+        if(focusedNode != node) {
+            resetFocus();
+        }
+    }
+
+    public Optional<Node> getFocusedNode() {
+        return Optional.ofNullable(focusedNode);
+    }
 }

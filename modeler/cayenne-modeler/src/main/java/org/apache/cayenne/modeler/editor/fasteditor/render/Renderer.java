@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
@@ -105,7 +106,7 @@ public class Renderer implements CanvasEventListener {
     private Optional<Node> findActiveNode(Point2D screenPoint) {
         LayerType[] types = LayerType.values();
         for(int i=types.length - 1; i >= 0; i--) {
-            Node node = layerMap.get(types[i]).findNode(screenPoint);
+            Node node = layerMap.get(types[i]).findChild(screenPoint);
             if(node != null) {
                 return Optional.of(node);
             }
@@ -116,30 +117,49 @@ public class Renderer implements CanvasEventListener {
     @Override
     public void onClick(Point2D screenPoint) {
         layerMap.get(LayerType.SCENE_BACK).onClick(screenPoint);
-        findActiveNode(screenPoint).ifPresent(n -> n.onClick(screenPoint));
+        Optional<Node> activeNode = findActiveNode(screenPoint);
+        if(activeNode.isPresent()) {
+            Node n = activeNode.get();
+            n.onClick(screenPoint);
+            focusController.resetFocusIfNot(n);
+        } else {
+            resetFocus();
+        }
     }
 
     @Override
     public void onMouseUp(Point2D screenPoint) {
         layerMap.get(LayerType.SCENE_BACK).onMouseUp(screenPoint);
         findActiveNode(screenPoint).ifPresent(n -> n.onMouseUp(screenPoint));
+        markDirty();
     }
 
     @Override
     public void onDragStart(Point2D screenPoint) {
         layerMap.get(LayerType.SCENE_BACK).onDragStart(screenPoint);
         findActiveNode(screenPoint).ifPresent(n -> n.onDragStart(screenPoint));
+        markDirty();
     }
 
     @Override
     public void onDragMove(Point2D screenPoint) {
         layerMap.get(LayerType.SCENE_BACK).onDragMove(screenPoint);
         findActiveNode(screenPoint).ifPresent(n -> n.onDragMove(screenPoint));
+        markDirty();
     }
 
     @Override
-    public void onDoubleClick(Point2D screenPoint) {
-        layerMap.get(LayerType.SCENE_BACK).onDoubleClick(screenPoint);
-        findActiveNode(screenPoint).ifPresent(n -> n.onDoubleClick(screenPoint));
+    public void onDoubleClick(Renderer source, Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onDoubleClick(this, screenPoint);
+        findActiveNode(screenPoint).ifPresent(node -> {
+            node.onDoubleClick(this, screenPoint);
+        });
+        markDirty();
+    }
+
+    @Override
+    public void onKey(String character, KeyCode code) {
+        focusController.getFocusedNode().ifPresent(n -> n.onKey(character, code));
+        markDirty();
     }
 }

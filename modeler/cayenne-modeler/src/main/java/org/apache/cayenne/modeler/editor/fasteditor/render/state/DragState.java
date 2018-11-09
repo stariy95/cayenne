@@ -37,7 +37,7 @@ public class DragState extends ControlState {
     @Override
     public void onDragStart(Point2D screenPoint) {
         resetDragNode();
-        dragNode = nodeContainer.findNode(screenPoint);
+        dragNode = nodeContainer.findChild(screenPoint);
         if(dragNode == null) {
             moveToState(StateType.MULTI_SELECTION).onDragStart(screenPoint);
         } else {

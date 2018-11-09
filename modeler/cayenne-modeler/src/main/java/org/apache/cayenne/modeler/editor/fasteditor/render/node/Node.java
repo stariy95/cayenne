@@ -21,20 +21,20 @@
 package org.apache.cayenne.modeler.editor.fasteditor.render.node;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.transform.Affine;
-import javafx.scene.transform.Transform;
-import javafx.scene.transform.Translate;
+import javafx.scene.input.KeyCode;
 import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 
 public abstract class Node implements RenderObject, CanvasEventListener {
+
+    protected static final Rectangle2D ZERO_RECT = new Rectangle2D(0, 0, 0, 0);
 
     protected final List<Node> children;
     protected Node parent;
@@ -44,6 +44,7 @@ public abstract class Node implements RenderObject, CanvasEventListener {
     public Node() {
         children = new ArrayList<>();
         nodeState = new NodeState();
+        boundingRect = ZERO_RECT;
     }
 
     public void addChild(Node node) {
@@ -51,16 +52,18 @@ public abstract class Node implements RenderObject, CanvasEventListener {
         node.parent = this;
     }
 
-    public int getChildrenCount() {
-        return children.size();
-    }
-
     public List<Node> getChildren() {
-        return children;
+        return Collections.unmodifiableList(children);
     }
 
-    public Node getChild(int idx) {
-        return children.get(idx);
+    public Node findChild(Point2D screenPoint) {
+        Point2D childPoint = screenPoint.subtract(getX(), getY());
+        for(Node child : children) {
+            if(child.getBoundingRect() != null && child.getBoundingRect().contains(childPoint)) {
+                return child.findChild(childPoint);
+            }
+        }
+        return this;
     }
 
     public double getX() {
@@ -80,7 +83,7 @@ public abstract class Node implements RenderObject, CanvasEventListener {
     }
 
     public void setBoundingRect(Rectangle2D boundingRect) {
-        this.boundingRect = boundingRect;
+        this.boundingRect = Objects.requireNonNull(boundingRect);
     }
 
     public Rectangle2D getBoundingRect() {
@@ -103,6 +106,11 @@ public abstract class Node implements RenderObject, CanvasEventListener {
         }
     }
 
+    @Override
+    public void advanceAnimation(long delta) {
+        children.forEach(o -> o.advanceAnimation(delta));
+    }
+
     abstract protected void doRender(Renderer renderer);
 
     @Override
@@ -122,19 +130,10 @@ public abstract class Node implements RenderObject, CanvasEventListener {
     }
 
     @Override
-    public void onDoubleClick(Point2D screenPoint) {
-        Point2D childPoint = screenPoint.subtract(getX(), getY());
-        System.out.println(screenPoint + " : " + childPoint + " : " + getBoundingRect());
-        for(Node child: children) {
-            System.out.println(child.getBoundingRect());
-            if(child.getBoundingRect() != null && child.getBoundingRect().contains(childPoint)) {
-                child.onDoubleClick(childPoint);
-            }
-        }
+    public void onDoubleClick(Renderer source, Point2D screenPoint) {
     }
 
     public void onFocusLost() {
-
     }
 
     public void onFocus() {

@@ -20,6 +20,7 @@
 package org.apache.cayenne.modeler.editor.fasteditor.render;
 
 import javafx.geometry.Point2D;
+import javafx.scene.input.KeyCode;
 
 public interface CanvasEventListener {
 
@@ -31,5 +32,8 @@ public interface CanvasEventListener {
 
     void onDragMove(Point2D screenPoint);
 
-    void onDoubleClick(Point2D screenPoint);
+    void onDoubleClick(Renderer source, Point2D screenPoint);
+
+    default void onKey(String character, KeyCode code) {
+    }
 }

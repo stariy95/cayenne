@@ -21,6 +21,7 @@ package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 
 import javafx.geometry.Point2D;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 public class DefaultState extends ControlState {
@@ -35,13 +36,13 @@ public class DefaultState extends ControlState {
     }
 
     @Override
-    public void onDoubleClick(Point2D screenPoint) {
-        moveToState(StateType.SINGLE_SELECTION).onDoubleClick(screenPoint);
+    public void onDoubleClick(Renderer source, Point2D screenPoint) {
+        moveToState(StateType.SINGLE_SELECTION).onDoubleClick(source, screenPoint);
     }
 
     @Override
     public void onDragStart(Point2D screenPoint) {
-        Node selectedNode = nodeContainer.findNode(screenPoint);
+        Node selectedNode = nodeContainer.findChild(screenPoint);
         if(selectedNode != null) {
             moveToState(StateType.DRAG).onDragStart(screenPoint);
         } else {

@@ -22,6 +22,7 @@ package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 import javafx.geometry.Point2D;
 import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 
 public abstract class ControlState implements CanvasEventListener {
 
@@ -36,7 +37,7 @@ public abstract class ControlState implements CanvasEventListener {
     }
 
     @Override
-    public void onDoubleClick(Point2D screenPoint) {
+    public void onDoubleClick(Renderer source, Point2D screenPoint) {
     }
 
     @Override
