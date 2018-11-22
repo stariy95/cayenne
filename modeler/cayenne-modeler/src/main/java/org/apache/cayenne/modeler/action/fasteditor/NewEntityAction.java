@@ -44,7 +44,9 @@ public class NewEntityAction extends CayenneAction {
 
     @Override
     public void performAction(ActionEvent e) {
-        fastEditorView.getEditorScene().addEntity(new ObjEntityWrapper());
+        ObjEntityWrapper entity = new ObjEntityWrapper();
+        entity.setName("NewEntity1");
+        fastEditorView.getEditorScene().addEntity(entity);
     }
 
     public void setEditor(FastEditorView fastEditorView) {

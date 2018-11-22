@@ -22,9 +22,11 @@ package org.apache.cayenne.modeler.editor.fasteditor.render;
 import java.util.EnumMap;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
@@ -39,8 +41,10 @@ public class Renderer implements CanvasEventListener {
     protected volatile boolean isDirty = true;
     protected long lastFrameTime;
     protected final FocusController focusController;
+    protected final TextField textField;
 
-    public Renderer() {
+    public Renderer(TextField textField) {
+        this.textField = textField;
         this.focusController = new FocusController();
         for(LayerType type: LayerType.values()) {
             layerMap.put(type, new RenderLayer(this, type));
@@ -75,6 +79,7 @@ public class Renderer implements CanvasEventListener {
     }
 
     public void resetFocus() {
+        hideTextInput();
         focusController.resetFocus();
     }
 
@@ -161,5 +166,25 @@ public class Renderer implements CanvasEventListener {
     public void onKey(String character, KeyCode code) {
         focusController.getFocusedNode().ifPresent(n -> n.onKey(character, code));
         markDirty();
+    }
+
+    public void hideTextInput() {
+        textField.setVisible(false);
+        textField.setText("");
+    }
+
+    public void textInput(Point2D point, String text, Consumer<String> callback) {
+        textField.setLayoutX(point.getX());
+        textField.setLayoutY(point.getY());
+        textField.setText(text);
+        textField.setVisible(true);
+        textField.requestFocus();
+
+        textField.setOnKeyReleased(event -> {
+            if(event.getCode() == KeyCode.ENTER) {
+                callback.accept(textField.getText());
+                hideTextInput();
+            }
+        });
     }
 }

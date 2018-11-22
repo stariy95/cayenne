@@ -97,7 +97,7 @@ public abstract class Node implements RenderObject, CanvasEventListener {
     @Override
     public void render(Renderer renderer) {
         doRender(renderer);
-        renderer.getContext().strokeRect(getX(), getY(), getWidth(), getHeight());
+//        renderer.getContext().strokeRect(getX(), getY(), getWidth(), getHeight());
         if(!children.isEmpty()) {
             children.forEach(c -> {
                 renderer.getContext().setTransform(1, 0, 0, 1, boundingRect.getMinX(), boundingRect.getMinY());
