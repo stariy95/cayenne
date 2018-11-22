@@ -184,6 +184,8 @@ public class Renderer implements CanvasEventListener {
             if(event.getCode() == KeyCode.ENTER) {
                 callback.accept(textField.getText());
                 hideTextInput();
+            } else if(event.getCode() == KeyCode.ESCAPE) {
+                hideTextInput();
             }
         });
     }

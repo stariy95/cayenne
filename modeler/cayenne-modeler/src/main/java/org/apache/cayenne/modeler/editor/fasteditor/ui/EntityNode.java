@@ -19,8 +19,12 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
+import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
@@ -36,6 +40,7 @@ public class EntityNode extends Node {
     public EntityNode(ObjEntityWrapper entityWrapper) {
         this.entityWrapper = entityWrapper;
         addChild(new EntityHeaderNode(entityWrapper));
+        addChild(new AddAttributeNode(entityWrapper));
     }
 
     @Override
@@ -49,5 +54,29 @@ public class EntityNode extends Node {
         }
         context.fillRoundRect(getBoundingRect().getMinX(), getBoundingRect().getMinY(),getWidth(), getHeight(), 15, 15);
 
+    }
+
+    private void addAttribute() {
+        System.out.println("Attribute added");
+    }
+
+    private class AddAttributeNode extends Node {
+
+        private final Image addAttributeIcon;
+
+        public AddAttributeNode(ObjEntityWrapper entityWrapper) {
+            addAttributeIcon = new Image("org/apache/cayenne/modeler/images/icon-attribute.png");
+            boundingRect = new Rectangle2D(10, 20, addAttributeIcon.getWidth(), addAttributeIcon.getHeight());
+        }
+
+        @Override
+        protected void doRender(Renderer renderer) {
+            renderer.getContext().drawImage(addAttributeIcon, getX(), getY());
+        }
+
+        @Override
+        public void onClick(Point2D screenPoint) {
+            addAttribute();
+        }
     }
 }
