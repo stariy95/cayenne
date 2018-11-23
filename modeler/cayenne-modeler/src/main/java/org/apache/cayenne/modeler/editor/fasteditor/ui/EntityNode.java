@@ -25,10 +25,12 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
+import org.apache.cayenne.modeler.editor.wrapper.ObjAttributeWrapper;
 
 /**
  * @since 4.2
@@ -40,6 +42,9 @@ public class EntityNode extends Node {
     public EntityNode(ObjEntityWrapper entityWrapper) {
         this.entityWrapper = entityWrapper;
         addChild(new EntityHeaderNode(entityWrapper));
+        for(ObjAttribute attribute : entityWrapper.getAttributes()) {
+            addChild(new AttributeNode(new ObjAttributeWrapper(attribute)));
+        }
         addChild(new AddAttributeNode(entityWrapper));
     }
 

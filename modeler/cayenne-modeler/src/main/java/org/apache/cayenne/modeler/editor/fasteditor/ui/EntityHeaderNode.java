@@ -41,7 +41,7 @@ public class EntityHeaderNode extends Node {
         this.name = entityWrapper.getName();
     }
 
-    private void initBoundingRect(boolean force) {
+    private void recalcBoundingRect(boolean force) {
         if(force || boundingRect == ZERO_RECT) {
             final Text text = new Text(name);
             double captionWidth = text.getLayoutBounds().getWidth();
@@ -54,7 +54,7 @@ public class EntityHeaderNode extends Node {
 
     @Override
     protected void doRender(Renderer renderer) {
-        initBoundingRect(false);
+        recalcBoundingRect(false);
         GraphicsContext gc = renderer.getContext();
         gc.setFill(Color.BLACK);
         gc.fillText(name, getX(), getY() + getHeight());
@@ -66,7 +66,7 @@ public class EntityHeaderNode extends Node {
         source.textInput(position, entityWrapper.getName(), str -> {
             name = str;
             entityWrapper.setName(str);
-            initBoundingRect(true);
+            recalcBoundingRect(true);
             source.markDirty();
         });
     }

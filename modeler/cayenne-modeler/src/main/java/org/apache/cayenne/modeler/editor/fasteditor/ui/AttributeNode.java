@@ -22,21 +22,23 @@ package org.apache.cayenne.modeler.editor.fasteditor.ui;
 import javafx.scene.canvas.GraphicsContext;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 import org.apache.cayenne.modeler.editor.wrapper.ObjAttributeWrapper;
 
 /**
  * @since 4.2
  */
-public class AttributeNode implements RenderObject {
+public class AttributeNode extends Node {
 
     private final ObjAttributeWrapper objAttribute;
 
     public AttributeNode(ObjAttributeWrapper objAttribute) {
         this.objAttribute = objAttribute;
+
     }
 
     @Override
-    public void render(Renderer renderer) {
+    protected void doRender(Renderer renderer) {
         GraphicsContext context = renderer.getContext();
         context.fillText("• " + objAttribute.getName(), 0, 0);
     }
