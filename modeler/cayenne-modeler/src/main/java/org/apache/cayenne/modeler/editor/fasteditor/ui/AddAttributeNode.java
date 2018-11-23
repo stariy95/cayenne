@@ -34,7 +34,7 @@ public class AddAttributeNode extends Node {
 
     public AddAttributeNode() {
         addAttributeIcon = new Image("org/apache/cayenne/modeler/images/icon-attribute.png");
-        boundingRect = new Rectangle2D(10, 20, addAttributeIcon.getWidth(), addAttributeIcon.getHeight());
+        boundingRect = new Rectangle2D(10, 0, addAttributeIcon.getWidth(), addAttributeIcon.getHeight());
     }
 
     @Override

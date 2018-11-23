@@ -75,42 +75,42 @@ public class ObjEntityWrapper extends ObjEntity implements ObjAttributeListener,
 
     @Override
     public void objAttributeChanged(AttributeEvent e) {
-        if(listener != null) {
+        if(e.getEntity() == this && listener != null) {
             listener.onChange(ChangeType.ATTRIBUTE_CHANGE, this, e.getAttribute().getName());
         }
     }
 
     @Override
     public void objAttributeAdded(AttributeEvent e) {
-        if(listener != null) {
-            listener.onChange(ChangeType.ATTRIBUTE_CHANGE, this, e.getAttribute().getName());
+        if(e.getEntity() == this && listener != null) {
+            listener.onChange(ChangeType.ATTRIBUTE_ADD, this, e.getAttribute().getName());
         }
     }
 
     @Override
     public void objAttributeRemoved(AttributeEvent e) {
-        if(listener != null) {
-            listener.onChange(ChangeType.ATTRIBUTE_CHANGE, this, e.getAttribute().getName());
+        if(e.getEntity() == this && listener != null) {
+            listener.onChange(ChangeType.ATTRIBUTE_REMOVE, this, e.getAttribute().getName());
         }
     }
 
     @Override
     public void objRelationshipChanged(RelationshipEvent e) {
-        if(listener != null) {
+        if(e.getEntity() == this && listener != null) {
             listener.onChange(ChangeType.RELATIONSHIP_CHANGE, this, e.getRelationship().getName());
         }
     }
 
     @Override
     public void objRelationshipAdded(RelationshipEvent e) {
-        if(listener != null) {
+        if(e.getEntity() == this && listener != null) {
             listener.onChange(ChangeType.RELATIONSHIP_ADD, this, e.getRelationship().getName());
         }
     }
 
     @Override
     public void objRelationshipRemoved(RelationshipEvent e) {
-        if(listener != null) {
+        if(e.getEntity() == this && listener != null) {
             listener.onChange(ChangeType.RELATIONSHIP_REMOVE, this, e.getRelationship().getName());
         }
     }

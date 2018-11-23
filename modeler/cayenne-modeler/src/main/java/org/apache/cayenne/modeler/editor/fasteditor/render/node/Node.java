@@ -27,6 +27,8 @@ import java.util.Objects;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.transform.Affine;
 import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
@@ -56,6 +58,11 @@ public abstract class Node implements RenderObject, CanvasEventListener {
         node.parent = this;
     }
 
+    public void removeChild(Node node) {
+        children.remove(node);
+        node.parent = null;
+    }
+
     public List<Node> getChildren() {
         return Collections.unmodifiableList(children);
     }
@@ -68,6 +75,14 @@ public abstract class Node implements RenderObject, CanvasEventListener {
             }
         }
         return this;
+    }
+
+    public double getWorldX() {
+        return getX() + (parent == null ? 0 : parent.getWorldX());
+    }
+
+    public double getWorldY() {
+        return getY() + (parent == null ? 0 : parent.getWorldY());
     }
 
     public double getX() {
@@ -103,10 +118,15 @@ public abstract class Node implements RenderObject, CanvasEventListener {
         doRender(renderer);
 //        renderer.getContext().strokeRect(getX(), getY(), getWidth(), getHeight());
         if(!children.isEmpty()) {
+            GraphicsContext context = renderer.getContext();
+            Affine transform = context.getTransform();
+            transform.appendTranslation(boundingRect.getMinX(), boundingRect.getMinY());
             children.forEach(c -> {
-                renderer.getContext().setTransform(1, 0, 0, 1, boundingRect.getMinX(), boundingRect.getMinY());
+                context.setTransform(transform);
                 c.render(renderer);
             });
+            transform.appendTranslation(-boundingRect.getMinX(), -boundingRect.getMinY());
+            context.setTransform(transform);
         }
     }
 

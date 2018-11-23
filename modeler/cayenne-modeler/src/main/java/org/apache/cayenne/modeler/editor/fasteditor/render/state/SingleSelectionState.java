@@ -38,7 +38,6 @@ public class SingleSelectionState extends ControlState {
         resetSelectedNode();
         selectedNode = nodeContainer.findChild(screenPoint);
         if(selectedNode != null) {
-            System.out.println("Select node " + selectedNode);
             selectedNode.getNodeState().addState(NodeState.STATE_SELECTED);
         } else {
             moveToState(StateType.DEFAULT);
@@ -48,9 +47,6 @@ public class SingleSelectionState extends ControlState {
     @Override
     public void onDoubleClick(Renderer source, Point2D screenPoint) {
         onClick(source, screenPoint);
-        if(selectedNode != null) {
-            System.out.println("Double click");
-        }
     }
 
     @Override
@@ -70,7 +66,6 @@ public class SingleSelectionState extends ControlState {
 
     private void resetSelectedNode() {
         if(selectedNode != null) {
-            System.out.println("Reset node " + selectedNode);
             selectedNode.getNodeState().removeState(NodeState.STATE_SELECTED);
             selectedNode = null;
         }

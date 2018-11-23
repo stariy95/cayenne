@@ -55,7 +55,6 @@ public abstract class ControlState implements CanvasEventListener {
     public abstract void onStateExit(ControlState nextState);
 
     protected ControlState moveToState(StateType stateType) {
-        System.out.println("move to state " + stateType);
         ControlState nextState = nodeContainer.moveToState(stateType);
         onStateExit(nextState);
         return nextState;

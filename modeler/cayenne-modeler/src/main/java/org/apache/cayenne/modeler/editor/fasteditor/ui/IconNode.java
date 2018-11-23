@@ -19,29 +19,27 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
-import javafx.geometry.Point2D;
-import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
+
+import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
  * @since 4.2
  */
-public class EntityHeaderNode extends TextNode {
+public class IconNode extends Node {
 
-    private final ObjEntityWrapper entityWrapper;
+    private final Image icon;
 
-    public EntityHeaderNode(ObjEntityWrapper entityWrapper) {
-        super(entityWrapper.getName());
-        this.entityWrapper = entityWrapper;
+    public IconNode(String url) {
+        icon = new Image(url);
+        setBoundingRect(new Rectangle2D(0, 0, icon.getWidth(), icon.getHeight()));
     }
 
     @Override
-    public void onDoubleClick(Renderer source, Point2D screenPoint) {
-        Point2D position = new Point2D(getWorldX(), getWorldY());
-        source.textInput(position, entityWrapper.getName(), str -> {
-            entityWrapper.setName(str);
-            setText(str);
-            source.markDirty();
-        });
+    protected void doRender(Renderer renderer) {
+        renderer.getContext().drawImage(icon, getX(), getY());
     }
+
 }

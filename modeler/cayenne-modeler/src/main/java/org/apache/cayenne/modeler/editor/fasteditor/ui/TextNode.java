@@ -19,29 +19,34 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
-import javafx.geometry.Point2D;
-import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
  * @since 4.2
  */
-public class EntityHeaderNode extends TextNode {
+public class TextNode extends Node {
 
-    private final ObjEntityWrapper entityWrapper;
+    private String text;
 
-    public EntityHeaderNode(ObjEntityWrapper entityWrapper) {
-        super(entityWrapper.getName());
-        this.entityWrapper = entityWrapper;
+    public TextNode(String text) {
+        setText(text);
     }
 
     @Override
-    public void onDoubleClick(Renderer source, Point2D screenPoint) {
-        Point2D position = new Point2D(getWorldX(), getWorldY());
-        source.textInput(position, entityWrapper.getName(), str -> {
-            entityWrapper.setName(str);
-            setText(str);
-            source.markDirty();
-        });
+    protected void doRender(Renderer renderer) {
+        renderer.getContext().setFill(Color.BLACK);
+        renderer.getContext().fillText(text, getX(), getY() + getHeight());
+    }
+
+    public void setText(String text) {
+        this.text = text;
+        final Text tmpText = new Text(text);
+        double captionWidth = tmpText.getLayoutBounds().getWidth();
+        double captionHeight = tmpText.getLayoutBounds().getHeight();
+        boundingRect = new Rectangle2D(0, 0, captionWidth, captionHeight);
     }
 }

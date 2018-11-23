@@ -19,26 +19,28 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
-import javafx.scene.canvas.GraphicsContext;
 import org.apache.cayenne.modeler.editor.fasteditor.model.ObjAttributeWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
-import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
  * @since 4.2
  */
-public class AttributeNode extends Node {
+public class AttributeNode extends HBoxNode {
+
+    private final static String REMOVE_ICON = "org/apache/cayenne/modeler/images/icon-trash.png";
 
     private final ObjAttributeWrapper objAttribute;
 
     public AttributeNode(ObjAttributeWrapper objAttribute) {
+        super(4);
         this.objAttribute = objAttribute;
 
+        addChild(new IconNode(REMOVE_ICON));
+        addChild(new TextNode(objAttribute.getName()));
     }
 
     @Override
     protected void doRender(Renderer renderer) {
-        GraphicsContext context = renderer.getContext();
-        context.fillText("• " + objAttribute.getName(), 0, 0);
+        super.doRender(renderer);
     }
 }
