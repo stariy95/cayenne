@@ -51,7 +51,7 @@ import org.jgraph.JGraph;
 public class DataDomainGraphTab extends JPanel implements DomainDisplayListener, ItemListener {
 
     /**
-     * mediator instance
+     * controller instance
      */
     ProjectController mediator;
 

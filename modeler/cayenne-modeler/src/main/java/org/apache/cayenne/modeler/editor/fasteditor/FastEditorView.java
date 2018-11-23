@@ -58,7 +58,7 @@ public class FastEditorView extends JPanel {
 
     private void initJfxPanel() {
         Platform.runLater(()
-                -> jfxPanel.setScene(editorScene = new FastEditorScene()));
+                -> jfxPanel.setScene(editorScene = new FastEditorScene(mediator)));
         add(new JScrollPane(jfxPanel), BorderLayout.CENTER);
     }
 

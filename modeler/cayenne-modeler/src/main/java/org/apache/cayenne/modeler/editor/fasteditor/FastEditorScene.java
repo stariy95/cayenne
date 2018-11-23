@@ -24,6 +24,7 @@ import java.util.Collections;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.editor.fasteditor.layout.DefaultLayout;
 import org.apache.cayenne.modeler.editor.fasteditor.layout.Layout;
 import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
@@ -40,13 +41,15 @@ public class FastEditorScene extends Scene {
 
     private final Renderer renderer;
     private final Layout layout;
+    private final ProjectController controller;
 
-    public FastEditorScene() {
+    public FastEditorScene(ProjectController controller) {
         super(new Group());
+        this.controller = controller;
         TextField textField = new TextField();
 
         layout = new DefaultLayout();
-        renderer = new Renderer(textField);
+        renderer = new Renderer(controller, textField);
         ResizableCanvas canvas = new ResizableCanvas(renderer);
 
         ((Group)getRoot()).getChildren().add(canvas);
@@ -62,6 +65,8 @@ public class FastEditorScene extends Scene {
     }
 
     public void addEntity(ObjEntityWrapper entity) {
+        controller.addObjAttributeListener(entity);
+        controller.addObjRelationshipListener(entity);
         EntityNode entityNode = new EntityNode(entity);
         layout.doLayout(Collections.emptyList(), entityNode);
         renderer.addObject(LayerType.SCENE_BACK, entityNode);

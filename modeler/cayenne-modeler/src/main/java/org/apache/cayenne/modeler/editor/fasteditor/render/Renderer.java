@@ -29,6 +29,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import org.apache.cayenne.modeler.ProjectController;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
 /**
@@ -42,8 +43,10 @@ public class Renderer implements CanvasEventListener {
     protected long lastFrameTime;
     protected final FocusController focusController;
     protected final TextField textField;
+    protected final ProjectController controller;
 
-    public Renderer(TextField textField) {
+    public Renderer(ProjectController controller, TextField textField) {
+        this.controller = controller;
         this.textField = textField;
         this.focusController = new FocusController();
         for(LayerType type: LayerType.values()) {
@@ -120,12 +123,12 @@ public class Renderer implements CanvasEventListener {
     }
 
     @Override
-    public void onClick(Point2D screenPoint) {
-        layerMap.get(LayerType.SCENE_BACK).onClick(screenPoint);
+    public void onClick(Renderer source, Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onClick(source, screenPoint);
         Optional<Node> activeNode = findActiveNode(screenPoint);
         if(activeNode.isPresent()) {
             Node n = activeNode.get();
-            n.onClick(screenPoint);
+            n.onClick(source, screenPoint);
             focusController.resetFocusIfNot(n);
         } else {
             resetFocus();
@@ -133,23 +136,23 @@ public class Renderer implements CanvasEventListener {
     }
 
     @Override
-    public void onMouseUp(Point2D screenPoint) {
-        layerMap.get(LayerType.SCENE_BACK).onMouseUp(screenPoint);
-        findActiveNode(screenPoint).ifPresent(n -> n.onMouseUp(screenPoint));
+    public void onMouseUp(Renderer source, Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onMouseUp(source, screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onMouseUp(source, screenPoint));
         markDirty();
     }
 
     @Override
-    public void onDragStart(Point2D screenPoint) {
-        layerMap.get(LayerType.SCENE_BACK).onDragStart(screenPoint);
-        findActiveNode(screenPoint).ifPresent(n -> n.onDragStart(screenPoint));
+    public void onDragStart(Renderer source, Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onDragStart(source, screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onDragStart(source, screenPoint));
         markDirty();
     }
 
     @Override
-    public void onDragMove(Point2D screenPoint) {
-        layerMap.get(LayerType.SCENE_BACK).onDragMove(screenPoint);
-        findActiveNode(screenPoint).ifPresent(n -> n.onDragMove(screenPoint));
+    public void onDragMove(Renderer source, Point2D screenPoint) {
+        layerMap.get(LayerType.SCENE_BACK).onDragMove(source, screenPoint);
+        findActiveNode(screenPoint).ifPresent(n -> n.onDragMove(source, screenPoint));
         markDirty();
     }
 
@@ -163,8 +166,8 @@ public class Renderer implements CanvasEventListener {
     }
 
     @Override
-    public void onKey(String character, KeyCode code) {
-        focusController.getFocusedNode().ifPresent(n -> n.onKey(character, code));
+    public void onKey(Renderer source, String character, KeyCode code) {
+        focusController.getFocusedNode().ifPresent(n -> n.onKey(source, character, code));
         markDirty();
     }
 
@@ -188,5 +191,9 @@ public class Renderer implements CanvasEventListener {
                 hideTextInput();
             }
         });
+    }
+
+    public ProjectController getProjectController() {
+        return controller;
     }
 }

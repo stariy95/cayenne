@@ -33,7 +33,7 @@ public abstract class ControlState implements CanvasEventListener {
     }
 
     @Override
-    public void onClick(Point2D screenPoint) {
+    public void onClick(Renderer source, Point2D screenPoint) {
     }
 
     @Override
@@ -41,15 +41,15 @@ public abstract class ControlState implements CanvasEventListener {
     }
 
     @Override
-    public void onMouseUp(Point2D screenPoint) {
+    public void onMouseUp(Renderer source, Point2D screenPoint) {
     }
 
     @Override
-    public void onDragStart(Point2D screenPoint) {
+    public void onDragStart(Renderer source, Point2D screenPoint) {
     }
 
     @Override
-    public void onDragMove(Point2D screenPoint) {
+    public void onDragMove(Renderer source, Point2D screenPoint) {
     }
 
     public abstract void onStateExit(ControlState nextState);

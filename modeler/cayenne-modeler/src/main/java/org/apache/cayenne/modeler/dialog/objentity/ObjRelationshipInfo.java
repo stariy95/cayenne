@@ -543,7 +543,7 @@ public class ObjRelationshipInfo extends CayenneController implements TreeSelect
 
             // note on events notification - this needs to be propagated
             // via old modeler events, but we leave this to the controller
-            // since model knows nothing about Modeler mediator.
+            // since model knows nothing about Modeler controller.
             relationship.setTargetEntityName(objectTarget);
         }
 

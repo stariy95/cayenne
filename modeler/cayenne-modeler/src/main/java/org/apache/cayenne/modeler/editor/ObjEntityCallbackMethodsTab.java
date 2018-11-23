@@ -37,7 +37,7 @@ public class ObjEntityCallbackMethodsTab extends AbstractCallbackMethodsTab  {
 
     /**
      * constructor
-     * @param mediator mediator instance
+     * @param mediator controller instance
      */
     public ObjEntityCallbackMethodsTab(ProjectController mediator) {
         super(mediator);

@@ -41,7 +41,7 @@ public class CallbackDescriptorTableModel extends CayenneTableModel<String> {
     /**
      * constructor
      * 
-     * @param mediator mediator instance
+     * @param mediator controller instance
      * @param eventSource event source
      * @param objectList default objects list
      * @param callbackDescriptor callback descriptor instance

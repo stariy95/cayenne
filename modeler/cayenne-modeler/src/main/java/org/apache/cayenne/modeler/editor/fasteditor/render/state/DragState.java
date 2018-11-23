@@ -22,6 +22,7 @@ package org.apache.cayenne.modeler.editor.fasteditor.render.state;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
+import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
 
@@ -35,11 +36,11 @@ public class DragState extends ControlState {
     }
 
     @Override
-    public void onDragStart(Point2D screenPoint) {
+    public void onDragStart(Renderer source, Point2D screenPoint) {
         resetDragNode();
         dragNode = nodeContainer.findChild(screenPoint);
         if(dragNode == null) {
-            moveToState(StateType.MULTI_SELECTION).onDragStart(screenPoint);
+            moveToState(StateType.MULTI_SELECTION).onDragStart(source, screenPoint);
         } else {
             dragNode.getNodeState().addState(NodeState.STATE_DRAG);
             offset = new Point2D(dragNode.getX(), dragNode.getY()).subtract(screenPoint);
@@ -47,7 +48,7 @@ public class DragState extends ControlState {
     }
 
     @Override
-    public void onDragMove(Point2D screenPoint) {
+    public void onDragMove(Renderer source, Point2D screenPoint) {
         dragNode.setBoundingRect(new Rectangle2D(
                 screenPoint.getX() + offset.getX(),
                 screenPoint.getY() + offset.getY(),
@@ -57,7 +58,7 @@ public class DragState extends ControlState {
     }
 
     @Override
-    public void onMouseUp(Point2D screenPoint) {
+    public void onMouseUp(Renderer source, Point2D screenPoint) {
         moveToState(StateType.DEFAULT);
     }
 

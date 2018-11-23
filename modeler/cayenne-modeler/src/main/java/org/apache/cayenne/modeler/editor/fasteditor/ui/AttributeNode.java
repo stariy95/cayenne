@@ -20,10 +20,9 @@
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
 import javafx.scene.canvas.GraphicsContext;
-import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
+import org.apache.cayenne.modeler.editor.fasteditor.model.ObjAttributeWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
-import org.apache.cayenne.modeler.editor.wrapper.ObjAttributeWrapper;
 
 /**
  * @since 4.2

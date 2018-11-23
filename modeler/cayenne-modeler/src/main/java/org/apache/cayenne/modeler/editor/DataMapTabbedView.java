@@ -36,7 +36,7 @@ public class DataMapTabbedView extends JTabbedPane {
     /**
      * constructor
      *
-     * @param mediator mediator instance
+     * @param mediator controller instance
      */
     public DataMapTabbedView(ProjectController mediator) {
         this.mediator = mediator;

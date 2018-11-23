@@ -81,7 +81,7 @@ public abstract class AbstractCallbackMethodsTab extends JPanel {
     private static Logger logger = LoggerFactory.getLogger(AbstractCallbackMethodsTab.class);
 
     /**
-     * mediator instance
+     * controller instance
      */
     ProjectController mediator;
 
@@ -124,7 +124,7 @@ public abstract class AbstractCallbackMethodsTab extends JPanel {
     /**
      * constructor
      * 
-     * @param mediator mediator instance
+     * @param mediator controller instance
      */
     public AbstractCallbackMethodsTab(ProjectController mediator) {
         this.mediator = mediator;

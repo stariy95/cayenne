@@ -20,32 +20,32 @@
 package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
-import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.event.AttributeEvent;
+import org.apache.cayenne.map.event.MapEvent;
+import org.apache.cayenne.modeler.editor.fasteditor.model.ObjAttributeWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.model.ObjEntityWrapper;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
-import org.apache.cayenne.modeler.editor.wrapper.ObjAttributeWrapper;
+import org.apache.cayenne.util.Util;
 
 /**
  * @since 4.2
  */
-public class EntityNode extends Node {
+public class EntityNode extends Node implements ObjEntityWrapper.ChangeListener {
 
     private final ObjEntityWrapper entityWrapper;
 
     public EntityNode(ObjEntityWrapper entityWrapper) {
         this.entityWrapper = entityWrapper;
+        entityWrapper.setListener(this);
         addChild(new EntityHeaderNode(entityWrapper));
-        for(ObjAttribute attribute : entityWrapper.getAttributes()) {
-            addChild(new AttributeNode(new ObjAttributeWrapper(attribute)));
+        for(ObjAttributeWrapper attribute : entityWrapper.getWrapperAttributes()) {
+            addChild(new AttributeNode(attribute));
         }
-        addChild(new AddAttributeNode(entityWrapper));
+        addChild(new AddAttributeNode());
     }
 
     @Override
@@ -61,27 +61,30 @@ public class EntityNode extends Node {
 
     }
 
-    private void addAttribute() {
-        System.out.println("Attribute added");
+    public void addAttribute(AddAttributeNode addAttributeNode, Renderer source) {
+        Point2D point2D = new Point2D(addAttributeNode.getX(), addAttributeNode.getY());
+        source.textInput(point2D, "newAttribute", name -> {
+            if(!Util.isBlank(name)) {
+                ObjAttributeWrapper attribute = new ObjAttributeWrapper(name);
+                entityWrapper.addAttribute(attribute);
+                AttributeEvent event = new AttributeEvent(source, attribute, entityWrapper, MapEvent.ADD);
+                source.getProjectController().fireObjAttributeEvent(event);
+            }
+        });
     }
 
-    private class AddAttributeNode extends Node {
-
-        private final Image addAttributeIcon;
-
-        public AddAttributeNode(ObjEntityWrapper entityWrapper) {
-            addAttributeIcon = new Image("org/apache/cayenne/modeler/images/icon-attribute.png");
-            boundingRect = new Rectangle2D(10, 20, addAttributeIcon.getWidth(), addAttributeIcon.getHeight());
-        }
-
-        @Override
-        protected void doRender(Renderer renderer) {
-            renderer.getContext().drawImage(addAttributeIcon, getX(), getY());
-        }
-
-        @Override
-        public void onClick(Point2D screenPoint) {
-            addAttribute();
+    @Override
+    public void onChange(ObjEntityWrapper.ChangeType type, ObjEntityWrapper wrapper, String name) {
+        switch (type) {
+            case ATTRIBUTE_ADD:
+                addChild(children.size() - 2, new AttributeNode(wrapper.getWrapperAttribute(name)));
+                break;
+            case ATTRIBUTE_CHANGE:
+            case ATTRIBUTE_REMOVE:
+            case RELATIONSHIP_ADD:
+            case RELATIONSHIP_CHANGE:
+            case RELATIONSHIP_REMOVE:
         }
     }
+
 }

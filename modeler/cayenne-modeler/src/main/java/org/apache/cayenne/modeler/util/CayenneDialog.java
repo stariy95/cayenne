@@ -154,7 +154,7 @@ public class CayenneDialog extends JDialog implements HyperlinkListener {
     }
 
     /**
-     * Returns current CayenneModeler mediator.
+     * Returns current CayenneModeler controller.
      */
     public ProjectController getMediator() {
         return Application.getInstance().getFrameController().getProjectController();

@@ -28,6 +28,7 @@ import javafx.scene.paint.Color;
 import org.apache.cayenne.modeler.editor.fasteditor.render.LayerType;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
+import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.NodeState;
 
@@ -53,7 +54,7 @@ public class MultiSelectionState extends ControlState {
     }
 
     @Override
-    public void onDragMove(Point2D screenPoint) {
+    public void onDragMove(Renderer source, Point2D screenPoint) {
         // selection rectangle
         double x = Math.min(startPoint.getX(), screenPoint.getX());
         double y = Math.min(startPoint.getY(), screenPoint.getY());
@@ -63,14 +64,14 @@ public class MultiSelectionState extends ControlState {
     }
 
     @Override
-    public void onDragStart(Point2D screenPoint) {
+    public void onDragStart(Renderer source, Point2D screenPoint) {
         startPoint = screenPoint;
         selectionRect = new Rectangle2D(screenPoint.getX(), screenPoint.getY(), 1, 1);
         nodeContainer.getRenderer().addObject(LayerType.UI, selectionRenderObject);
     }
 
     @Override
-    public void onMouseUp(Point2D screenPoint) {
+    public void onMouseUp(Renderer source, Point2D screenPoint) {
         moveToState(StateType.DEFAULT);
     }
 

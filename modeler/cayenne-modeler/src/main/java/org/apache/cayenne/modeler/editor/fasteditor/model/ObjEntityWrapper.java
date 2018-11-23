@@ -19,13 +19,23 @@
 
 package org.apache.cayenne.modeler.editor.fasteditor.model;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.apache.cayenne.map.Attribute;
+import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
+import org.apache.cayenne.map.event.AttributeEvent;
+import org.apache.cayenne.map.event.ObjAttributeListener;
+import org.apache.cayenne.map.event.ObjRelationshipListener;
+import org.apache.cayenne.map.event.RelationshipEvent;
 
 /**
  * @since 4.2
  */
-public class ObjEntityWrapper extends ObjEntity {
+public class ObjEntityWrapper extends ObjEntity implements ObjAttributeListener, ObjRelationshipListener {
+
+    private ChangeListener listener;
 
     @Override
     public void addAttribute(Attribute attribute) {
@@ -40,5 +50,82 @@ public class ObjEntityWrapper extends ObjEntity {
         result.setClassName(getClassName());
 
         return result;
+    }
+
+    @Override
+    public void setName(String name) {
+        super.setName(name);
+        if(listener != null) {
+            listener.onChange(ChangeType.NAME_CHANGE, this, name);
+        }
+    }
+
+    public ObjAttributeWrapper getWrapperAttribute(String name) {
+        return (ObjAttributeWrapper)getAttribute(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<ObjAttributeWrapper> getWrapperAttributes() {
+        return (Collection<ObjAttributeWrapper>)(Collection)getAttributes();
+    }
+
+    public void setListener(ChangeListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    public void objAttributeChanged(AttributeEvent e) {
+        if(listener != null) {
+            listener.onChange(ChangeType.ATTRIBUTE_CHANGE, this, e.getAttribute().getName());
+        }
+    }
+
+    @Override
+    public void objAttributeAdded(AttributeEvent e) {
+        if(listener != null) {
+            listener.onChange(ChangeType.ATTRIBUTE_CHANGE, this, e.getAttribute().getName());
+        }
+    }
+
+    @Override
+    public void objAttributeRemoved(AttributeEvent e) {
+        if(listener != null) {
+            listener.onChange(ChangeType.ATTRIBUTE_CHANGE, this, e.getAttribute().getName());
+        }
+    }
+
+    @Override
+    public void objRelationshipChanged(RelationshipEvent e) {
+        if(listener != null) {
+            listener.onChange(ChangeType.RELATIONSHIP_CHANGE, this, e.getRelationship().getName());
+        }
+    }
+
+    @Override
+    public void objRelationshipAdded(RelationshipEvent e) {
+        if(listener != null) {
+            listener.onChange(ChangeType.RELATIONSHIP_ADD, this, e.getRelationship().getName());
+        }
+    }
+
+    @Override
+    public void objRelationshipRemoved(RelationshipEvent e) {
+        if(listener != null) {
+            listener.onChange(ChangeType.RELATIONSHIP_REMOVE, this, e.getRelationship().getName());
+        }
+    }
+
+    public enum ChangeType {
+        ATTRIBUTE_ADD,
+        ATTRIBUTE_CHANGE,
+        ATTRIBUTE_REMOVE,
+        RELATIONSHIP_ADD,
+        RELATIONSHIP_CHANGE,
+        RELATIONSHIP_REMOVE,
+        NAME_CHANGE
+    }
+
+    public interface ChangeListener {
+        void onChange(ChangeType type, ObjEntityWrapper wrapper, String name);
     }
 }

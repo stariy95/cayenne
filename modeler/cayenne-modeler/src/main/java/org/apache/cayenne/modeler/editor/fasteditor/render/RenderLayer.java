@@ -87,23 +87,23 @@ public class RenderLayer extends Node {
     }
 
     @Override
-    public void onClick(Point2D screenPoint) {
-        currentState.onClick(screenPoint);
+    public void onClick(Renderer source, Point2D screenPoint) {
+        currentState.onClick(source, screenPoint);
     }
 
     @Override
-    public void onMouseUp(Point2D screenPoint) {
-        currentState.onMouseUp(screenPoint);
+    public void onMouseUp(Renderer source, Point2D screenPoint) {
+        currentState.onMouseUp(source, screenPoint);
     }
 
     @Override
-    public void onDragStart(Point2D screenPoint) {
-        currentState.onDragStart(screenPoint);
+    public void onDragStart(Renderer source, Point2D screenPoint) {
+        currentState.onDragStart(source, screenPoint);
     }
 
     @Override
-    public void onDragMove(Point2D screenPoint) {
-        currentState.onDragMove(screenPoint);
+    public void onDragMove(Renderer source, Point2D screenPoint) {
+        currentState.onDragMove(source, screenPoint);
     }
 
     @Override

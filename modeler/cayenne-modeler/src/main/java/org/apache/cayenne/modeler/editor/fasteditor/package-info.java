@@ -8,6 +8,7 @@
  *          - confirm dialog
  *    <li> Disable entity node internals to move
  *    <li> Basic layout
+ *    <li> Canvas resize to viewport and scroll
  *    <li> Basic sync to model
  *    <li> Basic sync from model? Or just use events?
  *    <li> Text Input validation

@@ -17,41 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.modeler.editor.fasteditor.render.state;
+package org.apache.cayenne.modeler.editor.fasteditor.ui;
 
 import javafx.geometry.Point2D;
-import org.apache.cayenne.modeler.editor.fasteditor.render.RenderLayer;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
 import org.apache.cayenne.modeler.editor.fasteditor.render.node.Node;
 
-public class DefaultState extends ControlState {
+/**
+ * @since 4.2
+ */
+public class AddAttributeNode extends Node {
 
-    public DefaultState(RenderLayer container) {
-        super(container);
+    private final Image addAttributeIcon;
+
+    public AddAttributeNode() {
+        addAttributeIcon = new Image("org/apache/cayenne/modeler/images/icon-attribute.png");
+        boundingRect = new Rectangle2D(10, 20, addAttributeIcon.getWidth(), addAttributeIcon.getHeight());
+    }
+
+    @Override
+    protected void doRender(Renderer renderer) {
+        renderer.getContext().drawImage(addAttributeIcon, getX(), getY());
     }
 
     @Override
     public void onClick(Renderer source, Point2D screenPoint) {
-        moveToState(StateType.SINGLE_SELECTION).onClick(source, screenPoint);
-    }
-
-    @Override
-    public void onDoubleClick(Renderer source, Point2D screenPoint) {
-        moveToState(StateType.SINGLE_SELECTION).onDoubleClick(source, screenPoint);
-    }
-
-    @Override
-    public void onDragStart(Renderer source, Point2D screenPoint) {
-        Node selectedNode = nodeContainer.findChild(screenPoint);
-        if(selectedNode != null) {
-            moveToState(StateType.DRAG).onDragStart(source, screenPoint);
-        } else {
-            moveToState(StateType.MULTI_SELECTION).onDragStart(source, screenPoint);
-        }
-    }
-
-    @Override
-    public void onStateExit(ControlState nextState) {
-        // Do nothing on exit from default state
+        ((EntityNode) parent).addAttribute(this, source);
     }
 }

@@ -27,7 +27,6 @@ import java.util.Objects;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.input.KeyCode;
 import org.apache.cayenne.modeler.editor.fasteditor.render.CanvasEventListener;
 import org.apache.cayenne.modeler.editor.fasteditor.render.RenderObject;
 import org.apache.cayenne.modeler.editor.fasteditor.render.Renderer;
@@ -49,6 +48,11 @@ public abstract class Node implements RenderObject, CanvasEventListener {
 
     public void addChild(Node node) {
         children.add(node);
+        node.parent = this;
+    }
+
+    public void addChild(int idx, Node node) {
+        children.add(idx, node);
         node.parent = this;
     }
 
@@ -114,19 +118,19 @@ public abstract class Node implements RenderObject, CanvasEventListener {
     abstract protected void doRender(Renderer renderer);
 
     @Override
-    public void onClick(Point2D screenPoint) {
+    public void onClick(Renderer source, Point2D screenPoint) {
     }
 
     @Override
-    public void onMouseUp(Point2D screenPoint) {
+    public void onMouseUp(Renderer source, Point2D screenPoint) {
     }
 
     @Override
-    public void onDragStart(Point2D screenPoint) {
+    public void onDragStart(Renderer source, Point2D screenPoint) {
     }
 
     @Override
-    public void onDragMove(Point2D screenPoint) {
+    public void onDragMove(Renderer source, Point2D screenPoint) {
     }
 
     @Override

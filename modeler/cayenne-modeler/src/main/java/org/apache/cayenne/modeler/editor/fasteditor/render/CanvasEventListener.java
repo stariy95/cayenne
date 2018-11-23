@@ -24,16 +24,16 @@ import javafx.scene.input.KeyCode;
 
 public interface CanvasEventListener {
 
-    void onClick(Point2D screenPoint);
+    void onClick(Renderer source, Point2D screenPoint);
 
-    void onMouseUp(Point2D screenPoint);
+    void onMouseUp(Renderer source, Point2D screenPoint);
 
-    void onDragStart(Point2D screenPoint);
+    void onDragStart(Renderer source, Point2D screenPoint);
 
-    void onDragMove(Point2D screenPoint);
+    void onDragMove(Renderer source, Point2D screenPoint);
 
     void onDoubleClick(Renderer source, Point2D screenPoint);
 
-    default void onKey(String character, KeyCode code) {
+    default void onKey(Renderer source, String character, KeyCode code) {
     }
 }

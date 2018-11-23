@@ -28,6 +28,16 @@ public class ObjAttributeWrapper extends ObjAttribute {
 
     private boolean mandatory;
 
+    public ObjAttributeWrapper(ObjAttribute attribute) {
+        setName(attribute.getName());
+        setType(attribute.getType());
+        setMandatory(attribute.isMandatory());
+    }
+
+    public ObjAttributeWrapper(String name) {
+        setName(name);
+    }
+
     public void setMandatory(boolean mandatory) {
         this.mandatory = mandatory;
     }

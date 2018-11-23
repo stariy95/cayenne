@@ -41,7 +41,7 @@ public class DataDomainTabbedView extends JTabbedPane
 
     /**
      * constructor
-     * @param mediator mediator instance
+     * @param mediator controller instance
      */
     public DataDomainTabbedView(ProjectController mediator) {
         this.mediator = mediator;

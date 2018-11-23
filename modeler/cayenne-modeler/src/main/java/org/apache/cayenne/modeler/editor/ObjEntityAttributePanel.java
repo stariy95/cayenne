@@ -280,6 +280,9 @@ public class ObjEntityAttributePanel extends JPanel implements ObjEntityDisplayL
     }
 
     public void objAttributeAdded(AttributeEvent e) {
+        if(!(table.getModel() instanceof ObjAttributeTableModel)) {
+            return;
+        }
         ObjAttributeTableModel model = (ObjAttributeTableModel) table.getModel();
 
         if (!model.isValid()) {
