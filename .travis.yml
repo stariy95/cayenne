@@ -26,12 +26,12 @@ language: java
 
 env:
   matrix:
-    - DB_PROFILE=hsql
-    - DB_PROFILE=h2
-    - DB_PROFILE=derby
-    - DB_PROFILE=mysql-docker
+#    - DB_PROFILE=hsql
+#    - DB_PROFILE=h2
+#    - DB_PROFILE=derby
+#    - DB_PROFILE=mysql-docker
     - DB_PROFILE=postgres-docker
-    - DB_PROFILE=sqlserver-docker
+#    - DB_PROFILE=sqlserver-docker
   global:
     # travis encrypt -r apache/cayenne "SNAPSHOT_REPO_USERNAME='username'"
     # travis encrypt -r apache/cayenne "SNAPSHOT_REPO_PASSWORD='password'"
@@ -50,7 +50,7 @@ matrix:
     - env: DB_PROFILE=postgres-docker
 
 script:
-  - travis_wait 30 mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+  - travis_wait 30 mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=INFO
 
 jobs:
   include:
