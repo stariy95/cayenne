@@ -50,7 +50,7 @@ matrix:
     - env: DB_PROFILE=postgres-docker
 
 script:
-  - travis_wait mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+  - travis_wait 30 mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
 
 jobs:
   include:
@@ -62,6 +62,6 @@ jobs:
 # prevent Travis from unneeded "mvn install" run
 install: true
 
-#cache:
-#  directories:
-#    - $HOME/.m2
+cache:
+  directories:
+    - $HOME/.m2
