@@ -1424,7 +1424,7 @@
 				<dependency>
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
-					<version>9.4.1212.jre7</version>
+					<version>42.2.5</version>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
@@ -1441,7 +1441,7 @@
 				<dependency>
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
-					<version>9.4.1212.jre7</version>
+					<version>42.2.5</version>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
@@ -1469,7 +1469,7 @@
 							<images>
 								<image>
 									<alias>db</alias>
-									<name>postgres:9.5</name>
+									<name>postgres:11.1</name>
 									<run>
 										<ports>
 											<port>${db.host}:${db.port}:5432</port>
