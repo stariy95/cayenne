@@ -50,7 +50,7 @@ matrix:
     - env: DB_PROFILE=postgres-docker
 
 script:
-  - mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=WARN
+  - mvn verify -q $EXCLUDE_MODULES -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=WARN -pl cayenne-di,cayenne-server,cayenne-client
 
 jobs:
   include:
