@@ -35,6 +35,7 @@ import org.apache.cayenne.configuration.event.ProcedureParameterEvent;
 import org.apache.cayenne.configuration.event.ProcedureParameterListener;
 import org.apache.cayenne.configuration.event.QueryEvent;
 import org.apache.cayenne.configuration.event.QueryListener;
+import org.apache.cayenne.event.CayenneEvent;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -453,7 +454,7 @@ public class ProjectController extends CayenneController {
         }
     }
 
-    private void removeFromHistory(EventObject e) {
+    private void removeFromHistory(CayenneEvent e) {
 
         int count = controllerStateHistory.size();
         List<ControllerState> removeList = new ArrayList<>();

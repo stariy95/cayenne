@@ -20,8 +20,10 @@
 
 package org.apache.cayenne.event;
 
+import java.io.Serializable;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.util.Collections;
-import java.util.EventObject;
 import java.util.Map;
 
 /**
@@ -29,11 +31,14 @@ import java.util.Map;
  * optional event information.
  * 
  */
-public class CayenneEvent extends EventObject {
+public class CayenneEvent implements Serializable {
+
+    private static final long serialVersionUID = -836106370092985266L;
 
     protected Map info;
     protected transient Object postedBy;
     protected EventSubject subject;
+    protected transient Reference<Object> sourceRef;
 
     public CayenneEvent(Object source) {
         this(source, null);
@@ -50,9 +55,9 @@ public class CayenneEvent extends EventObject {
      * @since 1.1
      */
     public CayenneEvent(Object source, Object postedBy, Map info) {
-        super(source);
         this.postedBy = postedBy;
         this.info = info;
+        this.sourceRef = new WeakReference<>(source);
     }
 
     public Map getInfo() {
@@ -77,7 +82,7 @@ public class CayenneEvent extends EventObject {
      * Used when deserializing remote events.
      */
     void setSource(Object source) {
-        super.source = source;
+        this.sourceRef = new WeakReference<>(source);
     }
 
     /**
@@ -86,6 +91,10 @@ public class CayenneEvent extends EventObject {
      */
     public Object getPostedBy() {
         return postedBy;
+    }
+
+    public Object getSource() {
+        return sourceRef.get();
     }
 
     public void setPostedBy(Object postedBy) {

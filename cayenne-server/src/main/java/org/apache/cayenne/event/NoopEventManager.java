@@ -70,12 +70,12 @@ public class NoopEventManager implements EventManager {
     }
 
     @Override
-    public void postEvent(EventObject event, EventSubject subject) {
+    public void postEvent(CayenneEvent event, EventSubject subject) {
 
     }
 
     @Override
-    public void postNonBlockingEvent(EventObject event, EventSubject subject) {
+    public void postNonBlockingEvent(CayenneEvent event, EventSubject subject) {
 
     }
 }

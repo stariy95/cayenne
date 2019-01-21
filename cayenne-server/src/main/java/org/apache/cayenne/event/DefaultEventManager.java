@@ -16,440 +16,171 @@
  *  specific language governing permissions and limitations
  *  under the License.
  ****************************************************************/
+
 package org.apache.cayenne.event;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.di.BeforeScopeEnd;
-import org.apache.cayenne.util.Invocation;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EventObject;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * A default implementation of {@link EventManager}.
- * 
- * @since 3.1
+ *
+ * @since 3.1, completely new implementation in 4.2
  */
 public class DefaultEventManager implements EventManager {
 
-    private static final int DEFAULT_DISPATCH_THREAD_COUNT = 5;
+    private static final int DEFAULT_EXECUTOR_THREADS = 2;
 
-    // keeps weak references to subjects
-    protected final Map<EventSubject, DispatchQueue> subjects;
-    protected final List<Dispatch> eventQueue;
-    protected final boolean singleThread;
-    protected final List<DispatchThread> dispatchThreads;
+    // every N-th event submission will launch cleanup task, that purge GC-ed listeners
+    private static final long CLEANUP_TASK_THRESHOLD = 1000L;
 
-    protected volatile boolean stopped;
+    private static final Object NULL_SENDER = new Object();
 
-    /**
-     * Creates a multithreaded EventManager using default thread count.
-     */
+    private final Map<EventSubject, Map<Object, Collection<EventListener>>> listenersBySubject = new ConcurrentHashMap<>();
+    private final Map<String, MethodHandle> methodHandleCache = new ConcurrentHashMap<>();
+    private final AtomicLong taskSubmitCounter = new AtomicLong(0L);
+    private final ExecutorService executorService;
+    private final Runnable refCleanupTask;
+
     public DefaultEventManager() {
-        this(DEFAULT_DISPATCH_THREAD_COUNT);
+        this(DEFAULT_EXECUTOR_THREADS);
     }
 
-    /**
-     * Creates an EventManager starting the specified number of threads for multithreaded
-     * dispatching. To create a single-threaded EventManager, use thread count of zero or
-     * less.
-     */
-    public DefaultEventManager(int dispatchThreadCount) {
-        this.subjects = Collections.synchronizedMap(new WeakHashMap<>());
-        this.eventQueue = Collections.synchronizedList(new LinkedList<>());
-        this.singleThread = dispatchThreadCount <= 0;
-
-        if (!singleThread) {
-            dispatchThreads = new ArrayList<>(dispatchThreadCount);
-
-            String prefix = "cayenne-event-";
-
-            // start dispatch threads
-            for (int i = 0; i < dispatchThreadCount; i++) {
-                DispatchThread thread = new DispatchThread(prefix + i);
-                dispatchThreads.add(thread);
-                thread.start();
-            }
-        } else {
-            dispatchThreads = Collections.emptyList();
-        }
+    public DefaultEventManager(int executorThreads) {
+        executorService = Executors.newFixedThreadPool(executorThreads);
+        refCleanupTask = () -> listenersBySubject.values().forEach(
+                bySender -> bySender.values().forEach(
+                        listeners -> listeners.removeIf(listener -> listener.refTo(null))
+                )
+        );
     }
 
-    /**
-     * Returns true if the EventManager was stopped via {@link #shutdown()} method.
-     * 
-     * @since 3.1
-     */
-    public boolean isStopped() {
-        return stopped;
-    }
-
-    /**
-     * Returns true if this EventManager is single-threaded. If so it will throw an
-     * exception on any attempt to register an unblocking listener or dispatch a
-     * non-blocking event.
-     * 
-     * @since 1.2
-     */
+    @Override
     public boolean isSingleThreaded() {
-        return singleThread;
-    }
-
-    /**
-     * Stops event threads. After the EventManager is stopped, it can not be restarted and
-     * should be discarded.
-     * 
-     * @since 3.0
-     */
-    @BeforeScopeEnd
-    public void shutdown() {
-
-        if (!stopped) {
-
-            this.stopped = true;
-
-            for (DispatchThread thread : dispatchThreads) {
-                thread.interrupt();
-            }
-
-            dispatchThreads.clear();
-        }
-    }
-
-    /**
-     * Register an <code>EventListener</code> for events sent by any sender.
-     * 
-     * @throws RuntimeException if <code>methodName</code> is not found
-     * @see #addListener(Object, String, Class, EventSubject, Object)
-     */
-    public void addListener(
-            Object listener,
-            String methodName,
-            Class<?> eventParameterClass,
-            EventSubject subject) {
-        this.addListener(listener, methodName, eventParameterClass, subject, null, true);
-    }
-
-    public void addNonBlockingListener(
-            Object listener,
-            String methodName,
-            Class<?> eventParameterClass,
-            EventSubject subject) {
-
-        if (singleThread) {
-            throw new IllegalStateException("DefaultEventManager is configured to be single-threaded.");
-        }
-
-        this.addListener(listener, methodName, eventParameterClass, subject, null, false);
-    }
-
-    /**
-     * Register an <code>EventListener</code> for events sent by a specific sender.
-     * 
-     * @param listener the object to be notified about events
-     * @param methodName the name of the listener method to be invoked
-     * @param eventParameterClass the class of the single event argument passed to
-     *            <code>methodName</code>
-     * @param subject the event subject that the listener is interested in
-     * @param sender the object whose events the listener is interested in;
-     *            <code>null</code> means 'any sender'.
-     * @throws RuntimeException if <code>methodName</code> is not found
-     */
-    public void addListener(
-            Object listener,
-            String methodName,
-            Class<?> eventParameterClass,
-            EventSubject subject,
-            Object sender) {
-        addListener(listener, methodName, eventParameterClass, subject, sender, true);
-    }
-
-    public void addNonBlockingListener(
-            Object listener,
-            String methodName,
-            Class<?> eventParameterClass,
-            EventSubject subject,
-            Object sender) {
-
-        if (singleThread) {
-            throw new IllegalStateException("DefaultEventManager is configured to be single-threaded.");
-        }
-
-        addListener(listener, methodName, eventParameterClass, subject, sender, false);
-    }
-
-    protected void addListener(
-            Object listener,
-            String methodName,
-            Class<?> eventParameterClass,
-            EventSubject subject,
-            Object sender,
-            boolean blocking) {
-
-        if (listener == null) {
-            throw new IllegalArgumentException("Listener must not be null.");
-        }
-
-        if (eventParameterClass == null) {
-            throw new IllegalArgumentException("Event class must not be null.");
-        }
-
-        if (subject == null) {
-            throw new IllegalArgumentException("Subject must not be null.");
-        }
-
-        try {
-            Invocation invocation = blocking
-                    ? new Invocation(listener, methodName, eventParameterClass)
-                    : new NonBlockingInvocation(listener, methodName, eventParameterClass);
-            dispatchQueueForSubject(subject, true).addInvocation(invocation, sender);
-        } catch (NoSuchMethodException nsm) {
-            throw new CayenneRuntimeException("Error adding listener, method name: %s", nsm, methodName);
-        }
-    }
-
-    /**
-     * Unregister the specified listener from all event subjects handled by this manager
-     * instance.
-     * 
-     * @param listener the object to be unregistered
-     * @return <code>true</code> if <code>listener</code> could be removed for any
-     *         existing subjects, else returns <code>false</code>.
-     */
-    public boolean removeListener(Object listener) {
-        if (listener == null) {
-            return false;
-        }
-
-        boolean didRemove = false;
-
-        synchronized (subjects) {
-            if (!subjects.isEmpty()) {
-                for (EventSubject subject : subjects.keySet()) {
-                    didRemove |= this.removeListener(listener, subject);
-                }
-            }
-        }
-
-        return didRemove;
-    }
-
-    /**
-     * Removes all listeners for a given subject.
-     */
-    public boolean removeAllListeners(EventSubject subject) {
-        if (subject != null) {
-            synchronized (subjects) {
-                return subjects.remove(subject) != null;
-            }
-        }
-
         return false;
     }
 
-    /**
-     * Unregister the specified listener for the events about the given subject.
-     * 
-     * @param listener the object to be unregistered
-     * @param subject the subject from which the listener is to be unregistered
-     * @return <code>true</code> if <code>listener</code> could be removed for the given
-     *         subject, else returns <code>false</code>.
-     */
+    @Override
+    public void addListener(Object listener, String methodName, Class<?> eventParameterClass, EventSubject subject) {
+        addNonBlockingListener(listener, methodName, eventParameterClass, subject, null);
+    }
+
+    @Override
+    public void addNonBlockingListener(Object listener, String methodName, Class<?> eventParameterClass, EventSubject subject) {
+        addNonBlockingListener(listener, methodName, eventParameterClass, subject, null);
+    }
+
+    @Override
+    public void addListener(Object listener, String methodName, Class<?> eventParameterClass, EventSubject subject, Object sender) {
+        addNonBlockingListener(listener, methodName, eventParameterClass, subject, sender);
+    }
+
+    @Override
+    public void addNonBlockingListener(Object object, String method, Class<?> eventClass, EventSubject subject, Object sender) {
+        Reference<?> objectRef = new WeakReference<>(Objects.requireNonNull(object, "Listener is null"));
+        Class<?> listenerClass = object.getClass();
+        MethodHandle methodHandle = getMethodHandle(listenerClass, method, eventClass);
+        EventListener listener = new EventListener(objectRef, methodHandle, sender);
+
+        listenersBySubject
+                .computeIfAbsent(subject, subj -> new ConcurrentHashMap<>())
+                .computeIfAbsent(keyForSender(sender), s -> new ConcurrentLinkedQueue<>())
+                .add(listener);
+    }
+
+    private Object keyForSender(Object sender) {
+        if(sender == null) {
+            return NULL_SENDER;
+        }
+        return sender;
+    }
+
+    @Override
+    public boolean removeListener(Object listener) {
+        boolean removed = false;
+        for(Map<Object, Collection<EventListener>> listenersBySender : listenersBySubject.values()) {
+            for(Collection<EventListener> listeners: listenersBySender.values()) {
+                removed |= listeners.removeIf(next -> next.refTo(listener));
+            }
+        }
+        return removed;
+    }
+
+    @Override
+    public boolean removeAllListeners(EventSubject subject) {
+        Map<Object, Collection<EventListener>> listeners = listenersBySubject.remove(subject);
+        return listeners != null && !listeners.isEmpty();
+    }
+
+    @Override
     public boolean removeListener(Object listener, EventSubject subject) {
-        return this.removeListener(listener, subject, null);
+        listenersBySubject.values()
+                .forEach(bySenders -> bySenders
+                    .getOrDefault(subject, Collections.emptyList())
+                    .removeIf(next -> next.refTo(listener))
+                );
+        return false;
     }
 
-    /**
-     * Unregister the specified listener for the events about the given subject and the
-     * given sender.
-     * 
-     * @param listener the object to be unregistered
-     * @param subject the subject from which the listener is to be unregistered
-     * @param sender the object whose events the listener was interested in;
-     *            <code>null</code> means 'any sender'.
-     * @return <code>true</code> if <code>listener</code> could be removed for the given
-     *         subject, else returns <code>false</code>.
-     */
+    @Override
     public boolean removeListener(Object listener, EventSubject subject, Object sender) {
-        if (listener == null || subject == null) {
-            return false;
-        }
-
-        DispatchQueue subjectQueue = dispatchQueueForSubject(subject, false);
-        if (subjectQueue == null) {
-            return false;
-        }
-
-        return subjectQueue.removeInvocations(listener, sender);
+        return removeListener(listener, subject);
     }
 
-    /**
-     * Sends an event to all registered objects about a particular subject. Event is sent
-     * synchronously, so the sender thread is blocked until all the listeners finish
-     * processing the event.
-     * 
-     * @param event the event to be posted to the observers
-     * @param subject the subject about which observers will be notified
-     * @throws IllegalArgumentException if event or subject are null
-     */
-    public void postEvent(EventObject event, EventSubject subject) {
-        dispatchEvent(new Dispatch(event, subject));
+    @Override
+    public void postEvent(CayenneEvent event, EventSubject subject) {
+        postNonBlockingEvent(event, subject);
     }
 
-    /**
-     * Sends an event to all registered objects about a particular subject. Event is
-     * queued by EventManager, releasing the sender thread, and is later dispatched in a
-     * separate thread.
-     * 
-     * @param event the event to be posted to the observers
-     * @param subject the subject about which observers will be notified
-     * @throws IllegalArgumentException if event or subject are null
-     * @since 1.1
-     */
-    public void postNonBlockingEvent(EventObject event, EventSubject subject) {
-        if (singleThread) {
-            throw new IllegalStateException("EventManager is configured to be single-threaded.");
+    @Override
+    public void postNonBlockingEvent(CayenneEvent event, EventSubject subject) {
+        // TODO: send for NULL sender...
+        Collection<EventListener> listeners = listenersBySubject
+                .getOrDefault(subject, Collections.emptyMap())
+                .getOrDefault(event.getSource(), Collections.emptyList());
+        if(!listeners.isEmpty()) {
+            executorService.submit(() -> listeners.removeIf(listener -> listener.apply(event)));
         }
+        checkAndSubmitCleanupTask();
+    }
 
-        // add dispatch to the queue and return
-        synchronized (eventQueue) {
-            eventQueue.add(new Dispatch(event, subject));
-            eventQueue.notifyAll();
+    private void checkAndSubmitCleanupTask() {
+        if(taskSubmitCounter.incrementAndGet() % CLEANUP_TASK_THRESHOLD == 0) {
+            executorService.submit(refCleanupTask);
         }
     }
 
-    private void dispatchEvent(Dispatch dispatch) {
-        DispatchQueue dispatchQueue = dispatchQueueForSubject(dispatch.subject, false);
-        if (dispatchQueue != null) {
-            dispatchQueue.dispatchEvent(dispatch);
-        }
-    }
-
-    // returns a subject's mapping from senders to registered listener invocations
-    private DispatchQueue dispatchQueueForSubject(EventSubject subject, boolean create) {
-        synchronized (subjects) {
-            DispatchQueue listenersStore = subjects.get(subject);
-            if (create && listenersStore == null) {
-                listenersStore = new DispatchQueue();
-                subjects.put(subject, listenersStore);
+    private MethodHandle getMethodHandle(Class<?> listenerClass, String method, Class<?> eventClass) {
+        String methodKey = listenerClass.getName() + '/' + method + '/' + eventClass.getSimpleName();
+        return methodHandleCache.computeIfAbsent(methodKey, key -> {
+            try {
+                Method methodRef = listenerClass.getDeclaredMethod(method, eventClass);
+                methodRef.setAccessible(true);
+                return MethodHandles.lookup().unreflect(methodRef);
+            } catch (NoSuchMethodException | IllegalAccessException ex) {
+                throw new CayenneRuntimeException("Unable to find method %s() for %s", method, listenerClass);
             }
-            return listenersStore;
-        }
+        });
     }
 
-    // represents a posted event
-    class Dispatch {
-
-        EventObject[] eventArgument;
-        EventSubject subject;
-
-        Dispatch(EventObject event, EventSubject subject) {
-            this(new EventObject[] {event}, subject);
-        }
-
-        Dispatch(EventObject[] eventArgument, EventSubject subject) {
-            this.eventArgument = eventArgument;
-            this.subject = subject;
-        }
-
-        Object getSender() {
-            return eventArgument[0].getSource();
-        }
-
-        void fire() {
-            DefaultEventManager.this.dispatchEvent(Dispatch.this);
-        }
-
-        boolean fire(Invocation invocation) {
-            if (invocation instanceof NonBlockingInvocation) {
-
-                // do minimal checks first...
-                if (invocation.getTarget() == null) {
-                    return false;
-                }
-
-                // inject single invocation dispatch into the queue
-                synchronized (eventQueue) {
-                    eventQueue.add(new InvocationDispatch(eventArgument, subject, invocation));
-                    eventQueue.notifyAll();
-                }
-
-                return true;
-            } else {
-                return invocation.fire(eventArgument);
-            }
-        }
+    @BeforeScopeEnd
+    public void shutdown() {
+        executorService.shutdownNow();
     }
 
-    // represents a posted event that should be sent to a single known listener
-    class InvocationDispatch extends Dispatch {
-
-        Invocation target;
-
-        InvocationDispatch(EventObject[] eventArgument, EventSubject subject, Invocation target) {
-            super(eventArgument, subject);
-            this.target = target;
-        }
-
-        @Override
-        void fire() {
-            // there is no way to kill the invocation if it is bad...
-            // so don't check for status
-            target.fire(eventArgument);
-        }
-    }
-
-    // subclass exists only to tag invocations that should be
-    // dispatched in a separate thread
-    final class NonBlockingInvocation extends Invocation {
-        NonBlockingInvocation(Object target, String methodName, Class<?> parameterType) throws NoSuchMethodException {
-            super(target, methodName, parameterType);
-        }
-    }
-
-    final class DispatchThread extends Thread {
-
-        DispatchThread(String name) {
-            super(name);
-            setDaemon(true);
-        }
-
-        @Override
-        public void run() {
-            while (!stopped) {
-
-                // get event from the queue, if the queue is empty, just wait
-                Dispatch dispatch = null;
-
-                synchronized (DefaultEventManager.this.eventQueue) {
-                    if (DefaultEventManager.this.eventQueue.size() > 0) {
-                        dispatch = DefaultEventManager.this.eventQueue.remove(0);
-                    } else {
-                        try {
-                            // wake up occasionally to check whether EM has been stopped
-                            DefaultEventManager.this.eventQueue.wait(3 * 60 * 1000);
-                        } catch (InterruptedException e) {
-                            // ignore interrupts...
-                        }
-                    }
-                }
-
-                // dispatch outside of synchronized block
-                if (!stopped && dispatch != null) {
-                    // this try/catch is needed to prevent DispatchThread
-                    // from dying on dispatch errors
-                    try {
-                        dispatch.fire();
-                    } catch (Throwable th) {
-                        // ignoring exception
-                    }
-                }
-            }
-        }
-    }
 }

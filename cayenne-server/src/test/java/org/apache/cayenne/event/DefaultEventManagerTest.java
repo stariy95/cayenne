@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.event;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.test.parallel.ParallelTestContainer;
 import org.junit.After;
 import org.junit.Before;
@@ -74,7 +75,7 @@ public class DefaultEventManagerTest implements EventListener {
                 EventObject.class,
                 MockListener.mockSubject);
 
-        eventManager.postEvent(new EventObject(this), MockListener.mockSubject);
+        eventManager.postEvent(new CayenneEvent(this), MockListener.mockSubject);
     }
 
     @Test
@@ -101,7 +102,7 @@ public class DefaultEventManagerTest implements EventListener {
                 MockListener.mockSubject,
                 this);
 
-        eventManager.postEvent(new EventObject(this), MockListener.mockSubject);
+        eventManager.postEvent(new CayenneEvent(this), MockListener.mockSubject);
     }
 
     @Test
@@ -112,7 +113,7 @@ public class DefaultEventManagerTest implements EventListener {
             fail();
         }
 
-        catch (IllegalArgumentException ia) {
+        catch (NullPointerException ia) {
             // expected
         }
     }
@@ -125,7 +126,7 @@ public class DefaultEventManagerTest implements EventListener {
             fail();
         }
 
-        catch (IllegalArgumentException e) {
+        catch (CayenneRuntimeException e) {
             // expected
         }
 
@@ -224,7 +225,7 @@ public class DefaultEventManagerTest implements EventListener {
         eventManager.addListener(this, "seeNotification", CayenneEvent.class, subject);
 
         // ..but post a subclass of EventObject that is not compatible with CayenneEvent
-        eventManager.postEvent(new EventObject(this), subject);
+        eventManager.postEvent(new CayenneEvent(this), subject);
 
         assertReceivedEvents(0, this);
     }

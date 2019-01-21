@@ -19,13 +19,10 @@
 package org.apache.cayenne.event;
 
 import java.util.EventObject;
-import java.util.List;
-
-import org.apache.cayenne.event.DefaultEventManager.Dispatch;
-
 
 public class MockEventManager implements EventManager {
 
+    @Override
     public void addListener(
             Object listener,
             String methodName,
@@ -33,6 +30,7 @@ public class MockEventManager implements EventManager {
             EventSubject subject) {
     }
 
+    @Override
     public void addListener(
             Object listener,
             String methodName,
@@ -41,6 +39,7 @@ public class MockEventManager implements EventManager {
             Object sender) {
     }
 
+    @Override
     public void addNonBlockingListener(
             Object listener,
             String methodName,
@@ -48,6 +47,7 @@ public class MockEventManager implements EventManager {
             EventSubject subject) {
     }
 
+    @Override
     public void addNonBlockingListener(
             Object listener,
             String methodName,
@@ -56,37 +56,37 @@ public class MockEventManager implements EventManager {
             Object sender) {
     }
 
-    public List<Dispatch> getEventQueue() {
-        return null;
-    }
-
+    @Override
     public boolean isSingleThreaded() {
         return false;
     }
 
-    public void postEvent(EventObject event, EventSubject subject) {
+    @Override
+    public void postEvent(CayenneEvent event, EventSubject subject) {
     }
 
-    public void postNonBlockingEvent(EventObject event, EventSubject subject) {
+    @Override
+    public void postNonBlockingEvent(CayenneEvent event, EventSubject subject) {
     }
 
+    @Override
     public boolean removeAllListeners(EventSubject subject) {
         return false;
     }
 
+    @Override
     public boolean removeListener(Object listener) {
         return false;
     }
 
+    @Override
     public boolean removeListener(Object listener, EventSubject subject) {
         return false;
     }
 
+    @Override
     public boolean removeListener(Object listener, EventSubject subject, Object sender) {
         return false;
-    }
-
-    public void shutdown() {
     }
 
 }

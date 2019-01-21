@@ -129,7 +129,7 @@ public interface EventManager {
      * @param subject the subject about which observers will be notified
      * @throws IllegalArgumentException if event or subject are null
      */
-    void postEvent(EventObject event, EventSubject subject);
+    void postEvent(CayenneEvent event, EventSubject subject);
 
     /**
      * Sends an event to all registered objects about a particular subject. Event is
@@ -141,5 +141,5 @@ public interface EventManager {
      * @throws IllegalArgumentException if event or subject are null
      * @since 1.1
      */
-    void postNonBlockingEvent(EventObject event, EventSubject subject);
+    void postNonBlockingEvent(CayenneEvent event, EventSubject subject);
 }
