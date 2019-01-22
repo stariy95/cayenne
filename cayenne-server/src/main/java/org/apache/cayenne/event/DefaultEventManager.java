@@ -44,19 +44,24 @@ import org.apache.cayenne.di.BeforeScopeEnd;
  */
 public class DefaultEventManager implements EventManager {
 
+    // default number of thread for async manager
     private static final int DEFAULT_EXECUTOR_THREADS = 2;
-
     // every N-th event submission will launch cleanup task, that purge GC-ed listeners
-    private static final long CLEANUP_TASK_THRESHOLD = 1000L;
-
+    private static final long CLEANUP_TASK_THRESHOLD = 100L;
+    // Null sender marker
     private static final Object NULL_SENDER = new Object();
 
+    // listeners indexed by subject and by sender
     private final Map<EventSubject, Map<Object, Collection<EventListener>>> listenersBySubject = new ConcurrentHashMap<>();
+    // cache of MethodHandles as it can be expensive to lookup and their count is limited
     private final Map<String, MethodHandle> methodHandleCache = new ConcurrentHashMap<>();
+    // submitted task counter, used by cleanup task submit logic
     private final AtomicLong taskSubmitCounter = new AtomicLong(0L);
-
+    // is this manager perform synchronously or asynchronously
     private final boolean syncExecution;
+    // executor service for async case
     private final ExecutorService executorService;
+    // task to mass cleanup listeners with deleted references
     private final Runnable refCleanupTask;
 
     public DefaultEventManager() {
@@ -65,11 +70,7 @@ public class DefaultEventManager implements EventManager {
 
     public DefaultEventManager(int executorThreads) {
         syncExecution = executorThreads <= 0;
-        if(!syncExecution) {
-            executorService = Executors.newFixedThreadPool(executorThreads);
-        } else {
-            executorService = null;
-        }
+        executorService = syncExecution ? null : Executors.newFixedThreadPool(executorThreads);
         refCleanupTask = () -> listenersBySubject.values().forEach(
                 bySender -> bySender.values().forEach(
                         listeners -> listeners.removeIf(listener -> listener.refTo(null))
