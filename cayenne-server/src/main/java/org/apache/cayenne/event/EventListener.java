@@ -38,16 +38,9 @@ class EventListener implements Function<CayenneEvent, Boolean> {
      */
     private final MethodHandle handle;
 
-    /**
-     * Desired sender, events will be filtered by it;
-     * null means that listener will accept events from all senders.
-     */
-    private final Object sender;
-
-    EventListener(Reference<?> objectRef, MethodHandle handle, Object sender) {
+    EventListener(Reference<?> objectRef, MethodHandle handle) {
         this.objectRef = objectRef;
         this.handle = handle;
-        this.sender = sender;
     }
 
     /**
@@ -56,16 +49,7 @@ class EventListener implements Function<CayenneEvent, Boolean> {
      */
     @Override
     public Boolean apply(CayenneEvent event) {
-        if (this.sender != null && this.sender != event.getSource()) {
-            return false;
-        }
-
         try {
-            // event from dead source
-            Object source = event.getSource();
-            if(source == null) {
-                return false;
-            }
             // listener is dead, should be removed
             Object object = objectRef.get();
             if (object == null) {

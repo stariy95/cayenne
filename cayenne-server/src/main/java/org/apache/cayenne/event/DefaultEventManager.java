@@ -54,6 +54,8 @@ public class DefaultEventManager implements EventManager {
     private final Map<EventSubject, Map<Object, Collection<EventListener>>> listenersBySubject = new ConcurrentHashMap<>();
     private final Map<String, MethodHandle> methodHandleCache = new ConcurrentHashMap<>();
     private final AtomicLong taskSubmitCounter = new AtomicLong(0L);
+
+    private final boolean syncExecution;
     private final ExecutorService executorService;
     private final Runnable refCleanupTask;
 
@@ -62,7 +64,12 @@ public class DefaultEventManager implements EventManager {
     }
 
     public DefaultEventManager(int executorThreads) {
-        executorService = Executors.newFixedThreadPool(executorThreads);
+        syncExecution = executorThreads <= 0;
+        if(!syncExecution) {
+            executorService = Executors.newFixedThreadPool(executorThreads);
+        } else {
+            executorService = null;
+        }
         refCleanupTask = () -> listenersBySubject.values().forEach(
                 bySender -> bySender.values().forEach(
                         listeners -> listeners.removeIf(listener -> listener.refTo(null))
@@ -92,10 +99,11 @@ public class DefaultEventManager implements EventManager {
 
     @Override
     public void addNonBlockingListener(Object object, String method, Class<?> eventClass, EventSubject subject, Object sender) {
+        Objects.requireNonNull(subject, "Subject can't be null");
         Reference<?> objectRef = new WeakReference<>(Objects.requireNonNull(object, "Listener is null"));
         Class<?> listenerClass = object.getClass();
         MethodHandle methodHandle = getMethodHandle(listenerClass, method, eventClass);
-        EventListener listener = new EventListener(objectRef, methodHandle, sender);
+        EventListener listener = new EventListener(objectRef, methodHandle);
 
         listenersBySubject
                 .computeIfAbsent(subject, subj -> new ConcurrentHashMap<>())
@@ -129,17 +137,23 @@ public class DefaultEventManager implements EventManager {
 
     @Override
     public boolean removeListener(Object listener, EventSubject subject) {
-        listenersBySubject.values()
-                .forEach(bySenders -> bySenders
-                    .getOrDefault(subject, Collections.emptyList())
-                    .removeIf(next -> next.refTo(listener))
-                );
-        return false;
+        if(subject == null) {
+            return false;
+        }
+        boolean removed = false;
+        Map<Object, Collection<EventListener>> bySenders = listenersBySubject.getOrDefault(subject, Collections.emptyMap());
+        for(Collection<EventListener> listeners : bySenders.values()) {
+            removed |= listeners.removeIf(next -> next.refTo(listener));
+        }
+        return removed;
     }
 
     @Override
     public boolean removeListener(Object listener, EventSubject subject, Object sender) {
-        return removeListener(listener, subject);
+        return listenersBySubject
+                .getOrDefault(subject, Collections.emptyMap())
+                .getOrDefault(keyForSender(sender), Collections.emptyList())
+                .removeIf(next -> next.refTo(listener));
     }
 
     @Override
@@ -149,19 +163,34 @@ public class DefaultEventManager implements EventManager {
 
     @Override
     public void postNonBlockingEvent(CayenneEvent event, EventSubject subject) {
-        // TODO: send for NULL sender...
+        submitExecutionForSender(event, subject, NULL_SENDER);
+        submitExecutionForSender(event, subject, event.getSource());
+        checkAndSubmitCleanupTask();
+    }
+
+    private void submitExecutionForSender(CayenneEvent event, EventSubject subject, Object sender) {
+        if(sender == null) {
+            return;
+        }
         Collection<EventListener> listeners = listenersBySubject
                 .getOrDefault(subject, Collections.emptyMap())
-                .getOrDefault(event.getSource(), Collections.emptyList());
+                .getOrDefault(sender, Collections.emptyList());
         if(!listeners.isEmpty()) {
-            executorService.submit(() -> listeners.removeIf(listener -> listener.apply(event)));
+            submit(() -> listeners.removeIf(listener -> listener.apply(event)));
         }
-        checkAndSubmitCleanupTask();
     }
 
     private void checkAndSubmitCleanupTask() {
         if(taskSubmitCounter.incrementAndGet() % CLEANUP_TASK_THRESHOLD == 0) {
-            executorService.submit(refCleanupTask);
+           submit(refCleanupTask);
+        }
+    }
+
+    private void submit(Runnable task) {
+        if(syncExecution) {
+            task.run();
+        } else {
+            executorService.submit(task);
         }
     }
 
@@ -180,7 +209,9 @@ public class DefaultEventManager implements EventManager {
 
     @BeforeScopeEnd
     public void shutdown() {
-        executorService.shutdownNow();
+        if(!syncExecution) {
+            executorService.shutdownNow();
+        }
     }
 
 }

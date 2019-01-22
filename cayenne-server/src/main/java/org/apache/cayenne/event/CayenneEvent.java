@@ -29,22 +29,23 @@ import java.util.Map;
 /**
  * Common superclass for events passed from the EventManager to Listeners; encapsulates
  * optional event information.
- * 
+ *
+ * @since 4.2 not implements {@link java.util.EventObject}
  */
 public class CayenneEvent implements Serializable {
 
     private static final long serialVersionUID = -836106370092985266L;
 
-    protected Map info;
-    protected transient Object postedBy;
-    protected EventSubject subject;
+    protected transient Reference<Object> postedByRef;
     protected transient Reference<Object> sourceRef;
+    protected EventSubject subject;
+    protected Map<?, ?> info;
 
     public CayenneEvent(Object source) {
         this(source, null);
     }
 
-    public CayenneEvent(Object source, Map info) {
+    public CayenneEvent(Object source, Map<?, ?> info) {
         this(source, source, info);
     }
 
@@ -54,14 +55,14 @@ public class CayenneEvent implements Serializable {
      * 
      * @since 1.1
      */
-    public CayenneEvent(Object source, Object postedBy, Map info) {
-        this.postedBy = postedBy;
-        this.info = info;
+    public CayenneEvent(Object source, Object postedBy, Map<?, ?> info) {
         this.sourceRef = new WeakReference<>(source);
+        this.postedByRef = new WeakReference<>(postedBy);
+        this.info = info;
     }
 
-    public Map getInfo() {
-        return info != null ? info : Collections.EMPTY_MAP;
+    public Map<?, ?> getInfo() {
+        return info != null ? info : Collections.emptyMap();
     }
 
     /**
@@ -78,6 +79,14 @@ public class CayenneEvent implements Serializable {
         this.subject = subject;
     }
 
+    public Object getSource() {
+        // ref will be null after deserialization
+        if(sourceRef == null) {
+            return null;
+        }
+        return sourceRef.get();
+    }
+
     /**
      * Used when deserializing remote events.
      */
@@ -90,14 +99,14 @@ public class CayenneEvent implements Serializable {
      * event is reposted multiple times.
      */
     public Object getPostedBy() {
-        return postedBy;
-    }
-
-    public Object getSource() {
-        return sourceRef.get();
+        // ref will be null after deserialization
+        if(postedByRef == null) {
+            return null;
+        }
+        return postedByRef.get();
     }
 
     public void setPostedBy(Object postedBy) {
-        this.postedBy = postedBy;
+        this.postedByRef = new WeakReference<>(postedBy);
     }
 }

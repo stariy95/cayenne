@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.event;
 
-import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.test.parallel.ParallelTestContainer;
 import org.junit.After;
 import org.junit.Before;
@@ -124,9 +123,7 @@ public class DefaultEventManagerTest implements EventListener {
         try {
             eventManager.addListener(this, "testNullObserver", CayenneEvent.class, null);
             fail();
-        }
-
-        catch (CayenneRuntimeException e) {
+        } catch (NullPointerException e) {
             // expected
         }
 
@@ -135,9 +132,7 @@ public class DefaultEventManagerTest implements EventListener {
             EventSubject subject = EventSubject.getSubject(this.getClass(), "");
             eventManager.addListener(this, "testNullObserver", null, subject);
             fail();
-        }
-
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // expected
         }
 
@@ -150,9 +145,7 @@ public class DefaultEventManagerTest implements EventListener {
                     CayenneEvent.class,
                     subject);
             fail();
-        }
-
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // expected
         }
     }
@@ -221,10 +214,10 @@ public class DefaultEventManagerTest implements EventListener {
     public void testWrongRegisteredEventClass() throws Exception {
         EventSubject subject = EventSubject.getSubject(this.getClass(), "XXX");
 
-        // we register a method that takes a CayenneEvent or subclass thereof..
-        eventManager.addListener(this, "seeNotification", CayenneEvent.class, subject);
+        // we register a method that takes a MyCayenneEvent or subclass thereof..
+        eventManager.addListener(this, "seeNotification2", MyCayenneEvent.class, subject);
 
-        // ..but post a subclass of EventObject that is not compatible with CayenneEvent
+        // ..but post a subclass of CayenneEvent that is not compatible with MyCayenneEvent
         eventManager.postEvent(new CayenneEvent(this), subject);
 
         assertReceivedEvents(0, this);
@@ -365,8 +358,8 @@ public class DefaultEventManagerTest implements EventListener {
                 CayenneEvent.class,
                 subject,
                 this);
-        assertTrue(eventManager.removeListener(this, subject, null));
-        assertFalse(eventManager.removeListener(this));
+        assertFalse(eventManager.removeListener(this, subject, null));
+        assertTrue(eventManager.removeListener(this));
     }
 
     @Test
@@ -403,21 +396,12 @@ public class DefaultEventManagerTest implements EventListener {
         assertFalse(eventManager.removeListener(this, subject3));
     }
 
-    @Test
-    public void testSubjectGarbageCollection() {
-        EventSubject subject = EventSubject.getSubject(this.getClass(), "XXX");
-        eventManager.addListener(this, "seeNotification", CayenneEvent.class, subject);
-
-        // let go of the subject & (hopefully) release queue
-        subject = null;
-        System.gc();
-        System.gc();
-
-        assertFalse(eventManager.removeListener(this));
-    }
-
     // notification method
     public void seeNotification(CayenneEvent event) {
+        numberOfReceivedEvents++;
+        numberOfReceivedEventsForClass++;
+    }
+    public void seeNotification2(MyCayenneEvent event) {
         numberOfReceivedEvents++;
         numberOfReceivedEventsForClass++;
     }
@@ -434,7 +418,7 @@ public class DefaultEventManagerTest implements EventListener {
                 assertEquals(expected, listener.numberOfReceivedEvents);
             }
         };
-        helper.runTest(5000);
+        helper.runTest(100);
     }
 
     // allows just enough time for the event threads to run
@@ -446,7 +430,7 @@ public class DefaultEventManagerTest implements EventListener {
                 assertEquals(expected, numberOfReceivedEventsForClass);
             }
         };
-        helper.runTest(5000);
+        helper.runTest(100);
     }
 
 }
