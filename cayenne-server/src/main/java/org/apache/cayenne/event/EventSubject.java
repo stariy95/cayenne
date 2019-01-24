@@ -22,7 +22,6 @@ package org.apache.cayenne.event;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.cayenne.util.HashCodeBuilder;
 import org.apache.cayenne.util.WeakValueMap;
 
 /**
@@ -40,7 +39,6 @@ import org.apache.cayenne.util.WeakValueMap;
 public class EventSubject implements Serializable {
 
     // a Map that will allow the values to be GC'ed
-    @SuppressWarnings("unchecked")
     private static Map<String, EventSubject> _registeredSubjects = new WeakValueMap<>();
 
     // Subject identifier in the form "com.foo.bar/SubjectName"
@@ -101,7 +99,7 @@ public class EventSubject implements Serializable {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 3).append(_fullyQualifiedSubjectName).toHashCode();
+        return _fullyQualifiedSubjectName.hashCode();
     }
 
     public String getSubjectName() {

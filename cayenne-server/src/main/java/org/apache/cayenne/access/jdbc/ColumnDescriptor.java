@@ -191,8 +191,9 @@ public class ColumnDescriptor {
      */
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(23, 43).append(name).append(namePrefix).append(procedureName).append(tableName)
-                .append(dataRowKey).toHashCode();
+        return new HashCodeBuilder()
+                .append(name).append(namePrefix).append(procedureName).append(tableName).append(dataRowKey)
+                .toHashCode();
     }
 
     /**

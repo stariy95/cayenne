@@ -248,7 +248,7 @@ final class FlattenedArcKey {
 		int compare = id1.getSourceId().getEntityName().compareTo(id2.getSourceId().getEntityName());
 
 		if (compare == 0) {
-			compare = id1.getIncominArc().getName().compareTo(id2.getIncominArc().getName());
+			compare = id1.getIncomingArc().getName().compareTo(id2.getIncomingArc().getName());
 
 			if (compare == 0) {
 				// since ordering is mostly important for detecting equivalent

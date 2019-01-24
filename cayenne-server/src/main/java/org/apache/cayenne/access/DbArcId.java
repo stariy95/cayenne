@@ -47,7 +47,7 @@ final class DbArcId {
 
     DbEntity getEntity() {
         if (entity == null) {
-            entity = (DbEntity) incomingArc.getTargetEntity();
+            entity = incomingArc.getTargetEntity();
         }
 
         return entity;
@@ -57,18 +57,14 @@ final class DbArcId {
         return sourceId;
     }
 
-    DbRelationship getIncominArc() {
+    DbRelationship getIncomingArc() {
         return incomingArc;
     }
 
     @Override
     public int hashCode() {
-
-        if (this.hashCode == 0) {
-            HashCodeBuilder builder = new HashCodeBuilder(3, 5);
-            builder.append(sourceId);
-            builder.append(incomingArc.getName());
-            this.hashCode = builder.toHashCode();
+        if (hashCode == 0) {
+            hashCode = new HashCodeBuilder().append(sourceId).append(incomingArc.getName()).toHashCode();
         }
 
         return hashCode;
@@ -87,7 +83,8 @@ final class DbArcId {
 
         DbArcId id = (DbArcId) object;
 
-        return new EqualsBuilder().append(sourceId, id.sourceId)
+        return new EqualsBuilder()
+                .append(sourceId, id.sourceId)
                 .append(incomingArc.getName(), id.incomingArc.getName())
                 .isEquals();
     }

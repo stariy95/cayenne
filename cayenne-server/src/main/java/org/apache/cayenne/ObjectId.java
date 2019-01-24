@@ -261,7 +261,7 @@ public class ObjectId implements Serializable {
 
 		if (this.hashCode == 0) {
 
-			HashCodeBuilder builder = new HashCodeBuilder(3, 5);
+			HashCodeBuilder builder = new HashCodeBuilder();
 			builder.append(entityName.hashCode());
 
 			if (key != null) {
