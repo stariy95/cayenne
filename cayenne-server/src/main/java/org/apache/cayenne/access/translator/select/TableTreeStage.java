@@ -41,11 +41,17 @@ class TableTreeStage implements TranslationStage {
     @Override
     public void perform(TranslatorContext context) {
         context.getTableTree().visit(node -> {
-            NodeBuilder tableNode = table(node.getEntity().getFullyQualifiedName()).as(node.getTableAlias());
-            if(node.getRelationship() != null) {
-                tableNode = getJoin(node, tableNode).on(getJoinExpression(context, node));
+            NodeBuilder tableNode;
+            if(node.isSubquery()) {
+                DefaultSelectTranslator translator = new DefaultSelectTranslator(node.getSubquery(), context);
+                translator.translate();
+                tableNode = aliased(translator.getContext().getSelectBuilder(), node.getTableAlias());
+            } else {
+                tableNode = table(node.getEntity().getFullyQualifiedName()).as(node.getTableAlias());
+                if (node.getRelationship() != null) {
+                    tableNode = getJoin(node, tableNode).on(getJoinExpression(context, node));
+                }
             }
-
             context.getSelectBuilder().from(tableNode);
         });
     }

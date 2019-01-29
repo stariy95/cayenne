@@ -73,13 +73,15 @@ public abstract class AbstractQuery extends CacheableQuery {
                 || (value instanceof ObjEntity)
                 || (value instanceof DbEntity)
                 || (value instanceof Class)
-                || (value instanceof Procedure) || (value instanceof DataMap))) {
+                || (value instanceof Procedure)
+                || (value instanceof DataMap)
+                || (value instanceof Select))) {
 
             String rootClass = (value != null) ? value.getClass().getName() : "null";
 
             throw new IllegalArgumentException(
                     getClass().getName()
-                            + ": \"setRoot(..)\" takes a DataMap, String, ObjEntity, DbEntity, Procedure, "
+                            + ": \"setRoot(..)\" takes a DataMap, String, ObjEntity, DbEntity, Procedure, Select, "
                             + "or Class. It was passed a "
                             + rootClass);
         }

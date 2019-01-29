@@ -105,7 +105,7 @@ public class TranslatorContext implements SQLGenerationContext {
         this.resolver = resolver;
         this.metadata = query.getMetaData(resolver);
         this.parentContext = parentContext;
-        this.tableTree = new TableTree(metadata.getDbEntity(), parentContext == null ? null : parentContext.getTableTree());
+        this.tableTree = new TableTree(metadata, parentContext == null ? null : parentContext.getTableTree());
         this.columnDescriptors = new ArrayList<>();
         this.bindings = new ArrayList<>(4);
         this.selectBuilder = SQLBuilder.select();

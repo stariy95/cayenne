@@ -38,11 +38,13 @@ class ColumnExtractorStage implements TranslationStage {
         if(context.getQuery().getColumns() != null && !context.getQuery().getColumns().isEmpty()) {
             extractor = new CustomColumnSetExtractor(context, context.getQuery().getColumns());
         } else if (context.getParentContext() != null || context.getMetadata().getPageSize() > 0) {
-            if(context.getMetadata().getObjEntity() != null) {
+            if (context.getMetadata().getObjEntity() != null) {
                 extractor = new IdColumnExtractor(context, context.getMetadata().getObjEntity());
             } else {
                 extractor = new IdColumnExtractor(context, context.getMetadata().getDbEntity());
             }
+        } else if (context.getMetadata().getSubquery() != null) {
+            extractor = new SubqueryColumnExtractor(context);
         } else if (context.getMetadata().getClassDescriptor() != null) {
             extractor = new DescriptorColumnExtractor(context, context.getMetadata().getClassDescriptor());
         } else {

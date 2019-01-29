@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.query;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -39,16 +40,17 @@ import org.apache.cayenne.map.ObjEntity;
  */
 public abstract class FluentSelect<T> extends IndirectQuery implements Select<T> {
 
-    protected Class<?> entityType;
-    protected String entityName;
-    protected String dbEntityName;
+    protected QueryRoot<?> queryRoot;
+
     protected Expression where;
     protected Collection<Ordering> orderings;
     protected PrefetchTreeNode prefetches;
+
     protected int limit;
     protected int offset;
     protected int pageSize;
     protected int statementFetchSize;
+
     protected QueryCacheStrategy cacheStrategy;
     protected String cacheGroup;
 
@@ -58,35 +60,16 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
     /**
      * Translates self to a SelectQuery.
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Query createReplacementQuery(EntityResolver resolver) {
 
-        @SuppressWarnings("rawtypes")
-        SelectQuery replacement = new SelectQuery();
-
-        if (entityType != null) {
-            replacement.setRoot(entityType);
-        } else if (entityName != null) {
-
-            ObjEntity entity = resolver.getObjEntity(entityName);
-            if (entity == null) {
-                throw new CayenneRuntimeException("Unrecognized ObjEntity name: %s", entityName);
-            }
-
-            replacement.setRoot(entity);
-        } else if (dbEntityName != null) {
-
-            DbEntity entity = resolver.getDbEntity(dbEntityName);
-            if (entity == null) {
-                throw new CayenneRuntimeException("Unrecognized DbEntity name: %s", dbEntityName);
-            }
-
-            replacement.setRoot(entity);
-        } else {
+        SelectQuery<?> replacement = new SelectQuery<>();
+        Object root;
+        if(queryRoot == null || (root = queryRoot.resolve(resolver)) == null) {
             throw new CayenneRuntimeException("Undefined root entity of the query");
         }
 
+        replacement.setRoot(root);
         replacement.setQualifier(where);
         replacement.addOrderings(orderings);
         replacement.setPrefetchTree(prefetches);
@@ -124,16 +107,8 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
         return offset;
     }
 
-    public Class<?> getEntityType() {
-        return entityType;
-    }
-
-    public String getEntityName() {
-        return entityName;
-    }
-
-    public String getDbEntityName() {
-        return dbEntityName;
+    protected QueryRoot<?> getQueryRoot() {
+        return queryRoot;
     }
 
     /**
@@ -174,5 +149,62 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
     @Override
     public ResultBatchIterator<T> batchIterator(ObjectContext context, int size) {
         return context.batchIterator(this, size);
+    }
+
+    interface QueryRoot<E> extends Serializable {
+        E resolve(EntityResolver resolver);
+    }
+
+    static class EntityTypeQueryRoot implements QueryRoot<Class<?>> {
+        final Class<?> entityType;
+
+        EntityTypeQueryRoot(Class<?> entityType) {
+            this.entityType = entityType;
+        }
+
+        @Override
+        public Class<?> resolve(EntityResolver resolver) {
+            return entityType;
+        }
+    }
+
+    static class EntityNameQueryRoot implements QueryRoot<ObjEntity> {
+        final String entityName;
+
+        EntityNameQueryRoot(String entityName) {
+            this.entityName = entityName;
+        }
+
+        @Override
+        public ObjEntity resolve(EntityResolver resolver) {
+            return resolver.getObjEntity(entityName);
+        }
+    }
+
+    static class DbEntityNameQueryRoot implements QueryRoot<DbEntity> {
+        final String entityName;
+
+        DbEntityNameQueryRoot(String entityName) {
+            this.entityName = entityName;
+        }
+
+        @Override
+        public DbEntity resolve(EntityResolver resolver) {
+            return resolver.getDbEntity(entityName);
+        }
+    }
+
+    static class SubqueryQueryRoot implements QueryRoot<Select<?>> {
+
+        final Select<?> subquery;
+
+        SubqueryQueryRoot(Select<?> subquery) {
+            this.subquery = subquery;
+        }
+
+        @Override
+        public Select<?> resolve(EntityResolver resolver) {
+            return subquery;
+        }
     }
 }

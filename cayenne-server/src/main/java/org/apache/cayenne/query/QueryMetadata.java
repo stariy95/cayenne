@@ -128,6 +128,13 @@ public interface QueryMetadata {
      */
     DataMap getDataMap();
 
+    /**
+     * @return a subquery associated with a query or null if no such subquery exists.
+     * @since 4.2
+     */
+    default Select<?> getSubquery() {
+        return null;
+    }
 
     /**
      * Returns a caching strategy for this query.

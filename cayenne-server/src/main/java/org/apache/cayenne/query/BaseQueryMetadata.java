@@ -66,6 +66,7 @@ class BaseQueryMetadata implements QueryMetadata, Serializable {
 	transient List<Object> resultSetMapping;
 	transient DbEntity dbEntity;
 	transient DataMap dataMap;
+	transient Select<?> subquery;
 	transient Object lastRoot;
 	transient ClassDescriptor classDescriptor;
 	transient EntityResolver lastEntityResolver;
@@ -129,6 +130,13 @@ class BaseQueryMetadata implements QueryMetadata, Serializable {
 						this.dbEntity = entity.getDbEntity();
 						this.dataMap = entity.getDataMap();
 					}
+				} else if (root instanceof Select<?>) {
+					this.subquery = (Select<?>)root;
+
+					QueryMetadata subqueryMeta = subquery.getMetaData(resolver);
+					this.dataMap = subqueryMeta.getDataMap();
+					this.dbEntity = subqueryMeta.getDbEntity();
+					this.classDescriptor = subqueryMeta.getClassDescriptor();
 				}
 			}
 
@@ -241,6 +249,14 @@ class BaseQueryMetadata implements QueryMetadata, Serializable {
 	 */
 	public ClassDescriptor getClassDescriptor() {
 		return classDescriptor;
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	@Override
+	public Select<?> getSubquery() {
+		return subquery;
 	}
 
 	/**

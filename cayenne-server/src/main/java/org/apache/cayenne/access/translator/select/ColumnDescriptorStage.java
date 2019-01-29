@@ -22,6 +22,8 @@ package org.apache.cayenne.access.translator.select;
 import org.apache.cayenne.access.jdbc.ColumnDescriptor;
 import org.apache.cayenne.map.DbAttribute;
 
+import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.aliased;
+
 /**
  * @since 4.2
  */
@@ -31,12 +33,6 @@ class ColumnDescriptorStage implements TranslationStage {
     public void perform(TranslatorContext context) {
         int i = 0;
         for(ResultNodeDescriptor resultNode : context.getResultNodeList()) {
-            context.getSelectBuilder().result(resultNode::getNode);
-
-            if(!resultNode.isInDataRow()) {
-                continue;
-            }
-
             String name;
             DbAttribute attribute = resultNode.getDbAttribute();
             if(attribute != null) {
@@ -44,6 +40,16 @@ class ColumnDescriptorStage implements TranslationStage {
             } else {
                 // generated name
                 name = "c" + i++;
+            }
+
+            if(context.getParentContext() != null) {
+                context.getSelectBuilder().result(aliased(resultNode.getNode(), name));
+            } else {
+                context.getSelectBuilder().result(resultNode::getNode);
+            }
+
+            if(!resultNode.isInDataRow()) {
+                continue;
             }
 
             ColumnDescriptor descriptor = new ColumnDescriptor(name, resultNode.getJdbcType(), resultNode.getJavaType());

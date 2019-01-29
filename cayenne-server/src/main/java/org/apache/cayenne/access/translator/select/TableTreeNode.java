@@ -19,9 +19,14 @@
 
 package org.apache.cayenne.access.translator.select;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
+import org.apache.cayenne.query.ColumnSelect;
+import org.apache.cayenne.query.ObjectSelect;
+import org.apache.cayenne.query.Select;
+import org.apache.cayenne.query.SelectQuery;
 
 /**
  * @since 4.2
@@ -31,6 +36,7 @@ class TableTreeNode {
     // path that spawned this node
     private final PathComponents attributePath;
     private final DbEntity entity;
+    private final Select<?> subquery;
     private final String tableAlias;
     private final JoinType joinType;
 
@@ -40,6 +46,16 @@ class TableTreeNode {
     TableTreeNode(DbEntity entity, String tableAlias) {
         this.attributePath = new PathComponents("");
         this.entity = entity;
+        this.subquery = null;
+        this.tableAlias = tableAlias;
+        this.relationship = null;
+        this.joinType = null;
+    }
+
+    TableTreeNode(Select<?> subquery, String tableAlias) {
+        this.attributePath = new PathComponents("");
+        this.entity = null;
+        this.subquery = subquery;
         this.tableAlias = tableAlias;
         this.relationship = null;
         this.joinType = null;
@@ -48,28 +64,47 @@ class TableTreeNode {
     TableTreeNode(String path, DbRelationship relationship, String tableAlias, JoinType joinType) {
         this.attributePath = new PathComponents(path);
         this.entity = relationship.getTargetEntity();
+        this.subquery = null;
         this.tableAlias = tableAlias;
         this.relationship = relationship;
         this.joinType = joinType;
     }
 
-    public PathComponents getAttributePath() {
+    PathComponents getAttributePath() {
         return attributePath;
     }
 
-    public DbEntity getEntity() {
+    DbEntity getEntity() {
         return entity;
     }
 
-    public String getTableAlias() {
+    boolean isSubquery() {
+        return subquery != null;
+    }
+
+    TranslatableQueryWrapper getSubquery() {
+        if(subquery instanceof ObjectSelect) {
+            return new ObjectSelectWrapper((ObjectSelect<?>)subquery);
+        }
+        if(subquery instanceof ColumnSelect) {
+            return new ColumnSelectWrapper((ColumnSelect<?>)subquery);
+        }
+        if(subquery instanceof SelectQuery) {
+            return new SelectQueryWrapper((SelectQuery<?>)subquery);
+        }
+
+        throw new CayenneRuntimeException("Unsupported subquery type %s", subquery.getClass().getName());
+    }
+
+    String getTableAlias() {
         return tableAlias;
     }
 
-    public JoinType getJoinType() {
+    JoinType getJoinType() {
         return joinType;
     }
 
-    public DbRelationship getRelationship() {
+    DbRelationship getRelationship() {
         return relationship;
     }
 }

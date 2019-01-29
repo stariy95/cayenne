@@ -23,9 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.cayenne.CayenneRuntimeException;
-import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
+import org.apache.cayenne.query.QueryMetadata;
 import org.apache.cayenne.util.Util;
 
 /**
@@ -42,16 +42,19 @@ class TableTree {
      */
     private final Map<String, TableTreeNode> tableNodes;
     private final TableTree parentTree;
-
-    private TableTreeNode rootNode;
+    private final TableTreeNode rootNode;
 
     private int tableAliasSequence;
 
-    TableTree(DbEntity root, TableTree parentTree) {
+    TableTree(QueryMetadata metadata, TableTree parentTree) {
         this.tableAliasSequence = 0;
         this.parentTree = parentTree;
         this.tableNodes = new LinkedHashMap<>();
-        this.rootNode = new TableTreeNode(root, nextTableAlias());
+        if(metadata.getSubquery() != null) {
+            this.rootNode = new TableTreeNode(metadata.getSubquery(), nextTableAlias());
+        } else {
+            this.rootNode = new TableTreeNode(metadata.getDbEntity(), nextTableAlias());
+        }
     }
 
     void addJoinTable(String path, DbRelationship relationship, JoinType joinType) {

@@ -150,13 +150,17 @@ public class ObjectSelect<T> extends FluentSelect<T> {
         return new ColumnSelect<Object[]>().entityType(entityType).columns(firstColumn, otherColumns);
     }
 
+    public static ObjectSelect<?> subQuery(Select<?> subselect) {
+        return new ObjectSelect<>().queryRoot(new SubqueryQueryRoot(subselect)).fetchDataRows();
+    }
+
     protected ObjectSelect() {
     }
 
     /**
      * Translates self to a SelectQuery.
      */
-    @SuppressWarnings({"deprecation", "unchecked"})
+    @SuppressWarnings("deprecation")
     @Override
     protected Query createReplacementQuery(EntityResolver resolver) {
         SelectQuery<?> replacement = (SelectQuery<?>) super.createReplacementQuery(resolver);
@@ -171,7 +175,7 @@ public class ObjectSelect<T> extends FluentSelect<T> {
      * @return this object
      */
     public ObjectSelect<T> entityType(Class<?> entityType) {
-        return resetEntity(entityType, null, null);
+        return queryRoot(new EntityTypeQueryRoot(entityType));
     }
 
     /**
@@ -182,7 +186,7 @@ public class ObjectSelect<T> extends FluentSelect<T> {
      * @return this object
      */
     public ObjectSelect<T> entityName(String entityName) {
-        return resetEntity(null, entityName, null);
+        return queryRoot(new EntityNameQueryRoot(entityName));
     }
 
     /**
@@ -193,13 +197,12 @@ public class ObjectSelect<T> extends FluentSelect<T> {
      * @return this object
      */
     public ObjectSelect<T> dbEntityName(String dbEntityName) {
-        return resetEntity(null, null, dbEntityName);
+        return queryRoot(new DbEntityNameQueryRoot(dbEntityName));
     }
 
-    private ObjectSelect<T> resetEntity(Class<?> entityType, String entityName, String dbEntityName) {
-        this.entityType = entityType;
-        this.entityName = entityName;
-        this.dbEntityName = dbEntityName;
+    private ObjectSelect<T> queryRoot(QueryRoot root) {
+        this.replacementQuery = null;
+        this.queryRoot = root;
         return this;
     }
 
@@ -411,7 +414,6 @@ public class ObjectSelect<T> extends FluentSelect<T> {
      * Resets query fetch limit - a parameter that defines max number of objects
      * that should be ever be fetched from the database.
      */
-    @SuppressWarnings("unchecked")
     public ObjectSelect<T> limit(int fetchLimit) {
         if (this.limit != fetchLimit) {
             this.limit = fetchLimit;

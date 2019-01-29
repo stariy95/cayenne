@@ -26,6 +26,7 @@ import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.exp.property.PropertyFactory;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
@@ -203,5 +204,21 @@ public class ObjectSelect_RunIT extends ServerCase {
 				.selectOne(context);
 		assertNotNull(a);
 		assertEquals("artist1", a.getArtistName());
+	}
+
+	@Test
+	public void test_SelectFromSubSelect() {
+
+		ColumnSelect<?> subselect = ObjectSelect.columnQuery(Artist.class, PropertyFactory.createSelf(Artist.class));
+
+		ObjectSelect.subQuery(subselect)
+				.columns(Artist.ARTIST_NAME.function("lower", String.class), PropertyFactory.COUNT)
+				.select(context);
+
+	}
+
+	@Test
+	public void test_SelectAllSubSelect() {
+		ObjectSelect.subQuery(ObjectSelect.columnQuery(Artist.class, PropertyFactory.createSelf(Artist.class))).select(context);
 	}
 }

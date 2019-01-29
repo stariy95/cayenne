@@ -18,13 +18,6 @@
  ****************************************************************/
 package org.apache.cayenne.query;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +28,9 @@ import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.testdo.testmap.Artist;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.*;
+
 public class ObjectSelectTest {
 
 	@Test
@@ -43,9 +39,9 @@ public class ObjectSelectTest {
 		assertNotNull(q);
 		assertTrue(q.isFetchingDataRows());
 
-		assertEquals(Artist.class, q.getEntityType());
-		assertNull(q.getEntityName());
-		assertNull(q.getDbEntityName());
+		assertThat(q.getQueryRoot(), instanceOf(FluentSelect.EntityTypeQueryRoot.class));
+		FluentSelect.EntityTypeQueryRoot root = (FluentSelect.EntityTypeQueryRoot)q.getQueryRoot();
+		assertEquals(Artist.class, root.entityType);
 	}
 
 	@Test
@@ -55,9 +51,9 @@ public class ObjectSelectTest {
 		assertNull(q.getWhere());
 		assertFalse(q.isFetchingDataRows());
 
-		assertEquals(Artist.class, q.getEntityType());
-		assertNull(q.getEntityName());
-		assertNull(q.getDbEntityName());
+		assertThat(q.getQueryRoot(), instanceOf(FluentSelect.EntityTypeQueryRoot.class));
+		FluentSelect.EntityTypeQueryRoot root = (FluentSelect.EntityTypeQueryRoot)q.getQueryRoot();
+		assertEquals(Artist.class, root.entityType);
 	}
 
 	@Test
@@ -67,9 +63,9 @@ public class ObjectSelectTest {
 		assertEquals("a = \"A\"", q.getWhere().toString());
 		assertFalse(q.isFetchingDataRows());
 
-		assertEquals(Artist.class, q.getEntityType());
-		assertNull(q.getEntityName());
-		assertNull(q.getDbEntityName());
+		assertThat(q.getQueryRoot(), instanceOf(FluentSelect.EntityTypeQueryRoot.class));
+		FluentSelect.EntityTypeQueryRoot root = (FluentSelect.EntityTypeQueryRoot)q.getQueryRoot();
+		assertEquals(Artist.class, root.entityType);
 	}
 
 	@Test
@@ -78,9 +74,9 @@ public class ObjectSelectTest {
 		assertNotNull(q);
 		assertFalse(q.isFetchingDataRows());
 
-		assertNull(q.getEntityType());
-		assertEquals("Painting", q.getEntityName());
-		assertNull(q.getDbEntityName());
+		assertThat(q.getQueryRoot(), instanceOf(FluentSelect.EntityNameQueryRoot.class));
+		FluentSelect.EntityNameQueryRoot root = (FluentSelect.EntityNameQueryRoot)q.getQueryRoot();
+		assertEquals("Painting", root.entityName);
 	}
 
 	@Test
@@ -89,9 +85,9 @@ public class ObjectSelectTest {
 		assertNotNull(q);
 		assertTrue(q.isFetchingDataRows());
 
-		assertNull(q.getEntityType());
-		assertNull(q.getEntityName());
-		assertEquals("PAINTING", q.getDbEntityName());
+		assertThat(q.getQueryRoot(), instanceOf(FluentSelect.DbEntityNameQueryRoot.class));
+		FluentSelect.DbEntityNameQueryRoot root = (FluentSelect.DbEntityNameQueryRoot)q.getQueryRoot();
+		assertEquals("PAINTING", root.entityName);
 	}
 
 	@Test
@@ -153,7 +149,7 @@ public class ObjectSelectTest {
 		q.where(ExpressionFactory.matchExp("a", 3));
 		assertEquals("a = 3", q.getWhere().toString());
 
-		q.and(new Expression[0]);
+		q.and();
 		assertEquals("a = 3", q.getWhere().toString());
 	}
 
@@ -165,7 +161,7 @@ public class ObjectSelectTest {
 		q.where(ExpressionFactory.matchExp("a", 3));
 		assertEquals("a = 3", q.getWhere().toString());
 
-		q.and(Collections.<Expression> emptyList());
+		q.and(Collections.emptyList());
 		assertEquals("a = 3", q.getWhere().toString());
 	}
 

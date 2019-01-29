@@ -84,9 +84,7 @@ public class ColumnSelect<T> extends FluentSelect<T> {
     protected ColumnSelect(ObjectSelect<T> select) {
         super();
         this.name = select.name;
-        this.entityType = select.entityType;
-        this.entityName = select.entityName;
-        this.dbEntityName = select.dbEntityName;
+        this.queryRoot = select.queryRoot;
         this.where = select.where;
         this.orderings = select.orderings;
         this.prefetches = select.prefetches;
@@ -116,7 +114,7 @@ public class ColumnSelect<T> extends FluentSelect<T> {
      * @return this object
      */
     public ColumnSelect<T> entityType(Class<?> entityType) {
-        return resetEntity(entityType, null, null);
+        return queryRoot(new EntityTypeQueryRoot(entityType));
     }
 
     /**
@@ -127,7 +125,7 @@ public class ColumnSelect<T> extends FluentSelect<T> {
      * @return this object
      */
     public ColumnSelect<T> entityName(String entityName) {
-        return resetEntity(null, entityName, null);
+        return queryRoot(new EntityNameQueryRoot(entityName));
     }
 
     /**
@@ -138,14 +136,12 @@ public class ColumnSelect<T> extends FluentSelect<T> {
      * @return this object
      */
     public ColumnSelect<T> dbEntityName(String dbEntityName) {
-        return resetEntity(null, null, dbEntityName);
+        return queryRoot(new DbEntityNameQueryRoot(dbEntityName));
     }
 
-    private ColumnSelect<T> resetEntity(Class<?> entityType, String entityName, String dbEntityName) {
-        this.entityType = entityType;
-        this.entityName = entityName;
-        this.dbEntityName = dbEntityName;
+    private ColumnSelect<T> queryRoot(QueryRoot root) {
         this.replacementQuery = null;
+        this.queryRoot = root;
         return this;
     }
 
