@@ -26,9 +26,12 @@ import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.property.PropertyFactory;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
+import org.apache.cayenne.testdo.testmap.Painting;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
@@ -203,5 +206,15 @@ public class ObjectSelect_RunIT extends ServerCase {
 				.selectOne(context);
 		assertNotNull(a);
 		assertEquals("artist1", a.getArtistName());
+	}
+
+	@Test
+	public void test_Select_CustomJoin() {
+		Expression joinExp = PropertyFactory.SRC.dot(Artist.ARTIST_NAME).substring(1, 1)
+				.eq(PropertyFactory.DST.dot(Painting.PAINTING_TITLE).substring(1, 1));
+		String title = ObjectSelect.columnQuery(Artist.class, Painting.PAINTING_TITLE)
+				.join(Painting.class, joinExp)
+				.selectOne(context);
+		assertNotNull(title);
 	}
 }

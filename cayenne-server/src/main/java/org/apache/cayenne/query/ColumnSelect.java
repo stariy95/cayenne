@@ -74,6 +74,8 @@ public class ColumnSelect<T> extends FluentSelect<T> {
     boolean distinct;
     boolean suppressDistinct;
 
+    private Collection<Join> joins;
+
     protected ColumnSelect() {
         super();
     }
@@ -696,5 +698,26 @@ public class ColumnSelect<T> extends FluentSelect<T> {
     @Override
     public T selectFirst(ObjectContext context) {
         return context.selectFirst(limit(1));
+    }
+
+    /**
+     * @since 4.2
+     */
+    public ColumnSelect<T> join(Class<?> joinType, Expression eq) {
+        if(this.joins == null) {
+            this.joins = new ArrayList<>();
+        }
+        this.joins.add(new Join(joinType, eq));
+        return this;
+    }
+
+    private class Join {
+        private final Class<?> type;
+        private final Expression expression;
+
+        private Join(Class<?> type, Expression expression) {
+            this.type = type;
+            this.expression = expression;
+        }
     }
 }
