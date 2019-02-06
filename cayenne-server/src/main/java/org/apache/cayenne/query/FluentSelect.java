@@ -19,8 +19,11 @@
 
 package org.apache.cayenne.query;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectContext;
@@ -51,6 +54,7 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
     protected int statementFetchSize;
     protected QueryCacheStrategy cacheStrategy;
     protected String cacheGroup;
+    protected Map<String, Join> joins;
 
     protected FluentSelect() {
     }
@@ -174,5 +178,52 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
     @Override
     public ResultBatchIterator<T> batchIterator(ObjectContext context, int size) {
         return context.batchIterator(this, size);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public FluentSelect<T> join(Class<?> joinType, String alias, Expression eq) {
+        if(this.joins == null) {
+            this.joins = new HashMap<>();
+        }
+        if(this.joins.put(alias, new Join(joinType, alias, eq)) != null) {
+            throw new CayenneRuntimeException("Join with alias '%s' already set for this query.", alias);
+        }
+        return this;
+    }
+
+    /**
+     * @since 4.2
+     * @return collection of dynamic join or null if there are no joins
+     */
+    public Map<String, Join> getJoins() {
+        return joins;
+    }
+
+    public static class Join {
+        private final int joinType;
+        private final Class<?> entityType;
+        private final String alias;
+        private final Expression expression;
+
+        private Join(Class<?> entityType, String alias, Expression expression) {
+            this.joinType = 0;
+            this.entityType = entityType;
+            this.alias = alias;
+            this.expression = expression;
+        }
+
+        public Class<?> getEntityType() {
+            return entityType;
+        }
+
+        public Expression getExpression() {
+            return expression;
+        }
+
+        public String getAlias() {
+            return alias;
+        }
     }
 }

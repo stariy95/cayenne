@@ -20,11 +20,13 @@
 package org.apache.cayenne.access.translator.select;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.query.FluentSelect;
 import org.apache.cayenne.query.Ordering;
 import org.apache.cayenne.query.PrefetchTreeNode;
 import org.apache.cayenne.query.QueryMetadata;
@@ -53,5 +55,9 @@ public interface TranslatableQueryWrapper {
     Expression getHavingQualifier();
 
     Select<?> unwrap();
+
+    default Map<String, FluentSelect.Join> getJoins() {
+        return null;
+    }
 
 }

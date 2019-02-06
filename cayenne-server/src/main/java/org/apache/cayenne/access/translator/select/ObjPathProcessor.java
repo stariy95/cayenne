@@ -25,6 +25,7 @@ import org.apache.cayenne.map.JoinType;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
+import org.apache.cayenne.query.FluentSelect;
 
 /**
  * @since 4.2
@@ -56,6 +57,12 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
         ObjRelationship relationship = entity.getRelationship(next);
         if(relationship != null) {
             processRelationship(relationship);
+            return;
+        }
+
+        FluentSelect.Join join = context.getQuery().getJoins().get(next);
+        if(join != null) {
+
             return;
         }
 
@@ -130,6 +137,16 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
         this.relationship = result.getDbRelationship().orElse(this.relationship);
         currentDbPath.delete(0, currentDbPath.length());
         currentDbPath.append(result.getFinalPath());
+    }
+
+    protected void processDynamicJoin(FluentSelect.Join join) {
+        if(lastComponent) {
+
+        } else {
+            entity = context.getResolver().getObjEntity(join.getEntityType());
+            appendCurrentPath(join.getAlias());
+            context.getTableTree().addJoinTable(currentDbPath.toString(), null, JoinType.LEFT_OUTER);
+        }
     }
 
 }

@@ -55,9 +55,6 @@ public class PropertyFactory {
      */
     public static final DateProperty<LocalDateTime> NOW = createDate(FunctionExpressionFactory.currentTimestamp(), LocalDateTime.class);
 
-    public static final EntityProperty<?> SRC = createEntity("__src", Persistent.class);
-    public static final EntityProperty<?> DST = createEntity("__dst", Persistent.class);
-
     // BaseProperty
 
     /**
@@ -239,6 +236,10 @@ public class PropertyFactory {
      */
     public static <T extends Persistent> EntityProperty<T> createEntity(String name, Class<T> type) {
         return createEntity(name, null, type);
+    }
+
+    public static EntityProperty<?> createEntityAlias(String alias) {
+        return createEntity(alias, null, Persistent.class);
     }
 
     /**

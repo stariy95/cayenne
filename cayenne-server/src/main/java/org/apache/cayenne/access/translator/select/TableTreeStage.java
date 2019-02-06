@@ -42,7 +42,7 @@ class TableTreeStage implements TranslationStage {
     public void perform(TranslatorContext context) {
         context.getTableTree().visit(node -> {
             NodeBuilder tableNode = table(node.getEntity().getFullyQualifiedName()).as(node.getTableAlias());
-            if(node.getRelationship() != null) {
+            if(node.isJoinedNode()) {
                 tableNode = getJoin(node, tableNode).on(getJoinExpression(context, node));
             }
 
@@ -62,9 +62,14 @@ class TableTreeStage implements TranslationStage {
     }
 
     private NodeBuilder getJoinExpression(TranslatorContext context, TableTreeNode node) {
-        List<DbJoin> joins = node.getRelationship().getJoins();
+        ExpressionNodeBuilder expressionNodeBuilder = defaultJoinExpression(context, node);
+        expressionNodeBuilder = attachTargetQualifier(context, node, expressionNodeBuilder);
+        return expressionNodeBuilder;
+    }
 
+    private ExpressionNodeBuilder defaultJoinExpression(TranslatorContext context, TableTreeNode node) {
         ExpressionNodeBuilder expressionNodeBuilder = null;
+        List<DbJoin> joins = node.getRelationship().getJoins();
         String sourceAlias = context.getTableTree().aliasForPath(node.getAttributePath().getParent());
         for (DbJoin dbJoin : joins) {
             DbAttribute src = dbJoin.getSource();
@@ -78,14 +83,12 @@ class TableTreeStage implements TranslationStage {
                 expressionNodeBuilder = joinExp;
             }
         }
-
-        expressionNodeBuilder = attachTargetQualifier(context, node, expressionNodeBuilder);
-
         return expressionNodeBuilder;
     }
 
-    private ExpressionNodeBuilder attachTargetQualifier(TranslatorContext context, TableTreeNode node, ExpressionNodeBuilder expressionNodeBuilder) {
-        Expression dbQualifier = node.getRelationship().getTargetEntity().getQualifier();
+    private ExpressionNodeBuilder attachTargetQualifier(TranslatorContext context, TableTreeNode node,
+                                                        ExpressionNodeBuilder expressionNodeBuilder) {
+        Expression dbQualifier = node.getEntity().getQualifier();
         if (dbQualifier != null) {
             String pathToRoot = node.getAttributePath().getPath();
             dbQualifier = dbQualifier.transform(input -> input instanceof ASTPath

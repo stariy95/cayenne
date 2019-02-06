@@ -72,4 +72,8 @@ class TableTreeNode {
     public DbRelationship getRelationship() {
         return relationship;
     }
+
+    public boolean isJoinedNode() {
+        return relationship != null;
+    }
 }
