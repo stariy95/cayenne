@@ -612,7 +612,7 @@ public class ColumnSelect<T> extends FluentSelect<T> {
 
     @Override
     public QueryMetadata getMetaData(EntityResolver resolver) {
-        Object root = getRoot(resolver);
+        Object root = resolveRoot(resolver);
         metaData.resolve(root, resolver, this);
         return metaData;
     }

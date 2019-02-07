@@ -51,7 +51,7 @@ public abstract class FluentSelect<T> extends AbstractQuery implements Select<T>
     protected FluentSelect() {
     }
 
-    protected Object getRoot(EntityResolver resolver) {
+    protected Object resolveRoot(EntityResolver resolver) {
         Object root;
         if (entityType != null) {
             root = entityType;
