@@ -28,6 +28,7 @@ import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.ResultIteratorCallback;
 import org.apache.cayenne.exp.Expression;
+import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjEntity;
@@ -39,14 +40,16 @@ import org.apache.cayenne.map.ObjEntity;
  */
 public abstract class FluentSelect<T> extends AbstractQuery implements Select<T> {
 
+    // root
     protected Class<?> entityType;
     protected String entityName;
     protected String dbEntityName;
+
     protected Expression where;
     protected Expression having;
-    protected Collection<Ordering> orderings;
-
     boolean havingExpressionIsActive = false;
+
+    protected Collection<Ordering> orderings;
 
     protected FluentSelect() {
     }
@@ -189,5 +192,19 @@ public abstract class FluentSelect<T> extends AbstractQuery implements Select<T>
 
     private void routePrefetches(QueryRouter router, EntityResolver resolver) {
         new FluentSelectPrefetchRouterAction().route(this, router, resolver);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public Collection<BaseProperty<?>> getColumns() {
+        return null;
+    }
+
+    /**
+     * @since 4.2
+     */
+    public boolean isDistinct() {
+        return false;
     }
 }

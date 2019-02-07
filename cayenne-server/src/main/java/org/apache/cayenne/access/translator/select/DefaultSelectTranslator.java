@@ -28,13 +28,11 @@ import org.apache.cayenne.access.translator.DbAttributeBinding;
 import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjAttribute;
-import org.apache.cayenne.query.ColumnSelect;
 import org.apache.cayenne.query.FluentSelect;
-import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.SelectQuery;
 
 /**
- * Default translator of select queries ({@link SelectQuery}, {@link ObjectSelect} and {@link ColumnSelect}).
+ * Default translator of select queries ({@link SelectQuery} or {@link FluentSelect}).
  *
  * @since 4.2
  */
@@ -82,17 +80,7 @@ public class DefaultSelectTranslator implements SelectTranslator {
     }
 
     public DefaultSelectTranslator(FluentSelect<?> query, DbAdapter adapter, EntityResolver entityResolver) {
-        this(
-                query instanceof ObjectSelect
-                        ? new ObjectSelectWrapper((ObjectSelect<?>) query)
-                        : new ColumnSelectWrapper((ColumnSelect<?>) query)
-                , adapter
-                , entityResolver
-        );
-    }
-
-    public DefaultSelectTranslator(ColumnSelect<?> query, DbAdapter adapter, EntityResolver entityResolver) {
-        this(new ColumnSelectWrapper(query), adapter, entityResolver);
+        this(new FluentSelectWrapper(query), adapter, entityResolver);
     }
 
     TranslatorContext getContext() {

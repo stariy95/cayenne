@@ -41,6 +41,9 @@ class HSQLActionBuilder extends JdbcActionBuilder {
         return new HSQLSelectAction(query, dataNode);
     }
 
+    /**
+     * @since 4.2
+     */
     @Override
     public <T> SQLAction objectSelectAction(FluentSelect<T> query) {
         return new HSQLSelectAction(query, dataNode);

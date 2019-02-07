@@ -590,6 +590,7 @@ public class ColumnSelect<T> extends FluentSelect<T> {
         return this;
     }
 
+    @Override
     public Collection<BaseProperty<?>> getColumns() {
         return columns;
     }
@@ -597,6 +598,7 @@ public class ColumnSelect<T> extends FluentSelect<T> {
     /**
      * @since 4.2
      */
+    @Override
     public boolean isDistinct() {
         return distinct;
     }
