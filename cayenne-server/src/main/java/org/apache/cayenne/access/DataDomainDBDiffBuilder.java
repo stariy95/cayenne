@@ -35,6 +35,7 @@ import org.apache.cayenne.map.ObjRelationship;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 
 /**
  * Processes object diffs, generating DB diffs. Can be used for both UPDATE and
@@ -123,17 +124,37 @@ class DataDomainDBDiffBuilder implements GraphChangeHandler {
 
                 // In case of a vertical inheritance, ensure that it belongs to this bucket...
                 if (dbRelation.getSourceEntity() == dbEntity) {
+                    ObjectId sourceId = (ObjectId) currentId;
                     ObjectId targetId = (ObjectId) entry.getValue();
                     for (DbJoin join : dbRelation.getJoins()) {
-                        Object value = (targetId != null)
-                                ? new PropagatedValueFactory(targetId, join.getTargetName())
-                                : null;
+//                        Object value = (targetId != null) ? new PropagatedValueFactory(targetId, join.getTargetName()) : null;
+                        Object value = getValueForFk(targetId, join.getTargetName());
+                        // if FK is a part of PK put it into replacement map of ObjectId
+                        // so it will be available for others later
+                        if(join.getSource().isPrimaryKey() && sourceId != null && !(value instanceof Supplier)) {
+                            sourceId.getReplacementIdMap().put(join.getSourceName(), value);
+                        }
 
                         dbDiff.put(join.getSourceName(), value);
                     }
                 }
             }
         }
+    }
+
+    private Object getValueForFk(ObjectId targetId, String attributeName) {
+        if(targetId == null) {
+            return null;
+        }
+
+        // check if value already set and use it
+        Object value = targetId.getIdSnapshot().get(attributeName);
+        if(value != null) {
+            return value;
+        }
+
+        // FK should be generated, so wait for it till insert
+        return new PropagatedValueFactory(targetId, attributeName);
     }
 
     private void appendPrimaryKeys(Map<String, Object> dbDiff) {

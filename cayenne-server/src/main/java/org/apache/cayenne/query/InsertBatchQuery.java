@@ -65,4 +65,11 @@ public class InsertBatchQuery extends BatchQuery {
         });
     }
 
+    /**
+     * Directly insert row into query
+     * @since 4.1
+     */
+    public void add(BatchQueryRow row) {
+        rows.add(row);
+    }
 }

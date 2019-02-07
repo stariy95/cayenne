@@ -27,8 +27,11 @@ import org.apache.cayenne.Persistent;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.query.BatchQuery;
+import org.apache.cayenne.query.BatchQueryRow;
+import org.apache.cayenne.query.InsertBatchQuery;
 import org.apache.cayenne.query.Query;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.tx.BaseTransaction;
@@ -38,6 +41,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -264,5 +268,38 @@ class DataDomainFlushAction {
         }
 
         context.getObjectStore().postprocessAfterCommit(resultDiff);
+    }
+
+    List<Persistent> getInsertedObjectsForDescriptor(ClassDescriptor descriptor) {
+        return insertBucket.objectsByDescriptor.get(descriptor);
+    }
+
+    BatchQueryRow findAndRemoveInsertFromBatch(DbEntity entity, Map<String, Object> objectIdSnapshot) {
+        for(Query query : queries) {
+            if(query instanceof InsertBatchQuery && ((InsertBatchQuery) query).getDbEntity().equals(entity)) {
+                Iterator<BatchQueryRow> iterator = ((InsertBatchQuery) query).getRows().iterator();
+                whileLoop:
+                while(iterator.hasNext()) {
+                    BatchQueryRow row = iterator.next();
+
+                    int i=0;
+                    for(DbAttribute attribute : entity.getAttributes()) {
+                        if(attribute.isPrimaryKey()) {
+                            Object value = row.getValue(i);
+                            if(value != null &&
+                                    !value.equals(objectIdSnapshot.get(attribute.getName()))) {
+                                continue whileLoop;
+                            }
+                        }
+                        i++;
+                    }
+
+                    iterator.remove();
+                    return row;
+                }
+            }
+        }
+
+        return null;
     }
 }

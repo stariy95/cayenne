@@ -81,6 +81,10 @@ public class BatchAction extends BaseSQLAction {
 	@Override
 	public void performAction(Connection connection, OperationObserver observer) throws SQLException, Exception {
 
+		if(query.getRows().isEmpty()) {
+			return;
+		}
+
 		BatchTranslator translator = createTranslator();
 		boolean generatesKeys = hasGeneratedKeys();
 

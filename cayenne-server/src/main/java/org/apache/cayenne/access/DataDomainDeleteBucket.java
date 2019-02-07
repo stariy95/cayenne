@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +32,9 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntitySorter;
+import org.apache.cayenne.query.BatchQueryRow;
 import org.apache.cayenne.query.DeleteBatchQuery;
+import org.apache.cayenne.query.InsertBatchQuery;
 import org.apache.cayenne.query.Query;
 
 /**
@@ -65,6 +68,8 @@ class DataDomainDeleteBucket extends DataDomainSyncBucket {
 
         EntitySorter sorter = parent.getDomain().getEntitySorter();
         sorter.sortDbEntities(dbEntities, true);
+        // delete can spawn out-of-order insert for meaningful PKs that both deleted and inserted
+        LinkedList<Query> outOfOrderInserts = null;
 
         for (DbEntity dbEntity : dbEntities) {
             Collection<DbEntityClassDescriptor> descriptors = descriptorsByDbEntity
@@ -90,6 +95,9 @@ class DataDomainDeleteBucket extends DataDomainSyncBucket {
                 if (isRootDbEntity) {
                     sorter.sortObjectsForEntity(descriptor.getEntity(), objects, true);
                 }
+
+                List<Persistent> insertedObjectsForDescriptor = parent
+                        .getInsertedObjectsForDescriptor(descriptor.getClassDescriptor());
 
                 for (Persistent o : objects) {
                     ObjectDiff diff = parent.objectDiff(o.getObjectId());
@@ -117,10 +125,31 @@ class DataDomainDeleteBucket extends DataDomainSyncBucket {
                     }
 
                     batch.add(qualifierSnapshot);
+
+                    // check that no entity is inserted with this ObjectId
+                    if(insertedObjectsForDescriptor == null || insertedObjectsForDescriptor.isEmpty()) {
+                        continue;
+                    }
+
+                    // this can be slow
+                    BatchQueryRow queryRow = parent
+                            .findAndRemoveInsertFromBatch(descriptor.getDbEntity(), o.getObjectId().getIdSnapshot());
+                    if(queryRow != null) {
+                        InsertBatchQuery query = new InsertBatchQuery(descriptor.getDbEntity(), 1);
+                        query.add(queryRow);
+                        if(outOfOrderInserts == null) {
+                            outOfOrderInserts = new LinkedList<>();
+                        }
+                        outOfOrderInserts.addFirst(query);
+                    }
                 }
             }
 
             queries.addAll(batches.values());
+        }
+
+        if(outOfOrderInserts != null) {
+            queries.addAll(outOfOrderInserts);
         }
     }
 }
