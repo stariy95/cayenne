@@ -20,6 +20,7 @@ package org.apache.cayenne.dba.hsqldb;
 
 import org.apache.cayenne.access.DataNode;
 import org.apache.cayenne.access.jdbc.SelectAction;
+import org.apache.cayenne.query.FluentSelect;
 import org.apache.cayenne.query.SelectQuery;
 
 /**
@@ -28,6 +29,10 @@ import org.apache.cayenne.query.SelectQuery;
 class HSQLSelectAction extends SelectAction {
 
 	<T> HSQLSelectAction(SelectQuery<T> query, DataNode dataNode) {
+		super(query, dataNode);
+	}
+
+	<T> HSQLSelectAction(FluentSelect<T> query, DataNode dataNode) {
 		super(query, dataNode);
 	}
 

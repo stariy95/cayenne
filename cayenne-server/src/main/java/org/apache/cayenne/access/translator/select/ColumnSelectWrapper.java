@@ -53,11 +53,6 @@ public class ColumnSelectWrapper implements TranslatableQueryWrapper {
     }
 
     @Override
-    public PrefetchTreeNode getPrefetchTree() {
-        return columnSelect.getPrefetches();
-    }
-
-    @Override
     public Expression getQualifier() {
         return columnSelect.getWhere();
     }

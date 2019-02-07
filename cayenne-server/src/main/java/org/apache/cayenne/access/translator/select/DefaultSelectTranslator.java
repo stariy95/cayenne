@@ -29,6 +29,7 @@ import org.apache.cayenne.dba.DbAdapter;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.query.ColumnSelect;
+import org.apache.cayenne.query.FluentSelect;
 import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.SelectQuery;
 
@@ -80,8 +81,14 @@ public class DefaultSelectTranslator implements SelectTranslator {
         this(new SelectQueryWrapper(query), adapter, entityResolver);
     }
 
-    public DefaultSelectTranslator(ObjectSelect<?> query, DbAdapter adapter, EntityResolver entityResolver) {
-        this(new ObjectSelectWrapper(query), adapter, entityResolver);
+    public DefaultSelectTranslator(FluentSelect<?> query, DbAdapter adapter, EntityResolver entityResolver) {
+        this(
+                query instanceof ObjectSelect
+                        ? new ObjectSelectWrapper((ObjectSelect<?>) query)
+                        : new ColumnSelectWrapper((ColumnSelect<?>) query)
+                , adapter
+                , entityResolver
+        );
     }
 
     public DefaultSelectTranslator(ColumnSelect<?> query, DbAdapter adapter, EntityResolver entityResolver) {

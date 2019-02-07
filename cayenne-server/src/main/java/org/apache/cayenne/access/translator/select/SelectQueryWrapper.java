@@ -53,11 +53,6 @@ public class SelectQueryWrapper implements TranslatableQueryWrapper {
     }
 
     @Override
-    public PrefetchTreeNode getPrefetchTree() {
-        return selectQuery.getPrefetchTree();
-    }
-
-    @Override
     public Expression getQualifier() {
         return selectQuery.getQualifier();
     }
