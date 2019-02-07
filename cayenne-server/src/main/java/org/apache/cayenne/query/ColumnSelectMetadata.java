@@ -28,16 +28,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.cayenne.CayenneRuntimeException;
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.types.ValueObjectType;
-import org.apache.cayenne.access.types.ValueObjectTypeRegistry;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.TraversalHandler;
 import org.apache.cayenne.exp.parser.ASTDbPath;
-import org.apache.cayenne.exp.parser.ASTFunctionCall;
-import org.apache.cayenne.exp.parser.ASTScalar;
 import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -58,7 +52,7 @@ import org.apache.cayenne.reflect.ToOneProperty;
 import org.apache.cayenne.util.CayenneMapEntry;
 
 /**
- * @since 3.0
+ * @since 4.2
  */
 class ColumnSelectMetadata extends BaseQueryMetadata {
 
@@ -227,38 +221,13 @@ class ColumnSelectMetadata extends BaseQueryMetadata {
 		}
 	}
 
-	/**
-	 * @since 3.0
-	 */
 	@Override
 	public Map<String, String> getPathSplitAliases() {
 		return pathSplitAliases != null ? pathSplitAliases : Collections.emptyMap();
 	}
 
 	/**
-	 * @since 3.0
-	 */
-	public void addPathSplitAliases(String path, String... aliases) {
-		if (aliases == null) {
-			throw new NullPointerException("Null aliases");
-		}
-
-		if (aliases.length == 0) {
-			throw new IllegalArgumentException("No aliases specified");
-		}
-
-		if (pathSplitAliases == null) {
-			pathSplitAliases = new HashMap<>();
-		}
-
-		for (String alias : aliases) {
-			pathSplitAliases.put(alias, path);
-		}
-	}
-
-	/**
 	 * Build DB result descriptor, that will be used to read and convert raw result of ColumnSelect
-	 * @since 4.0
 	 */
 	private void buildResultSetMappingForColumns(ColumnSelect<?> query, EntityResolver resolver) {
 		if(query.getColumns() == null || query.getColumns().isEmpty()) {
@@ -427,147 +396,17 @@ class ColumnSelectMetadata extends BaseQueryMetadata {
 		return result;
 	}
 
-	/**
-	 * @since 4.0
-	 */
 	@Override
 	public boolean isSingleResultSetMapping() {
 		return isSingleResultSetMapping;
 	}
 
-	/**
-	 * @since 4.0
-	 */
 	@Override
 	public boolean isSuppressingDistinct() {
 		return suppressingDistinct;
 	}
 
-	/**
-	 * @since 4.0
-	 */
 	public void setSuppressingDistinct(boolean suppressingDistinct) {
 		this.suppressingDistinct = suppressingDistinct;
-	}
-
-	/**
-	 * Expression traverse handler to create cache key string out of Expression.
-	 * {@link Expression#appendAsString(Appendable)} where previously used for that,
-	 * but it can't handle custom value objects properly (see CAY-2210).
-	 *
-	 * @see ValueObjectTypeRegistry
-	 *
-	 * @since 4.0
-	 */
-	static class ToCacheKeyTraversalHandler implements TraversalHandler {
-
-		private ValueObjectTypeRegistry registry;
-		private StringBuilder out;
-
-		ToCacheKeyTraversalHandler(ValueObjectTypeRegistry registry, StringBuilder out) {
-			this.registry = registry;
-			this.out = out;
-		}
-
-		@Override
-		public void finishedChild(Expression node, int childIndex, boolean hasMoreChildren) {
-			out.append(',');
-		}
-
-		@Override
-		public void startNode(Expression node, Expression parentNode) {
-			if(node.getType() == Expression.FUNCTION_CALL) {
-				out.append(((ASTFunctionCall)node).getFunctionName()).append('(');
-			} else {
-				out.append(node.getType()).append('(');
-			}
-		}
-
-		@Override
-		public void endNode(Expression node, Expression parentNode) {
-			out.append(')');
-		}
-
-		@Override
-		public void objectNode(Object leaf, Expression parentNode) {
-			if(leaf == null) {
-				out.append("null");
-				return;
-			}
-
-			if(leaf instanceof ASTScalar) {
-				leaf = ((ASTScalar) leaf).getValue();
-			} else if(leaf instanceof Object[]) {
-				for(Object value : (Object[])leaf) {
-					objectNode(value, parentNode);
-					out.append(',');
-				}
-				return;
-			}
-
-			if (leaf instanceof Persistent) {
-				ObjectId id = ((Persistent) leaf).getObjectId();
-				Object encode = (id != null) ? id : leaf;
-				out.append(encode);
-			} else if (leaf instanceof Enum<?>) {
-				Enum<?> e = (Enum<?>) leaf;
-				out.append("e:").append(leaf.getClass().getName()).append(':').append(e.ordinal());
-			} else {
-				ValueObjectType<Object, ?> valueObjectType;
-				if (registry == null || (valueObjectType = registry.getValueType(leaf.getClass())) == null) {
-					// Registry will be null in cayenne-client context.
-					// Maybe we shouldn't create cache key at all in that case...
-					out.append(leaf);
-				} else {
-					out.append(valueObjectType.toCacheKey(leaf));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Prefetch processor that append prefetch tree into cache key.
-	 * @since 4.0
-	 */
-	static class ToCacheKeyPrefetchProcessor implements PrefetchProcessor {
-
-		StringBuilder out;
-
-		ToCacheKeyPrefetchProcessor(StringBuilder out) {
-			this.out = out;
-		}
-
-		@Override
-		public boolean startPhantomPrefetch(PrefetchTreeNode node) {
-			return true;
-		}
-
-		@Override
-		public boolean startDisjointPrefetch(PrefetchTreeNode node) {
-			out.append("/pd:").append(node.getPath());
-			return true;
-		}
-
-		@Override
-		public boolean startDisjointByIdPrefetch(PrefetchTreeNode node) {
-			out.append("/pi:").append(node.getPath());
-			return true;
-		}
-
-		@Override
-		public boolean startJointPrefetch(PrefetchTreeNode node) {
-			out.append("/pj:").append(node.getPath());
-			return true;
-		}
-
-		@Override
-		public boolean startUnknownPrefetch(PrefetchTreeNode node) {
-			out.append("/pu:").append(node.getPath());
-			return true;
-		}
-
-		@Override
-		public void finishPrefetch(PrefetchTreeNode node) {
-		}
 	}
 }
