@@ -218,6 +218,7 @@ public class ObjectSelect_RunIT extends ServerCase {
 
 		String title = ObjectSelect.columnQuery(Artist.class, paintingAlias.dot(Painting.PAINTING_TITLE))
 				.join(Painting.class, "p", joinExp)
+				.where(paintingAlias.dot(Painting.PAINTING_TITLE).startsWith("p"))
 				.selectOne(context);
 		assertNotNull(title);
 	}

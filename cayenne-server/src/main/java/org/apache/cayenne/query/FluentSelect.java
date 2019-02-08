@@ -100,6 +100,7 @@ public abstract class FluentSelect<T> extends IndirectQuery implements Select<T>
         replacement.setFetchOffset(offset);
         replacement.setPageSize(pageSize);
         replacement.setStatementFetchSize(statementFetchSize);
+        replacement.setJoins(joins);
 
         return replacement;
     }

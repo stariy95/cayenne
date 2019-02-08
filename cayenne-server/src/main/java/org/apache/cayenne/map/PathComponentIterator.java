@@ -84,6 +84,8 @@ class PathComponentIterator implements Iterator<PathComponent<Attribute, Relatio
             return aliasedPathComponent;
         }
 
+        // TODO: here we should use somehow dynamic join info ...
+
         throw invalidPathException("Can't resolve path component", pathComp);
     }
 

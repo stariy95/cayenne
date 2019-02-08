@@ -62,7 +62,13 @@ class TableTreeStage implements TranslationStage {
     }
 
     private NodeBuilder getJoinExpression(TranslatorContext context, TableTreeNode node) {
-        ExpressionNodeBuilder expressionNodeBuilder = defaultJoinExpression(context, node);
+        ExpressionNodeBuilder expressionNodeBuilder;
+        if(node.getRelationship() != null) {
+            expressionNodeBuilder = defaultJoinExpression(context, node);
+        } else {
+            expressionNodeBuilder = exp(() -> context.getQualifierTranslator().translate(node.getJoinExp()));
+        }
+
         expressionNodeBuilder = attachTargetQualifier(context, node, expressionNodeBuilder);
         return expressionNodeBuilder;
     }

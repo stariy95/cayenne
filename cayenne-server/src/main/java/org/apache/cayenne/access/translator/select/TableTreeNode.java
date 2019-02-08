@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.translator.select;
 
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
@@ -33,6 +34,7 @@ class TableTreeNode {
     private final DbEntity entity;
     private final String tableAlias;
     private final JoinType joinType;
+    private final Expression joinExp;
 
     // relationship that connects this node with parent (or null if this is root)
     private final DbRelationship relationship;
@@ -43,6 +45,7 @@ class TableTreeNode {
         this.tableAlias = tableAlias;
         this.relationship = null;
         this.joinType = null;
+        this.joinExp = null;
     }
 
     TableTreeNode(String path, DbRelationship relationship, String tableAlias, JoinType joinType) {
@@ -51,6 +54,16 @@ class TableTreeNode {
         this.tableAlias = tableAlias;
         this.relationship = relationship;
         this.joinType = joinType;
+        this.joinExp = null;
+    }
+
+    TableTreeNode(String path, Expression joinExp, DbEntity entity, String tableAlias, JoinType joinType) {
+        this.attributePath = new PathComponents(path);
+        this.entity = entity;
+        this.tableAlias = tableAlias;
+        this.relationship = null;
+        this.joinType = joinType;
+        this.joinExp = joinExp;
     }
 
     public PathComponents getAttributePath() {
@@ -73,7 +86,11 @@ class TableTreeNode {
         return relationship;
     }
 
+    public Expression getJoinExp() {
+        return joinExp;
+    }
+
     public boolean isJoinedNode() {
-        return relationship != null;
+        return joinExp != null || relationship != null;
     }
 }

@@ -62,7 +62,7 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
 
         FluentSelect.Join join = context.getQuery().getJoins().get(next);
         if(join != null) {
-
+            processDynamicJoin(join);
             return;
         }
 
@@ -141,11 +141,12 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
 
     protected void processDynamicJoin(FluentSelect.Join join) {
         if(lastComponent) {
-
+            // TODO: implement this case
+            throw new UnsupportedOperationException();
         } else {
             entity = context.getResolver().getObjEntity(join.getEntityType());
             appendCurrentPath(join.getAlias());
-            context.getTableTree().addJoinTable(currentDbPath.toString(), null, JoinType.LEFT_OUTER);
+            context.getTableTree().addJoinTable(currentDbPath.toString(), join, entity.getDbEntity(), JoinType.LEFT_OUTER);
         }
     }
 

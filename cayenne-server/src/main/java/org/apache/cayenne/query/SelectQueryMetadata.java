@@ -272,8 +272,7 @@ class SelectQueryMetadata extends BaseQueryMetadata {
 			boolean fullObject = false;
 			if(exp.getType() == Expression.OBJ_PATH) {
 				// check if this is toOne relation
-				Expression dbPath = this.getObjEntity().translateToDbPath(exp);
-				DbRelationship rel = findRelationByPath(dbEntity, dbPath);
+				ObjRelationship rel = findRelationByPath(getObjEntity(), exp);
 				if(rel != null && !rel.isToMany()) {
 					// it this path is toOne relation, than select full object for it
 					fullObject = true;
@@ -313,6 +312,14 @@ class SelectQueryMetadata extends BaseQueryMetadata {
 			result.addDbField(attribute.getName(), attribute.getName());
 		}
 		return result;
+	}
+
+	private ObjRelationship findRelationByPath(ObjEntity entity, Expression exp) {
+		ObjRelationship r = null;
+		for (PathComponent<ObjAttribute, ObjRelationship> component : entity.resolvePath(exp, getPathSplitAliases())) {
+			r = component.getRelationship();
+		}
+		return r;
 	}
 
 	private DbRelationship findRelationByPath(DbEntity entity, Expression exp) {
