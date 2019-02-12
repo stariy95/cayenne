@@ -57,8 +57,6 @@ public class DefaultEventManager implements EventManager {
     private final Map<String, MethodHandle> methodHandleCache = new ConcurrentHashMap<>();
     // submitted task counter, used by cleanup task submit logic
     private final AtomicLong taskSubmitCounter = new AtomicLong(0L);
-    // is this manager perform synchronously or asynchronously
-    private final boolean syncExecution;
     // executor service for async case
     private final ExecutorService executorService;
     // task to mass cleanup listeners with deleted references
@@ -69,8 +67,7 @@ public class DefaultEventManager implements EventManager {
     }
 
     public DefaultEventManager(int executorThreads) {
-        syncExecution = executorThreads <= 0;
-        executorService = syncExecution ? null : Executors.newFixedThreadPool(executorThreads);
+        executorService = Executors.newFixedThreadPool(executorThreads <= 0 ? 1 : executorThreads);
         refCleanupTask = () -> listenersBySubject.values().forEach(
                 bySender -> bySender.values().forEach(
                         listeners -> listeners.removeIf(listener -> listener.refTo(null))
@@ -159,17 +156,21 @@ public class DefaultEventManager implements EventManager {
 
     @Override
     public void postEvent(CayenneEvent event, EventSubject subject) {
-        postNonBlockingEvent(event, subject);
+        postEvent(event, subject, false);
     }
 
     @Override
     public void postNonBlockingEvent(CayenneEvent event, EventSubject subject) {
-        submitExecutionForSender(event, subject, NULL_SENDER);
-        submitExecutionForSender(event, subject, event.getSource());
+        postEvent(event, subject, true);
+    }
+
+    private void postEvent(CayenneEvent event, EventSubject subject, boolean async) {
+        submitExecutionForSender(event, subject, NULL_SENDER, async);
+        submitExecutionForSender(event, subject, event.getSource(), async);
         checkAndSubmitCleanupTask();
     }
 
-    private void submitExecutionForSender(CayenneEvent event, EventSubject subject, Object sender) {
+    private void submitExecutionForSender(CayenneEvent event, EventSubject subject, Object sender, boolean sync) {
         if(sender == null) {
             return;
         }
@@ -177,21 +178,21 @@ public class DefaultEventManager implements EventManager {
                 .getOrDefault(subject, Collections.emptyMap())
                 .getOrDefault(sender, Collections.emptyList());
         if(!listeners.isEmpty()) {
-            submit(() -> listeners.removeIf(listener -> listener.apply(event)));
+            submit(() -> listeners.removeIf(listener -> listener.apply(event)), sync);
         }
     }
 
     private void checkAndSubmitCleanupTask() {
         if(taskSubmitCounter.incrementAndGet() % CLEANUP_TASK_THRESHOLD == 0) {
-           submit(refCleanupTask);
+           submit(refCleanupTask, true);
         }
     }
 
-    private void submit(Runnable task) {
-        if(syncExecution) {
-            task.run();
-        } else {
+    private void submit(Runnable task, boolean async) {
+        if(async) {
             executorService.submit(task);
+        } else {
+            task.run();
         }
     }
 
@@ -210,9 +211,7 @@ public class DefaultEventManager implements EventManager {
 
     @BeforeScopeEnd
     public void shutdown() {
-        if(!syncExecution) {
-            executorService.shutdownNow();
-        }
+        executorService.shutdownNow();
     }
 
 }
