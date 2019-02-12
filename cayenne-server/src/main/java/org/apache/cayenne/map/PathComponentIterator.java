@@ -85,6 +85,45 @@ class PathComponentIterator implements Iterator<PathComponent<Attribute, Relatio
         }
 
         // TODO: here we should use somehow dynamic join info ...
+        if("p".equals(pathComp)) {
+            currentEntity = currentEntity.getRelationship("paintingArray").getTargetEntity();
+            return new PathComponent<Attribute, Relationship>() {
+                @Override
+                public Attribute getAttribute() {
+                    return null;
+                }
+
+                @Override
+                public Relationship getRelationship() {
+                    return null;
+                }
+
+                @Override
+                public String getName() {
+                    return null;
+                }
+
+                @Override
+                public JoinType getJoinType() {
+                    return null;
+                }
+
+                @Override
+                public boolean isLast() {
+                    return false;
+                }
+
+                @Override
+                public boolean isAlias() {
+                    return false;
+                }
+
+                @Override
+                public Iterable<PathComponent<Attribute, Relationship>> getAliasedPath() {
+                    return null;
+                }
+            };
+        }
 
         throw invalidPathException("Can't resolve path component", pathComp);
     }

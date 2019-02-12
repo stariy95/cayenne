@@ -30,8 +30,7 @@ import org.apache.cayenne.map.ObjEntity;
  */
 class PathTranslator {
 
-    private final Map<String, PathTranslationResult> objResultCache = new ConcurrentHashMap<>();
-    private final Map<String, PathTranslationResult> dbResultCache = new ConcurrentHashMap<>();
+    private final Map<String, PathTranslationResult> resultCache = new ConcurrentHashMap<>();
 
     private final TranslatorContext context;
 
@@ -40,7 +39,7 @@ class PathTranslator {
     }
 
     PathTranslationResult translatePath(ObjEntity entity, String path, String parentPath) {
-        return objResultCache.computeIfAbsent(parentPath + '.' + entity.getName() + '.' + path,
+        return resultCache.computeIfAbsent(parentPath + '.' + entity.getName() + '.' + path,
                 (k) -> new ObjPathProcessor(context, entity, parentPath).process(path));
     }
 
@@ -49,7 +48,7 @@ class PathTranslator {
     }
 
     PathTranslationResult translatePath(DbEntity entity, String path, String parentPath, boolean flattenedPath) {
-        return dbResultCache.computeIfAbsent(parentPath + '.' + entity.getName() + '.' + path,
+        return resultCache.computeIfAbsent('.' + parentPath + '.' + entity.getName() + '.' + path,
                 (k) -> new DbPathProcessor(context, entity, parentPath, flattenedPath).process(path));
     }
 
