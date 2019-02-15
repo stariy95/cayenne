@@ -227,6 +227,20 @@ public class DbRelationshipDialog extends CayenneController {
                 relationship.setToDependentPK(view.getToDepPk().isSelected());
             }
         });
+
+        view.getUseExpressionForJoin().addActionListener(select -> {
+            if(view.getUseExpressionForJoin().isSelected()) {
+                view.getJoinButtons().setVisible(false);
+                view.getTableScrollPane().setVisible(false);
+
+                view.getCustomExpressionField().setVisible(true);
+            } else {
+                view.getJoinButtons().setVisible(true);
+                view.getTableScrollPane().setVisible(true);
+
+                view.getCustomExpressionField().setVisible(true);
+            }
+        });
     }
 
     private void enableInfo() {
