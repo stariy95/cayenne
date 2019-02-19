@@ -26,7 +26,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
-import org.apache.cayenne.query.FluentSelect;
+import org.apache.cayenne.query.DynamicJoin;
 import org.apache.cayenne.util.Util;
 
 /**
@@ -64,12 +64,12 @@ class TableTree {
         tableNodes.put(path, node);
     }
 
-    void addJoinTable(String path, FluentSelect.Join join, DbEntity entity, JoinType joinType) {
+    void addJoinTable(String path, DynamicJoin join, DbEntity entity) {
         if (tableNodes.get(path) != null) {
             return;
         }
 
-        TableTreeNode node = new TableTreeNode(path, join.getExpression(), entity, nextTableAlias(), joinType);
+        TableTreeNode node = new TableTreeNode(path, join.getExpression(), entity, nextTableAlias(), join.getJoinType());
         tableNodes.put(path, node);
     }
 

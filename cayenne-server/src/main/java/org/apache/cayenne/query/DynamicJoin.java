@@ -17,46 +17,40 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.translator.select;
-
-import java.util.Collection;
-import java.util.Map;
+package org.apache.cayenne.query;
 
 import org.apache.cayenne.exp.Expression;
-import org.apache.cayenne.exp.property.BaseProperty;
-import org.apache.cayenne.map.EntityResolver;
-import org.apache.cayenne.query.DynamicJoin;
-import org.apache.cayenne.query.Ordering;
-import org.apache.cayenne.query.PrefetchTreeNode;
-import org.apache.cayenne.query.QueryMetadata;
-import org.apache.cayenne.query.Select;
+import org.apache.cayenne.map.JoinType;
 
 /**
- * This interface allows transparently use different queries (namely SelectQuery, ObjectSelect and ColumnSelect)
- * in translator and as subqueries.
- *
  * @since 4.2
  */
-public interface TranslatableQueryWrapper {
+public class DynamicJoin {
+    private final JoinType joinType;
+    private final Class<?> entityType;
+    private final String alias;
+    private final Expression expression;
 
-    boolean isDistinct();
-
-    QueryMetadata getMetaData(EntityResolver resolver);
-
-    PrefetchTreeNode getPrefetchTree();
-
-    Expression getQualifier();
-
-    Collection<Ordering> getOrderings();
-
-    Collection<BaseProperty<?>> getColumns();
-
-    Expression getHavingQualifier();
-
-    Select<?> unwrap();
-
-    default Map<String, DynamicJoin> getDynamicJoins() {
-        return null;
+    DynamicJoin(Class<?> entityType, String alias, Expression expression) {
+        this.joinType = JoinType.LEFT_OUTER;
+        this.entityType = entityType;
+        this.alias = alias;
+        this.expression = expression;
     }
 
+    public Class<?> getEntityType() {
+        return entityType;
+    }
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public JoinType getJoinType() {
+        return joinType;
+    }
 }

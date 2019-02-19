@@ -214,12 +214,12 @@ public class ObjectSelect_RunIT extends ServerCase {
 		EntityProperty<?> paintingAlias = PropertyFactory.createEntityAlias("p");
 
 		Expression joinExp = Artist.ARTIST_NAME.substring(1, 1)
-				.eq(paintingAlias.dot(Painting.PAINTING_TITLE).substring(1, 1));
+				.eq(paintingAlias.dot(Painting.PAINTING_TITLE).substring(2, 1));
 
-		String title = ObjectSelect.columnQuery(Artist.class, paintingAlias.dot(Painting.PAINTING_TITLE))
+		List<String> titles = ObjectSelect.columnQuery(Artist.class, paintingAlias.dot(Painting.PAINTING_TITLE))
 				.join(Painting.class, "p", joinExp)
 				.where(paintingAlias.dot(Painting.PAINTING_TITLE).startsWith("p"))
-				.selectOne(context);
-		assertNotNull(title);
+				.select(context);
+		assertEquals(20, titles.size());
 	}
 }

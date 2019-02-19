@@ -27,7 +27,7 @@ import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.ColumnSelect;
-import org.apache.cayenne.query.FluentSelect;
+import org.apache.cayenne.query.DynamicJoin;
 import org.apache.cayenne.query.Ordering;
 import org.apache.cayenne.query.PrefetchTreeNode;
 import org.apache.cayenne.query.QueryMetadata;
@@ -85,7 +85,7 @@ public class ColumnSelectWrapper implements TranslatableQueryWrapper {
     }
 
     @Override
-    public Map<String, FluentSelect.Join> getJoins() {
-        return columnSelect.getJoins();
+    public Map<String, DynamicJoin> getDynamicJoins() {
+        return columnSelect.getDynamicJoins();
     }
 }

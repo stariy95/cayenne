@@ -74,7 +74,7 @@ public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery,
 	protected boolean canReturnScalarValue = true;
 
 	SelectQueryMetadata metaData = new SelectQueryMetadata();
-	Map<String, FluentSelect.Join> joins;
+	Map<String, DynamicJoin> joins;
 
 	/**
 	 * Creates a SelectQuery that selects objects of a given persistent class.
@@ -834,11 +834,17 @@ public class SelectQuery<T> extends AbstractQuery implements ParameterizedQuery,
 		return metaData;
 	}
 
-    public void setJoins(Map<String, FluentSelect.Join> joins) {
+    /**
+     * @since 4.2
+     */
+    public void setJoins(Map<String, DynamicJoin> joins) {
 		this.joins = joins;
     }
 
-	public Map<String, FluentSelect.Join> getJoins() {
+    /**
+     * @since 4.2
+     */
+	public Map<String, DynamicJoin> getDynamicJoins() {
 		return joins;
 	}
 }
