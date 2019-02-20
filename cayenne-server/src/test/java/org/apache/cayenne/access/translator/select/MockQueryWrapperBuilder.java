@@ -50,6 +50,7 @@ class MockQueryWrapperBuilder {
     private Expression havingQualifier;
 
     private Select<?> mockSelect;
+    private boolean needResultSetMapping;
 
     MockQueryWrapperBuilder withDistinct(boolean distinct) {
         this.distinct = distinct;
@@ -91,6 +92,11 @@ class MockQueryWrapperBuilder {
         return this;
     }
 
+    MockQueryWrapperBuilder withNeedResultSetMapping(boolean needResultSetMapping) {
+        this.needResultSetMapping = needResultSetMapping;
+        return this;
+    }
+
     TranslatableQueryWrapper build() {
         return new TranslatableQueryWrapper() {
             @Override
@@ -126,6 +132,11 @@ class MockQueryWrapperBuilder {
             @Override
             public Select<?> unwrap() {
                 return mockSelect;
+            }
+
+            @Override
+            public boolean needResultSetMapping() {
+                return needResultSetMapping;
             }
         };
     }

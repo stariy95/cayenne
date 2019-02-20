@@ -46,6 +46,7 @@ public class CustomColumnSetExtractorTest extends BaseColumnExtractorTest {
     public void testExtractWithoutPrefix() {
         DbEntity mockDbEntity = createMockDbEntity("mock");
         TranslatableQueryWrapper wrapper = new MockQueryWrapperBuilder()
+                .withNeedResultSetMapping(true)
                 .withMetaData(new MockQueryMetadataBuilder()
                         .withDbEntity(mockDbEntity)
                         .build())
