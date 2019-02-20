@@ -35,6 +35,7 @@ import org.apache.cayenne.dba.QuotingStrategy;
 import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.map.SQLResult;
 import org.apache.cayenne.query.QueryMetadata;
 
 /**
@@ -99,6 +100,8 @@ public class TranslatorContext implements SQLGenerationContext {
     // this flag can be removed if logic that converts result row into an object tree allow random order of columns if a row.
     private boolean appendResultToRoot;
 
+    private SQLResult sqlResult;
+
     TranslatorContext(TranslatableQueryWrapper query, DbAdapter adapter, EntityResolver resolver, TranslatorContext parentContext) {
         this.query = query;
         this.adapter = adapter;
@@ -113,6 +116,7 @@ public class TranslatorContext implements SQLGenerationContext {
         this.qualifierTranslator = new QualifierTranslator(this);
         this.quotingStrategy = adapter.getQuotingStrategy();
         this.resultNodeList = new LinkedList<>();
+        this.sqlResult = new SQLResult();
     }
 
     /**
@@ -234,6 +238,10 @@ public class TranslatorContext implements SQLGenerationContext {
 
     boolean isSkipSQLGeneration() {
         return skipSQLGeneration;
+    }
+
+    public SQLResult getSqlResult() {
+        return sqlResult;
     }
 
     enum DescriptorType {

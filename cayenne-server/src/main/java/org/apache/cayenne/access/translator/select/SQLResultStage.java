@@ -19,37 +19,24 @@
 
 package org.apache.cayenne.access.translator.select;
 
-import org.apache.cayenne.map.DbAttribute;
-import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.map.EntityResult;
-import org.apache.cayenne.map.ObjEntity;
+import java.util.List;
 
 /**
  * @since 4.2
  */
-class IdColumnExtractor extends BaseColumnExtractor {
-
-    private final DbEntity dbEntity;
-    private EntityResult result;
-
-    IdColumnExtractor(TranslatorContext context, DbEntity dbEntity) {
-        super(context);
-        this.dbEntity = dbEntity;
-    }
-
-    IdColumnExtractor(TranslatorContext context, ObjEntity objEntity) {
-        this(context, objEntity.getDbEntity());
-        this.result = new EntityResult(objEntity.getName());
-    }
+public class SQLResultStage implements TranslationStage {
 
     @Override
-    public void extract(String prefix) {
-        for (DbAttribute dba : dbEntity.getPrimaryKeys()) {
-            addDbAttribute(prefix, prefix, dba);
-            if(result != null) {
-                result.addDbField(dba.getName(), prefix + dba.getName());
-            }
+    public void perform(TranslatorContext context) {
+        if(context.getSqlResult() == null
+                || context.getParentContext() != null
+                || context.getQuery().getColumns() == null
+                || context.getQuery().getColumns().isEmpty()) {
+            return;
         }
-        context.getSqlResult().addEntityResult(result);
+
+        // optimization, resolve metadata result components here too, as it have same logic as this extractor...
+        List<Object> resultSetMapping = context.getSqlResult().getResolvedComponents(context.getResolver());
+        context.getMetadata().setResultSetMapping(resultSetMapping);
     }
 }

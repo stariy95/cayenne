@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.EntityResult;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.reflect.AttributeProperty;
@@ -44,26 +45,34 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
 
     private final ClassDescriptor descriptor;
     private final PathTranslator pathTranslator;
+    private final Set<String> columnTracker = new HashSet<>();
 
+    private EntityResult entityResult;
     private String prefix;
-    private Set<String> columnTracker = new HashSet<>();
+    private String labelPrefix;
 
     DescriptorColumnExtractor(TranslatorContext context, ClassDescriptor descriptor) {
         super(context);
         this.descriptor = descriptor;
         this.pathTranslator = context.getPathTranslator();
+        this.entityResult = new EntityResult(descriptor.getObjectClass());
     }
 
     public void extract(String prefix) {
         this.prefix = prefix;
-        String labelPrefix = prefix;
+        boolean newEntityResult = true;
+        this.labelPrefix = null;
         TranslatorContext.DescriptorType type = TranslatorContext.DescriptorType.OTHER;
-        if(prefix != null && prefix.length() > 2 && prefix.startsWith(PREFETCH_PREFIX)) {
+
+        if(prefix != null && prefix.startsWith(PREFETCH_PREFIX)) {
             type = TranslatorContext.DescriptorType.PREFETCH;
             labelPrefix = prefix.substring(2);
+            entityResult = context.getSqlResult().getLastEntityResult();
+            newEntityResult = false;
         } else if(descriptor.getEntity().getDbEntity() == context.getRootDbEntity()) {
             type = TranslatorContext.DescriptorType.ROOT;
         }
+
         context.markDescriptorStart(type);
 
         descriptor.visitAllProperties(this);
@@ -75,7 +84,13 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
             String columnUniqueName = alias + '.' + dba.getName();
             if(columnTracker.add(columnUniqueName)) {
                 addDbAttribute(prefix, labelPrefix, dba);
+                String name = labelPrefix == null ? dba.getName() : labelPrefix + '.' + dba.getName();
+                entityResult.addDbField(name, name);
             }
+        }
+
+        if(newEntityResult) {
+            context.getSqlResult().addEntityResult(entityResult);
         }
         context.markDescriptorEnd(type);
     }
@@ -90,6 +105,10 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
             ResultNodeDescriptor resultNodeDescriptor = processTranslationResult(result, i);
             if(resultNodeDescriptor != null && i == count - 1) {
                 resultNodeDescriptor.setJavaType(oa.getType());
+                String name = labelPrefix == null
+                        ? oa.getDbAttribute().getName()
+                        : labelPrefix + '.' + oa.getDbAttribute().getName();
+                entityResult.addDbField(name, name);
             }
         }
 
@@ -105,6 +124,9 @@ class DescriptorColumnExtractor extends BaseColumnExtractor implements PropertyV
         int count = result.getDbAttributes().size();
         for(int i=0; i<count; i++) {
             processTranslationResult(result, i);
+            DbAttribute attribute = result.getDbAttributes().get(i);
+            String name = labelPrefix == null ? attribute.getName() : labelPrefix + '.' + attribute.getName();
+            entityResult.addDbField(name, name);
         }
 
         return true;

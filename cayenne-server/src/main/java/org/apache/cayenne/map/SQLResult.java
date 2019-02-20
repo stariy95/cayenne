@@ -36,6 +36,7 @@ public class SQLResult {
 
     protected String name;
     protected List<Object> resultDescriptors;
+    protected EntityResult lastEntityResult;
 
     /**
      * Creates an unnamed SQLResultSet.
@@ -108,6 +109,7 @@ public class SQLResult {
         }
 
         resultDescriptors.add(entityResult);
+        lastEntityResult = entityResult;
     }
 
     /**
@@ -119,5 +121,9 @@ public class SQLResult {
         }
 
         resultDescriptors.add(column);
+    }
+
+    public EntityResult getLastEntityResult() {
+        return lastEntityResult;
     }
 }
