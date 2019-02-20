@@ -119,7 +119,7 @@ public class AshwoodEntitySorter implements EntitySorter {
 
 					for (DbJoin join : candidate.getJoins()) {
 						DbAttribute targetAttribute = join.getTarget();
-						if (targetAttribute.isPrimaryKey()) {
+						if (targetAttribute != null && targetAttribute.isPrimaryKey()) {
 
 							if (newReflexive) {
 								List<DbRelationship> reflexiveRels = reflexiveDbEntities

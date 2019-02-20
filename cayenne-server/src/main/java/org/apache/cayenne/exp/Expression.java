@@ -189,6 +189,11 @@ public abstract class Expression implements Serializable, XMLSerializable {
 	 */
 	public static final int DBID_PATH = 52;
 
+	/**
+	 * @since 4.2
+	 */
+	public static final int JOIN_PATH = 51;
+
 	protected int type;
 
 	/**

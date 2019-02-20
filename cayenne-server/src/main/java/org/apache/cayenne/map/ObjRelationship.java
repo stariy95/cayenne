@@ -504,6 +504,16 @@ public class ObjRelationship extends Relationship implements ConfigurationNode {
         return path.toString();
     }
 
+    public boolean hasReverseDdRelationship() {
+        List<DbRelationship> relationships = getDbRelationships();
+        for(DbRelationship dbRelationship : relationships) {
+            if(!dbRelationship.hasReverseDdRelationship()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Returns a reversed dbRelationship path.
      * 
@@ -677,7 +687,7 @@ public class ObjRelationship extends Relationship implements ConfigurationNode {
     public void recalculateReadOnlyValue() {
         // not flattened, always read/write
         if (dbRelationships.size() < 2) {
-            this.readOnly = false;
+            this.readOnly = dbRelationships.size() == 1 && dbRelationships.get(0).isUseJoinExp();
             return;
         }
 
