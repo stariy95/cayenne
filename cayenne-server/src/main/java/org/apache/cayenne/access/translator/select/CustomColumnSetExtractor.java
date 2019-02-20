@@ -60,6 +60,7 @@ class CustomColumnSetExtractor implements ColumnExtractor {
     private void extractSimpleProperty(BaseProperty<?> property) {
         Node sqlNode = context.getQualifierTranslator().translate(property);
         context.addResultNode(sqlNode, true, property, property.getAlias());
+        context.getSqlResult().addColumnResult(property.getName() == null ? "exp" : property.getName());
     }
 
     private boolean isFullObjectProp(BaseProperty<?> property) {
