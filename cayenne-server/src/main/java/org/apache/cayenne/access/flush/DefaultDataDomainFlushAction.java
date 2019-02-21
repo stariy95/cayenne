@@ -20,7 +20,6 @@
 package org.apache.cayenne.access.flush;
 
 import org.apache.cayenne.CayenneRuntimeException;
-import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
@@ -29,19 +28,20 @@ import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
+import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
-import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.query.BatchQuery;
-import org.apache.cayenne.query.InsertBatchQuery;
-import org.apache.cayenne.query.Query;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * TODO: nice to fix CAY-2488 (update of a relationship to non-PK field)
+ *
  * @since 4.2
  */
 public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
@@ -61,11 +61,13 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         }
 
         List<Operation> operations = createOperations(context, changes);
-        operations = operationSorter.sort(operations);
+
+
         List<BatchQuery> queries = createQueries(context, operations);
+
         executeQueries(queries);
 
-        return null;
+        return changes;
     }
 
     protected List<Operation> createOperations(DataContext context, GraphDiff changes) {
@@ -76,11 +78,14 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         ObjectStore objectStore = context.getObjectStore();
         // ObjectStoreGraphDiff contains changes already categorized by objectId...
         Map<Object, ObjectDiff> changesByObjectId = ((ObjectStoreGraphDiff) changes).getChangesByObjectId();
-        return changesByObjectId.keySet().stream().map(key -> {
+        List<Operation> operations = new ArrayList<>(changesByObjectId.size());
+
+        changesByObjectId.forEach((key, diff) -> {
             ObjectId id = (ObjectId) key;
             Persistent object = (Persistent) objectStore.getNode(id);
-            return createOperationForObject(id, object);
-        }).collect(Collectors.toList());
+            operations.add(createOperationForObject(id, object, diff));
+        });
+        return operationSorter.sort(operations);
     }
 
     protected List<BatchQuery> createQueries(DataContext context, List<Operation> operations) {
@@ -89,49 +94,24 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
     }
 
     protected void executeQueries(List<BatchQuery> queries) {
+        OperationObserver observer = new FlushOperationObserver();
         queries.forEach(
                 q -> dataDomain
                         .lookupDataNode(q.getDbEntity().getDataMap())
-                        .performQueries(Collections.singleton(q), null)
+                        .performQueries(Collections.singleton(q), observer)
         );
     }
 
-    protected Operation createOperationForObject(ObjectId id, Persistent object) {
+    protected Operation createOperationForObject(ObjectId id, Persistent object, ObjectDiff diff) {
         switch (object.getPersistenceState()) {
             case PersistenceState.NEW:
-                return new InsertOperation(id, object);
+                return new InsertOperation(id, object, diff);
             case PersistenceState.MODIFIED:
-                return new UpdateOperation(id, object);
+                return new UpdateOperation(id, object, diff);
             case PersistenceState.DELETED:
-                return new DeleteOperation(id, object);
+                return new DeleteOperation(id, object, diff);
         }
         throw new CayenneRuntimeException("Changed object in unknown state " + object.getPersistenceState());
     }
 
-    static class QueryOperationVisitor implements OperationVisitor<BatchQuery> {
-        private final DataContext context;
-
-        QueryOperationVisitor(DataContext context) {
-            this.context = context;
-        }
-
-        @Override
-        public BatchQuery visitInsert(InsertOperation operation) {
-            ObjEntity objEntity = context.getEntityResolver().getObjEntity(operation.getObject());
-            InsertBatchQuery query = new InsertBatchQuery(objEntity.getDbEntity(), 1);
-            DataRow snapshot = context.getObjectStore().getSnapshot(operation.getId());
-            query.add(snapshot, operation.getId());
-            return query;
-        }
-
-        @Override
-        public BatchQuery visitUpdate(UpdateOperation operation) {
-            return null;
-        }
-
-        @Override
-        public BatchQuery visitDelete(DeleteOperation operation) {
-            return null;
-        }
-    }
 }

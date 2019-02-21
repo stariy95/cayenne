@@ -21,14 +21,15 @@ package org.apache.cayenne.access.flush;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.ObjectDiff;
 
 /**
  * @since 4.2
  */
 public class InsertOperation extends Operation {
 
-    public InsertOperation(ObjectId id, Persistent object) {
-        super(id, object);
+    public InsertOperation(ObjectId id, Persistent object, ObjectDiff diff) {
+        super(id, object, diff);
     }
 
     @Override

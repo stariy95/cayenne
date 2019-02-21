@@ -21,6 +21,7 @@ package org.apache.cayenne.access.flush;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.ObjectDiff;
 
 /**
  * @since 4.2
@@ -29,10 +30,12 @@ public abstract class Operation {
 
     protected final ObjectId id;
     protected final Persistent object;
+    protected final ObjectDiff diff;
 
-    public Operation(ObjectId id, Persistent object) {
+    public Operation(ObjectId id, Persistent object, ObjectDiff diff) {
         this.id = id;
         this.object = object;
+        this.diff = diff;
     }
 
     public ObjectId getId() {

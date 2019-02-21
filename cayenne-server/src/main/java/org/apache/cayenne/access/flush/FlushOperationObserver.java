@@ -19,21 +19,54 @@
 
 package org.apache.cayenne.access.flush;
 
+import java.util.List;
+
 import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.ObjectDiff;
+import org.apache.cayenne.ResultIterator;
+import org.apache.cayenne.access.OperationObserver;
+import org.apache.cayenne.query.Query;
 
 /**
  * @since 4.2
  */
-public class UpdateOperation extends Operation {
+class FlushOperationObserver implements OperationObserver {
+    @Override
+    public void nextCount(Query query, int resultCount) {
 
-    public UpdateOperation(ObjectId id, Persistent object, ObjectDiff diff) {
-        super(id, object, diff);
     }
 
     @Override
-    public <T> T visit(OperationVisitor<T> visitor) {
-        return visitor.visitUpdate(this);
+    public void nextBatchCount(Query query, int[] resultCount) {
+
+    }
+
+    @Override
+    public void nextRows(Query query, List<?> dataRows) {
+
+    }
+
+    @Override
+    public void nextRows(Query q, ResultIterator<?> it) {
+
+    }
+
+    @Override
+    public void nextGeneratedRows(Query query, ResultIterator<?> keys, ObjectId idToUpdate) {
+
+    }
+
+    @Override
+    public void nextQueryException(Query query, Exception ex) {
+
+    }
+
+    @Override
+    public void nextGlobalException(Exception ex) {
+
+    }
+
+    @Override
+    public boolean isIteratedResult() {
+        return false;
     }
 }
