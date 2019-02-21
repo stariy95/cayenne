@@ -26,10 +26,16 @@ package org.apache.cayenne.access.flush;
  */
 public interface OperationVisitor<T> {
 
-    T visitInsert(InsertOperation operation);
+    default T visitInsert(InsertOperation operation) {
+        return null;
+    }
 
-    T visitUpdate(UpdateOperation operation);
+    default T visitUpdate(UpdateOperation operation) {
+        return null;
+    }
 
-    T visitDelete(DeleteOperation operation);
+    default T visitDelete(DeleteOperation operation) {
+        return null;
+    }
 
 }

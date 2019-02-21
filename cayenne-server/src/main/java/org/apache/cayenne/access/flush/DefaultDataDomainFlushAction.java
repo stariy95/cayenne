@@ -62,6 +62,7 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
         List<Operation> operations = createOperations(context, changes);
 
+        objectIdUpdate(context, operations);
 
         List<BatchQuery> queries = createQueries(context, operations);
 
@@ -95,11 +96,9 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected void executeQueries(List<BatchQuery> queries) {
         OperationObserver observer = new FlushOperationObserver();
-        queries.forEach(
-                q -> dataDomain
-                        .lookupDataNode(q.getDbEntity().getDataMap())
-                        .performQueries(Collections.singleton(q), observer)
-        );
+        queries.forEach(query -> dataDomain
+                .lookupDataNode(query.getDbEntity().getDataMap())
+                .performQueries(Collections.singleton(query), observer));
     }
 
     protected Operation createOperationForObject(ObjectId id, Persistent object, ObjectDiff diff) {
@@ -112,6 +111,18 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
                 return new DeleteOperation(id, object, diff);
         }
         throw new CayenneRuntimeException("Changed object in unknown state " + object.getPersistenceState());
+    }
+
+    protected void objectIdUpdate(DataContext context, List<Operation> operations) {
+        OperationVisitor<Void> visitor = new OperationVisitor<Void>() {
+            @Override
+            public Void visitInsert(InsertOperation operation) {
+                operation.getId();
+                return null;
+            }
+        };
+
+        operations.forEach(op -> op.visit(visitor));
     }
 
 }
