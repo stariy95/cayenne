@@ -51,7 +51,7 @@ import java.util.Map;
  * A dynamic GraphDiff that represents a delta between object simple properties
  * at diff creation time and its current state.
  */
-class ObjectDiff extends NodeDiff {
+public class ObjectDiff extends NodeDiff {
 
     private final String entityName;
 
