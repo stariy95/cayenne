@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.map;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -50,4 +51,16 @@ public interface EntitySorter {
      * Sorts a list of objects belonging to the ObjEntity.
      */
     void sortObjectsForEntity(ObjEntity entity, List<?> objects, boolean deleteOrder);
+
+    /**
+     * @since 4.2
+     * @return comparator for {@link DbEntity}
+     */
+    Comparator<DbEntity> getDbEntityComparator();
+
+    /**
+     * @since 4.2
+     * @return comparator for {@link ObjEntity}
+     */
+    Comparator<ObjEntity> getObjEntityComparator();
 }

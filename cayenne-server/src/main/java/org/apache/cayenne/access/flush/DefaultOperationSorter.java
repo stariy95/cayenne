@@ -21,9 +21,14 @@ package org.apache.cayenne.access.flush;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
+import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.di.Provider;
+import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.EntitySorter;
+import org.apache.cayenne.map.ObjEntity;
 
 /**
  * @since 4.2
@@ -31,7 +36,7 @@ import org.apache.cayenne.map.EntitySorter;
 public class DefaultOperationSorter implements OperationSorter{
 
     @Inject
-    private EntitySorter entitySorter;
+    private Provider<DataDomain> dataDomainProvider;
 
     public List<Operation> sort(List<Operation> operations) {
         // TODO:
@@ -41,25 +46,38 @@ public class DefaultOperationSorter implements OperationSorter{
         //  4. sort by entity order
         //  5. rearrange ops by ObjectId (delete before insert/update)
 
-        operations.sort(Comparator
-                .comparing((Operation o) -> o.visit(new OperationVisitor<Integer>() {
-                    @Override
-                    public Integer visitInsert(InsertOperation op) {
-                        return 1;
-                    }
+        DataDomain dataDomain = dataDomainProvider.get();
+        EntityResolver resolver = dataDomain.getEntityResolver();
+        EntitySorter entitySorter = dataDomain.getEntitySorter();
 
-                    @Override
-                    public Integer visitUpdate(UpdateOperation op) {
-                        return 2;
-                    }
+        Function<Operation, Integer> operationType = new OperationTypeExtractor();
+        Function<Operation, ObjEntity> entityType = o -> resolver.getObjEntity(o.id.getEntityName());
 
-                    @Override
-                    public Integer visitDelete(DeleteOperation op) {
-                        return 3;
-                    }
-                }))
-                .thenComparing((Operation o) -> o.id.getEntityName()));
-//                .thenComparing((Operation o) -> (Integer) o.id.getIdSnapshot().get("id")));
+        operations.sort(Comparator.comparing(operationType)
+                .thenComparing(entityType, entitySorter.getObjEntityComparator()));
+
         return operations;
+    }
+
+    private static class OperationTypeExtractor implements Function<Operation, Integer> {
+        @Override
+        public Integer apply(Operation o) {
+            return o.visit(new OperationVisitor<Integer>() {
+                @Override
+                public Integer visitInsert(InsertOperation op) {
+                    return 1;
+                }
+
+                @Override
+                public Integer visitUpdate(UpdateOperation op) {
+                    return 2;
+                }
+
+                @Override
+                public Integer visitDelete(DeleteOperation op) {
+                    return 3;
+                }
+            });
+        }
     }
 }

@@ -19,8 +19,10 @@
 
 package org.apache.cayenne.access.flush;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -36,12 +38,13 @@ import org.apache.cayenne.map.ObjRelationship;
 /**
  * @since 4.2
  */
-class InsertSnapshotHandler implements GraphChangeHandler {
+public class UpdateSnapshotHandler implements GraphChangeHandler {
 
     private final ObjEntity entity;
     private Map<String, Object> snapshot;
+    private List<DbAttribute> modifiedAttributes;
 
-    InsertSnapshotHandler(ObjEntity entity) {
+    UpdateSnapshotHandler(ObjEntity entity) {
         this.entity = entity;
     }
 
@@ -52,10 +55,17 @@ class InsertSnapshotHandler implements GraphChangeHandler {
         return snapshot;
     }
 
+    public List<DbAttribute> getModifiedAttributes() {
+        if(modifiedAttributes == null) {
+            return Collections.emptyList();
+        }
+        return modifiedAttributes;
+    }
+
     @Override
     public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
         ObjAttribute attribute = entity.getAttribute(property);
-        addToSnapshot(attribute.getDbAttribute().getName(), newValue);
+        addToSnapshot(attribute.getDbAttribute(), newValue);
     }
 
     @Override
@@ -71,37 +81,54 @@ class InsertSnapshotHandler implements GraphChangeHandler {
         ObjectId targetId = (ObjectId)targetNodeId;
         for(DbJoin join : dbRelationship.getJoins()) {
             // skip PK
-            if(join.getSource().isPrimaryKey() && !dbRelationship.isToMasterPK()) {
+            if(join.getSource().isPrimaryKey()) {
                 continue;
             }
-            addToSnapshot(join.getSourceName(), (Supplier) () -> targetId.getIdSnapshot().get(join.getTargetName()));
+            addToSnapshot(join.getSource(), (Supplier) () -> targetId.getIdSnapshot().get(join.getTargetName()));
         }
     }
 
-    protected void addToSnapshot(String key, Object value) {
+    @Override
+    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+        String relationshipPath = arcId.toString(); // can be db:path, obj.path, etc.
+        ObjRelationship relationship = entity.getRelationship(relationshipPath);
+        if(relationship == null) {
+            // TODO: do something else ...
+            return;
+        }
+
+        DbRelationship dbRelationship = relationship.getDbRelationships().get(0);
+        for(DbJoin join : dbRelationship.getJoins()) {
+            // skip PK
+            if(join.getSource().isPrimaryKey()) {
+                continue;
+            }
+            addToSnapshot(join.getSource(), null);
+        }
+    }
+
+    protected void addToSnapshot(DbAttribute key, Object value) {
         if(value == null) {
             return;
         }
 
         if(snapshot == null) {
             snapshot = new HashMap<>();
+            modifiedAttributes = new ArrayList<>();
         }
 
-        snapshot.put(key, value);
+        snapshot.put(key.getName(), value);
+        modifiedAttributes.add(key);
+    }
+
+    @Override
+    public void nodeIdChanged(Object nodeId, Object newId) {
     }
 
     // We don't interested in other changes in insert context...
 
     @Override
-    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
-    }
-
-    @Override
     public void nodeRemoved(Object nodeId) {
-    }
-
-    @Override
-    public void nodeIdChanged(Object nodeId, Object newId) {
     }
 
     @Override

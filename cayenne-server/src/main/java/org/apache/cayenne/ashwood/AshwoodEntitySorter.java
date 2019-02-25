@@ -317,6 +317,18 @@ public class AshwoodEntitySorter implements EntitySorter {
 		return (id != null) ? context.getGraphManager().getNode(id) : null;
 	}
 
+	@Override
+	public Comparator<DbEntity> getDbEntityComparator() {
+		indexSorter();
+		return dbEntityComparator;
+	}
+
+	@Override
+	public Comparator<ObjEntity> getObjEntityComparator() {
+		indexSorter();
+		return objEntityComparator;
+	}
+
 	protected Comparator<DbEntity> getDbEntityComparator(boolean dependantFirst) {
 		Comparator<DbEntity> c = dbEntityComparator;
 		if (dependantFirst) {
@@ -378,7 +390,7 @@ public class AshwoodEntitySorter implements EntitySorter {
 				int index1 = rec1.index;
 				int index2 = rec2.index;
 
-				int result = index1 > index2 ? 1 : (index1 < index2 ? -1 : 0);
+				int result = Integer.compare(index1, index2);
 
 				// TODO: is this check really needed?
 				if (result != 0 && rec1.component == rec2.component) {

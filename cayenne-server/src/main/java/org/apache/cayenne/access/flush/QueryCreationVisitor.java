@@ -63,8 +63,12 @@ class QueryCreationVisitor implements OperationVisitor<BatchQuery> {
         ObjEntity objEntity = context.getEntityResolver().getObjEntity(operation.getObject());
         DbEntity dbEntity = objEntity.getDbEntity();
         ArrayList<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
-        UpdateBatchQuery query = new UpdateBatchQuery(dbEntity, qualifierAttributes, Collections.emptyList(), Collections.emptyList(), 1);
-        query.add(operation.getId().getIdSnapshot(), Collections.emptyMap(), operation.getId());
+
+        UpdateSnapshotHandler handler = new UpdateSnapshotHandler(objEntity);
+        operation.getDiff().apply(handler);
+
+        UpdateBatchQuery query = new UpdateBatchQuery(dbEntity, qualifierAttributes, handler.getModifiedAttributes(), Collections.emptyList(), 1);
+        query.add(operation.getId().getIdSnapshot(), handler.getSnapshot(), operation.getId());
 
         return query;
     }
