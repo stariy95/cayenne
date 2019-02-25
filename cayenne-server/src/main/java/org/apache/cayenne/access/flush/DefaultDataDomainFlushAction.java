@@ -25,12 +25,14 @@ import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.DataDomainFlushObserver;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
+import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.query.BatchQuery;
 
 import java.util.ArrayList;
@@ -48,25 +50,28 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected final DataDomain dataDomain;
     protected final OperationSorter operationSorter;
+    protected final JdbcEventLogger jdbcEventLogger;
 
-    protected DefaultDataDomainFlushAction(DataDomain dataDomain, OperationSorter operationSorter) {
+    protected DefaultDataDomainFlushAction(DataDomain dataDomain, OperationSorter operationSorter, JdbcEventLogger jdbcEventLogger) {
         this.dataDomain = dataDomain;
         this.operationSorter = operationSorter;
+        this.jdbcEventLogger = jdbcEventLogger;
     }
 
     @Override
     public GraphDiff flush(DataContext context, GraphDiff changes) {
+        CompoundDiff result = new CompoundDiff();
         if (changes == null) {
-            return new CompoundDiff();
+            return result;
         }
 
         List<Operation> operations = createOperations(context, changes);
-
-        objectIdUpdate(context, operations);
-
+        objectIdUpdate(operations);
         List<BatchQuery> queries = createQueries(context, operations);
-
         executeQueries(queries);
+        setFinalIds(operations, result);
+
+        context.getObjectStore().postprocessAfterCommit(result);
 
         return changes;
     }
@@ -90,12 +95,13 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
     }
 
     protected List<BatchQuery> createQueries(DataContext context, List<Operation> operations) {
-        OperationVisitor<BatchQuery> visitor = new QueryOperationVisitor(context);
+        OperationVisitor<BatchQuery> visitor = new QueryCreationVisitor(context);
         return operations.stream().map(op -> op.visit(visitor)).collect(Collectors.toList());
     }
 
     protected void executeQueries(List<BatchQuery> queries) {
-        OperationObserver observer = new FlushOperationObserver();
+        OperationObserver observer = new DataDomainFlushObserver(jdbcEventLogger);
+        // TODO: batch queries by node change, when queries are sorted should speedup a bit
         queries.forEach(query -> dataDomain
                 .lookupDataNode(query.getDbEntity().getDataMap())
                 .performQueries(Collections.singleton(query), observer));
@@ -113,15 +119,13 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         throw new CayenneRuntimeException("Changed object in unknown state " + object.getPersistenceState());
     }
 
-    protected void objectIdUpdate(DataContext context, List<Operation> operations) {
-        OperationVisitor<Void> visitor = new OperationVisitor<Void>() {
-            @Override
-            public Void visitInsert(InsertOperation operation) {
-                operation.getId();
-                return null;
-            }
-        };
+    protected void objectIdUpdate(List<Operation> operations) {
+        OperationVisitor<Void> visitor = new PermObjectIdVisitor(dataDomain);
+        operations.forEach(op -> op.visit(visitor));
+    }
 
+    protected void setFinalIds(List<Operation> operations, CompoundDiff result) {
+        OperationVisitor<Void> visitor = new FinalIdVisitor(result);
         operations.forEach(op -> op.visit(visitor));
     }
 

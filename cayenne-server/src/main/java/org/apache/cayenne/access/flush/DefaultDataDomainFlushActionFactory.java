@@ -21,6 +21,7 @@ package org.apache.cayenne.access.flush;
 
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.log.JdbcEventLogger;
 
 /**
  * @since 4.2
@@ -30,8 +31,11 @@ public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActio
     @Inject
     private OperationSorter operationSorter;
 
+    @Inject
+    private JdbcEventLogger jdbcEventLogger;
+
     @Override
     public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
-        return new DefaultDataDomainFlushAction(dataDomain, operationSorter);
+        return new DefaultDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
     }
 }

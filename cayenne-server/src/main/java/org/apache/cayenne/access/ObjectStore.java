@@ -407,7 +407,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
      * 
      * @since 1.2
      */
-    void postprocessAfterCommit(GraphDiff parentChanges) {
+    public void postprocessAfterCommit(GraphDiff parentChanges) {
 
         // scan through changed objects, set persistence state to committed
         for (Object id : changes.keySet()) {

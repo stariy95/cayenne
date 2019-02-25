@@ -19,36 +19,37 @@
 
 package org.apache.cayenne.access.flush;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.ObjectDiff;
+import org.apache.cayenne.graph.CompoundDiff;
+import org.apache.cayenne.graph.NodeIdChangeOperation;
 
 /**
  * @since 4.2
  */
-public abstract class Operation {
+class FinalIdVisitor implements OperationVisitor<Void> {
+    private final CompoundDiff result;
 
-    protected final ObjectId id;
-    protected final Persistent object;
-    protected final ObjectDiff diff;
-
-    public Operation(ObjectId id, Persistent object, ObjectDiff diff) {
-        this.id = id;
-        this.object = object;
-        this.diff = diff;
+    public FinalIdVisitor(CompoundDiff result) {
+        this.result = result;
     }
 
-    public ObjectId getId() {
-        return id;
-    }
+    @Override
+    public Void visitInsert(InsertOperation operation) {
+        Persistent object = operation.getObject();
+        ObjectId id = operation.getId();
 
-    public Persistent getObject() {
-        return object;
-    }
+        // TODO: more logic should be here ...
 
-    public ObjectDiff getDiff() {
-        return diff;
+        if (id.isReplacementIdAttached()) {
+            ObjectId replacementId = id.createReplacementId();
+            if (replacementId.isTemporary()) {
+                throw new CayenneRuntimeException("PK for object " + object + " is not set during insert.");
+            }
+            object.setObjectId(replacementId);
+            result.add(new NodeIdChangeOperation(id, replacementId));
+        }
+        return null;
     }
-
-    public abstract <T> T visit(OperationVisitor<T> visitor);
 }

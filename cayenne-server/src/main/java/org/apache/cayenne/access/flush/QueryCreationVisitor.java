@@ -21,10 +21,8 @@ package org.apache.cayenne.access.flush;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.cayenne.DataRow;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -37,30 +35,26 @@ import org.apache.cayenne.query.UpdateBatchQuery;
 /**
  * @since 4.2
  */
-class QueryOperationVisitor implements OperationVisitor<BatchQuery> {
+class QueryCreationVisitor implements OperationVisitor<BatchQuery> {
+
     private final DataContext context;
 
-    QueryOperationVisitor(DataContext context) {
+    QueryCreationVisitor(DataContext context) {
         this.context = context;
     }
 
     @Override
     public BatchQuery visitInsert(InsertOperation operation) {
-        DataRow snapshot = context.getObjectStore().getSnapshot(operation.getId());
-        Map<String, Object> filteredSnapshot;
-        if (snapshot == null || snapshot.isEmpty()) {
-            filteredSnapshot = Collections.emptyMap();
-        } else {
-            filteredSnapshot = new HashMap<>(snapshot.size());
-            snapshot.forEach((k, v) -> {
-                if (v != null) {
-                    filteredSnapshot.put(k, v);
-                }
-            });
-        }
         ObjEntity objEntity = context.getEntityResolver().getObjEntity(operation.getObject());
+
+        InsertSnapshotHandler handler = new InsertSnapshotHandler(objEntity);
+        operation.getDiff().apply(handler);
+        Map<String, Object> snapshot = handler.getSnapshot();
+        snapshot.putAll(operation.getId().getIdSnapshot());
+
         InsertBatchQuery query = new InsertBatchQuery(objEntity.getDbEntity(), 1);
-        query.add(filteredSnapshot, operation.getId());
+        query.add(snapshot, operation.getId());
+
         return query;
     }
 
@@ -71,6 +65,7 @@ class QueryOperationVisitor implements OperationVisitor<BatchQuery> {
         ArrayList<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
         UpdateBatchQuery query = new UpdateBatchQuery(dbEntity, qualifierAttributes, Collections.emptyList(), Collections.emptyList(), 1);
         query.add(operation.getId().getIdSnapshot(), Collections.emptyMap(), operation.getId());
+
         return query;
     }
 
@@ -81,6 +76,8 @@ class QueryOperationVisitor implements OperationVisitor<BatchQuery> {
         ArrayList<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
         DeleteBatchQuery query = new DeleteBatchQuery(dbEntity, qualifierAttributes, Collections.emptyList(), 1);
         query.add(operation.getId().getIdSnapshot());
+
         return query;
     }
+
 }
