@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -46,11 +47,19 @@ class QueryCreationVisitor implements OperationVisitor<BatchQuery> {
     @Override
     public BatchQuery visitInsert(InsertOperation operation) {
         ObjEntity objEntity = context.getEntityResolver().getObjEntity(operation.getObject());
+        if(objEntity.isReadOnly()) {
+            throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
+                    "Can't commit changes.", objEntity.getName());
+        }
 
         InsertSnapshotHandler handler = new InsertSnapshotHandler(objEntity);
         operation.getDiff().apply(handler);
         Map<String, Object> snapshot = handler.getSnapshot();
-        snapshot.putAll(operation.getId().getIdSnapshot());
+        if(snapshot == null) {
+            snapshot = operation.getId().getIdSnapshot();
+        } else {
+            snapshot.putAll(operation.getId().getIdSnapshot());
+        }
 
         InsertBatchQuery query = new InsertBatchQuery(objEntity.getDbEntity(), 1);
         query.add(snapshot, operation.getId());
@@ -67,15 +76,23 @@ class QueryCreationVisitor implements OperationVisitor<BatchQuery> {
         UpdateSnapshotHandler handler = new UpdateSnapshotHandler(objEntity);
         operation.getDiff().apply(handler);
 
-        UpdateBatchQuery query = new UpdateBatchQuery(dbEntity, qualifierAttributes, handler.getModifiedAttributes(), Collections.emptyList(), 1);
-        query.add(operation.getId().getIdSnapshot(), handler.getSnapshot(), operation.getId());
+        if(handler.hasChanges()) {
+            UpdateBatchQuery query = new UpdateBatchQuery(dbEntity, qualifierAttributes, handler.getModifiedAttributes(), Collections.emptyList(), 1);
+            query.add(operation.getId().getIdSnapshot(), handler.getSnapshot(), operation.getId());
+            return query;
+        }
 
-        return query;
+        return null;
     }
 
     @Override
     public BatchQuery visitDelete(DeleteOperation operation) {
         ObjEntity objEntity = context.getEntityResolver().getObjEntity(operation.getObject());
+        if(objEntity.isReadOnly()) {
+            throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
+                    "Can't commit changes.", objEntity.getName());
+        }
+
         DbEntity dbEntity = objEntity.getDbEntity();
         ArrayList<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
         DeleteBatchQuery query = new DeleteBatchQuery(dbEntity, qualifierAttributes, Collections.emptyList(), 1);

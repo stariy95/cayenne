@@ -19,37 +19,77 @@
 
 package org.apache.cayenne.access.flush;
 
+import java.util.Map;
+
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.NodeIdChangeOperation;
+import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjEntity;
+import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
  * @since 4.2
  */
 class FinalIdVisitor implements OperationVisitor<Void> {
+
+    private final EntityResolver resolver;
     private final CompoundDiff result;
 
-    public FinalIdVisitor(CompoundDiff result) {
+    private ClassDescriptor lastDescriptor;
+    private ObjEntity lastObjEntity;
+
+    FinalIdVisitor(EntityResolver resolver, CompoundDiff result) {
+        this.resolver = resolver;
         this.result = result;
     }
 
     @Override
     public Void visitInsert(InsertOperation operation) {
-        Persistent object = operation.getObject();
+        setEntity(operation);
+        updateObjectId(operation.getObject(), operation.getId());
+        return null;
+    }
+
+    @Override
+    public Void visitUpdate(UpdateOperation operation) {
+        setEntity(operation);
+        updateObjectId(operation.getObject(), operation.getId());
+        return null;
+    }
+
+    private void setEntity(Operation operation) {
         ObjectId id = operation.getId();
+        if(lastObjEntity == null || !id.getEntityName().equals(lastObjEntity.getName())) {
+            lastObjEntity = resolver.getObjEntity(id.getEntityName());
+            lastDescriptor = resolver.getClassDescriptor(lastObjEntity.getName());
+        }
+    }
 
-        // TODO: more logic should be here ...
-
+    private void updateObjectId(Persistent object, ObjectId id) {
         if (id.isReplacementIdAttached()) {
             ObjectId replacementId = id.createReplacementId();
+            Map<String, Object> replacementMap = id.getReplacementIdMap();
             if (replacementId.isTemporary()) {
                 throw new CayenneRuntimeException("PK for object " + object + " is not set during insert.");
             }
+
+            // TODO: looks really slow..
+            //  need to check that we have any meaningful PK at least
+            replacementMap.forEach((k, v) -> {
+                DbAttribute dbAttribute = lastObjEntity.getDbEntity().getAttribute(k);
+                ObjAttribute objAttribute = lastObjEntity.getAttributeForDbAttribute(dbAttribute);
+                if(objAttribute != null) {
+                    lastDescriptor.getProperty(objAttribute.getName()).writePropertyDirectly(object, null, v);
+                }
+            });
+
             object.setObjectId(replacementId);
             result.add(new NodeIdChangeOperation(id, replacementId));
         }
-        return null;
     }
 }

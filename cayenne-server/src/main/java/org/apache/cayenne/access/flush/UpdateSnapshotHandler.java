@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
@@ -62,15 +63,34 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
         return modifiedAttributes;
     }
 
+    public boolean hasChanges() {
+        return snapshot != null && modifiedAttributes != null;
+    }
+
     @Override
     public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
-        ObjAttribute attribute = entity.getAttribute(property);
-        addToSnapshot(attribute.getDbAttribute(), newValue);
+        if(entity.isReadOnly()) {
+            throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
+                    "Can't commit changes.", entity.getName());
+        }
+
+        DbAttribute dbAttribute = entity.getAttribute(property).getDbAttribute();
+        addToSnapshot(dbAttribute, newValue);
+
+        // process meaningful PK
+        if(dbAttribute.isPrimaryKey()) {
+            ObjectId id = (ObjectId)nodeId;
+            id.getReplacementIdMap().put(dbAttribute.getName(), newValue);
+        }
     }
 
     @Override
     public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+        // todo: readonly entity should be rejected here if we need to update it
         String relationshipPath = arcId.toString(); // can be db:path, obj.path, etc.
+        ObjectId srcId = (ObjectId)nodeId;
+        ObjectId targetId = (ObjectId)targetNodeId;
+
         ObjRelationship relationship = entity.getRelationship(relationshipPath);
         if(relationship == null) {
             // TODO: do something else ...
@@ -78,11 +98,14 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
         }
 
         DbRelationship dbRelationship = relationship.getDbRelationships().get(0);
-        ObjectId targetId = (ObjectId)targetNodeId;
         for(DbJoin join : dbRelationship.getJoins()) {
-            // skip PK
+            // skip PK if it's not depend on master PK
+            Object value = targetId.getIdSnapshot().get(join.getTargetName());
             if(join.getSource().isPrimaryKey()) {
-                continue;
+                if(!dbRelationship.isToMasterPK()) {
+                    continue;
+                }
+                srcId.getReplacementIdMap().put(join.getSourceName(), value);
             }
             addToSnapshot(join.getSource(), (Supplier) () -> targetId.getIdSnapshot().get(join.getTargetName()));
         }
@@ -100,7 +123,7 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
         DbRelationship dbRelationship = relationship.getDbRelationships().get(0);
         for(DbJoin join : dbRelationship.getJoins()) {
             // skip PK
-            if(join.getSource().isPrimaryKey()) {
+            if(join.getSource().isPrimaryKey() && !dbRelationship.isToMasterPK()) {
                 continue;
             }
             addToSnapshot(join.getSource(), null);
@@ -121,11 +144,11 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
         modifiedAttributes.add(key);
     }
 
+    // We don't interested in other changes here
+
     @Override
     public void nodeIdChanged(Object nodeId, Object newId) {
     }
-
-    // We don't interested in other changes in insert context...
 
     @Override
     public void nodeRemoved(Object nodeId) {

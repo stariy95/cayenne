@@ -46,9 +46,6 @@ class InsertSnapshotHandler implements GraphChangeHandler {
     }
 
     public Map<String, Object> getSnapshot() {
-        if(snapshot == null) {
-            return Collections.emptyMap();
-        }
         return snapshot;
     }
 

@@ -37,14 +37,14 @@ import org.apache.cayenne.util.Util;
  * 
  * @since 1.2
  */
-public class DataDomainFlushObserver implements OperationObserver {
+class DataDomainFlushObserver implements OperationObserver {
 
     /**
      * @since 3.1
      */
     private JdbcEventLogger logger;
 
-    public DataDomainFlushObserver(JdbcEventLogger logger) {
+    DataDomainFlushObserver(JdbcEventLogger logger) {
         this.logger = logger;
     }
 

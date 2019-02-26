@@ -25,7 +25,6 @@ import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
-import org.apache.cayenne.access.DataDomainFlushObserver;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
@@ -39,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -96,11 +96,14 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected List<BatchQuery> createQueries(DataContext context, List<Operation> operations) {
         OperationVisitor<BatchQuery> visitor = new QueryCreationVisitor(context);
-        return operations.stream().map(op -> op.visit(visitor)).collect(Collectors.toList());
+        return operations.stream()
+                .map(op -> op.visit(visitor)) // create query from operation
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     protected void executeQueries(List<BatchQuery> queries) {
-        OperationObserver observer = new DataDomainFlushObserver(jdbcEventLogger);
+        OperationObserver observer = new FlushOperationObserver(jdbcEventLogger);
         // TODO: batch queries by node change, when queries are sorted should speedup a bit
         queries.forEach(query -> dataDomain
                 .lookupDataNode(query.getDbEntity().getDataMap())
@@ -125,7 +128,7 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
     }
 
     protected void setFinalIds(List<Operation> operations, CompoundDiff result) {
-        OperationVisitor<Void> visitor = new FinalIdVisitor(result);
+        OperationVisitor<Void> visitor = new FinalIdVisitor(dataDomain.getEntityResolver(), result);
         operations.forEach(op -> op.visit(visitor));
     }
 
