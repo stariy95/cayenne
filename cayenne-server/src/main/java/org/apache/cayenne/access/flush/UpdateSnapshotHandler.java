@@ -32,7 +32,6 @@ import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
-import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
 
@@ -42,11 +41,17 @@ import org.apache.cayenne.map.ObjRelationship;
 public class UpdateSnapshotHandler implements GraphChangeHandler {
 
     private final ObjEntity entity;
+//    private final DbEntity root;
+
     private Map<String, Object> snapshot;
     private List<DbAttribute> modifiedAttributes;
 
+    // All DB changes produced by this diff
+//    private Map<DbEntity, Map<DbAttribute, Object>> snapshots;
+
     UpdateSnapshotHandler(ObjEntity entity) {
         this.entity = entity;
+//        this.root = entity.getDbEntity();
     }
 
     public Map<String, Object> getSnapshot() {
@@ -107,6 +112,7 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
                 }
                 srcId.getReplacementIdMap().put(join.getSourceName(), value);
             }
+            // todo: fix for CAY-2488 should be here...
             addToSnapshot(join.getSource(), (Supplier) () -> targetId.getIdSnapshot().get(join.getTargetName()));
         }
     }

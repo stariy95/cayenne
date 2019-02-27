@@ -345,7 +345,8 @@ public class AshwoodEntitySorter implements EntitySorter {
 		return c;
 	}
 
-	protected boolean isReflexive(DbEntity metadata) {
+	@Override
+	public boolean isReflexive(DbEntity metadata) {
 		return reflexiveDbEntities.containsKey(metadata);
 	}
 

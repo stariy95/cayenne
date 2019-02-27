@@ -53,14 +53,22 @@ public interface EntitySorter {
     void sortObjectsForEntity(ObjEntity entity, List<?> objects, boolean deleteOrder);
 
     /**
-     * @since 4.2
      * @return comparator for {@link DbEntity}
+     * @since 4.2
      */
     Comparator<DbEntity> getDbEntityComparator();
 
     /**
-     * @since 4.2
      * @return comparator for {@link ObjEntity}
+     * @since 4.2
      */
     Comparator<ObjEntity> getObjEntityComparator();
+
+    /**
+     * @param entity to check
+     * @return is entity has reflexive relationships
+     *
+     * @since 4.2
+     */
+    boolean isReflexive(DbEntity entity);
 }
