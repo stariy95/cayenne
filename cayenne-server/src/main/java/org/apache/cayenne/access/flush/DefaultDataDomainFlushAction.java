@@ -32,10 +32,15 @@ import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
+import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.query.BatchQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -132,4 +137,81 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         operations.forEach(op -> op.visit(visitor));
     }
 
+
+
+    enum OperationType {
+        INSERT,
+        UPDATE,
+        DELETE
+    }
+
+    static class ChangeId {
+        final DbEntity entity;
+        final Object[] id;
+
+        ObjectId objectIdRef;
+
+        static ChangeId fromSnapshot(Snapshot snapshot) {
+            Collection<DbAttribute> primaryKeys = snapshot.entity.getPrimaryKeys();
+            Object[] id = new Object[primaryKeys.size()];
+            int i=0;
+            for (DbAttribute primaryKey : primaryKeys) {
+                id[i++] = snapshot.getValue(primaryKey);
+            }
+            return new ChangeId(snapshot.entity, id);
+        }
+
+        ChangeId(DbEntity entity, Object[] id) {
+            this.entity = entity;
+            this.id = id;
+        }
+
+        public void setObjectIdRef(ObjectId objectIdRef) {
+            this.objectIdRef = objectIdRef;
+        }
+
+        public ObjectId getObjectIdRef() {
+            return objectIdRef;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ChangeId changeId = (ChangeId) o;
+            if (!entity.equals(changeId.entity)) return false;
+            return Arrays.deepEquals(id, changeId.id);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * entity.hashCode() + Arrays.deepHashCode(id);
+        }
+    }
+
+    static class Snapshot {
+        final OperationType type;
+
+        // header
+        final DbEntity entity;
+        final List<DbAttribute> attributes;
+        // data
+        final Map<DbAttribute, Object> data;
+
+        Snapshot(DbEntity entity, OperationType type) {
+            this.entity = entity;
+            this.type = type;
+            this.data = new HashMap<>();
+            this.attributes = new ArrayList<>(entity.getAttributes());
+        }
+
+        Object getValue(DbAttribute attribute) {
+            return data.get(attribute);
+        }
+
+        Object getValue(int i) {
+            return data.get(attributes.get(i));
+        }
+    }
 }

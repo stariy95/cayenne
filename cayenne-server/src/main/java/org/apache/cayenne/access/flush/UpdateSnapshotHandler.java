@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.flush;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjEntity;
@@ -41,35 +43,60 @@ import org.apache.cayenne.map.ObjRelationship;
 public class UpdateSnapshotHandler implements GraphChangeHandler {
 
     private final ObjEntity entity;
-//    private final DbEntity root;
-
-    private Map<String, Object> snapshot;
-    private List<DbAttribute> modifiedAttributes;
+    private final DbEntity root;
 
     // All DB changes produced by this diff
-//    private Map<DbEntity, Map<DbAttribute, Object>> snapshots;
+    private Map<DbEntity, Map<DbAttribute, Object>> snapshots;
 
     UpdateSnapshotHandler(ObjEntity entity) {
         this.entity = entity;
-//        this.root = entity.getDbEntity();
+        this.root = entity.getDbEntity();
     }
 
-    public Map<String, Object> getSnapshot() {
-        if(snapshot == null) {
+    Map<String, Object> getSnapshot() {
+        Map<DbAttribute, Object> snapshot = getSnapshotForEntity(root);
+        if(snapshot.isEmpty()){
             return Collections.emptyMap();
         }
+
+        Map<String, Object> snapshotByName = new HashMap<>();
+        snapshot.forEach((attr, val) -> {
+            snapshotByName.put(attr.getName(), val);
+        });
+
+        if(snapshots.size() > 1) {
+            System.out.println("UpdateSnapshotHandler!!! multiple entities > " + snapshots.size());
+        }
+        return snapshotByName;
+    }
+
+    Map<DbAttribute, Object> getSnapshotForEntity(DbEntity entity) {
+        if(snapshots == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<DbAttribute, Object> snapshot = snapshots.get(root);
+        if(snapshot == null || snapshot.isEmpty()){
+            return Collections.emptyMap();
+        }
+
         return snapshot;
     }
 
-    public List<DbAttribute> getModifiedAttributes() {
-        if(modifiedAttributes == null) {
+    List<DbAttribute> getModifiedAttributes() {
+        Map<DbAttribute, Object> snapshot = getSnapshotForEntity(root);
+        if(snapshot.isEmpty()) {
             return Collections.emptyList();
         }
-        return modifiedAttributes;
+        return new ArrayList<>(snapshot.keySet());
     }
 
-    public boolean hasChanges() {
-        return snapshot != null && modifiedAttributes != null;
+    boolean hasChanges() {
+        return snapshots != null && !snapshots.isEmpty();
+    }
+
+    Collection<DbEntity> getModifiedEntities() {
+        return snapshots == null ? Collections.emptyList() : snapshots.keySet();
     }
 
     @Override
@@ -141,13 +168,11 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
             return;
         }
 
-        if(snapshot == null) {
-            snapshot = new HashMap<>();
-            modifiedAttributes = new ArrayList<>();
+        if(snapshots == null) {
+            snapshots = new HashMap<>();
         }
-
-        snapshot.put(key.getName(), value);
-        modifiedAttributes.add(key);
+        snapshots.computeIfAbsent(key.getEntity(), (e) -> new HashMap<>())
+                .put(key, value);
     }
 
     // We don't interested in other changes here
