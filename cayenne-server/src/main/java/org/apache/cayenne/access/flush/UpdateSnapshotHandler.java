@@ -36,20 +36,23 @@ import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
+import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
  * @since 4.2
  */
 public class UpdateSnapshotHandler implements GraphChangeHandler {
 
+    private final ClassDescriptor descriptor;
     private final ObjEntity entity;
     private final DbEntity root;
 
     // All DB changes produced by this diff
     private Map<DbEntity, Map<DbAttribute, Object>> snapshots;
 
-    UpdateSnapshotHandler(ObjEntity entity) {
-        this.entity = entity;
+    UpdateSnapshotHandler(ClassDescriptor descriptor) {
+        this.descriptor = descriptor;
+        this.entity = descriptor.getEntity();
         this.root = entity.getDbEntity();
     }
 

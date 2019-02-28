@@ -32,6 +32,7 @@ import org.apache.cayenne.query.BatchQuery;
 import org.apache.cayenne.query.DeleteBatchQuery;
 import org.apache.cayenne.query.InsertBatchQuery;
 import org.apache.cayenne.query.UpdateBatchQuery;
+import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
  * @since 4.2
@@ -69,11 +70,12 @@ class QueryCreationVisitor implements OperationVisitor<BatchQuery> {
 
     @Override
     public BatchQuery visitUpdate(UpdateOperation operation) {
-        ObjEntity objEntity = context.getEntityResolver().getObjEntity(operation.getObject());
+        ClassDescriptor descriptor = context.getEntityResolver().getClassDescriptor(operation.getId().getEntityName());
+        ObjEntity objEntity = descriptor.getEntity();
         DbEntity dbEntity = objEntity.getDbEntity();
         ArrayList<DbAttribute> qualifierAttributes = new ArrayList<>(dbEntity.getPrimaryKeys());
 
-        UpdateSnapshotHandler handler = new UpdateSnapshotHandler(objEntity);
+        UpdateSnapshotHandler handler = new UpdateSnapshotHandler(descriptor);
         operation.getDiff().apply(handler);
 
         if(handler.hasChanges()) {
