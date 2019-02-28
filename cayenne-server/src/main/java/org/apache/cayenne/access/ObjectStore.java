@@ -74,7 +74,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
      * Presence of path in this map is used to separate insert from update case of flattened records.
      * @since 4.1
      */
-    protected Map<Object, Set<String>> trackedFlattenedPaths;
+    protected Map<Object, Map<String, ObjectId>> trackedFlattenedPaths;
 
     // a sequential id used to tag GraphDiffs so that they can later be sorted in the
     // original creation order
@@ -604,7 +604,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
         }
 
         if(trackedFlattenedPaths != null) {
-            Set<String> paths = trackedFlattenedPaths.remove(nodeId);
+            Map<String, ObjectId> paths = trackedFlattenedPaths.remove(nodeId);
             if(paths != null) {
                 trackedFlattenedPaths.put(newId, paths);
             }
@@ -997,20 +997,20 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
             return false;
         }
         return trackedFlattenedPaths
-                .getOrDefault(objectId, Collections.emptySet()).contains(path);
+                .getOrDefault(objectId, Collections.emptyMap()).containsKey(path);
     }
 
     /**
      * Mark that flattened path for object has data row in DB.
      * @since 4.1
      */
-    void markFlattenedPath(ObjectId objectId, String path) {
+    void markFlattenedPath(ObjectId objectId, String path, ObjectId id) {
         if(trackedFlattenedPaths == null) {
             trackedFlattenedPaths = new ConcurrentHashMap<>();
         }
         trackedFlattenedPaths
-                .computeIfAbsent(objectId, o -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-                .add(path);
+                .computeIfAbsent(objectId, o -> new ConcurrentHashMap<>())
+                .put(path, id);
     }
 
     // an ObjectIdQuery optimized for retrieval of multiple snapshots - it can be reset

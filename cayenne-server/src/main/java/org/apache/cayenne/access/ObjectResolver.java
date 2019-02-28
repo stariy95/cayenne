@@ -194,7 +194,7 @@ class ObjectResolver {
             String prefix = lastDot == -1 ? path : path.substring(lastDot + 1);
             ObjectId objectId = createObjectId(row, dbEntity.getName(), dbEntity.getPrimaryKeys(), prefix + '.', false);
             if(objectId != null) {
-				context.getObjectStore().markFlattenedPath(object.getObjectId(), path);
+				context.getObjectStore().markFlattenedPath(object.getObjectId(), path, objectId);
             }
         }
     }
