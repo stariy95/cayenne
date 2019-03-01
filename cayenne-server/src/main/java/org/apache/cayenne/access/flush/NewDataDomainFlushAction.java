@@ -26,16 +26,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.PersistenceState;
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.ObjectDiff;
-import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
+import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.reflect.AttributeProperty;
+import org.apache.cayenne.reflect.ClassDescriptor;
+import org.apache.cayenne.reflect.PropertyDescriptor;
+import org.apache.cayenne.reflect.PropertyVisitor;
+import org.apache.cayenne.reflect.ToManyProperty;
+import org.apache.cayenne.reflect.ToOneProperty;
 
 /**
  * @since 4.2
@@ -55,9 +65,17 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
     @Override
     public GraphDiff flush(DataContext context, GraphDiff changes) {
 
-        ObjectStore objectStore = context.getObjectStore();
+        EntityResolver resolver = dataDomain.getEntityResolver();
+
         // ObjectStoreGraphDiff contains changes already categorized by objectId...
         Map<Object, ObjectDiff> changesByObjectId = ((ObjectStoreGraphDiff) changes).getChangesByObjectId();
+        changesByObjectId.forEach((obj, diff) -> {
+            Persistent persistent = (Persistent)obj;
+            ClassDescriptor descriptor = resolver.getClassDescriptor(persistent.getObjectId().getEntityName());
+            SnapshotCreationHandler handler = new SnapshotCreationHandler(descriptor, persistent);
+            diff.apply(handler);
+
+        });
 
         return null;
     }
@@ -65,7 +83,20 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
     enum OperationType {
         INSERT,
         UPDATE,
-        DELETE
+        DELETE;
+
+        static OperationType forObject(Persistent object) {
+            switch (object.getPersistenceState()) {
+                case PersistenceState.NEW:
+                    return UPDATE;
+                case PersistenceState.DELETED:
+                    return DELETE;
+                case PersistenceState.MODIFIED:
+                    return UPDATE;
+            }
+            throw new CayenneRuntimeException("Triyng to flush object (%s) in wrong persistence state (%s)",
+                    object, PersistenceState.persistenceStateName(object.getPersistenceState()));
+        }
     }
 
     static class ChangeId {
@@ -123,7 +154,7 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         final OperationType type;
 
         // header
-        final ObjectId id;
+        final ObjectId id; // ???
         final DbEntity entity;
         final List<DbAttribute> attributes;
         // data
@@ -146,4 +177,62 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         }
     }
 
+    private static class SnapshotCreationHandler implements GraphChangeHandler {
+
+        private final Persistent persistent;
+        private final ClassDescriptor descriptor;
+
+        private Snapshot snapshot;
+
+        SnapshotCreationHandler(ClassDescriptor descriptor, Persistent persistent) {
+            this.descriptor = descriptor;
+            this.persistent = persistent;
+            OperationType type = OperationType.forObject(persistent);
+            if(type == OperationType.DELETE) {
+                // only qualifier needed
+            }
+        }
+
+        @Override
+        public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
+            PropertyDescriptor propertyDescriptor = descriptor.getProperty(property);
+            propertyDescriptor.visit(new PropertyVisitor() {
+                @Override
+                public boolean visitAttribute(AttributeProperty property) {
+
+                    return false;
+                }
+
+                @Override
+                public boolean visitToOne(ToOneProperty property) {
+                    return false;
+                }
+
+                @Override
+                public boolean visitToMany(ToManyProperty property) {
+                    return false;
+                }
+            });
+        }
+
+        @Override
+        public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+
+        }
+
+        @Override
+        public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+
+        }
+
+        //
+        @Override
+        public void nodeIdChanged(Object nodeId, Object newId) {}
+
+        @Override
+        public void nodeCreated(Object nodeId) {}
+
+        @Override
+        public void nodeRemoved(Object nodeId) {}
+    }
 }
