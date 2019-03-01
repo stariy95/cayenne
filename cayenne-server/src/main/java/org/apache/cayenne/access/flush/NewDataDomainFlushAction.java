@@ -40,6 +40,7 @@ import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.reflect.AttributeProperty;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.reflect.PropertyDescriptor;
@@ -196,23 +197,8 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         @Override
         public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
             PropertyDescriptor propertyDescriptor = descriptor.getProperty(property);
-            propertyDescriptor.visit(new PropertyVisitor() {
-                @Override
-                public boolean visitAttribute(AttributeProperty property) {
-
-                    return false;
-                }
-
-                @Override
-                public boolean visitToOne(ToOneProperty property) {
-                    return false;
-                }
-
-                @Override
-                public boolean visitToMany(ToManyProperty property) {
-                    return false;
-                }
-            });
+            MyPropertyVisitor visitor = new MyPropertyVisitor();
+            propertyDescriptor.visit(visitor);
         }
 
         @Override
@@ -234,5 +220,27 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
 
         @Override
         public void nodeRemoved(Object nodeId) {}
+
+        private static class MyPropertyVisitor implements PropertyVisitor {
+            private ClassDescriptor target;
+            private ObjAttribute attribute;
+
+            @Override
+            public boolean visitAttribute(AttributeProperty property) {
+                this.attribute = property.getAttribute();
+                return false;
+            }
+
+            @Override
+            public boolean visitToOne(ToOneProperty property) {
+                this.target = property.getTargetDescriptor();
+                return false;
+            }
+
+            @Override
+            public boolean visitToMany(ToManyProperty property) {
+                return false;
+            }
+        }
     }
 }
