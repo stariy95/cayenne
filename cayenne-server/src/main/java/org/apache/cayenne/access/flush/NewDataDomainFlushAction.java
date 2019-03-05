@@ -22,9 +22,13 @@ package org.apache.cayenne.access.flush;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
@@ -33,14 +37,24 @@ import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.ObjectDiff;
+import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
+import org.apache.cayenne.access.OperationObserver;
+import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.DbJoin;
+import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjRelationship;
+import org.apache.cayenne.query.BatchQuery;
+import org.apache.cayenne.query.BatchQueryRow;
+import org.apache.cayenne.query.InsertBatchQuery;
+import org.apache.cayenne.query.UpdateBatchQuery;
 import org.apache.cayenne.reflect.AttributeProperty;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.reflect.PropertyDescriptor;
@@ -65,20 +79,79 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
 
     @Override
     public GraphDiff flush(DataContext context, GraphDiff changes) {
+        CompoundDiff result = new CompoundDiff();
+        if (changes == null) {
+            return result;
+        }
 
+        List<Operation> operations = createOperations(context, changes);
+        objectIdUpdate(operations);
+        List<BatchQuery> queries = createQueries(context, operations);
+        executeQueries(queries);
+        setFinalIds(operations, result);
+
+        context.getObjectStore().postprocessAfterCommit(result);
+
+        return changes;
+    }
+
+    protected List<Operation> createOperations(DataContext context, GraphDiff changes) {
         EntityResolver resolver = dataDomain.getEntityResolver();
 
-        // ObjectStoreGraphDiff contains changes already categorized by objectId...
         Map<Object, ObjectDiff> changesByObjectId = ((ObjectStoreGraphDiff) changes).getChangesByObjectId();
+        List<Operation> operations = new ArrayList<>(changesByObjectId.size());
         changesByObjectId.forEach((obj, diff) -> {
-            Persistent persistent = (Persistent)obj;
-            ClassDescriptor descriptor = resolver.getClassDescriptor(persistent.getObjectId().getEntityName());
-            SnapshotCreationHandler handler = new SnapshotCreationHandler(descriptor, persistent);
+            ObjectId id = (ObjectId)obj;
+            Persistent object = (Persistent)context.getObjectStore().getNode(id);
+            ClassDescriptor descriptor = resolver.getClassDescriptor(id.getEntityName());
+            SnapshotCreationHandler handler = new SnapshotCreationHandler(context.getObjectStore(), descriptor, object);
             diff.apply(handler);
-
+            for(Snapshot snapshot : handler.getSnapshotMap().values()) {
+                Operation operation;
+                switch (snapshot.type) {
+                    case INSERT:
+                        operation = new InsertOperation(id, object, diff);
+                        break;
+                    case UPDATE:
+                        operation = new UpdateOperation(id, object, diff);
+                        break;
+                    case DELETE:
+                        operation = new DeleteOperation(id, object, diff);
+                        break;
+                    default:
+                        throw new CayenneRuntimeException("Unknown operation type " + snapshot.type.name());
+                }
+                operation.setSnapshot(snapshot);
+                operations.add(operation);
+            }
         });
+        return operationSorter.sort(operations);
+    }
 
-        return null;
+    protected List<BatchQuery> createQueries(DataContext context, List<Operation> operations) {
+        OperationVisitor<BatchQuery> visitor = new SnapshotQueryCreationVisitor();
+        return operations.stream()
+                .map(op -> op.visit(visitor)) // create query from operation
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    protected void executeQueries(List<BatchQuery> queries) {
+        OperationObserver observer = new FlushOperationObserver(jdbcEventLogger);
+        // TODO: batch queries by node change, when queries are sorted should speedup a bit
+        queries.forEach(query -> dataDomain
+                .lookupDataNode(query.getDbEntity().getDataMap())
+                .performQueries(Collections.singleton(query), observer));
+    }
+
+    protected void objectIdUpdate(List<Operation> operations) {
+        OperationVisitor<Void> visitor = new NewPermObjectIdVisitor(dataDomain);
+        operations.forEach(op -> op.visit(visitor));
+    }
+
+    protected void setFinalIds(List<Operation> operations, CompoundDiff result) {
+        OperationVisitor<Void> visitor = new FinalIdVisitor(dataDomain.getEntityResolver(), result);
+        operations.forEach(op -> op.visit(visitor));
     }
 
     enum OperationType {
@@ -89,13 +162,13 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         static OperationType forObject(Persistent object) {
             switch (object.getPersistenceState()) {
                 case PersistenceState.NEW:
-                    return UPDATE;
+                    return INSERT;
                 case PersistenceState.DELETED:
                     return DELETE;
                 case PersistenceState.MODIFIED:
                     return UPDATE;
             }
-            throw new CayenneRuntimeException("Triyng to flush object (%s) in wrong persistence state (%s)",
+            throw new CayenneRuntimeException("Trying to flush object (%s) in wrong persistence state (%s)",
                     object, PersistenceState.persistenceStateName(object.getPersistenceState()));
         }
     }
@@ -103,8 +176,6 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
     static class ChangeId {
         final DbEntity entity;
         final Object[] id;
-
-        ObjectId objectIdRef;
 
         static ChangeId fromSnapshot(Snapshot snapshot) {
             Collection<DbAttribute> primaryKeys = snapshot.entity.getPrimaryKeys();
@@ -115,24 +186,15 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
                 if(idValue != null) {
                     id[i++] = idValue;
                 } else {
-                    // TODO: need to resolve relationship here...
-                    id[i++] = snapshot.id.getIdSnapshot().get(primaryKey.getName());
+                    id[i++] = snapshot.getId().getIdSnapshot().get(primaryKey.getName());
                 }
             }
-            return new ChangeId(snapshot.entity, id);
+            return new ChangeId(snapshot.getEntity(), id);
         }
 
         ChangeId(DbEntity entity, Object[] id) {
             this.entity = entity;
             this.id = id;
-        }
-
-        public void setObjectIdRef(ObjectId objectIdRef) {
-            this.objectIdRef = objectIdRef;
-        }
-
-        public ObjectId getObjectIdRef() {
-            return objectIdRef;
         }
 
         @Override
@@ -151,17 +213,18 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         }
     }
 
-    static class Snapshot {
+    static class Snapshot extends BatchQueryRow {
         final OperationType type;
-
         // header
-        final ObjectId id; // ???
         final DbEntity entity;
         final List<DbAttribute> attributes;
         // data
         final Map<DbAttribute, Object> data;
 
+        ObjectId id; // ???
+
         Snapshot(ObjectId id, DbEntity entity, OperationType type) {
+            super(id, new HashMap<>());
             this.id = id;
             this.entity = entity;
             this.type = type;
@@ -173,37 +236,127 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
             return data.get(attribute);
         }
 
-        Object getValue(int i) {
+        public Object getValue(int i) {
             return data.get(attributes.get(i));
+        }
+
+        ObjectId getId() {
+            return id;
+        }
+
+        void setId(ObjectId id) {
+            this.id = id;
+        }
+
+        DbEntity getEntity() {
+            return entity;
+        }
+
+        Map<String, Object> getInsertSnapshot() {
+            Map<String, Object> map = new HashMap<>(data.size() + 1);
+            data.forEach((attr, value) -> {
+                map.put(attr.getName(), value);
+            });
+            map.putAll(id.getIdSnapshot());
+            return map;
+        }
+
+        Map<String, Object> getUpdateSnapshot() {
+            Map<String, Object> map = new HashMap<>(data.size());
+            data.forEach((attr, value) -> {
+                map.put(attr.getName(), value);
+            });
+            return map;
+        }
+
+        public List<DbAttribute> getModifiedAttributes() {
+            return new ArrayList<>(data.keySet());
+        }
+    }
+
+    private static class SnapshotQueryCreationVisitor implements OperationVisitor<BatchQuery> {
+
+        public SnapshotQueryCreationVisitor() {
+        }
+
+        @Override
+        public BatchQuery visitInsert(InsertOperation operation) {
+            InsertBatchQuery query = new InsertBatchQuery(operation.getSnapshot().getEntity(), 1);
+            query.add(operation.getSnapshot().getInsertSnapshot(), operation.getId());
+            return query;
+        }
+
+        @Override
+        public BatchQuery visitUpdate(UpdateOperation operation) {
+            Snapshot snapshot = operation.getSnapshot();
+            ArrayList<DbAttribute> qualifierAttributes = new ArrayList<>(snapshot.getEntity().getPrimaryKeys());
+            UpdateBatchQuery query = new UpdateBatchQuery(snapshot.getEntity(), qualifierAttributes, snapshot.getModifiedAttributes(), Collections.emptyList(), 1);
+            query.add(snapshot.getId().getIdSnapshot(), snapshot.getUpdateSnapshot(), operation.getId());
+            return query;
         }
     }
 
     private static class SnapshotCreationHandler implements GraphChangeHandler {
 
+        private final ObjectStore store;
         private final Persistent persistent;
         private final ClassDescriptor descriptor;
+        private final OperationType type;
 
-        private Snapshot snapshot;
+        private final boolean qualifierOnly;
+        private PropertyExtractor visitor;
+        private Map<DbEntity, Snapshot> snapshotMap;
 
-        SnapshotCreationHandler(ClassDescriptor descriptor, Persistent persistent) {
+        SnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor, Persistent persistent) {
+            this.store = store;
             this.descriptor = descriptor;
             this.persistent = persistent;
-            OperationType type = OperationType.forObject(persistent);
-            if(type == OperationType.DELETE) {
-                // only qualifier needed
-            }
+            this.type = OperationType.forObject(persistent);
+            visitor = new PropertyExtractor();
+            qualifierOnly = type == OperationType.DELETE;
         }
 
         @Override
         public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
+            if(descriptor.getEntity().isReadOnly()) {
+                throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
+                        "Can't commit changes.", descriptor.getEntity().getName());
+            }
+
             PropertyDescriptor propertyDescriptor = descriptor.getProperty(property);
-            MyPropertyVisitor visitor = new MyPropertyVisitor();
+            visitor.reset();
             propertyDescriptor.visit(visitor);
+
+            ObjAttribute attribute = visitor.getAttribute();
+            ObjectId id = persistent.getObjectId();
+
+            if(attribute.isFlattened()) {
+                String path = attribute.getDbAttributePath();
+                String parent = path.substring(0, path.lastIndexOf('.'));
+                id = store.getFlattenedId(persistent.getObjectId(), parent);
+            }
+
+            addToSnapshot(id, attribute.getDbAttribute(), newValue);
         }
 
         @Override
         public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
-
+            String relationshipName = arcId.toString();
+            PropertyDescriptor propertyDescriptor = descriptor.getProperty(relationshipName);
+            if(propertyDescriptor != null) {
+                visitor.reset();
+                propertyDescriptor.visit(visitor);
+                ObjRelationship relationship = visitor.getRelationship();
+                DbRelationship dbRelationship = relationship.getDbRelationships().get(0);
+                ObjectId targetId = (ObjectId)targetNodeId;
+                for(DbJoin join : dbRelationship.getJoins()) {
+                    // skip PK
+                    if(join.getSource().isPrimaryKey() && !dbRelationship.isToMasterPK()) {
+                        continue;
+                    }
+                    addToSnapshot((ObjectId)nodeId, join.getSource(), (Supplier) () -> targetId.getIdSnapshot().get(join.getTargetName()));
+                }
+            }
         }
 
         @Override
@@ -211,7 +364,22 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
 
         }
 
-        //
+        Map<DbEntity, Snapshot> getSnapshotMap() {
+            return snapshotMap == null ? Collections.emptyMap() : snapshotMap;
+        }
+
+        private void addToSnapshot(ObjectId id, DbAttribute attribute, Object value) {
+            if(snapshotMap == null) {
+                snapshotMap = new HashMap<>();
+            }
+
+            Snapshot snapshot = snapshotMap
+                    .computeIfAbsent(attribute.getEntity(), entity -> new Snapshot(id, entity, type));
+            snapshot.data.put(attribute, value);
+        }
+
+        // not used
+
         @Override
         public void nodeIdChanged(Object nodeId, Object newId) {}
 
@@ -221,9 +389,28 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         @Override
         public void nodeRemoved(Object nodeId) {}
 
-        private static class MyPropertyVisitor implements PropertyVisitor {
+        private static class PropertyExtractor implements PropertyVisitor {
             private ClassDescriptor target;
             private ObjAttribute attribute;
+            private ObjRelationship relationship;
+
+            void reset() {
+                target = null;
+                attribute = null;
+                relationship = null;
+            }
+
+            ObjAttribute getAttribute() {
+                return Objects.requireNonNull(attribute, "No attribute found");
+            }
+
+            ClassDescriptor getTarget() {
+                return Objects.requireNonNull(target, "No target descriptor found");
+            }
+
+            ObjRelationship getRelationship() {
+                return Objects.requireNonNull(relationship, "No relationship found");
+            }
 
             @Override
             public boolean visitAttribute(AttributeProperty property) {
@@ -234,11 +421,14 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
             @Override
             public boolean visitToOne(ToOneProperty property) {
                 this.target = property.getTargetDescriptor();
+                this.relationship = property.getRelationship();
                 return false;
             }
 
             @Override
             public boolean visitToMany(ToManyProperty property) {
+                this.target = property.getTargetDescriptor();
+                this.relationship = property.getRelationship();
                 return false;
             }
         }

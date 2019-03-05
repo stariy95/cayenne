@@ -36,6 +36,9 @@ public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActio
 
     @Override
     public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
-        return new DefaultDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
+//        org.apache.cayenne.access.DataDomainFlushAction dataDomainFlushAction = new org.apache.cayenne.access.DataDomainFlushAction(dataDomain);
+//        dataDomainFlushAction.setJdbcEventLogger(jdbcEventLogger);
+//        return dataDomainFlushAction;
+        return new NewDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
     }
 }

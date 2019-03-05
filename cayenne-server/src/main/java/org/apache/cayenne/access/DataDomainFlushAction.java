@@ -49,7 +49,7 @@ import java.util.Map;
  * 
  * @since 1.2
  */
-class DataDomainFlushAction {
+public class DataDomainFlushAction implements org.apache.cayenne.access.flush.DataDomainFlushAction {
 
     private final DataDomain domain;
     private DataContext context;
@@ -69,7 +69,7 @@ class DataDomainFlushAction {
 
     private JdbcEventLogger logger;
 
-    DataDomainFlushAction(DataDomain domain) {
+    public DataDomainFlushAction(DataDomain domain) {
         this.domain = domain;
     }
 
@@ -117,7 +117,7 @@ class DataDomainFlushAction {
         flattenedBucket.addFlattenedDelete(flattenedEntity, flattenedDeleteInfo);
     }
 
-    GraphDiff flush(DataContext context, GraphDiff changes) {
+    public GraphDiff flush(DataContext context, GraphDiff changes) {
 
         if (changes == null) {
             return new CompoundDiff();

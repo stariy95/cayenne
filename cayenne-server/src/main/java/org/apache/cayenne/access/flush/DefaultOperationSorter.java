@@ -26,6 +26,7 @@ import java.util.function.Function;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.EntitySorter;
 import org.apache.cayenne.map.ObjEntity;
@@ -51,10 +52,10 @@ public class DefaultOperationSorter implements OperationSorter{
         EntitySorter entitySorter = dataDomain.getEntitySorter();
 
         Function<Operation, Integer> operationType = new OperationTypeExtractor();
-        Function<Operation, ObjEntity> entityType = o -> resolver.getObjEntity(o.id.getEntityName());
+        Function<Operation, DbEntity> entityType = o -> o.getSnapshot().getEntity();
 
         operations.sort(Comparator.comparing(operationType)
-                .thenComparing(entityType, entitySorter.getObjEntityComparator()));
+                .thenComparing(entityType, entitySorter.getDbEntityComparator()));
 
         return operations;
     }

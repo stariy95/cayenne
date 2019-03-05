@@ -120,6 +120,8 @@ public class DataContextFlattenedAttributesIT extends ServerCase {
 
         assertNotNull(result);
 
+        result.setArtistName("new A");
+        context.commitChanges();
     }
 
     @Test

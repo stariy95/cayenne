@@ -1000,6 +1000,15 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
                 .getOrDefault(objectId, Collections.emptyMap()).containsKey(path);
     }
 
+    public ObjectId getFlattenedId(ObjectId objectId, String path) {
+        if(trackedFlattenedPaths == null) {
+            return null;
+        }
+
+        return trackedFlattenedPaths
+                .getOrDefault(objectId, Collections.emptyMap()).get(path);
+    }
+
     /**
      * Mark that flattened path for object has data row in DB.
      * @since 4.1

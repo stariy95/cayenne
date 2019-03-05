@@ -31,6 +31,7 @@ public abstract class Operation {
     protected final ObjectId id;
     protected final Persistent object;
     protected final ObjectDiff diff;
+    protected NewDataDomainFlushAction.Snapshot snapshot;
 
     public Operation(ObjectId id, Persistent object, ObjectDiff diff) {
         this.id = id;
@@ -48,6 +49,14 @@ public abstract class Operation {
 
     public ObjectDiff getDiff() {
         return diff;
+    }
+
+    public void setSnapshot(NewDataDomainFlushAction.Snapshot snapshot) {
+        this.snapshot = snapshot;
+    }
+
+    public NewDataDomainFlushAction.Snapshot getSnapshot() {
+        return snapshot;
     }
 
     public abstract <T> T visit(OperationVisitor<T> visitor);
