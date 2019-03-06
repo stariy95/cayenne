@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.flush;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjEntity;
@@ -68,6 +70,109 @@ public class NewDataDomainFlushActionIT extends ServerCase {
         Map<Id, Snapshot> snapshots = getIdSnapshotMap(relationship, sourceId, finalTargetId);
 
         assertEquals(1, snapshots.size());
+    }
+
+    @Test
+    public void testFlattenedRelationshipProcessing2() {
+//        ObjEntity artist = runtime.getDataDomain().getEntityResolver().getObjEntity(Artist.class);
+//        assertNotNull(artist);
+//        ObjRelationship relationship = artist.getRelationship("groupArray");
+//        assertNotNull(relationship);
+//
+//        ObjectId sourceId = ObjectId.of("Artist", "ARTIST_ID", 1);
+//        ObjectId finalTargetId = ObjectId.of("Group", "GROUP_ID", 2);
+
+
+        ObjEntity artist = runtime.getDataDomain().getEntityResolver().getObjEntity(Artist.class);
+        assertNotNull(artist);
+        ObjRelationship relationship = artist.getRelationship("paintingArray");
+        assertNotNull(relationship);
+
+        ObjectId sourceId = ObjectId.of("Artist", "ARTIST_ID", 1);
+        ObjectId finalTargetId = ObjectId.of("Painting", "PAINTING_ID", 2);
+
+
+        List<DbRelationship> dbRelationships = relationship.getDbRelationships();
+        List<ObjectId> dbIds = new ArrayList<>(dbRelationships.size());
+
+        Map<String, Object> sourceIdData = sourceId.getIdSnapshot();
+        Map<String, Object> targetIdData = null;
+
+        // we have source and target ID, need to get/create all intermediate...
+        DbRelationship next = null;
+        StringBuilder path = new StringBuilder();
+        for(int i=0; i<dbRelationships.size(); i++) {
+            targetIdData = i == dbRelationships.size() - 1 ? finalTargetId.getIdSnapshot() : new HashMap<>();
+            next = dbRelationships.get(i);
+            if(path.length() == 0)
+            path.append(next);
+
+            DbEntity sourceEntity = next.getSourceEntity();
+            DbEntity targetEntity = next.getTargetEntity();
+
+            for(DbAttribute pk: sourceEntity.getPrimaryKeys()) {
+                DbJoin join = getJoinForSrcAttribute(next, pk);
+                if(join != null) {
+                    // try to grab PK from join...
+                    if(join.getTarget().isPrimaryKey() && !next.isToDependentPK()) {
+                        sourceIdData.put(pk.getName(), supplierFor(targetIdData, join.getTargetName()));
+                    }
+                }
+            }
+
+            for(DbAttribute pk: targetEntity.getPrimaryKeys()) {
+                DbJoin join = getJoinForDstAttribute(next, pk);
+                if(join != null) {
+                    // try to grab PK from join...
+                    if(join.getSource().isPrimaryKey() && next.isToDependentPK()) {
+                        targetIdData.put(pk.getName(), supplierFor(sourceIdData, join.getSourceName()));
+                    }
+                }
+            }
+
+            if(sourceIdData.isEmpty()) {
+                dbIds.add(ObjectId.of("db:" + next.getSourceEntityName()));
+            } else {
+                dbIds.add(ObjectId.of("db:" + next.getSourceEntityName(), sourceIdData));
+            }
+            sourceIdData = targetIdData;
+        }
+
+        if(next != null) {
+            dbIds.add(ObjectId.of("db:" + next.getTargetEntityName(), targetIdData));
+        }
+
+        assertEquals(2, dbIds.size());
+    }
+
+    Object supplierFor(Map<String, Object> data, String name) {
+        // try to get it eagerly
+        Object value = data.get(name);
+        if(value != null) {
+            return value;
+        }
+        // resolve lazily...
+        return (Supplier<Object>)() -> data.get(name);
+    }
+
+    DbJoin getJoinForSrcAttribute(DbRelationship relationship, DbAttribute src) {
+        for(DbJoin join : relationship.getJoins()) {
+            if(join.getSource() == src) {
+                return join;
+            }
+        }
+
+        return null;
+    }
+
+    DbJoin getJoinForDstAttribute(DbRelationship relationship, DbAttribute dst) {
+        for(DbJoin join : relationship.getJoins()) {
+            if(join.getTarget() == dst) {
+                return join;
+            }
+        }
+
+        return null;
     }
 
     @Test
@@ -129,6 +234,7 @@ public class NewDataDomainFlushActionIT extends ServerCase {
                 }
             }
 
+            // if it's not PK on not PK propagated to dependent PK, then we need to add it to snapshot
             if(!source.isPrimaryKey() || (join.getTarget().isPrimaryKey() && !next.isToDependentPK())) {
                 snapshots.compute(srcId, (id, old) -> {
                     if (old == null) {

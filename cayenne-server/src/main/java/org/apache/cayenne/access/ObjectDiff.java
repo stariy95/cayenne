@@ -462,7 +462,7 @@ public class ObjectDiff extends NodeDiff {
         @Override
         public int hashCode() {
             // assuming String and ObjectId provide a good hashCode
-            return arcId.hashCode() + targetNodeId.hashCode() + 5;
+            return 31 * arcId.hashCode() + targetNodeId.hashCode();
         }
 
         @Override
