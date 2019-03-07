@@ -93,7 +93,7 @@ public class NewDataDomainFlushActionIT extends ServerCase {
 
 
         List<DbRelationship> dbRelationships = relationship.getDbRelationships();
-        List<ObjectId> dbIds = new ArrayList<>(dbRelationships.size());
+        Map<DbEntity, Map<String, Object>> dbIds = new HashMap<>(dbRelationships.size());
 
         Map<String, Object> sourceIdData = sourceId.getIdSnapshot();
         Map<String, Object> targetIdData = null;
@@ -104,7 +104,11 @@ public class NewDataDomainFlushActionIT extends ServerCase {
         for(int i=0; i<dbRelationships.size(); i++) {
             targetIdData = i == dbRelationships.size() - 1 ? finalTargetId.getIdSnapshot() : new HashMap<>();
             next = dbRelationships.get(i);
-            if(path.length() == 0)
+
+            // build flattened path here...
+            if(path.length() > 0) {
+                path.append('.');
+            }
             path.append(next);
 
             DbEntity sourceEntity = next.getSourceEntity();
@@ -130,19 +134,15 @@ public class NewDataDomainFlushActionIT extends ServerCase {
                 }
             }
 
-            if(sourceIdData.isEmpty()) {
-                dbIds.add(ObjectId.of("db:" + next.getSourceEntityName()));
-            } else {
-                dbIds.add(ObjectId.of("db:" + next.getSourceEntityName(), sourceIdData));
-            }
+            dbIds.put(next.getSourceEntity(), sourceIdData);
             sourceIdData = targetIdData;
         }
 
         if(next != null) {
-            dbIds.add(ObjectId.of("db:" + next.getTargetEntityName(), targetIdData));
+            dbIds.put(next.getTargetEntity(), targetIdData);
         }
 
-        assertEquals(2, dbIds.size());
+        assertEquals(3, dbIds.size());
     }
 
     Object supplierFor(Map<String, Object> data, String name) {
