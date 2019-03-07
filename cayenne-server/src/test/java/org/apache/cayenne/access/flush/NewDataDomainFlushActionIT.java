@@ -91,9 +91,10 @@ public class NewDataDomainFlushActionIT extends ServerCase {
         ObjectId sourceId = ObjectId.of("Artist", "ARTIST_ID", 1);
         ObjectId finalTargetId = ObjectId.of("Painting", "PAINTING_ID", 2);
 
-
         List<DbRelationship> dbRelationships = relationship.getDbRelationships();
+
         Map<DbEntity, Map<String, Object>> dbIds = new HashMap<>(dbRelationships.size());
+        Map<DbEntity, Map<String, Object>> snapshots = new HashMap<>(dbRelationships.size());
 
         Map<String, Object> sourceIdData = sourceId.getIdSnapshot();
         Map<String, Object> targetIdData = null;
@@ -136,6 +137,17 @@ public class NewDataDomainFlushActionIT extends ServerCase {
 
             dbIds.put(next.getSourceEntity(), sourceIdData);
             sourceIdData = targetIdData;
+        }
+
+        // Set FKs
+        for (DbRelationship nextRel : dbRelationships) {
+            Map<String, Object> snapshot = new HashMap<>();
+            for (DbJoin join : next.getJoins()) {
+                if (!join.getSource().isPrimaryKey()) {
+                    snapshot.put(join.getSourceName(), (Supplier) () -> snapshots.get(nextRel.getTargetEntity()).get(join.getTargetName()));
+                }
+            }
+            snapshots.put(nextRel.getSourceEntity(), snapshot);
         }
 
         if(next != null) {
