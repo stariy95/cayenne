@@ -17,23 +17,31 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.ObjectDiff;
+import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.flush.DataDomainFlushAction;
+import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.OperationSorter;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.log.JdbcEventLogger;
 
 /**
  * @since 4.2
  */
-public class InsertOperation extends Operation {
+public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActionFactory {
 
-    public InsertOperation(ObjectId id, Persistent object, ObjectDiff diff) {
-        super(id, object, diff);
-    }
+    @Inject
+    private OperationSorter operationSorter;
+
+    @Inject
+    private JdbcEventLogger jdbcEventLogger;
 
     @Override
-    public <T> T visit(OperationVisitor<T> visitor) {
-        return visitor.visitInsert(this);
+    public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
+//        org.apache.cayenne.access.DataDomainFlushAction dataDomainFlushAction = new org.apache.cayenne.access.DataDomainFlushAction(dataDomain);
+//        dataDomainFlushAction.setJdbcEventLogger(jdbcEventLogger);
+//        return dataDomainFlushAction;
+        return new NewDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
     }
 }

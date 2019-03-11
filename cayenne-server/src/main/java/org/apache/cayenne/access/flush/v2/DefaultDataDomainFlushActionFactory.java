@@ -17,17 +17,28 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v2;
 
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
+import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.flush.DataDomainFlushAction;
+import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.OperationSorter;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.log.JdbcEventLogger;
 
 /**
  * @since 4.2
  */
-public interface OperationSorter {
+public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActionFactory {
 
-    List<Operation> sort(List<Operation> operations);
+    @Inject
+    private OperationSorter operationSorter;
 
+    @Inject
+    private JdbcEventLogger jdbcEventLogger;
+
+    @Override
+    public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
+        return new DefaultDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
+    }
 }

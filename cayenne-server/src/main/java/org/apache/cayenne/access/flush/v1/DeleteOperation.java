@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
@@ -26,38 +26,14 @@ import org.apache.cayenne.access.ObjectDiff;
 /**
  * @since 4.2
  */
-public abstract class Operation {
+public class DeleteOperation extends Operation {
 
-    protected final ObjectId id;
-    protected final Persistent object;
-    protected final ObjectDiff diff;
-    protected NewDataDomainFlushAction.Snapshot snapshot;
-
-    public Operation(ObjectId id, Persistent object, ObjectDiff diff) {
-        this.id = id;
-        this.object = object;
-        this.diff = diff;
+    public DeleteOperation(ObjectId id, Persistent object, ObjectDiff diff) {
+        super(id, object, diff);
     }
 
-    public ObjectId getId() {
-        return id;
+    @Override
+    public <T> T visit(OperationVisitor<T> visitor) {
+        return visitor.visitDelete(this);
     }
-
-    public Persistent getObject() {
-        return object;
-    }
-
-    public ObjectDiff getDiff() {
-        return diff;
-    }
-
-    public void setSnapshot(NewDataDomainFlushAction.Snapshot snapshot) {
-        this.snapshot = snapshot;
-    }
-
-    public NewDataDomainFlushAction.Snapshot getSnapshot() {
-        return snapshot;
-    }
-
-    public abstract <T> T visit(OperationVisitor<T> visitor);
 }

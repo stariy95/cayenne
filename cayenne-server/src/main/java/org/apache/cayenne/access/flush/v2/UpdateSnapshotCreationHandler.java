@@ -17,17 +17,35 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v2;
 
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
+import org.apache.cayenne.access.ObjectStore;
+import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
  * @since 4.2
  */
-public interface OperationSorter {
+class UpdateSnapshotCreationHandler extends SnapshotCreationHandler {
 
-    List<Operation> sort(List<Operation> operations);
+    UpdateSnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor) {
+        super(store, descriptor);
+    }
 
+    @Override
+    protected UpdateDiffSnapshot createSnapshot(DbEntity entity) {
+        return new UpdateDiffSnapshot(entity);
+    }
+
+    @Override
+    public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
+    }
+
+    @Override
+    public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+    }
+
+    @Override
+    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+    }
 }

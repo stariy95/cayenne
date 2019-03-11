@@ -17,17 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.ObjectDiff;
 
 /**
  * @since 4.2
  */
-public interface OperationSorter {
+public class UpdateOperation extends Operation {
 
-    List<Operation> sort(List<Operation> operations);
+    public UpdateOperation(ObjectId id, Persistent object, ObjectDiff diff) {
+        super(id, object, diff);
+    }
 
+    @Override
+    public <T> T visit(OperationVisitor<T> visitor) {
+        return visitor.visitUpdate(this);
+    }
 }

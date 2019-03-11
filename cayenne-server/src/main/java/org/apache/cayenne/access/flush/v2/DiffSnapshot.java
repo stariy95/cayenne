@@ -17,28 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v2;
 
-import org.apache.cayenne.access.DataDomain;
-import org.apache.cayenne.di.Inject;
-import org.apache.cayenne.log.JdbcEventLogger;
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.map.DbEntity;
 
 /**
  * @since 4.2
  */
-public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActionFactory {
+abstract class DiffSnapshot {
 
-    @Inject
-    private OperationSorter operationSorter;
+    protected final DbEntity entity;
+    ObjectId changeId;               // not ObjEntity but a DB row id
 
-    @Inject
-    private JdbcEventLogger jdbcEventLogger;
-
-    @Override
-    public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
-//        org.apache.cayenne.access.DataDomainFlushAction dataDomainFlushAction = new org.apache.cayenne.access.DataDomainFlushAction(dataDomain);
-//        dataDomainFlushAction.setJdbcEventLogger(jdbcEventLogger);
-//        return dataDomainFlushAction;
-        return new NewDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
+    DiffSnapshot(DbEntity entity) {
+        this.entity = entity;
     }
+
+    abstract <T> T accept(DiffVisitor<T> visitor);
+
 }

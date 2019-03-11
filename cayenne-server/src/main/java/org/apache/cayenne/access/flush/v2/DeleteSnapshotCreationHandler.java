@@ -17,23 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v2;
 
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.ObjectDiff;
+import org.apache.cayenne.access.ObjectStore;
+import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
  * @since 4.2
  */
-public class UpdateOperation extends Operation {
+class DeleteSnapshotCreationHandler extends SnapshotCreationHandler {
 
-    public UpdateOperation(ObjectId id, Persistent object, ObjectDiff diff) {
-        super(id, object, diff);
+    DeleteSnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor) {
+        super(store, descriptor);
     }
 
     @Override
-    public <T> T visit(OperationVisitor<T> visitor) {
-        return visitor.visitUpdate(this);
+    protected DeleteDiffSnapshot createSnapshot(DbEntity entity) {
+        return new DeleteDiffSnapshot(entity);
     }
 }

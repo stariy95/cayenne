@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +40,8 @@ import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
+import org.apache.cayenne.access.flush.DataDomainFlushAction;
+import org.apache.cayenne.access.flush.OperationSorter;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.graph.GraphDiff;

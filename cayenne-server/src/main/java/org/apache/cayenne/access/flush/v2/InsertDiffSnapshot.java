@@ -17,17 +17,31 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v2;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.cayenne.access.flush.v1.Operation;
+import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbEntity;
 
 /**
  * @since 4.2
  */
-public interface OperationSorter {
+public class InsertDiffSnapshot extends DiffSnapshot {
 
-    List<Operation> sort(List<Operation> operations);
+    Map<DbAttribute, Object> values = new HashMap<>(); // values to store to DB (new or updated)
 
+    InsertDiffSnapshot(DbEntity entity) {
+        super(entity);
+    }
+
+    @Override
+    <T> T accept(DiffVisitor<T> visitor) {
+        return visitor.visitInsert(this);
+    }
+
+    void addValue(DbAttribute attribute, Object value) {
+        values.put(attribute, value);
+    }
 }

@@ -19,10 +19,10 @@
 
 package org.apache.cayenne.access.flush;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.apache.cayenne.ObjectContext;
@@ -74,22 +74,22 @@ public class NewDataDomainFlushActionIT extends ServerCase {
 
     @Test
     public void testFlattenedRelationshipProcessing2() {
-//        ObjEntity artist = runtime.getDataDomain().getEntityResolver().getObjEntity(Artist.class);
-//        assertNotNull(artist);
-//        ObjRelationship relationship = artist.getRelationship("groupArray");
-//        assertNotNull(relationship);
-//
-//        ObjectId sourceId = ObjectId.of("Artist", "ARTIST_ID", 1);
-//        ObjectId finalTargetId = ObjectId.of("Group", "GROUP_ID", 2);
-
-
         ObjEntity artist = runtime.getDataDomain().getEntityResolver().getObjEntity(Artist.class);
         assertNotNull(artist);
-        ObjRelationship relationship = artist.getRelationship("paintingArray");
+        ObjRelationship relationship = artist.getRelationship("groupArray");
         assertNotNull(relationship);
 
         ObjectId sourceId = ObjectId.of("Artist", "ARTIST_ID", 1);
-        ObjectId finalTargetId = ObjectId.of("Painting", "PAINTING_ID", 2);
+        ObjectId finalTargetId = ObjectId.of("Group", "GROUP_ID", 2);
+
+
+//        ObjEntity artist = runtime.getDataDomain().getEntityResolver().getObjEntity(Artist.class);
+//        assertNotNull(artist);
+//        ObjRelationship relationship = artist.getRelationship("paintingArray");
+//        assertNotNull(relationship);
+//
+//        ObjectId sourceId = ObjectId.of("Artist", "ARTIST_ID", 1);
+//        ObjectId finalTargetId = ObjectId.of("Painting", "PAINTING_ID", 2);
 
         List<DbRelationship> dbRelationships = relationship.getDbRelationships();
 
@@ -139,19 +139,37 @@ public class NewDataDomainFlushActionIT extends ServerCase {
             sourceIdData = targetIdData;
         }
 
+        if(next != null) {
+            dbIds.put(next.getTargetEntity(), targetIdData);
+        }
+
         // Set FKs
         for (DbRelationship nextRel : dbRelationships) {
             Map<String, Object> snapshot = new HashMap<>();
-            for (DbJoin join : next.getJoins()) {
+            boolean src = false;
+            for (DbJoin join : nextRel.getJoins()) {
                 if (!join.getSource().isPrimaryKey()) {
                     snapshot.put(join.getSourceName(), (Supplier) () -> snapshots.get(nextRel.getTargetEntity()).get(join.getTargetName()));
+                    src = true;
+                } else if(!join.getTarget().isPrimaryKey()) {
+                    snapshot.put(join.getTargetName(), (Supplier) () -> snapshots.get(nextRel.getSourceEntity()).get(join.getSourceName()));
+                    src = false;
                 }
             }
-            snapshots.put(nextRel.getSourceEntity(), snapshot);
-        }
-
-        if(next != null) {
-            dbIds.put(next.getTargetEntity(), targetIdData);
+            if(!snapshot.isEmpty()) {
+                BiFunction<DbEntity, Map<String, Object>, Map<String, Object>> remappingFunction = (ent, oldSnapshot) -> {
+                    if (oldSnapshot == null) {
+                        return snapshot;
+                    }
+                    oldSnapshot.putAll(snapshot);
+                    return oldSnapshot;
+                };
+                if (src) {
+                    snapshots.compute(nextRel.getSourceEntity(), remappingFunction);
+                } else {
+                    snapshots.compute(nextRel.getTargetEntity(), remappingFunction);
+                }
+            }
         }
 
         assertEquals(3, dbIds.size());

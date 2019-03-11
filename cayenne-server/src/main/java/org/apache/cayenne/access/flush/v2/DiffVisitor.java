@@ -17,23 +17,17 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
-
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.ObjectDiff;
+package org.apache.cayenne.access.flush.v2;
 
 /**
  * @since 4.2
  */
-public class DeleteOperation extends Operation {
+public interface DiffVisitor<T> {
 
-    public DeleteOperation(ObjectId id, Persistent object, ObjectDiff diff) {
-        super(id, object, diff);
-    }
+    T visitInsert(InsertDiffSnapshot diffSnapshot);
 
-    @Override
-    public <T> T visit(OperationVisitor<T> visitor) {
-        return visitor.visitDelete(this);
-    }
+    T visitUpdate(UpdateDiffSnapshot diffSnapshot);
+
+    T visitDelete(DeleteDiffSnapshot diffSnapshot);
+
 }

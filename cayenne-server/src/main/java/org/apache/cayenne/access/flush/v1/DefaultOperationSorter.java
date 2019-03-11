@@ -17,24 +17,24 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.flush.OperationSorter;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.EntitySorter;
-import org.apache.cayenne.map.ObjEntity;
 
 /**
  * @since 4.2
  */
-public class DefaultOperationSorter implements OperationSorter{
+public class DefaultOperationSorter implements OperationSorter {
 
     @Inject
     private Provider<DataDomain> dataDomainProvider;

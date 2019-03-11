@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
@@ -29,6 +29,8 @@ import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
+import org.apache.cayenne.access.flush.DataDomainFlushAction;
+import org.apache.cayenne.access.flush.OperationSorter;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;

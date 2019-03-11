@@ -17,10 +17,9 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
@@ -39,7 +38,7 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.2
  */
-class NewPermObjectIdVisitor implements OperationVisitor<Void> {
+class PermObjectIdVisitor implements OperationVisitor<Void> {
 
     private final DataDomain dataDomain;
     private final EntityResolver resolver;
@@ -48,7 +47,7 @@ class NewPermObjectIdVisitor implements OperationVisitor<Void> {
     private ObjEntity lastObjEntity;
     private DataNode lastNode;
 
-    NewPermObjectIdVisitor(DataDomain dataDomain) {
+    PermObjectIdVisitor(DataDomain dataDomain) {
         this.dataDomain = dataDomain;
         this.resolver = dataDomain.getEntityResolver();
     }
@@ -72,12 +71,8 @@ class NewPermObjectIdVisitor implements OperationVisitor<Void> {
     }
 
     private void createPermanentId(InsertOperation operation) {
-        ObjectId id = operation.getSnapshot().getId();
-        if(id == null) {
-            id = ObjectId.of(operation.getId().getEntityName());
-            operation.getSnapshot().setId(id);
-        }
-        DbEntity dbEntity = operation.getSnapshot().getEntity();
+        ObjectId id = operation.getId();
+        DbEntity dbEntity = lastObjEntity.getDbEntity();
         boolean supportsGeneratedKeys = lastNode.getAdapter().supportsGeneratedKeys();
         PkGenerator pkGenerator = lastNode.getAdapter().getPkGenerator();
 
@@ -113,9 +108,7 @@ class NewPermObjectIdVisitor implements OperationVisitor<Void> {
             }
 
             // skip propagated
-            String targetName;
-            if ((targetName = getPropagatedTargetName(dbAttr)) != null) {
-                idMap.put(dbAttrName, (Supplier<Object>) () -> operation.getId().getIdSnapshot().get(targetName));
+            if (isPropagated(dbAttr)) {
                 continue;
             }
 
@@ -136,7 +129,7 @@ class NewPermObjectIdVisitor implements OperationVisitor<Void> {
     }
 
 
-    String getPropagatedTargetName(DbAttribute attribute) {
+    boolean isPropagated(DbAttribute attribute) {
 
         for (DbRelationship dbRel : attribute.getEntity().getRelationships()) {
             if (!dbRel.isToMasterPK()) {
@@ -145,11 +138,11 @@ class NewPermObjectIdVisitor implements OperationVisitor<Void> {
 
             for (DbJoin join : dbRel.getJoins()) {
                 if (attribute.getName().equals(join.getSourceName())) {
-                    return join.getTargetName();
+                    return true;
                 }
             }
         }
 
-        return null;
+        return false;
     }
 }

@@ -17,17 +17,47 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v1;
 
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.ObjectDiff;
 
 /**
  * @since 4.2
  */
-public interface OperationSorter {
+public abstract class Operation {
 
-    List<Operation> sort(List<Operation> operations);
+    protected final ObjectId id;
+    protected final Persistent object;
+    protected final ObjectDiff diff;
+    protected NewDataDomainFlushAction.Snapshot snapshot;
 
+    public Operation(ObjectId id, Persistent object, ObjectDiff diff) {
+        this.id = id;
+        this.object = object;
+        this.diff = diff;
+    }
+
+    public ObjectId getId() {
+        return id;
+    }
+
+    public Persistent getObject() {
+        return object;
+    }
+
+    public ObjectDiff getDiff() {
+        return diff;
+    }
+
+    public void setSnapshot(NewDataDomainFlushAction.Snapshot snapshot) {
+        this.snapshot = snapshot;
+    }
+
+    public NewDataDomainFlushAction.Snapshot getSnapshot() {
+        return snapshot;
+    }
+
+    public abstract <T> T visit(OperationVisitor<T> visitor);
 }
