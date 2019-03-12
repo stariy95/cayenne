@@ -21,10 +21,10 @@ package org.apache.cayenne.access.flush.v2;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.graph.GraphChangeHandler;
@@ -39,13 +39,15 @@ abstract class SnapshotCreationHandler implements GraphChangeHandler {
 
     protected final ObjectStore store;
     protected final ClassDescriptor descriptor;
+    protected final Persistent object;
 
     protected final Map<String, DiffSnapshot> snapshots;
     protected final Map<String, ObjectId> dbIds;
 
-    SnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor) {
+    SnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
         this.store = store;
         this.descriptor = descriptor;
+        this.object = object;
         this.snapshots = new HashMap<>();
         this.dbIds = new HashMap<>();
     }

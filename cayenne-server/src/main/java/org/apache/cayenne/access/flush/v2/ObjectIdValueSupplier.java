@@ -44,7 +44,7 @@ class ObjectIdValueSupplier implements Supplier<Object> {
         return new ObjectIdValueSupplier(id, attribute);
     }
 
-    private ObjectIdValueSupplier(ObjectId id, String attribute) {
+    ObjectIdValueSupplier(ObjectId id, String attribute) {
         this.id = Objects.requireNonNull(id);
         this.attribute = Objects.requireNonNull(attribute);
     }

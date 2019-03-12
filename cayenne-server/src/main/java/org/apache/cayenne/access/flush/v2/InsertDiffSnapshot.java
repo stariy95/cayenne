@@ -22,6 +22,7 @@ package org.apache.cayenne.access.flush.v2;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 
@@ -30,18 +31,23 @@ import org.apache.cayenne.map.DbEntity;
  */
 public class InsertDiffSnapshot extends DiffSnapshot {
 
-    Map<DbAttribute, Object> values = new HashMap<>(); // values to store to DB (new or updated)
+    Map<String, Object> values = new HashMap<>(); // values to store to DB (new or updated)
 
-    InsertDiffSnapshot(DbEntity entity) {
-        super(entity);
+    InsertDiffSnapshot(Persistent object, DbEntity entity) {
+        super(object, entity);
     }
 
     @Override
-    <T> T accept(DiffVisitor<T> visitor) {
+    public <T> T accept(DiffSnapshotVisitor<T> visitor) {
         return visitor.visitInsert(this);
     }
 
     void addValue(DbAttribute attribute, Object value) {
-        values.put(attribute, value);
+        values.put(attribute.getName(), value);
+    }
+
+    public Map<String, Object> getSnapshot() {
+        values.putAll(changeId.getIdSnapshot());
+        return values;
     }
 }

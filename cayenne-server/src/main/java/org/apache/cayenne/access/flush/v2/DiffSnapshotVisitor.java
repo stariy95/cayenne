@@ -17,17 +17,23 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
-
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
+package org.apache.cayenne.access.flush.v2;
 
 /**
  * @since 4.2
  */
-public interface OperationSorter {
+public interface DiffSnapshotVisitor<T> {
 
-    List<Operation> sort(List<Operation> operations);
+    default T visitInsert(InsertDiffSnapshot diffSnapshot) {
+        return null;
+    }
+
+    default T visitUpdate(UpdateDiffSnapshot diffSnapshot) {
+        return null;
+    }
+
+    default T visitDelete(DeleteDiffSnapshot diffSnapshot) {
+        return null;
+    }
 
 }

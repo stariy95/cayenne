@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.DataDomain;
-import org.apache.cayenne.access.flush.OperationSorter;
+import org.apache.cayenne.access.flush.SnapshotSorter;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
 import org.apache.cayenne.map.DbEntity;
@@ -34,7 +34,7 @@ import org.apache.cayenne.map.EntitySorter;
 /**
  * @since 4.2
  */
-public class DefaultOperationSorter implements OperationSorter {
+public class DefaultOperationSorter implements SnapshotSorter {
 
     @Inject
     private Provider<DataDomain> dataDomainProvider;

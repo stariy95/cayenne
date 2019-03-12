@@ -30,7 +30,7 @@ import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.access.flush.DataDomainFlushAction;
-import org.apache.cayenne.access.flush.OperationSorter;
+import org.apache.cayenne.access.flush.SnapshotSorter;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
@@ -51,10 +51,10 @@ import java.util.stream.Collectors;
 public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected final DataDomain dataDomain;
-    protected final OperationSorter operationSorter;
+    protected final SnapshotSorter operationSorter;
     protected final JdbcEventLogger jdbcEventLogger;
 
-    protected DefaultDataDomainFlushAction(DataDomain dataDomain, OperationSorter operationSorter, JdbcEventLogger jdbcEventLogger) {
+    protected DefaultDataDomainFlushAction(DataDomain dataDomain, SnapshotSorter operationSorter, JdbcEventLogger jdbcEventLogger) {
         this.dataDomain = dataDomain;
         this.operationSorter = operationSorter;
         this.jdbcEventLogger = jdbcEventLogger;

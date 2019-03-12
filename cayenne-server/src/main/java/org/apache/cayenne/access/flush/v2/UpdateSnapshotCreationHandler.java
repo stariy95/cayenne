@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.reflect.ClassDescriptor;
@@ -28,13 +29,13 @@ import org.apache.cayenne.reflect.ClassDescriptor;
  */
 class UpdateSnapshotCreationHandler extends SnapshotCreationHandler {
 
-    UpdateSnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor) {
-        super(store, descriptor);
+    UpdateSnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
+        super(store, descriptor, object);
     }
 
     @Override
     protected UpdateDiffSnapshot createSnapshot(DbEntity entity) {
-        return new UpdateDiffSnapshot(entity);
+        return new UpdateDiffSnapshot(object, entity);
     }
 
     @Override

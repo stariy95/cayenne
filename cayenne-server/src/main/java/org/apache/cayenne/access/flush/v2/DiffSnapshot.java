@@ -20,20 +20,34 @@
 package org.apache.cayenne.access.flush.v2;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbEntity;
 
 /**
  * @since 4.2
  */
-abstract class DiffSnapshot {
+public abstract class DiffSnapshot {
 
+    protected final Persistent object;
     protected final DbEntity entity;
     ObjectId changeId;               // not ObjEntity but a DB row id
 
-    DiffSnapshot(DbEntity entity) {
+    DiffSnapshot(Persistent object, DbEntity entity) {
+        this.object = object;
         this.entity = entity;
     }
 
-    abstract <T> T accept(DiffVisitor<T> visitor);
+    public abstract <T> T accept(DiffSnapshotVisitor<T> visitor);
 
+    public DbEntity getEntity() {
+        return entity;
+    }
+
+    public ObjectId getChangeId() {
+        return changeId;
+    }
+
+    public Persistent getObject() {
+        return object;
+    }
 }

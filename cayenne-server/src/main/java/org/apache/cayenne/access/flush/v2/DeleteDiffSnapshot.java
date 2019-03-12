@@ -21,6 +21,7 @@ package org.apache.cayenne.access.flush.v2;
 
 import java.util.Map;
 
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 
@@ -31,12 +32,12 @@ public class DeleteDiffSnapshot extends DiffSnapshot {
 
     Map<DbAttribute, Object> optimisticLockQualifier;   // additional qualifier for optimistic lock
 
-    DeleteDiffSnapshot(DbEntity entity) {
-        super(entity);
+    DeleteDiffSnapshot(Persistent object, DbEntity entity) {
+        super(object, entity);
     }
 
     @Override
-    <T> T accept(DiffVisitor<T> visitor) {
+    public <T> T accept(DiffSnapshotVisitor<T> visitor) {
         return visitor.visitDelete(this);
     }
 }

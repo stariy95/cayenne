@@ -1013,7 +1013,7 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
      * Mark that flattened path for object has data row in DB.
      * @since 4.1
      */
-    void markFlattenedPath(ObjectId objectId, String path, ObjectId id) {
+    public void markFlattenedPath(ObjectId objectId, String path, ObjectId id) {
         if(trackedFlattenedPaths == null) {
             trackedFlattenedPaths = new ConcurrentHashMap<>();
         }

@@ -19,8 +19,10 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 
@@ -29,15 +31,19 @@ import org.apache.cayenne.map.DbEntity;
  */
 public class UpdateDiffSnapshot extends DiffSnapshot {
 
-    Map<DbAttribute, Object> values; // values to store to DB (new or updated)
+    final Map<String, Object> values = new HashMap<>(); // values to store to DB (new or updated)
     Map<DbAttribute, Object> optimisticLockQualifier;   // additional qualifier for optimistic lock
 
-    UpdateDiffSnapshot(DbEntity entity) {
-        super(entity);
+    UpdateDiffSnapshot(Persistent object, DbEntity entity) {
+        super(object, entity);
     }
 
     @Override
-    <T> T accept(DiffVisitor<T> visitor) {
+    public <T> T accept(DiffSnapshotVisitor<T> visitor) {
         return visitor.visitUpdate(this);
+    }
+
+    public void addValue(DbAttribute attribute, Object value) {
+        values.put(attribute.getName(), value);
     }
 }
