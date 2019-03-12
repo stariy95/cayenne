@@ -102,14 +102,14 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
                     targetId.getReplacementIdMap().put(join.getTargetName(), value);
                 } else {
                     AddToSnapshotVisitor visitor = new AddToSnapshotVisitor(join.getTarget(), value);
-                    this.<DiffSnapshot>getSnapshot(dbRelationship.getTargetEntity()).accept(visitor);
+                    this.getSnapshot(dbRelationship.getTargetEntity()).accept(visitor);
                 }
             } else {
                 // target -> source
                 // TODO: get target descriptor ...
                 Object value = ObjectValueSupplier.getFor(descriptor, targetId, join.getTarget());
                 AddToSnapshotVisitor visitor = new AddToSnapshotVisitor(join.getSource(), value);
-                this.<DiffSnapshot>getSnapshot(dbRelationship.getSourceEntity()).accept(visitor);
+                this.getSnapshot(dbRelationship.getSourceEntity()).accept(visitor);
             }
         }
     }

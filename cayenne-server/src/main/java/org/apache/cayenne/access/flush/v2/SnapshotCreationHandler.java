@@ -41,7 +41,7 @@ abstract class SnapshotCreationHandler implements GraphChangeHandler {
     protected final ClassDescriptor descriptor;
     protected final Persistent object;
 
-    protected final Map<String, DiffSnapshot> snapshots;
+    protected final Map<DbEntity, DiffSnapshot> snapshots;
     protected final Map<String, ObjectId> dbIds;
 
     SnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
@@ -54,21 +54,23 @@ abstract class SnapshotCreationHandler implements GraphChangeHandler {
 
     Collection<DiffSnapshot> processDiff(ObjectDiff diff) {
         diff.apply(this);
-        // link snapshot with id
-        snapshots.forEach((ent, snapshot) -> snapshot.changeId = dbIds.get(ent));
+        // link snapshot with id after all processing is done
+        snapshots.forEach((ent, snapshot) -> snapshot.changeId = dbIds.get(ent.getName()));
         return snapshots.values();
     }
 
     @SuppressWarnings("unchecked")
-    protected <E> E getSnapshot(DbEntity entity) {
-        return (E)snapshots.computeIfAbsent(entity.getName(), (name) -> createSnapshot(entity));
+    protected <E extends DiffSnapshot> E getSnapshot(DbEntity entity) {
+        return (E)snapshots.computeIfAbsent(entity, this::createSnapshot);
     }
 
-    protected <E> E getSnapshot(DbAttribute attribute) {
+    protected <E extends DiffSnapshot> E getSnapshot(DbAttribute attribute) {
         return getSnapshot(attribute.getEntity());
     }
 
     protected abstract DiffSnapshot createSnapshot(DbEntity entity);
+
+    /* * * GraphChangeHandler methods' stubs * * */
 
     @Override
     public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {

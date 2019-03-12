@@ -71,10 +71,10 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         List<DiffSnapshot> snapshots = createSnapshots(context, (ObjectStoreGraphDiff) changes);
         updateObjectIds(snapshots);
         snapshots = sort(snapshots);
-        List<BatchQuery> queries = createQueries(context, snapshots);
+        List<BatchQuery> queries = createQueries(snapshots);
         executeQueries(queries);
-
-        // todo: set replacement IDs in objects and in flattened paths?
+        createReplacementIds(result, snapshots);
+        context.getObjectStore().postprocessAfterCommit(result);
 
         return result;
     }
@@ -105,7 +105,7 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         return snapshotSorter.sortSnapshots(snapshots);
     }
 
-    protected List<BatchQuery> createQueries(DataContext context, List<DiffSnapshot> snapshots) {
+    protected List<BatchQuery> createQueries(List<DiffSnapshot> snapshots) {
         DiffSnapshotVisitor<BatchQuery> queryCreator = new QueryCreatorVisitor();
         return snapshots.stream()
                 .map(snapshot -> snapshot.accept(queryCreator))
@@ -118,6 +118,11 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         queries.forEach(query -> dataDomain
                 .lookupDataNode(query.getDbEntity().getDataMap())
                 .performQueries(Collections.singleton(query), observer));
+    }
+
+    protected void createReplacementIds(CompoundDiff result, List<DiffSnapshot> snapshots) {
+        ReplacementIdVisitor visitor = new ReplacementIdVisitor(result);
+        snapshots.forEach(snapshot -> snapshot.accept(visitor));
     }
 
 
@@ -143,4 +148,5 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
             return query;
         }
     }
+
 }
