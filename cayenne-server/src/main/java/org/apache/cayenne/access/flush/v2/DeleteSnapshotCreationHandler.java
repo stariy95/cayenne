@@ -31,6 +31,7 @@ class DeleteSnapshotCreationHandler extends SnapshotCreationHandler {
 
     DeleteSnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
         super(store, descriptor, object);
+        descriptor.visitAllProperties(new OptimisticLockDeleteQualifierBuilder(this, object));
     }
 
     @Override

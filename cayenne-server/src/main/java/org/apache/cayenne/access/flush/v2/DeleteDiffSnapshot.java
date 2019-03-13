@@ -19,6 +19,11 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.cayenne.Persistent;
@@ -39,5 +44,53 @@ public class DeleteDiffSnapshot extends DiffSnapshot {
     @Override
     public <T> T accept(DiffSnapshotVisitor<T> visitor) {
         return visitor.visitDelete(this);
+    }
+
+    protected Map<String, Object> getQualifier() {
+        Map<String, Object> idSnapshot = changeId.getIdSnapshot();
+        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+            return idSnapshot;
+        }
+
+        Map<String, Object> qualifier = new HashMap<>(optimisticLockQualifier.size() + idSnapshot.size());
+        qualifier.putAll(idSnapshot);
+        optimisticLockQualifier.forEach((attr, value) -> {
+            qualifier.put(attr.getName(), value);
+        });
+
+        return qualifier;
+    }
+
+    protected List<DbAttribute> getQualifierAttributes() {
+        List<DbAttribute> attributes = new ArrayList<>(entity.getPrimaryKeys());
+        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+            return attributes;
+        }
+
+        attributes.addAll(optimisticLockQualifier.keySet());
+        return attributes;
+    }
+
+    protected void addOptimisticLockQualifier(DbAttribute dbAttribute, Object value) {
+        if(optimisticLockQualifier == null) {
+            optimisticLockQualifier = new HashMap<>();
+        }
+
+        optimisticLockQualifier.put(dbAttribute, value);
+    }
+
+    protected Collection<String> getNullQualifierNames() {
+        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> nullNames = new ArrayList<>(optimisticLockQualifier.size() / 2);
+        optimisticLockQualifier.forEach((attr, value) -> {
+            if(value == null) {
+                nullNames.add(attr.getName());
+            }
+        });
+
+        return nullNames;
     }
 }

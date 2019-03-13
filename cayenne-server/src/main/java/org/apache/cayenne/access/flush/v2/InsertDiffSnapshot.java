@@ -19,9 +19,11 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -31,9 +33,12 @@ import org.apache.cayenne.map.DbEntity;
  */
 public class InsertDiffSnapshot extends DiffSnapshot {
 
-    Map<String, Object> values = new HashMap<>(); // values to store to DB (new or updated)
+    // new values to store to DB
+    protected Map<String, Object> values;
+    // generated flattened Ids for this insert
+    protected Map<String, ObjectId> flattenedIds;
 
-    InsertDiffSnapshot(Persistent object, DbEntity entity) {
+    protected InsertDiffSnapshot(Persistent object, DbEntity entity) {
         super(object, entity);
     }
 
@@ -42,12 +47,32 @@ public class InsertDiffSnapshot extends DiffSnapshot {
         return visitor.visitInsert(this);
     }
 
-    void addValue(DbAttribute attribute, Object value) {
+    protected void addValue(DbAttribute attribute, Object value) {
+        if(values == null) {
+            values = new HashMap<>();
+        }
         values.put(attribute.getName(), value);
     }
 
-    public Map<String, Object> getSnapshot() {
+    protected void addFlattenedId(String path, ObjectId id) {
+        if(flattenedIds == null) {
+            flattenedIds = new HashMap<>();
+        }
+        flattenedIds.put(path, id);
+    }
+
+    protected Map<String, Object> getSnapshot() {
+        if(values == null) {
+            return changeId.getIdSnapshot();
+        }
         values.putAll(changeId.getIdSnapshot());
         return values;
+    }
+
+    protected Map<String, ObjectId> getFlattenedIds() {
+        if(flattenedIds == null) {
+            return Collections.emptyMap();
+        }
+        return flattenedIds;
     }
 }

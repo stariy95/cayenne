@@ -35,8 +35,6 @@ import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.util.CayenneMapEntry;
 
-import static org.apache.cayenne.access.flush.v2.PermanentObjectIdVisitor.DB_ID_PREFIX;
-
 /**
  * @since 4.2
  */
@@ -44,6 +42,11 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
 
     InsertSnapshotCreationHandler(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
         super(store, descriptor, object);
+        DbEntity dbEntity = descriptor.getEntity().getDbEntity();
+
+        dbIds.put(dbEntity.getName(), object.getObjectId());
+        // force create snapshot to insert id if no fields are provided
+        getSnapshot(dbEntity);
     }
 
     @Override
@@ -57,7 +60,6 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
         ObjEntity entity = descriptor.getEntity();
         ObjAttribute attribute = entity.getAttribute(property);
         DbEntity dbEntity = entity.getDbEntity();
-        dbIds.put(dbEntity.getName(), id);
 
         if(attribute.isFlattened()) {
             processFlattenedPath(id, dbEntity, attribute.getDbAttributePath());
@@ -78,6 +80,10 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
             return;
         }
 
+        // grab Object ids of connected objects
+        dbIds.put(objRelationship.getSourceEntity().getDbEntity().getName(), id);
+        dbIds.put(objRelationship.getTargetEntity().getDbEntity().getName(), (ObjectId)targetNodeId);
+
         if(objRelationship.isFlattened()) {
             processFlattenedPath(id, entity.getDbEntity(), objRelationship.getDbRelationshipPath());
         }
@@ -89,15 +95,17 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
     }
 
     private void processRelationship(DbRelationship dbRelationship) {
-        ObjectId srcId = dbIds.computeIfAbsent(dbRelationship.getSourceEntityName(), entityName -> ObjectId.of(DB_ID_PREFIX + entityName));
-        ObjectId targetId = dbIds.computeIfAbsent(dbRelationship.getTargetEntityName(), entityName -> ObjectId.of(DB_ID_PREFIX + entityName));
+        ObjectId srcId = dbIds.computeIfAbsent(dbRelationship.getSourceEntityName(), entityName
+                -> ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + entityName));
+        ObjectId targetId = dbIds.computeIfAbsent(dbRelationship.getTargetEntityName(), entityName
+                -> ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + entityName));
 
         for(DbJoin join : dbRelationship.getJoins()) {
             boolean srcPK = join.getSource().isPrimaryKey();
             boolean targetPK = join.getTarget().isPrimaryKey();
             if((srcPK == targetPK && dbRelationship.isToDependentPK()) || srcPK) {
                 // source -> target
-                Object value = ObjectValueSupplier.getFor(descriptor, srcId, join.getSource());
+                Object value = ObjectValueSupplier.getFor(srcId, join.getSource());
                 if(targetPK) {
                     targetId.getReplacementIdMap().put(join.getTargetName(), value);
                 } else {
@@ -107,7 +115,7 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
             } else {
                 // target -> source
                 // TODO: get target descriptor ...
-                Object value = ObjectValueSupplier.getFor(descriptor, targetId, join.getTarget());
+                Object value = ObjectValueSupplier.getFor(targetId, join.getTarget());
                 AddToSnapshotVisitor visitor = new AddToSnapshotVisitor(join.getSource(), value);
                 this.getSnapshot(dbRelationship.getSourceEntity()).accept(visitor);
             }
@@ -132,8 +140,10 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
                 String flattenedPath = path.toString();
                 ObjectId flattenedId = store.getFlattenedId(id, flattenedPath);
                 if(flattenedId == null) {
-                    flattenedId = ObjectId.of(DB_ID_PREFIX + target.getName());
+                    flattenedId = ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + target.getName());
                     store.markFlattenedPath(id, flattenedPath, flattenedId);
+                    this.<InsertDiffSnapshot>getSnapshot(descriptor.getEntity().getDbEntity())
+                            .addFlattenedId(flattenedPath, flattenedId);
                 }
                 dbIds.put(target.getName(), flattenedId);
                 processRelationship(relationship);

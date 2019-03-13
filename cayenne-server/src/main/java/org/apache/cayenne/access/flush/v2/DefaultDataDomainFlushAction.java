@@ -19,8 +19,9 @@
 
 package org.apache.cayenne.access.flush.v2;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,7 +43,6 @@ import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.BatchQuery;
-import org.apache.cayenne.query.InsertBatchQuery;
 import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
@@ -68,40 +68,49 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
             return result;
         }
 
-        List<DiffSnapshot> snapshots = createSnapshots(context, (ObjectStoreGraphDiff) changes);
+        ObjectStore objectStore = context.getObjectStore();
+        Collection<DiffSnapshot> snapshots = createSnapshots(context, (ObjectStoreGraphDiff) changes);
         updateObjectIds(snapshots);
-        snapshots = sort(snapshots);
-        List<BatchQuery> queries = createQueries(snapshots);
+        List<DiffSnapshot> sortedSnapshots = sort(snapshots);
+        List<BatchQuery> queries = createQueries(sortedSnapshots);
         executeQueries(queries);
-        createReplacementIds(result, snapshots);
-        context.getObjectStore().postprocessAfterCommit(result);
+        createReplacementIds(objectStore, result, sortedSnapshots);
+        objectStore.postprocessAfterCommit(result);
 
         return result;
     }
 
-    protected List<DiffSnapshot> createSnapshots(DataContext context, ObjectStoreGraphDiff changes) {
+    protected Collection<DiffSnapshot> createSnapshots(DataContext context, ObjectStoreGraphDiff changes) {
         EntityResolver resolver = dataDomain.getEntityResolver();
         ObjectStore objectStore = context.getObjectStore();
 
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
-        List<DiffSnapshot> snapshots = new ArrayList<>(changesByObjectId.size());
+        Map<DiffSnapshot, DiffSnapshot> snapshots = new HashMap<>();
 
         changesByObjectId.forEach((obj, diff) -> {
             ObjectId id = (ObjectId)obj;
             Persistent object = (Persistent) objectStore.getNode(id);
             ClassDescriptor descriptor = resolver.getClassDescriptor(id.getEntityName());
-            snapshots.addAll(createHandler(objectStore, object, descriptor).processDiff(diff));
+
+            createHandler(objectStore, object, descriptor)
+                    .processDiff(diff)
+                    .forEach(snapshot -> snapshots.compute(snapshot, (key, value) -> {
+                        if(value != null) {
+                            return value.accept(new DiffSnapshotMerger(snapshot));
+                        }
+                        return snapshot;
+                    }));
         });
 
-        return snapshots;
+        return snapshots.values();
     }
 
-    protected void updateObjectIds(List<DiffSnapshot> snapshots) {
+    protected void updateObjectIds(Collection<DiffSnapshot> snapshots) {
         DiffSnapshotVisitor<Void> permIdVisitor = new PermanentObjectIdVisitor(dataDomain);
         snapshots.forEach(snapshot -> snapshot.accept(permIdVisitor));
     }
 
-    protected List<DiffSnapshot> sort(List<DiffSnapshot> snapshots) {
+    protected List<DiffSnapshot> sort(Collection<DiffSnapshot> snapshots) {
         return snapshotSorter.sortSnapshots(snapshots);
     }
 
@@ -120,11 +129,10 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
                 .performQueries(Collections.singleton(query), observer));
     }
 
-    protected void createReplacementIds(CompoundDiff result, List<DiffSnapshot> snapshots) {
-        ReplacementIdVisitor visitor = new ReplacementIdVisitor(result);
+    protected void createReplacementIds(ObjectStore store, CompoundDiff result, List<DiffSnapshot> snapshots) {
+        ReplacementIdVisitor visitor = new ReplacementIdVisitor(store, result);
         snapshots.forEach(snapshot -> snapshot.accept(visitor));
     }
-
 
     protected SnapshotCreationHandler createHandler(ObjectStore objectStore, Persistent object, ClassDescriptor descriptor) {
         switch (object.getPersistenceState()) {
@@ -137,15 +145,6 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
             default:
                 throw new CayenneRuntimeException("Trying to flush object (%s) in wrong persistence state (%s)",
                         object, PersistenceState.persistenceStateName(object.getPersistenceState()));
-        }
-    }
-
-    private static class QueryCreatorVisitor implements DiffSnapshotVisitor<BatchQuery> {
-        @Override
-        public BatchQuery visitInsert(InsertDiffSnapshot diffSnapshot) {
-            InsertBatchQuery query = new InsertBatchQuery(diffSnapshot.getEntity(), 1);
-            query.add(diffSnapshot.getSnapshot());
-            return query;
         }
     }
 

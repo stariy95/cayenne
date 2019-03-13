@@ -30,9 +30,10 @@ public abstract class DiffSnapshot {
 
     protected final Persistent object;
     protected final DbEntity entity;
-    ObjectId changeId;               // not ObjEntity but a DB row id
+    // Can be not ObjEntity id but a DB row id
+    protected ObjectId changeId;
 
-    DiffSnapshot(Persistent object, DbEntity entity) {
+    protected DiffSnapshot(Persistent object, DbEntity entity) {
         this.object = object;
         this.entity = entity;
     }
@@ -49,5 +50,19 @@ public abstract class DiffSnapshot {
 
     public Persistent getObject() {
         return object;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DiffSnapshot snapshot = (DiffSnapshot) o;
+        return changeId.equals(snapshot.changeId);
+    }
+
+    @Override
+    public int hashCode() {
+        return changeId.hashCode();
     }
 }

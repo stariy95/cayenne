@@ -72,7 +72,7 @@ public class PermanentObjectIdVisitor implements DiffSnapshotVisitor<Void> {
                 lastDescriptor = null;
                 lastNode = dataDomain.lookupDataNode(lastDbEntity.getDataMap());
             } else {
-                lastObjEntity = resolver.getObjEntity(diffSnapshot.getObject());
+                lastObjEntity = resolver.getObjEntity(id.getEntityName());
                 lastDbEntity = lastObjEntity.getDbEntity();
                 lastDescriptor = resolver.getClassDescriptor(lastObjEntity.getName());
                 lastNode = dataDomain.lookupDataNode(lastObjEntity.getDataMap());

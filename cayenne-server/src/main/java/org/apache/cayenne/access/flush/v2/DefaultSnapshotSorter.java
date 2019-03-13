@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -38,19 +40,20 @@ public class DefaultSnapshotSorter implements SnapshotSorter {
     private Provider<DataDomain> dataDomainProvider;
 
     @Override
-    public List<DiffSnapshot> sortSnapshots(List<DiffSnapshot> snapshots) {
+    public List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
 
         DataDomain dataDomain = dataDomainProvider.get();
         EntitySorter entitySorter = dataDomain.getEntitySorter();
 
 //        EntityResolver resolver = dataDomain.getEntityResolver();
 //        List<DiffSnapshot> sublist = snapshots.subList(0, 2);
+        List<DiffSnapshot> snapshotList = new ArrayList<>(snapshots);
 
-        snapshots.sort(Comparator
+        snapshotList.sort(Comparator
                 .comparing(SnapshotTypeExtractor.INSTANCE)
                 .thenComparing(DiffSnapshot::getEntity, entitySorter.getDbEntityComparator()));
 
-        return snapshots;
+        return snapshotList;
     }
 
     private static class SnapshotTypeExtractor implements Function<DiffSnapshot, Integer> {

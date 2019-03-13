@@ -19,9 +19,14 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -31,8 +36,8 @@ import org.apache.cayenne.map.DbEntity;
  */
 public class UpdateDiffSnapshot extends DiffSnapshot {
 
-    final Map<String, Object> values = new HashMap<>(); // values to store to DB (new or updated)
-    Map<DbAttribute, Object> optimisticLockQualifier;   // additional qualifier for optimistic lock
+    protected Map<DbAttribute, Object> values; // values to store to DB (new or updated)
+    protected Map<DbAttribute, Object> optimisticLockQualifier;   // additional qualifier for optimistic lock
 
     UpdateDiffSnapshot(Persistent object, DbEntity entity) {
         super(object, entity);
@@ -44,6 +49,84 @@ public class UpdateDiffSnapshot extends DiffSnapshot {
     }
 
     public void addValue(DbAttribute attribute, Object value) {
-        values.put(attribute.getName(), value);
+        if(values == null) {
+            values = new HashMap<>();
+        }
+        values.put(attribute, value);
+    }
+
+    protected  void addFlattenedId(String flattenedPath, ObjectId id) {
+    }
+
+    protected  Map<DbAttribute, Object> getValues() {
+        return values;
+    }
+
+    protected Map<String, Object> getQualifier() {
+        Map<String, Object> idSnapshot = changeId.getIdSnapshot();
+        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+            return idSnapshot;
+        }
+
+        Map<String, Object> qualifier = new HashMap<>(optimisticLockQualifier.size() + idSnapshot.size());
+        qualifier.putAll(idSnapshot);
+        optimisticLockQualifier.forEach((attr, value) -> {
+            qualifier.put(attr.getName(), value);
+        });
+
+        return qualifier;
+    }
+
+    protected List<DbAttribute> getQualifierAttributes() {
+        List<DbAttribute> attributes = new ArrayList<>(entity.getPrimaryKeys());
+        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+            return attributes;
+        }
+
+        attributes.addAll(optimisticLockQualifier.keySet());
+        return attributes;
+    }
+
+
+    protected List<DbAttribute> getUpdatedAttributes() {
+        return new ArrayList<>(values.keySet());
+    }
+
+    protected Map<String, Object> getSnapshot() {
+        if(values == null || values.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> result = new HashMap<>();
+        values.forEach((attr, value) -> {
+            result.put(attr.getName(), value);
+        });
+        return result;
+    }
+
+    protected Collection<String> getNullQualifierNames() {
+        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> nullNames = new ArrayList<>(optimisticLockQualifier.size() / 2);
+        optimisticLockQualifier.forEach((attr, value) -> {
+            if(value == null) {
+                nullNames.add(attr.getName());
+            }
+        });
+
+        return nullNames;
+    }
+
+    protected void addOptimisticLockQualifier(DbAttribute dbAttribute, Object value) {
+        if(optimisticLockQualifier == null) {
+            optimisticLockQualifier = new HashMap<>();
+        }
+
+        optimisticLockQualifier.put(dbAttribute, value);
+    }
+
+    protected boolean isUsingOptimisticLocking() {
+        return optimisticLockQualifier != null && !optimisticLockQualifier.isEmpty();
     }
 }

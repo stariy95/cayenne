@@ -17,30 +17,33 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
-import org.apache.cayenne.access.flush.v2.DiffSnapshot;
+package org.apache.cayenne.access.flush.v2;
 
 /**
  * @since 4.2
- * TODO: remove default implementations once v1 src is gone...
  */
-public interface SnapshotSorter {
+class DiffSnapshotMerger implements DiffSnapshotVisitor<DiffSnapshot> {
+    private final DiffSnapshot snapshot;
 
-    default List<Operation> sort(List<Operation> operations) {
-        return operations;
+    DiffSnapshotMerger(DiffSnapshot snapshot) {
+        this.snapshot = snapshot;
     }
 
-    default List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
-        if(snapshots instanceof List) {
-            return (List<DiffSnapshot>)snapshots;
+    @Override
+    public DiffSnapshot visitInsert(InsertDiffSnapshot diffSnapshot) {
+        InsertDiffSnapshot newValue = (InsertDiffSnapshot) snapshot;
+        if (diffSnapshot.values != null && newValue.values != null) {
+            diffSnapshot.values.putAll(newValue.values);
         }
-        return new ArrayList<>(snapshots);
+        return diffSnapshot;
     }
 
+    @Override
+    public DiffSnapshot visitUpdate(UpdateDiffSnapshot diffSnapshot) {
+        UpdateDiffSnapshot newValue = (UpdateDiffSnapshot) snapshot;
+        if (diffSnapshot.values != null && newValue.values != null) {
+            diffSnapshot.values.putAll(newValue.values);
+        }
+        return diffSnapshot;
+    }
 }

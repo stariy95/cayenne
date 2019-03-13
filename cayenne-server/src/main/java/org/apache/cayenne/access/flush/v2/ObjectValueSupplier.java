@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.flush.v2;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.apache.cayenne.CayenneRuntimeException;
@@ -39,7 +40,9 @@ class ObjectValueSupplier implements Supplier<Object> {
     private final AttributeProperty property;
     private final Persistent persistent;
 
-    static Object getFor(ClassDescriptor descriptor, ObjectId id, DbAttribute attribute) {
+    static Object getFor(ObjectId id, DbAttribute attribute) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(attribute);
         if(attribute.isPrimaryKey()) {
             // resolve eagerly, if value is already present
             // TODO: what if this is a meaningful part of an ID and it will change?
