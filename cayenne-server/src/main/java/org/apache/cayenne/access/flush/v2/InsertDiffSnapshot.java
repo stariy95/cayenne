@@ -31,7 +31,7 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public class InsertDiffSnapshot extends DiffSnapshot {
+public class InsertDiffSnapshot extends DiffSnapshot implements SnapshotWithValues {
 
     // new values to store to DB
     protected Map<String, Object> values;
@@ -47,7 +47,8 @@ public class InsertDiffSnapshot extends DiffSnapshot {
         return visitor.visitInsert(this);
     }
 
-    protected void addValue(DbAttribute attribute, Object value) {
+    @Override
+    public void addValue(DbAttribute attribute, Object value) {
         if(values == null) {
             values = new HashMap<>();
         }

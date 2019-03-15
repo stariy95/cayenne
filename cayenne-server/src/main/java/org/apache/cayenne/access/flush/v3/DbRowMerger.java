@@ -17,37 +17,42 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v3;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
-import org.apache.cayenne.access.flush.v2.DiffSnapshot;
 import org.apache.cayenne.access.flush.v3.row.DbRow;
+import org.apache.cayenne.access.flush.v3.row.DbRowVisitor;
+import org.apache.cayenne.access.flush.v3.row.DbRowWithValues;
+import org.apache.cayenne.access.flush.v3.row.DeleteDbRow;
+import org.apache.cayenne.access.flush.v3.row.InsertDbRow;
+import org.apache.cayenne.access.flush.v3.row.UpdateDbRow;
 
 /**
  * @since 4.2
- * TODO: remove default implementations once v1 src is gone...
  */
-public interface SnapshotSorter {
+class DbRowMerger implements DbRowVisitor<DbRow> {
 
-    default List<Operation> sort(List<Operation> operations) {
-        return operations;
+    private final DbRow dbRow;
+
+    DbRowMerger(DbRow dbRow) {
+        this.dbRow = dbRow;
     }
 
-    default List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
-        if(snapshots instanceof List) {
-            return (List<DiffSnapshot>)snapshots;
-        }
-        return new ArrayList<>(snapshots);
+    @Override
+    public DbRow visitInsert(InsertDbRow other) {
+        return mergeValues((DbRowWithValues) dbRow, other);
     }
 
-    default List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
-        if(dbRows instanceof List) {
-            return (List<DbRow>)dbRows;
+    @Override
+    public DbRow visitUpdate(UpdateDbRow other) {
+        // delete beats update ...
+        if(dbRow instanceof DeleteDbRow) {
+            return dbRow;
         }
-        return new ArrayList<>(dbRows);
+        return mergeValues((DbRowWithValues) dbRow, other);
+    }
+
+    private DbRow mergeValues(DbRowWithValues left, DbRowWithValues right) {
+        left.getValues().merge(right.getValues());
+        return left;
     }
 }

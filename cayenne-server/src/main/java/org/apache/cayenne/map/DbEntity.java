@@ -56,7 +56,7 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
 
     protected String catalog;
     protected String schema;
-    protected Collection<DbAttribute> primaryKey;
+    protected List<DbAttribute> primaryKey;
 
     /**
      * @since 1.2
@@ -184,8 +184,8 @@ public class DbEntity extends Entity implements ConfigurationNode, DbEntityListe
      *
      * @since 3.0
      */
-    public Collection<DbAttribute> getPrimaryKeys() {
-        return Collections.unmodifiableCollection(primaryKey);
+    public List<DbAttribute> getPrimaryKeys() {
+        return Collections.unmodifiableList(primaryKey);
     }
 
     /**

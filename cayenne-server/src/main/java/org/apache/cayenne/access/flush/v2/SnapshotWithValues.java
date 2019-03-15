@@ -17,37 +17,16 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v2;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
-import org.apache.cayenne.access.flush.v2.DiffSnapshot;
-import org.apache.cayenne.access.flush.v3.row.DbRow;
+import org.apache.cayenne.map.DbAttribute;
 
 /**
  * @since 4.2
- * TODO: remove default implementations once v1 src is gone...
  */
-public interface SnapshotSorter {
+interface SnapshotWithValues {
 
-    default List<Operation> sort(List<Operation> operations) {
-        return operations;
-    }
+    void addValue(DbAttribute attribute, Object value);
 
-    default List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
-        if(snapshots instanceof List) {
-            return (List<DiffSnapshot>)snapshots;
-        }
-        return new ArrayList<>(snapshots);
-    }
 
-    default List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
-        if(dbRows instanceof List) {
-            return (List<DbRow>)dbRows;
-        }
-        return new ArrayList<>(dbRows);
-    }
 }

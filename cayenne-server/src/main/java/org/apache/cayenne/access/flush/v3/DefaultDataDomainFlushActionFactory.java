@@ -17,37 +17,28 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v3;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
-import org.apache.cayenne.access.flush.v2.DiffSnapshot;
-import org.apache.cayenne.access.flush.v3.row.DbRow;
+import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.flush.DataDomainFlushAction;
+import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.SnapshotSorter;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.log.JdbcEventLogger;
 
 /**
  * @since 4.2
- * TODO: remove default implementations once v1 src is gone...
  */
-public interface SnapshotSorter {
+public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActionFactory {
 
-    default List<Operation> sort(List<Operation> operations) {
-        return operations;
-    }
+    @Inject
+    private SnapshotSorter operationSorter;
 
-    default List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
-        if(snapshots instanceof List) {
-            return (List<DiffSnapshot>)snapshots;
-        }
-        return new ArrayList<>(snapshots);
-    }
+    @Inject
+    private JdbcEventLogger jdbcEventLogger;
 
-    default List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
-        if(dbRows instanceof List) {
-            return (List<DbRow>)dbRows;
-        }
-        return new ArrayList<>(dbRows);
+    @Override
+    public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
+        return new DefaultDataDomainFlushAction(dataDomain, operationSorter, jdbcEventLogger);
     }
 }

@@ -17,37 +17,24 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v3.row;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
-import org.apache.cayenne.access.flush.v2.DiffSnapshot;
-import org.apache.cayenne.access.flush.v3.row.DbRow;
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
+import org.apache.cayenne.map.DbEntity;
 
 /**
  * @since 4.2
- * TODO: remove default implementations once v1 src is gone...
  */
-public interface SnapshotSorter {
+public interface DbRow {
 
-    default List<Operation> sort(List<Operation> operations) {
-        return operations;
-    }
+    <T> T accept(DbRowVisitor<T> visitor);
 
-    default List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
-        if(snapshots instanceof List) {
-            return (List<DiffSnapshot>)snapshots;
-        }
-        return new ArrayList<>(snapshots);
-    }
+    DbEntity getEntity();
 
-    default List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
-        if(dbRows instanceof List) {
-            return (List<DbRow>)dbRows;
-        }
-        return new ArrayList<>(dbRows);
-    }
+    ObjectId getChangeId();
+
+    Persistent getObject();
+
+    boolean isSameBatch(DbRow row);
 }

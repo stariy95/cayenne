@@ -34,7 +34,7 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public class UpdateDiffSnapshot extends DiffSnapshot {
+public class UpdateDiffSnapshot extends DiffSnapshot implements SnapshotWithQualifier, SnapshotWithValues {
 
     protected Map<DbAttribute, Object> values; // values to store to DB (new or updated)
     protected Map<DbAttribute, Object> optimisticLockQualifier;   // additional qualifier for optimistic lock
@@ -48,6 +48,7 @@ public class UpdateDiffSnapshot extends DiffSnapshot {
         return visitor.visitUpdate(this);
     }
 
+    @Override
     public void addValue(DbAttribute attribute, Object value) {
         if(values == null) {
             values = new HashMap<>();
@@ -55,10 +56,10 @@ public class UpdateDiffSnapshot extends DiffSnapshot {
         values.put(attribute, value);
     }
 
-    protected  void addFlattenedId(String flattenedPath, ObjectId id) {
+    protected void addFlattenedId(String flattenedPath, ObjectId id) {
     }
 
-    protected  Map<DbAttribute, Object> getValues() {
+    protected Map<DbAttribute, Object> getValues() {
         return values;
     }
 

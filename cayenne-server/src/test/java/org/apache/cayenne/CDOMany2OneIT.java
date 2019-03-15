@@ -24,6 +24,7 @@ import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.query.CapsStrategy;
+import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.SQLTemplate;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.test.jdbc.DBHelper;
@@ -229,8 +230,7 @@ public class CDOMany2OneIT extends ServerCase {
         ObjectContext context2 = runtime.newContext();
 
         // test database data
-        Painting p2 = (Painting) Cayenne.objectForQuery(context2, new SelectQuery(
-                Painting.class));
+        Painting p2 = ObjectSelect.query(Painting.class).selectOne(context2);
         Gallery g2 = p2.getToGallery();
 
         p2.setToGallery(null);
@@ -244,8 +244,7 @@ public class CDOMany2OneIT extends ServerCase {
 
         ObjectContext context3 = runtime.newContext();
 
-        Painting p3 = (Painting) Cayenne.objectForQuery(context3, new SelectQuery(
-                Painting.class));
+        Painting p3 = ObjectSelect.query(Painting.class).selectOne(context3);
         assertNull(p3.getToGallery());
     }
 
@@ -264,8 +263,7 @@ public class CDOMany2OneIT extends ServerCase {
         ObjectContext context2 = runtime.newContext();
 
         // test database data
-        Painting p2 = (Painting) Cayenne.objectForQuery(context2, new SelectQuery(
-                Painting.class));
+        Painting p2 = (Painting) Cayenne.objectForQuery(context2, new SelectQuery(Painting.class));
         Gallery g21 = p2.getToGallery();
         assertNotNull(g21);
         assertEquals("yTW", g21.getGalleryName());
@@ -286,8 +284,7 @@ public class CDOMany2OneIT extends ServerCase {
 
         ObjectContext context3 = runtime.newContext();
 
-        Painting p3 = (Painting) Cayenne.objectForQuery(context3, new SelectQuery(
-                Painting.class));
+        Painting p3 = (Painting) Cayenne.objectForQuery(context3, new SelectQuery(Painting.class));
         Gallery g3 = p3.getToGallery();
         assertNotNull(g3);
         assertEquals("rE", g3.getGalleryName());
@@ -307,8 +304,7 @@ public class CDOMany2OneIT extends ServerCase {
         ObjectContext context2 = runtime.newContext();
 
         // test database data
-        Painting p2 = (Painting) Cayenne.objectForQuery(context2, new SelectQuery(
-                Painting.class));
+        Painting p2 = (Painting) Cayenne.objectForQuery(context2, new SelectQuery(Painting.class));
         assertNull(p2.getToGallery());
 
         Gallery g2 = context2.newObject(Gallery.class);
@@ -324,8 +320,7 @@ public class CDOMany2OneIT extends ServerCase {
         context2.commitChanges();
         ObjectContext context3 = runtime.newContext();
 
-        Painting p3 = (Painting) Cayenne.objectForQuery(context3, new SelectQuery(
-                Painting.class));
+        Painting p3 = (Painting) Cayenne.objectForQuery(context3, new SelectQuery(Painting.class));
         Gallery g3 = p3.getToGallery();
         assertNotNull(g3);
         assertEquals("rE", g3.getGalleryName());

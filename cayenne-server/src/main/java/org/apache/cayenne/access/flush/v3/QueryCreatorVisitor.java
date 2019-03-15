@@ -17,8 +17,12 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush.v2;
+package org.apache.cayenne.access.flush.v3;
 
+import org.apache.cayenne.access.flush.v3.row.DbRowVisitor;
+import org.apache.cayenne.access.flush.v3.row.DeleteDbRow;
+import org.apache.cayenne.access.flush.v3.row.InsertDbRow;
+import org.apache.cayenne.access.flush.v3.row.UpdateDbRow;
 import org.apache.cayenne.query.BatchQuery;
 import org.apache.cayenne.query.DeleteBatchQuery;
 import org.apache.cayenne.query.InsertBatchQuery;
@@ -27,40 +31,44 @@ import org.apache.cayenne.query.UpdateBatchQuery;
 /**
  * @since 4.2
  */
-class QueryCreatorVisitor implements DiffSnapshotVisitor<BatchQuery> {
+class QueryCreatorVisitor implements DbRowVisitor<BatchQuery> {
 
     @Override
-    public BatchQuery visitInsert(InsertDiffSnapshot diffSnapshot) {
+    public BatchQuery visitInsert(InsertDbRow dbRow) {
         // TODO: pass snapshot as argument directly to batch...
-        InsertBatchQuery query = new InsertBatchQuery(diffSnapshot.getEntity(), 1);
-        query.add(diffSnapshot.getSnapshot(), diffSnapshot.getChangeId());
+        InsertBatchQuery query = new InsertBatchQuery(dbRow.getEntity(), 1);
+        query.add(dbRow.getValues().getSnapshot(), dbRow.getChangeId());
         return query;
     }
 
     @Override
-    public BatchQuery visitUpdate(UpdateDiffSnapshot diffSnapshot) {
+    public BatchQuery visitUpdate(UpdateDbRow dbRow) {
+        // skip fantom update..
+        if(dbRow.getValues().isEmpty()) {
+            return null;
+        }
         // TODO: pass snapshot as argument directly to batch...
         UpdateBatchQuery query = new UpdateBatchQuery(
-                diffSnapshot.getEntity(),
-                diffSnapshot.getQualifierAttributes(),
-                diffSnapshot.getUpdatedAttributes(),
-                diffSnapshot.getNullQualifierNames(),
+                dbRow.getEntity(),
+                dbRow.getQualifier().getQualifierAttributes(),
+                dbRow.getValues().getUpdatedAttributes(),
+                dbRow.getQualifier().getNullQualifierNames(),
                 1
         );
-        query.setUsingOptimisticLocking(diffSnapshot.isUsingOptimisticLocking());
-        query.add(diffSnapshot.getQualifier(), diffSnapshot.getSnapshot(), diffSnapshot.getChangeId());
+        query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
+        query.add(dbRow.getQualifier().getSnapshot(), dbRow.getValues().getSnapshot(), dbRow.getChangeId());
         return query;
     }
 
     @Override
-    public BatchQuery visitDelete(DeleteDiffSnapshot diffSnapshot) {
+    public BatchQuery visitDelete(DeleteDbRow dbRow) {
         DeleteBatchQuery query = new DeleteBatchQuery(
-                diffSnapshot.getEntity(),
-                diffSnapshot.getQualifierAttributes(),
-                diffSnapshot.getNullQualifierNames(),
+                dbRow.getEntity(),
+                dbRow.getQualifier().getQualifierAttributes(),
+                dbRow.getQualifier().getNullQualifierNames(),
                 1
         );
-        query.add(diffSnapshot.getQualifier());
+        query.add(dbRow.getQualifier().getSnapshot());
         return query;
     }
 }

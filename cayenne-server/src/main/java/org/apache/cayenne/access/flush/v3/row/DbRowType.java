@@ -17,37 +17,30 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.v3.row;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.cayenne.access.flush.v1.Operation;
-import org.apache.cayenne.access.flush.v2.DiffSnapshot;
-import org.apache.cayenne.access.flush.v3.row.DbRow;
+import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.PersistenceState;
+import org.apache.cayenne.Persistent;
 
 /**
  * @since 4.2
- * TODO: remove default implementations once v1 src is gone...
  */
-public interface SnapshotSorter {
+enum DbRowType {
+    INSERT,
+    UPDATE,
+    DELETE;
 
-    default List<Operation> sort(List<Operation> operations) {
-        return operations;
-    }
-
-    default List<DiffSnapshot> sortSnapshots(Collection<DiffSnapshot> snapshots) {
-        if(snapshots instanceof List) {
-            return (List<DiffSnapshot>)snapshots;
+    static DbRowType forObject(Persistent object) {
+        switch (object.getPersistenceState()) {
+            case PersistenceState.NEW:
+                return INSERT;
+            case PersistenceState.MODIFIED:
+                return UPDATE;
+            case PersistenceState.DELETED:
+                return DELETE;
         }
-        return new ArrayList<>(snapshots);
-    }
-
-    default List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
-        if(dbRows instanceof List) {
-            return (List<DbRow>)dbRows;
-        }
-        return new ArrayList<>(dbRows);
+        throw new CayenneRuntimeException("Trying to flush object %s in wrong persistence state %s",
+                object, PersistenceState.persistenceStateName(object.getPersistenceState()));
     }
 }
