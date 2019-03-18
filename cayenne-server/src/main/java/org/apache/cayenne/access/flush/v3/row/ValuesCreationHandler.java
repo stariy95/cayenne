@@ -150,6 +150,12 @@ public class ValuesCreationHandler implements GraphChangeHandler {
             boolean targetPK = join.getTarget().isPrimaryKey();
             Object srcValue = add ? ObjectIdValueSupplier.getFor(srcId, join.getSourceName()) : null;
             Object dstValue = add ? ObjectIdValueSupplier.getFor(targetId, join.getTargetName()) : null;
+
+            // Push values from/to source to/from target...
+            // We have 3 cases globally here:
+            // 1. PK -> FK: just grab value from PK and propagate it to FK
+            // 2. PK -> PK: check isToDep flag and
+            // 3. NON-PK -> FK (not supported fully for now): also check isToDep flag, but get value from DbRow, not ObjID
             if(srcPK == targetPK) {
                 if(dbRelationship.isToDependentPK()) {
                     if(targetPK) {
