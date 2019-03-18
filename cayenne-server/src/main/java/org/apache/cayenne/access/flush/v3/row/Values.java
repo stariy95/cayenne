@@ -85,7 +85,7 @@ public class Values {
             });
         }
 
-        if(other.getFlattenedIds() != null) {
+        if(other.flattenedIds != null) {
             if(flattenedIds == null) {
                 flattenedIds = other.getFlattenedIds();
             } else {

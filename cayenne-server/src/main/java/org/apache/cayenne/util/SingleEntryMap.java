@@ -106,7 +106,7 @@ public class SingleEntryMap<K, V> implements Map<K, V>, Map.Entry<K, V>, Seriali
         if(this.key.equals(key)) {
             return setValue(value);
         }
-        throw new IllegalArgumentException("This map supports only key '" + this.key + "'");
+        throw new IllegalArgumentException("This map supports only key '" + this.key + "', tried to put '" + key + "'");
     }
 
     @Override

@@ -20,7 +20,6 @@
 package org.apache.cayenne.access.flush.v3.row;
 
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.v3.PermanentObjectIdVisitor;
@@ -55,13 +54,13 @@ public class ValuesCreationHandler implements GraphChangeHandler {
         DbEntity dbEntity = entity.getDbEntity();
 
         if(attribute.isFlattened()) {
-            processFlattenedPath(id, dbEntity, attribute.getDbAttributePath(), newValue != null);
+            processFlattenedPath(id, null, dbEntity, attribute.getDbAttributePath(), newValue != null);
         }
 
         DbAttribute dbAttribute = attribute.getDbAttribute();
         if(dbAttribute.isPrimaryKey()) {
             if(!(newValue instanceof Number) || ((Number) newValue).longValue() != 0) {
-                factory.getDbId(dbAttribute.getEntity()).getReplacementIdMap().put(dbAttribute.getName(), newValue);
+                factory.get(dbAttribute.getEntity()).getChangeId().getReplacementIdMap().put(dbAttribute.getName(), newValue);
             }
         }
 
@@ -89,24 +88,24 @@ public class ValuesCreationHandler implements GraphChangeHandler {
         }
 
         // grab Object ids of connected objects
-        factory.addDbId(objRelationship.getSourceEntity().getDbEntity(), id);
-        factory.addDbId(objRelationship.getTargetEntity().getDbEntity(), targetId);
-        factory.getOrCreate(objRelationship.getTargetEntity().getDbEntity(),
+        factory.getOrCreate(objRelationship.getTargetEntity().getDbEntity(), targetId,
                 targetId.isTemporary() ? DbRowType.INSERT : DbRowType.UPDATE);
 
         if(objRelationship.isFlattened()) {
-            processFlattenedPath(id, entity.getDbEntity(), objRelationship.getDbRelationshipPath(), created);
+            processFlattenedPath(id, targetId, entity.getDbEntity(), objRelationship.getDbRelationshipPath(), created);
+        } else {
+            DbRelationship dbRelationship = objRelationship.getDbRelationships().get(0);
+            processRelationship(dbRelationship, id, targetId, created);
         }
-
-        List<DbRelationship> dbRelationships = objRelationship.getDbRelationships();
-        DbRelationship lastDbRelationship = dbRelationships.get(dbRelationships.size() - 1);
-
-        processRelationship(lastDbRelationship, created);
     }
 
-    private void processFlattenedPath(ObjectId id, DbEntity entity, String dbPath, boolean add) {
+    private void processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {
         Iterator<CayenneMapEntry> dbPathIterator = entity.resolvePathComponents(dbPath);
         StringBuilder path = new StringBuilder();
+
+        ObjectId srcId = id;
+        ObjectId targetId;
+
         while(dbPathIterator.hasNext()) {
             CayenneMapEntry entry = dbPathIterator.next();
             if(path.length() > 0) {
@@ -114,37 +113,39 @@ public class ValuesCreationHandler implements GraphChangeHandler {
             }
 
             path.append(entry.getName());
-            // skip last segment of the path, it will be processed by the caller
-            if(entry instanceof DbRelationship && dbPathIterator.hasNext()) {
+            if(entry instanceof DbRelationship) {
                 DbRelationship relationship = (DbRelationship)entry;
                 // intermediate db entity to be inserted
                 DbEntity target = relationship.getTargetEntity();
                 // if ID is present, just use it, otherwise create new
                 String flattenedPath = path.toString();
-                ObjectId flattenedId = factory.getStore().getFlattenedId(id, flattenedPath);
-                if(flattenedId == null) {
+
+                // if this is last segment and it's a relationship, use known target id from arc creation
+                if(!dbPathIterator.hasNext()) {
+                    targetId = finalTargetId;
+                } else {
+                    targetId = factory.getStore().getFlattenedId(id, flattenedPath);
+                }
+
+                if(targetId == null) {
                     // should insert, regardless of original operation (insert/update)
                     // TODO: prefix..
-                    flattenedId = ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + target.getName());
-                    factory.getStore().markFlattenedPath(id, flattenedPath, flattenedId);
-                    factory.addDbId(target, flattenedId);
-                    factory.<DbRowWithValues>getOrCreate(target, DbRowType.INSERT)
+                    targetId = ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + target.getName());
+                    factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
+                    factory.<DbRowWithValues>getOrCreate(target, targetId, DbRowType.INSERT)
                             .getValues()
-                            .addFlattenedId(flattenedPath, flattenedId);
+                            .addFlattenedId(flattenedPath, targetId);
                 } else  {
                     // should update existing DB row
-                    factory.addDbId(target, flattenedId);
-                    factory.getOrCreate(target, DbRowType.UPDATE);
+                    factory.getOrCreate(target, targetId, DbRowType.UPDATE);
                 }
-                processRelationship(relationship, add);
+                processRelationship(relationship, srcId, targetId, add);
+                srcId = targetId; // use target as next source..
             }
         }
     }
 
-    private void processRelationship(DbRelationship dbRelationship, boolean add) {
-        ObjectId srcId = factory.getDbId(dbRelationship.getSourceEntity());
-        ObjectId targetId = factory.getDbId(dbRelationship.getTargetEntity());
-
+    private void processRelationship(DbRelationship dbRelationship, ObjectId srcId, ObjectId targetId, boolean add) {
         for(DbJoin join : dbRelationship.getJoins()) {
             boolean srcPK = join.getSource().isPrimaryKey();
             boolean targetPK = join.getTarget().isPrimaryKey();
@@ -161,7 +162,7 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     if(targetPK) {
                         targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
                     } else {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), defaultType)
+                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
                                 .getValues()
                                 .addValue(join.getTarget(), srcValue);
                     }
@@ -169,18 +170,18 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     } else {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), defaultType)
+                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), targetId, defaultType)
                                 .getValues()
                                 .addValue(join.getSource(), dstValue);
                     }
                 }
             } else {
                 if(srcPK) {
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), defaultType)
+                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
                             .getValues()
                             .addValue(join.getTarget(), srcValue);
                 } else {
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), defaultType)
+                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
                             .getValues()
                             .addValue(join.getSource(), dstValue);
                 }

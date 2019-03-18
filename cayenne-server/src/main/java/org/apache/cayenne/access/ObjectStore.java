@@ -1000,6 +1000,9 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
                 .getOrDefault(objectId, Collections.emptyMap()).containsKey(path);
     }
 
+    /**
+     * @since 4.2
+     */
     public ObjectId getFlattenedId(ObjectId objectId, String path) {
         if(trackedFlattenedPaths == null) {
             return null;
@@ -1007,6 +1010,18 @@ public class ObjectStore implements Serializable, SnapshotEventListener, GraphMa
 
         return trackedFlattenedPaths
                 .getOrDefault(objectId, Collections.emptyMap()).get(path);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public Collection<ObjectId> getFlattenedIds(ObjectId objectId) {
+        if(trackedFlattenedPaths == null) {
+            return Collections.emptyList();
+        }
+
+        return trackedFlattenedPaths
+                .getOrDefault(objectId, Collections.emptyMap()).values();
     }
 
     /**

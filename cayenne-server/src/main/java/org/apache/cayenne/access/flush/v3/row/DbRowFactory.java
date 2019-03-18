@@ -42,30 +42,19 @@ public class DbRowFactory {
     protected final Persistent object;
 
     protected final Map<DbEntity, DbRow> dbRows;
-    protected final Map<String, ObjectId> dbIds;
 
     public DbRowFactory(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
         this.store = store;
         this.descriptor = descriptor;
         this.object = object;
         this.dbRows = new HashMap<>();
-        this.dbIds = new HashMap<>();
     }
 
     public Collection<? extends DbRow> createRows(ObjectDiff diff) {
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
-        addDbId(rootEntity, object.getObjectId());
-        DbRow row = getOrCreate(rootEntity, DbRowType.forObject(object));
+        DbRow row = getOrCreate(rootEntity, object.getObjectId(), DbRowType.forObject(object));
         row.accept(new RootRowProcessor(diff));
         return dbRows.values();
-    }
-
-    void addDbId(DbEntity entity, ObjectId id) {
-        dbIds.put(entity.getName(), id);
-    }
-
-    ObjectId getDbId(DbEntity entity) {
-        return dbIds.computeIfAbsent(entity.getName(), name -> ObjectId.of("db:" + name));
     }
 
     @SuppressWarnings("unchecked")
@@ -74,18 +63,18 @@ public class DbRowFactory {
     }
 
     @SuppressWarnings("unchecked")
-    <E extends DbRow> E getOrCreate(DbEntity entity, DbRowType type) {
-        return (E)dbRows.computeIfAbsent(entity, ent -> createRow(ent, type));
+    <E extends DbRow> E getOrCreate(DbEntity entity, ObjectId id, DbRowType type) {
+        return (E) dbRows.computeIfAbsent(entity, ent -> createRow(ent, id, type));
     }
 
-    DbRow createRow(DbEntity entity, DbRowType type) {
+    private DbRow createRow(DbEntity entity, ObjectId id, DbRowType type) {
         switch (type) {
             case INSERT:
-                return new InsertDbRow(object, entity, getDbId(entity));
+                return new InsertDbRow(object, entity, id);
             case UPDATE:
-                return new UpdateDbRow(object, entity, getDbId(entity));
+                return new UpdateDbRow(object, entity, id);
             case DELETE:
-                return new DeleteDbRow(object, entity, getDbId(entity));
+                return new DeleteDbRow(object, entity, id);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
     }
@@ -105,7 +94,7 @@ public class DbRowFactory {
     private class RootRowProcessor implements DbRowVisitor<Void> {
         private final ObjectDiff diff;
 
-        public RootRowProcessor(ObjectDiff diff) {
+        RootRowProcessor(ObjectDiff diff) {
             this.diff = diff;
         }
 
@@ -123,7 +112,9 @@ public class DbRowFactory {
 
         @Override
         public Void visitDelete(DeleteDbRow dbRow) {
-            // TODO: need to delete all flattened rows...
+            Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
+            // TODO: get DBEntity by id
+            flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(null, id, DbRowType.DELETE));
             return null;
         }
     }
