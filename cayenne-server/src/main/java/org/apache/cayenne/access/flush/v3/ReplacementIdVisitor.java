@@ -92,12 +92,12 @@ class ReplacementIdVisitor implements DbRowVisitor<Void> {
             object.setObjectId(replacementId);
             // update meaningful PKs
             // TODO: optimize this?
-//            for (AttributeProperty property: resolver.getClassDescriptor(replacementId.getEntityName()).getIdProperties()) {
-//                Object value = replacement.get(property.getAttribute().getDbAttributeName());
-//                if (value != null) {
-//                    property.writePropertyDirectly(object, null, value);
-//                }
-//            }
+            for (AttributeProperty property: resolver.getClassDescriptor(replacementId.getEntityName()).getIdProperties()) {
+                Object value = replacement.get(property.getAttribute().getDbAttributeName());
+                if (value != null) {
+                    property.writePropertyDirectly(object, null, value);
+                }
+            }
         }
         result.add(new NodeIdChangeOperation(id, replacementId));
     }

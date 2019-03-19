@@ -117,12 +117,8 @@ public class RelationshipQuery extends IndirectQuery {
         ObjRelationship relationship = getRelationship(resolver);
 
         // build executable select...
-        Expression qualifier = ExpressionFactory.matchDbExp(relationship
-                .getReverseDbRelationshipPath(), objectId);
-
-        SelectQuery<Object> query = new SelectQuery<Object>(
-                (ObjEntity) relationship.getTargetEntity(),
-                qualifier);
+        Expression qualifier = ExpressionFactory.matchDbExp(relationship.getReverseDbRelationshipPath(), objectId);
+        SelectQuery<Object> query = new SelectQuery<>(relationship.getTargetEntity(), qualifier);
         query.setStatementFetchSize(statementFetchSize);
         return query;
     }
@@ -143,8 +139,7 @@ public class RelationshipQuery extends IndirectQuery {
                 throw new CayenneRuntimeException("Can't resolve query - objectID is null.");
             }
 
-            ClassDescriptor descriptor = resolver.getClassDescriptor(objectId
-                    .getEntityName());
+            ClassDescriptor descriptor = resolver.getClassDescriptor(objectId.getEntityName());
             this.arc = (ArcProperty) descriptor.getProperty(relationshipName);
 
             if (arc == null) {

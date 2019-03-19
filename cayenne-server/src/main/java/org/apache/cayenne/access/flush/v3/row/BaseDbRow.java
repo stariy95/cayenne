@@ -19,10 +19,12 @@
 
 package org.apache.cayenne.access.flush.v3.row;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 
 /**
@@ -64,6 +66,10 @@ public abstract class BaseDbRow implements DbRow {
         ObjectId otherChangeId = other.getChangeId();
         // TODO: Is this assumption valid?
         //  can tmp id with proper replacement map be equal to permanent id?
+        if(this.changeId == otherChangeId) {
+            return true;
+        }
+
         if(this.changeId.isTemporary() != otherChangeId.isTemporary()) {
             return false;
         }
@@ -79,7 +85,13 @@ public abstract class BaseDbRow implements DbRow {
             }
 
             if(changeId.isReplacementIdAttached()) {
-                return changeId.getReplacementIdMap().equals(otherChangeId.getReplacementIdMap());
+                for(DbAttribute pk : entity.getPrimaryKeys()) {
+                    if(!changeId.getReplacementIdMap().get(pk.getName())
+                            .equals(otherChangeId.getReplacementIdMap().get(pk.getName()))) {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
         return changeId.equals(otherChangeId);
@@ -88,7 +100,15 @@ public abstract class BaseDbRow implements DbRow {
     @Override
     public int hashCode() {
         if(changeId.isTemporary() && changeId.isReplacementIdAttached()) {
-            return changeId.getReplacementIdMap().hashCode();
+            int hashCode = changeId.getEntityName().hashCode();
+            Map<String, Object> replacementIdMap = changeId.getReplacementIdMap();
+            for(DbAttribute attribute : entity.getPrimaryKeys()) {
+                Object value = replacementIdMap.get(attribute.getName());
+                if(value != null) {
+                    hashCode = 17 * hashCode + value.hashCode();
+                }
+            }
+            return hashCode;
         }
         return changeId.hashCode();
     }

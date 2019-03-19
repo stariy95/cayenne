@@ -97,8 +97,9 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
             Persistent object = (Persistent) objectStore.getNode(id);
             ClassDescriptor descriptor = resolver.getClassDescriptor(id.getEntityName());
 
-            DbRowFactory factory = new DbRowFactory(objectStore, descriptor, object);
-            factory.createRows(diff).forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
+            DbRowFactory factory = new DbRowFactory(resolver, objectStore, descriptor, object);
+            Collection<? extends DbRow> rows = factory.createRows(diff);
+            rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
                 if(value != null) {
                     return value.accept(new DbRowMerger(dbRow));
                 }

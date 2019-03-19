@@ -29,7 +29,9 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
+import org.apache.cayenne.access.flush.v3.PermanentObjectIdVisitor;
 import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
@@ -37,13 +39,15 @@ import org.apache.cayenne.reflect.ClassDescriptor;
  */
 public class DbRowFactory {
 
+    protected final EntityResolver resolver;
     protected final ObjectStore store;
     protected final ClassDescriptor descriptor;
     protected final Persistent object;
 
     protected final Map<DbEntity, DbRow> dbRows;
 
-    public DbRowFactory(ObjectStore store, ClassDescriptor descriptor, Persistent object) {
+    public DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object) {
+        this.resolver = resolver;
         this.store = store;
         this.descriptor = descriptor;
         this.object = object;
@@ -91,6 +95,16 @@ public class DbRowFactory {
         return store;
     }
 
+    private DbEntity getDbEntity(ObjectId id) {
+        String entityName = id.getEntityName();
+        if(entityName.startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
+            entityName = entityName.substring(PermanentObjectIdVisitor.DB_ID_PREFIX.length());
+            return resolver.getDbEntity(entityName);
+        } else {
+            return resolver.getObjEntity(entityName).getDbEntity();
+        }
+    }
+
     private class RootRowProcessor implements DbRowVisitor<Void> {
         private final ObjectDiff diff;
 
@@ -107,15 +121,17 @@ public class DbRowFactory {
         @Override
         public Void visitUpdate(UpdateDbRow dbRow) {
             diff.apply(new ValuesCreationHandler(DbRowFactory.this, DbRowType.UPDATE));
+            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(DbRowFactory.this, dbRow));
             return null;
         }
 
         @Override
         public Void visitDelete(DeleteDbRow dbRow) {
             Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
-            // TODO: get DBEntity by id
-            flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(null, id, DbRowType.DELETE));
+            flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(getDbEntity(id), id, DbRowType.DELETE));
+            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(DbRowFactory.this, dbRow));
             return null;
         }
     }
+
 }

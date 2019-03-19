@@ -43,7 +43,7 @@ class QueryCreatorVisitor implements DbRowVisitor<BatchQuery> {
 
     @Override
     public BatchQuery visitUpdate(UpdateDbRow dbRow) {
-        // skip fantom update..
+        // skip empty update..
         if(dbRow.getValues().isEmpty()) {
             return null;
         }
@@ -68,6 +68,7 @@ class QueryCreatorVisitor implements DbRowVisitor<BatchQuery> {
                 dbRow.getQualifier().getNullQualifierNames(),
                 1
         );
+        query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
         query.add(dbRow.getQualifier().getSnapshot());
         return query;
     }

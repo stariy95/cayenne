@@ -87,10 +87,6 @@ public class ValuesCreationHandler implements GraphChangeHandler {
             return;
         }
 
-        // grab Object ids of connected objects
-        factory.getOrCreate(objRelationship.getTargetEntity().getDbEntity(), targetId,
-                targetId.isTemporary() ? DbRowType.INSERT : DbRowType.UPDATE);
-
         if(objRelationship.isFlattened()) {
             processFlattenedPath(id, targetId, entity.getDbEntity(), objRelationship.getDbRelationshipPath(), created);
         } else {
@@ -158,24 +154,24 @@ public class ValuesCreationHandler implements GraphChangeHandler {
             // 2. PK -> PK: check isToDep flag and
             // 3. NON-PK -> FK (not supported fully for now): also check isToDep flag, but get value from DbRow, not ObjID
             if(srcPK == targetPK) {
+                // case 2 and 3
                 if(dbRelationship.isToDependentPK()) {
                     if(targetPK) {
                         targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
-                    } else {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
-                                .getValues()
-                                .addValue(join.getTarget(), srcValue);
                     }
+                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
+                            .getValues()
+                            .addValue(join.getTarget(), srcValue);
                 } else {
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
-                    } else {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), targetId, defaultType)
-                                .getValues()
-                                .addValue(join.getSource(), dstValue);
                     }
+                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), targetId, defaultType)
+                            .getValues()
+                            .addValue(join.getSource(), dstValue);
                 }
             } else {
+                // case 1
                 if(srcPK) {
                     factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
                             .getValues()
@@ -189,7 +185,7 @@ public class ValuesCreationHandler implements GraphChangeHandler {
         }
     }
 
-    // not interested in following events
+    // not interested in following events in this handler
 
     @Override
     public void nodeIdChanged(Object nodeId, Object newId) {
