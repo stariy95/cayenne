@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -120,7 +121,7 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
     }
 
     @Override
-    public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
         // todo: readonly entity should be rejected here if we need to update it
         String relationshipPath = arcId.toString(); // can be db:path, obj.path, etc.
         ObjectId srcId = (ObjectId)nodeId;
@@ -148,7 +149,7 @@ public class UpdateSnapshotHandler implements GraphChangeHandler {
     }
 
     @Override
-    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
         String relationshipPath = arcId.toString(); // can be db:path, obj.path, etc.
         ObjRelationship relationship = entity.getRelationship(relationshipPath);
         if(relationship == null) {

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.v3.PermanentObjectIdVisitor;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -77,29 +78,37 @@ public class ValuesCreationHandler implements GraphChangeHandler {
     }
 
     @Override
-    public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
-        processArcChange((ObjectId)nodeId, (ObjectId)targetNodeId, arcId.toString(), true);
+    public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
+        ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, (ObjectId) targetNodeId, arcId);
+        processArcChange(arcTarget, true);
     }
 
     @Override
-    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
-        processArcChange((ObjectId)nodeId, (ObjectId)targetNodeId, arcId.toString(), false);
+    public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
+        ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, (ObjectId) targetNodeId, arcId);
+        processArcChange(arcTarget, false);
     }
 
-    private void processArcChange(ObjectId id, ObjectId targetId, String arcName, boolean created) {
+    private void processArcChange(ArcTarget arcTarget, boolean created) {
+        if(factory.getProcessedArcs().contains(arcTarget.getReversed())) {
+            return;
+        }
+
         ObjEntity entity = factory.getDescriptor().getEntity();
-        ObjRelationship objRelationship = entity.getRelationship(arcName);
+        ObjRelationship objRelationship = entity.getRelationship(arcTarget.getArcId().getForwardArc());
         if(objRelationship == null) {
             // todo: process other variants like "db:relname"
             return;
         }
 
         if(objRelationship.isFlattened()) {
-            processFlattenedPath(id, targetId, entity.getDbEntity(), objRelationship.getDbRelationshipPath(), created);
+            processFlattenedPath(arcTarget.getSourceId(), arcTarget.getTargetId(), entity.getDbEntity(), objRelationship.getDbRelationshipPath(), created);
         } else {
             DbRelationship dbRelationship = objRelationship.getDbRelationships().get(0);
-            processRelationship(dbRelationship, id, targetId, created);
+            processRelationship(dbRelationship, arcTarget.getSourceId(), arcTarget.getTargetId(), created);
         }
+
+        factory.processedArcs.add(arcTarget);
     }
 
     private ObjectId processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {
@@ -180,7 +189,7 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     }
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), targetId, defaultType)
+                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
                             .getValues()
                             .addValue(join.getSource(), add ? dstValue : null);
                 }

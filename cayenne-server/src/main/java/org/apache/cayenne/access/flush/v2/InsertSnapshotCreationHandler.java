@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectStore;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
@@ -70,7 +71,7 @@ class InsertSnapshotCreationHandler extends SnapshotCreationHandler {
     }
 
     @Override
-    public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
         ObjectId id = (ObjectId)nodeId;
         String arcName = arcId.toString();
         ObjEntity entity = descriptor.getEntity();

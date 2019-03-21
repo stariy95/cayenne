@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbJoin;
@@ -56,7 +57,7 @@ class InsertSnapshotHandler implements GraphChangeHandler {
     }
 
     @Override
-    public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
         String relationshipPath = arcId.toString(); // can be db:path, obj.path, etc.
         ObjRelationship relationship = entity.getRelationship(relationshipPath);
         if(relationship == null) {
@@ -90,7 +91,7 @@ class InsertSnapshotHandler implements GraphChangeHandler {
     // We don't interested in other changes in insert context...
 
     @Override
-    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
     }
 
     @Override

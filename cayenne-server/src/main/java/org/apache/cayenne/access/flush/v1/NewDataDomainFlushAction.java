@@ -42,6 +42,7 @@ import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.access.flush.DataDomainFlushAction;
 import org.apache.cayenne.access.flush.SnapshotSorter;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.graph.GraphDiff;
@@ -342,7 +343,7 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         }
 
         @Override
-        public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+        public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
             String relationshipName = arcId.toString();
             PropertyDescriptor propertyDescriptor = descriptor.getProperty(relationshipName);
             if(propertyDescriptor != null) {
@@ -362,7 +363,7 @@ public class NewDataDomainFlushAction implements DataDomainFlushAction {
         }
 
         @Override
-        public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+        public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
 
         }
 

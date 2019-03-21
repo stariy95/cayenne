@@ -27,6 +27,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -77,11 +78,11 @@ abstract class SnapshotCreationHandler implements GraphChangeHandler {
     }
 
     @Override
-    public void arcCreated(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
     }
 
     @Override
-    public void arcDeleted(Object nodeId, Object targetNodeId, Object arcId) {
+    public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
     }
 
     @Override

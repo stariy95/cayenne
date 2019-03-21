@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
@@ -30,6 +31,7 @@ import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.flush.v3.PermanentObjectIdVisitor;
+import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.reflect.ClassDescriptor;
@@ -44,14 +46,16 @@ public class DbRowFactory {
     protected final ClassDescriptor descriptor;
     protected final Persistent object;
 
+    protected final Set<ArcTarget> processedArcs;
     protected final Map<ObjectId, DbRow> dbRows;
 
-    public DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object) {
+    public DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object, Set<ArcTarget> processedArcs) {
         this.resolver = resolver;
         this.store = store;
         this.descriptor = descriptor;
         this.object = object;
         this.dbRows = new HashMap<>();
+        this.processedArcs = processedArcs;
     }
 
     public Collection<? extends DbRow> createRows(ObjectDiff diff) {
@@ -103,6 +107,10 @@ public class DbRowFactory {
         } else {
             return resolver.getObjEntity(entityName).getDbEntity();
         }
+    }
+
+    public Set<ArcTarget> getProcessedArcs() {
+        return processedArcs;
     }
 
     private class RootRowProcessor implements DbRowVisitor<Void> {

@@ -22,9 +22,11 @@ package org.apache.cayenne.access.flush.v3;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.cayenne.ObjectId;
@@ -37,6 +39,7 @@ import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.access.flush.DataDomainFlushAction;
 import org.apache.cayenne.access.flush.SnapshotSorter;
+import org.apache.cayenne.access.flush.v3.row.ArcTarget;
 import org.apache.cayenne.access.flush.v3.row.DbRow;
 import org.apache.cayenne.access.flush.v3.row.DbRowFactory;
 import org.apache.cayenne.access.flush.v3.row.DbRowVisitor;
@@ -91,13 +94,14 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
         Map<DbRow, DbRow> dbRows = new HashMap<>();
+        Set<ArcTarget> processedArcs = new HashSet<>();
 
         changesByObjectId.forEach((obj, diff) -> {
             ObjectId id = (ObjectId)obj;
             Persistent object = (Persistent) objectStore.getNode(id);
             ClassDescriptor descriptor = resolver.getClassDescriptor(id.getEntityName());
 
-            DbRowFactory factory = new DbRowFactory(resolver, objectStore, descriptor, object);
+            DbRowFactory factory = new DbRowFactory(resolver, objectStore, descriptor, object, processedArcs);
             Collection<? extends DbRow> rows = factory.createRows(diff);
             rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
                 if(value != null) {
