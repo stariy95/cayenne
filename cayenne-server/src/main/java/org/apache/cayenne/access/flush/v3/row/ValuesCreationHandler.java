@@ -21,6 +21,7 @@ package org.apache.cayenne.access.flush.v3.row;
 
 import java.util.Iterator;
 
+import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.v3.PermanentObjectIdVisitor;
 import org.apache.cayenne.graph.GraphChangeHandler;
@@ -50,22 +51,28 @@ public class ValuesCreationHandler implements GraphChangeHandler {
     public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
         ObjectId id = (ObjectId)nodeId;
         ObjEntity entity = factory.getDescriptor().getEntity();
+        if(entity.isReadOnly()) {
+            throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
+                    "Can't commit changes.", entity.getName());
+        }
         ObjAttribute attribute = entity.getAttribute(property);
         DbEntity dbEntity = entity.getDbEntity();
 
         if(attribute.isFlattened()) {
-            processFlattenedPath(id, null, dbEntity, attribute.getDbAttributePath(), newValue != null);
+            // get target row ID
+            id = processFlattenedPath(id, null, dbEntity, attribute.getDbAttributePath(), newValue != null);
         }
 
         DbAttribute dbAttribute = attribute.getDbAttribute();
-        if(dbAttribute.isPrimaryKey()) {
+        // TODO: id == null?
+        if(id != null && dbAttribute.isPrimaryKey()) {
             if(!(newValue instanceof Number) || ((Number) newValue).longValue() != 0) {
-                factory.get(dbAttribute.getEntity()).getChangeId().getReplacementIdMap().put(dbAttribute.getName(), newValue);
+                id.getReplacementIdMap().put(dbAttribute.getName(), newValue);
             }
         }
 
         // TODO: any actual check that we can cast DbRow to DbRowWithValues?
-        DbRowWithValues dbRow = factory.get(dbAttribute.getEntity());
+        DbRowWithValues dbRow = factory.get(id);
         dbRow.getValues().addValue(dbAttribute, newValue);
     }
 
@@ -95,12 +102,12 @@ public class ValuesCreationHandler implements GraphChangeHandler {
         }
     }
 
-    private void processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {
+    private ObjectId processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {
         Iterator<CayenneMapEntry> dbPathIterator = entity.resolvePathComponents(dbPath);
         StringBuilder path = new StringBuilder();
 
         ObjectId srcId = id;
-        ObjectId targetId;
+        ObjectId targetId = null;
 
         while(dbPathIterator.hasNext()) {
             CayenneMapEntry entry = dbPathIterator.next();
@@ -120,18 +127,23 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                 if(!dbPathIterator.hasNext()) {
                     targetId = finalTargetId;
                 } else {
-                    targetId = factory.getStore().getFlattenedId(id, flattenedPath);
+                    if(!relationship.isToMany()) {
+                        targetId = factory.getStore().getFlattenedId(id, flattenedPath);
+                    } else {
+                        targetId = null;
+                    }
                 }
 
                 if(targetId == null) {
                     // should insert, regardless of original operation (insert/update)
-                    // TODO: prefix..
                     targetId = ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + target.getName());
-                    factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
+                    if(!relationship.isToMany()) {
+                        factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
+                    }
                     factory.<DbRowWithValues>getOrCreate(target, targetId, DbRowType.INSERT)
                             .getValues()
                             .addFlattenedId(flattenedPath, targetId);
-                } else  {
+                } else if(dbPathIterator.hasNext()) {
                     // should update existing DB row
                     factory.getOrCreate(target, targetId, DbRowType.UPDATE);
                 }
@@ -139,14 +151,16 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                 srcId = targetId; // use target as next source..
             }
         }
+
+        return targetId;
     }
 
     private void processRelationship(DbRelationship dbRelationship, ObjectId srcId, ObjectId targetId, boolean add) {
         for(DbJoin join : dbRelationship.getJoins()) {
             boolean srcPK = join.getSource().isPrimaryKey();
             boolean targetPK = join.getTarget().isPrimaryKey();
-            Object srcValue = add ? ObjectIdValueSupplier.getFor(srcId, join.getSourceName()) : null;
-            Object dstValue = add ? ObjectIdValueSupplier.getFor(targetId, join.getTargetName()) : null;
+            Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
+            Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
 
             // Push values from/to source to/from target...
             // We have 3 cases globally here:
@@ -161,25 +175,25 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     }
                     factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
                             .getValues()
-                            .addValue(join.getTarget(), srcValue);
+                            .addValue(join.getTarget(), add ? srcValue : null);
                 } else {
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     }
                     factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), targetId, defaultType)
                             .getValues()
-                            .addValue(join.getSource(), dstValue);
+                            .addValue(join.getSource(), add ? dstValue : null);
                 }
             } else {
                 // case 1
                 if(srcPK) {
                     factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
                             .getValues()
-                            .addValue(join.getTarget(), srcValue);
+                            .addValue(join.getTarget(), add ? srcValue : null);
                 } else {
                     factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
                             .getValues()
-                            .addValue(join.getSource(), dstValue);
+                            .addValue(join.getSource(), add ? dstValue : null);
                 }
             }
         }

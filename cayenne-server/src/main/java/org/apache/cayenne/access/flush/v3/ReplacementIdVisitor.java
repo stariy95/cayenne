@@ -88,14 +88,16 @@ class ReplacementIdVisitor implements DbRowVisitor<Void> {
         Persistent object = dbRow.getObject();
         Map<String, Object> replacement = id.getReplacementIdMap();
         ObjectId replacementId = id.createReplacementId();
-        if (!replacementId.getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
+        if (object.getObjectId() == id && !replacementId.getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
             object.setObjectId(replacementId);
             // update meaningful PKs
             // TODO: optimize this?
             for (AttributeProperty property: resolver.getClassDescriptor(replacementId.getEntityName()).getIdProperties()) {
-                Object value = replacement.get(property.getAttribute().getDbAttributeName());
-                if (value != null) {
-                    property.writePropertyDirectly(object, null, value);
+                if(property.getAttribute() != null) {
+                    Object value = replacement.get(property.getAttribute().getDbAttributeName());
+                    if (value != null) {
+                        property.writePropertyDirectly(object, null, value);
+                    }
                 }
             }
         }

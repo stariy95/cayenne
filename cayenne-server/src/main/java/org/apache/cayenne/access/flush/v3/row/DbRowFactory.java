@@ -44,7 +44,7 @@ public class DbRowFactory {
     protected final ClassDescriptor descriptor;
     protected final Persistent object;
 
-    protected final Map<DbEntity, DbRow> dbRows;
+    protected final Map<ObjectId, DbRow> dbRows;
 
     public DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object) {
         this.resolver = resolver;
@@ -62,13 +62,13 @@ public class DbRowFactory {
     }
 
     @SuppressWarnings("unchecked")
-    <E extends DbRow> E get(DbEntity entity) {
-        return Objects.requireNonNull((E) dbRows.get(entity));
+    <E extends DbRow> E get(ObjectId id) {
+        return Objects.requireNonNull((E) dbRows.get(id));
     }
 
     @SuppressWarnings("unchecked")
     <E extends DbRow> E getOrCreate(DbEntity entity, ObjectId id, DbRowType type) {
-        return (E) dbRows.computeIfAbsent(entity, ent -> createRow(ent, id, type));
+        return (E) dbRows.computeIfAbsent(id, nextId -> createRow(entity, id, type));
     }
 
     private DbRow createRow(DbEntity entity, ObjectId id, DbRowType type) {
@@ -127,6 +127,10 @@ public class DbRowFactory {
 
         @Override
         public Void visitDelete(DeleteDbRow dbRow) {
+            if(descriptor.getEntity().isReadOnly()) {
+                throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
+                        "Can't commit changes.", descriptor.getEntity().getName());
+            }
             Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
             flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(getDbEntity(id), id, DbRowType.DELETE));
             descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(DbRowFactory.this, dbRow));

@@ -44,20 +44,85 @@ public class DefaultDbRowSorter implements SnapshotSorter {
     @Inject
     private Provider<DataDomain> dataDomainProvider;
 
+    private volatile Comparator<DbRow> comparator;
+
     @Override
     public List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
-        DataDomain dataDomain = dataDomainProvider.get();
-        EntitySorter entitySorter = dataDomain.getEntitySorter();
 
-//        EntityResolver resolver = dataDomain.getEntityResolver();
-//        List<DiffSnapshot> sublist = snapshots.subList(0, 2);
         List<DbRow> snapshotList = new ArrayList<>(dbRows);
+        snapshotList.sort(getComparator());
 
-        snapshotList.sort(Comparator
-                .comparing(DbRowTypeExtractor.INSTANCE)
-                .thenComparing(DbRow::getEntity, entitySorter.getDbEntityComparator()));
+        // TODO: sort objects with reflexive relationships
+//        EntitySorter sorter = dataDomainProvider.get().getEntitySorter();
+//        DbEntity lastEntity = null;
+//        List<Persistent> objects = null;
+//        for(DbRow row : dbRows) {
+//            if (row.getEntity() != lastEntity) {
+//                if(objects != null) {
+//                }
+//                lastEntity = row.getEntity();
+//            }
+//            if (sorter.isReflexive(lastEntity)) {
+//                if(objects == null) {
+//                    objects = new ArrayList<>();
+//                }
+//                objects.add(row.getObject());
+//            } else {
+//                objects = null;
+//            }
+//        }
 
         return snapshotList;
+    }
+
+    private Comparator<DbRow> getComparator() {
+        Comparator<DbRow> local = comparator;
+        if(local == null) {
+            synchronized (this) {
+                local = comparator;
+                if(local == null) {
+                    local = new DbRowComparator(dataDomainProvider.get().getEntitySorter());
+                    comparator = local;
+                }
+            }
+        }
+        return local;
+    }
+
+    static class DbRowComparator implements Comparator<DbRow> {
+
+        private final EntitySorter entitySorter;
+
+        DbRowComparator(EntitySorter entitySorter) {
+            this.entitySorter = entitySorter;
+        }
+
+        @Override
+        public int compare(DbRow left, DbRow right) {
+            int leftType = DbRowTypeExtractor.INSTANCE.apply(left);
+            int rightType = DbRowTypeExtractor.INSTANCE.apply(right);
+
+            int result;
+            if(left.getChangeId().equals(right.getChangeId())) {
+                result = Integer.compare(rightType, leftType);
+            } else {
+                result = Integer.compare(leftType, rightType);
+            }
+
+            if(result != 0) {
+                return result;
+            }
+
+            result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
+            if(result != 0) {
+                if(leftType == 3) {
+                    return -result;
+                }
+                return result;
+            }
+
+            return 0;
+        }
     }
 
     private static class DbRowTypeExtractor implements Function<DbRow, Integer> {
