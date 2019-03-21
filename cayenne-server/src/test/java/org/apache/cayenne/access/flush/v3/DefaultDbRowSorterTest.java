@@ -20,6 +20,7 @@
 package org.apache.cayenne.access.flush.v3;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
@@ -54,6 +55,29 @@ public class DefaultDbRowSorterTest {
 
         leftSublist.sort(Comparator.comparing(Entity::getB).reversed());
         rightSublist.sort(Comparator.comparing(Entity::getB));
+
+        System.out.println(entityList);
+    }
+
+    @Test
+    public void testSublistClearAndAdd() {
+        List<Entity> entityList = new ArrayList<>();
+
+        Random random = new Random();
+        int count = 20;
+        for(int j=0; j<2; j++) {
+            for (int i = 0; i < count; i++) {
+                entityList.add(new Entity(j, random.nextInt(2 * count)));
+            }
+        }
+
+        List<Entity> leftSublist = entityList.subList(0, count);
+
+        leftSublist.clear();
+
+        List<Entity> newList = Arrays.asList(new Entity(2, 0), new Entity(2, 1), new Entity(2, 3));
+
+        leftSublist.addAll(newList);
 
         System.out.println(entityList);
     }

@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.access.flush.v3.row;
 
+import org.apache.cayenne.DataObject;
+import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbEntity;
@@ -26,7 +28,7 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public interface DbRow {
+public interface DbRow extends DataObject {
 
     <T> T accept(DbRowVisitor<T> visitor);
 
@@ -37,4 +39,77 @@ public interface DbRow {
     Persistent getObject();
 
     boolean isSameBatch(DbRow row);
+
+    default ObjectId getObjectId() {
+        return getObject().getObjectId();
+    }
+
+    default void setObjectId(ObjectId id) {
+        getObject().setObjectId(id);
+    }
+
+    default int getPersistenceState() {
+        return getObject().getPersistenceState();
+    }
+
+    default void setPersistenceState(int state) {
+        getObject().setPersistenceState(state);
+    }
+
+    default ObjectContext getObjectContext() {
+        return getObject().getObjectContext();
+    }
+
+    default void setObjectContext(ObjectContext objectContext) {
+        getObject().setObjectContext(objectContext);
+    }
+
+    default Object readPropertyDirectly(String propertyName) {
+        return ((DataObject)getObject()).readPropertyDirectly(propertyName);
+    }
+
+    default Object readProperty(String propertyName) {
+        return ((DataObject)getObject()).readProperty(propertyName);
+    }
+
+    default Object readNestedProperty(String path) {
+        return ((DataObject)getObject()).readNestedProperty(path);
+    }
+
+    default void writePropertyDirectly(String propertyName, Object val) {
+        throw new UnsupportedOperationException();
+    }
+
+    default void writeProperty(String propertyName, Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    default void addToManyTarget(
+            String relationshipName,
+            DataObject target,
+            boolean setReverse) {
+        throw new UnsupportedOperationException();
+    }
+
+    default void removeToManyTarget(
+            String relationshipName,
+            DataObject target,
+            boolean unsetReverse) {
+        throw new UnsupportedOperationException();
+    }
+
+    default void setToOneTarget(
+            String relationshipName,
+            DataObject value,
+            boolean setReverse) {
+        throw new UnsupportedOperationException();
+    }
+
+    default long getSnapshotVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    default void setSnapshotVersion(long snapshotVersion) {
+        throw new UnsupportedOperationException();
+    }
 }

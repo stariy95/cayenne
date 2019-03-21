@@ -19,12 +19,14 @@
 
 package org.apache.cayenne.access.flush.v3;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.flush.SnapshotSorter;
 import org.apache.cayenne.access.flush.v3.row.DbRow;
@@ -34,7 +36,10 @@ import org.apache.cayenne.access.flush.v3.row.InsertDbRow;
 import org.apache.cayenne.access.flush.v3.row.UpdateDbRow;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
+import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.EntitySorter;
+import org.apache.cayenne.map.ObjEntity;
 
 /**
  * @since 4.2
@@ -49,44 +54,49 @@ public class DefaultDbRowSorter implements SnapshotSorter {
     @Override
     public List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
 
-        List<DbRow> snapshotList = new ArrayList<>(dbRows);
-        snapshotList.sort(getComparator());
+        List<DbRow> sortedDbRows = new ArrayList<>(dbRows);
+        sortedDbRows.sort(getComparator());
 
-        // TODO: sort objects with reflexive relationships
-//        EntitySorter sorter = dataDomainProvider.get().getEntitySorter();
-//        DbEntity lastEntity = null;
-//        List<Persistent> objects = null;
-//        for(DbRow row : dbRows) {
-//            if (row.getEntity() != lastEntity) {
-//                if(objects != null) {
-//                }
-//                lastEntity = row.getEntity();
-//            }
-//            if (sorter.isReflexive(lastEntity)) {
-//                if(objects == null) {
-//                    objects = new ArrayList<>();
-//                }
-//                objects.add(row.getObject());
-//            } else {
-//                objects = null;
-//            }
-//        }
+        DataDomain dataDomain = dataDomainProvider.get();
+        EntitySorter sorter = dataDomain.getEntitySorter();
+        EntityResolver resolver = dataDomain.getEntityResolver();
 
-        return snapshotList;
+        DbEntity lastEntity = null;
+        int start = 0;
+        int idx = 0;
+        DbRow lastRow = null;
+        for(DbRow row : dbRows) {
+            if (row.getEntity() != lastEntity) {
+                start = idx;
+                if(lastEntity != null && sorter.isReflexive(lastEntity)) {
+                    ObjEntity objEntity = resolver.getObjEntity(lastRow.getObject().getObjectId().getEntityName());
+                    List<DbRow> reflexiveSublist = sortedDbRows.subList(start, idx);
+                    sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRow);
+                }
+                lastEntity = row.getEntity();
+            }
+            idx++;
+            lastRow = row;
+        }
+        // sort last chunk
+        if(lastEntity != null && sorter.isReflexive(lastEntity)) {
+            ObjEntity objEntity = resolver.getObjEntity(lastRow.getObject().getObjectId().getEntityName());
+            List<DbRow> reflexiveSublist = sortedDbRows.subList(start, idx);
+            sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRow);
+        }
+
+        return sortedDbRows;
     }
 
     private Comparator<DbRow> getComparator() {
-        Comparator<DbRow> local = comparator;
-        if(local == null) {
+        if(comparator == null) {
             synchronized (this) {
-                local = comparator;
-                if(local == null) {
-                    local = new DbRowComparator(dataDomainProvider.get().getEntitySorter());
-                    comparator = local;
+                if(comparator == null) {
+                    comparator = new DbRowComparator(dataDomainProvider.get().getEntitySorter());
                 }
             }
         }
-        return local;
+        return comparator;
     }
 
     static class DbRowComparator implements Comparator<DbRow> {

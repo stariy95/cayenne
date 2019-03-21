@@ -19,8 +19,12 @@
 
 package org.apache.cayenne.access.flush.v3.row;
 
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbAttribute;
+import org.apache.cayenne.map.DbJoin;
+import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.ObjAttribute;
+import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.reflect.AttributeProperty;
 import org.apache.cayenne.reflect.PropertyVisitor;
 import org.apache.cayenne.reflect.ToManyProperty;
@@ -40,6 +44,7 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
 
     @Override
     public boolean visitAttribute(AttributeProperty property) {
+        // TODO: nead to read this from snapshot if any.
         ObjAttribute attribute = property.getAttribute();
         DbAttribute dbAttribute = attribute.getDbAttribute();
         if (attribute.isUsedForLocking() && dbAttribute.getEntity() == dbRow.getEntity()) {
@@ -50,11 +55,22 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
 
     @Override
     public boolean visitToOne(ToOneProperty property) {
-        // TODO: implement
-//                ObjRelationship relationship = property.getRelationship();
-//                if(relationship.isUsedForLocking()) {
-//
-//                }
+        // TODO: nead to read this from snapshot if any.
+        // TODO: implement all cases...
+        ObjRelationship relationship = property.getRelationship();
+        if(relationship.isUsedForLocking()) {
+            DbRelationship dbRelationship = relationship.getDbRelationships().get(0);
+            for(DbJoin join : dbRelationship.getJoins()) {
+                DbAttribute source = join.getSource();
+                if(!source.isPrimaryKey()) {
+                    if(join.getTarget().isPrimaryKey()) {
+                        Persistent targetObject = (Persistent)property.readPropertyDirectly(factory.object);
+                        Object value = targetObject.getObjectId().getIdSnapshot().get(join.getTargetName());
+                        dbRow.getQualifier().addOptimisticLockQualifier(source, value);
+                    }
+                }
+            }
+        }
         return true;
     }
 
