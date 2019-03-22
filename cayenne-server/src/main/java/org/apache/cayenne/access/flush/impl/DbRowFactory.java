@@ -38,6 +38,7 @@ import org.apache.cayenne.access.flush.row.InsertDbRow;
 import org.apache.cayenne.access.flush.row.UpdateDbRow;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
+import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +120,8 @@ public class DbRowFactory {
             entityName = entityName.substring(PermanentObjectIdVisitor.DB_ID_PREFIX.length());
             return resolver.getDbEntity(entityName);
         } else {
-            return resolver.getObjEntity(entityName).getDbEntity();
+            ObjEntity objEntity = resolver.getObjEntity(entityName);
+            return objEntity.getDbEntity();
         }
     }
 
