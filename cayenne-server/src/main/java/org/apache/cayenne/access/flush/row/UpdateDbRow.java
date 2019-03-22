@@ -64,4 +64,9 @@ public class UpdateDbRow extends BaseDbRow implements DbRowWithValues, DbRowWith
 
         return qualifier.isSameBatch(other.qualifier);
     }
+
+    @Override
+    public String toString() {
+        return "update " + super.toString();
+    }
 }

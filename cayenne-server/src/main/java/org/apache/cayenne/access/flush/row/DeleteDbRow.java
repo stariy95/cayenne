@@ -61,4 +61,9 @@ public class DeleteDbRow extends BaseDbRow implements DbRowWithQualifier {
     public Qualifier getQualifier() {
         return qualifier;
     }
+
+    @Override
+    public String toString() {
+        return "delete " + super.toString();
+    }
 }

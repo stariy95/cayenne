@@ -19,12 +19,10 @@
 
 package org.apache.cayenne.access.flush.row;
 
-import java.util.Map;
 import java.util.Objects;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
-import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 
 /**
@@ -63,54 +61,16 @@ public abstract class BaseDbRow implements DbRow {
         if (!(o instanceof DbRow)) return false;
 
         DbRow other = (DbRow) o;
-        ObjectId otherChangeId = other.getChangeId();
-        // TODO: Is this assumption valid?
-        //  can tmp id with proper replacement map be equal to permanent id?
-        if(this.changeId == otherChangeId) {
-            return true;
-        }
-
-        if(this.changeId.isTemporary() != otherChangeId.isTemporary()) {
-            return false;
-        }
-
-        // TODO: should this be in the ObjectIdTmp class?
-        if(this.changeId.isTemporary()) {
-            if(!this.changeId.getEntityName().equals(otherChangeId.getEntityName())) {
-                return false;
-            }
-
-            if(changeId.isReplacementIdAttached() != otherChangeId.isReplacementIdAttached()) {
-                return false;
-            }
-
-            if(changeId.isReplacementIdAttached()) {
-                for(DbAttribute pk : entity.getPrimaryKeys()) {
-                    if(!changeId.getReplacementIdMap().get(pk.getName())
-                            .equals(otherChangeId.getReplacementIdMap().get(pk.getName()))) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return changeId.equals(otherChangeId);
+        return changeId.equals(other.getChangeId());
     }
 
     @Override
     public int hashCode() {
-        if(changeId.isTemporary() && changeId.isReplacementIdAttached()) {
-            int hashCode = changeId.getEntityName().hashCode();
-            Map<String, Object> replacementIdMap = changeId.getReplacementIdMap();
-            for(DbAttribute attribute : entity.getPrimaryKeys()) {
-                Object value = replacementIdMap.get(attribute.getName());
-                if(value != null) {
-                    hashCode = 17 * hashCode + value.hashCode();
-                }
-            }
-            return hashCode;
-        }
         return changeId.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return entity.getName() + " " + changeId;
+    }
 }

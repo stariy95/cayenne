@@ -149,7 +149,8 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     if(!relationship.isToMany()) {
                         factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
                     }
-                    factory.<DbRowWithValues>getOrCreate(target, targetId, DbRowType.INSERT)
+
+                    factory.<DbRowWithValues>getOrCreate(target, targetId, add ? DbRowType.INSERT : DbRowType.UPDATE)
                             .getValues()
                             .addFlattenedId(flattenedPath, targetId);
                 } else if(dbPathIterator.hasNext()) {

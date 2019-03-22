@@ -25,11 +25,15 @@ import org.apache.cayenne.access.flush.row.DbRowWithValues;
 import org.apache.cayenne.access.flush.row.DeleteDbRow;
 import org.apache.cayenne.access.flush.row.InsertDbRow;
 import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 class DbRowMerger implements DbRowVisitor<DbRow> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     private final DbRow dbRow;
 
@@ -39,6 +43,7 @@ class DbRowMerger implements DbRowVisitor<DbRow> {
 
     @Override
     public DbRow visitInsert(InsertDbRow other) {
+        LOGGER.info("Merge " + dbRow + " with " + other);
         return mergeValues((DbRowWithValues) dbRow, other);
     }
 
@@ -46,8 +51,10 @@ class DbRowMerger implements DbRowVisitor<DbRow> {
     public DbRow visitUpdate(UpdateDbRow other) {
         // delete beats update ...
         if(dbRow instanceof DeleteDbRow) {
+            LOGGER.info("Replace " + other + " with " + dbRow);
             return dbRow;
         }
+        LOGGER.info("Merge " + dbRow + " with " + other);
         return mergeValues((DbRowWithValues) dbRow, other);
     }
 

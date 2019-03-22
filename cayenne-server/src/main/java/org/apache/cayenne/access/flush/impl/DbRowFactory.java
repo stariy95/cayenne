@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
@@ -38,11 +39,15 @@ import org.apache.cayenne.access.flush.row.UpdateDbRow;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.reflect.ClassDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class DbRowFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     protected final EntityResolver resolver;
     protected final ObjectStore store;
@@ -65,7 +70,10 @@ public class DbRowFactory {
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
         DbRow row = getOrCreate(rootEntity, object.getObjectId(), DbRowType.forObject(object));
         row.accept(new RootRowProcessor(diff));
-        return dbRows.values();
+        return dbRows.values()
+                .stream()
+                .map(next -> next.accept(new ReplacementVisitor()))
+                .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
@@ -81,10 +89,13 @@ public class DbRowFactory {
     private DbRow createRow(DbEntity entity, ObjectId id, DbRowType type) {
         switch (type) {
             case INSERT:
+                LOGGER.info("Create insert for " + entity.getName() + " " + id);
                 return new InsertDbRow(object, entity, id);
             case UPDATE:
+                LOGGER.info("Create update for " + entity.getName() + " " + id);
                 return new UpdateDbRow(object, entity, id);
             case DELETE:
+                LOGGER.info("Create delete for " + entity.getName() + " " + id);
                 return new DeleteDbRow(object, entity, id);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
@@ -114,6 +125,36 @@ public class DbRowFactory {
 
     public Set<ArcTarget> getProcessedArcs() {
         return processedArcs;
+    }
+
+    private static class ReplacementVisitor implements DbRowVisitor<DbRow> {
+        @Override
+        public DbRow visitUpdate(UpdateDbRow dbRow) {
+            return dbRow;
+//            Map<String, Object> snapshot = dbRow.getValues().getSnapshot();
+//            for(DbAttribute pk: dbRow.getEntity().getPrimaryKeys()) {
+//                if(dbRow.getValues().getUpdatedAttributes().contains(pk)) {
+//                    Object value = snapshot.get(pk.getName());
+//                    if(value instanceof Supplier) {
+//                        value = ((Supplier) value).get();
+//                    }
+//                    if(value != null) {
+//                        return dbRow;
+//                    }
+//                }
+//            }
+//            return new DeleteDbRow(dbRow.getObject(), dbRow.getEntity(), dbRow.getChangeId());
+        }
+
+        @Override
+        public DbRow visitInsert(InsertDbRow dbRow) {
+            return dbRow;
+        }
+
+        @Override
+        public DbRow visitDelete(DeleteDbRow dbRow) {
+            return dbRow;
+        }
     }
 
     private class RootRowProcessor implements DbRowVisitor<Void> {

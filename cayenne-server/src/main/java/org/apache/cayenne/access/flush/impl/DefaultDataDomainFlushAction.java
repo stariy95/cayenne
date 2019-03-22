@@ -47,11 +47,15 @@ import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.BatchQuery;
 import org.apache.cayenne.reflect.ClassDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     protected final DataDomain dataDomain;
     protected final DbRowSorter snapshotSorter;
@@ -101,13 +105,17 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
             ClassDescriptor descriptor = resolver.getClassDescriptor(id.getEntityName());
 
             DbRowFactory factory = new DbRowFactory(resolver, objectStore, descriptor, object, processedArcs);
+            LOGGER.info("Get rows for object " + obj);
             Collection<? extends DbRow> rows = factory.createRows(diff);
-            rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
-                if(value != null) {
-                    return value.accept(new DbRowMerger(dbRow));
-                }
-                return dbRow;
-            }));
+            rows.forEach(dbRow -> {
+                LOGGER.info("Process " + dbRow);
+                dbRows.compute(dbRow, (key, value) -> {
+                    if (value != null) {
+                        return value.accept(new DbRowMerger(dbRow));
+                    }
+                    return dbRow;
+                });
+            });
         });
 
         return dbRows.values();
