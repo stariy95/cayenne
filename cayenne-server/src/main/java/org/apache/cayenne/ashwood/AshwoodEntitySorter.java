@@ -25,7 +25,7 @@ import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.QueryResponse;
-import org.apache.cayenne.access.flush.v3.row.DbRow;
+import org.apache.cayenne.access.flush.row.DbRow;
 import org.apache.cayenne.ashwood.graph.Digraph;
 import org.apache.cayenne.ashwood.graph.IndegreeTopologicalSort;
 import org.apache.cayenne.ashwood.graph.MapDigraph;

@@ -25,9 +25,9 @@ import org.apache.cayenne.access.DefaultDataRowStoreFactory;
 import org.apache.cayenne.access.DefaultObjectMapRetainStrategy;
 import org.apache.cayenne.access.ObjectMapRetainStrategy;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.v1.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.v1.DefaultOperationSorter;
-import org.apache.cayenne.access.flush.SnapshotSorter;
+import org.apache.cayenne.access.flush.row.DbRowSorter;
+import org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.impl.DefaultDbRowSorter;
 import org.apache.cayenne.ashwood.AshwoodEntitySorter;
 import org.apache.cayenne.cache.MapQueryCache;
 import org.apache.cayenne.cache.QueryCache;
@@ -81,7 +81,7 @@ public class DataContextFactoryTest {
             binder.bind(EventBridge.class).toProvider(NoopEventBridgeProvider.class);
             binder.bind(DataRowStoreFactory.class).to(DefaultDataRowStoreFactory.class);
             binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
-            binder.bind(SnapshotSorter.class).to(DefaultOperationSorter.class);
+            binder.bind(DbRowSorter.class).to(DefaultDbRowSorter.class);
             binder.bind(EntitySorter.class).to(AshwoodEntitySorter.class);
         };
 
@@ -120,7 +120,7 @@ public class DataContextFactoryTest {
             binder.bind(EventBridge.class).toProvider(NoopEventBridgeProvider.class);
             binder.bind(DataRowStoreFactory.class).to(DefaultDataRowStoreFactory.class);
             binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
-            binder.bind(SnapshotSorter.class).to(DefaultOperationSorter.class);
+            binder.bind(DbRowSorter.class).to(DefaultDbRowSorter.class);
             binder.bind(EntitySorter.class).to(AshwoodEntitySorter.class);
         };
 

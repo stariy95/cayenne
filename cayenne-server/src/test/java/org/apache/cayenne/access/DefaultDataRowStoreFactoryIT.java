@@ -19,6 +19,10 @@
 
 package org.apache.cayenne.access;
 
+import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.row.DbRowSorter;
+import org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.impl.DefaultDbRowSorter;
 import org.apache.cayenne.configuration.DefaultRuntimeProperties;
 import org.apache.cayenne.configuration.RuntimeProperties;
 import org.apache.cayenne.configuration.server.ServerModule;
@@ -100,6 +104,8 @@ public class DefaultDataRowStoreFactoryIT extends ServerCase {
             binder.bind(RuntimeProperties.class).to(DefaultRuntimeProperties.class);
             binder.bind(EventBridge.class).toProvider(MockEventBridgeProvider.class);
             binder.bind(DataRowStoreFactory.class).to(DefaultDataRowStoreFactory.class);
+            binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
+            binder.bind(DbRowSorter.class).to(DefaultDbRowSorter.class);
             ServerModule.contributeProperties(binder);
         };
 
