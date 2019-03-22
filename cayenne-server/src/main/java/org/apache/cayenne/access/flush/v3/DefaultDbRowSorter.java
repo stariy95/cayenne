@@ -19,14 +19,12 @@
 
 package org.apache.cayenne.access.flush.v3;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.flush.SnapshotSorter;
 import org.apache.cayenne.access.flush.v3.row.DbRow;
@@ -55,8 +53,15 @@ public class DefaultDbRowSorter implements SnapshotSorter {
     public List<DbRow> sortDbRows(Collection<DbRow> dbRows) {
 
         List<DbRow> sortedDbRows = new ArrayList<>(dbRows);
+        // sort by id, operation type and entity relations
         sortedDbRows.sort(getComparator());
+        // sort reflexively dependent objects
+        sortReflexive(sortedDbRows);
 
+        return sortedDbRows;
+    }
+
+    private void sortReflexive(List<DbRow> sortedDbRows) {
         DataDomain dataDomain = dataDomainProvider.get();
         EntitySorter sorter = dataDomain.getEntitySorter();
         EntityResolver resolver = dataDomain.getEntityResolver();
@@ -65,7 +70,7 @@ public class DefaultDbRowSorter implements SnapshotSorter {
         int start = 0;
         int idx = 0;
         DbRow lastRow = null;
-        for(DbRow row : dbRows) {
+        for(DbRow row : sortedDbRows) {
             if (row.getEntity() != lastEntity) {
                 start = idx;
                 if(lastEntity != null && sorter.isReflexive(lastEntity)) {
@@ -75,8 +80,8 @@ public class DefaultDbRowSorter implements SnapshotSorter {
                 }
                 lastEntity = row.getEntity();
             }
-            idx++;
             lastRow = row;
+            idx++;
         }
         // sort last chunk
         if(lastEntity != null && sorter.isReflexive(lastEntity)) {
@@ -84,19 +89,20 @@ public class DefaultDbRowSorter implements SnapshotSorter {
             List<DbRow> reflexiveSublist = sortedDbRows.subList(start, idx);
             sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRow);
         }
-
-        return sortedDbRows;
     }
 
     private Comparator<DbRow> getComparator() {
-        if(comparator == null) {
+        Comparator<DbRow> local = comparator;
+        if(local == null) {
             synchronized (this) {
-                if(comparator == null) {
-                    comparator = new DbRowComparator(dataDomainProvider.get().getEntitySorter());
+                local = comparator;
+                if(local == null) {
+                    local = new DbRowComparator(dataDomainProvider.get().getEntitySorter());
+                    comparator = local;
                 }
             }
         }
-        return comparator;
+        return local;
     }
 
     static class DbRowComparator implements Comparator<DbRow> {
