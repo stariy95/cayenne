@@ -150,9 +150,16 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                         factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
                     }
 
-                    factory.<DbRowWithValues>getOrCreate(target, targetId, add ? DbRowType.INSERT : DbRowType.UPDATE)
+                    DbRowType type;
+                    if(relationship.isToMany()) {
+                        type = add ? DbRowType.INSERT : DbRowType.DELETE;
+                        factory.getOrCreate(target, targetId, type);
+                    } else {
+                        type = add ? DbRowType.INSERT : DbRowType.UPDATE;
+                        factory.<DbRowWithValues>getOrCreate(target, targetId, type)
                             .getValues()
                             .addFlattenedId(flattenedPath, targetId);
+                    }
                 } else if(dbPathIterator.hasNext()) {
                     // should update existing DB row
                     factory.getOrCreate(target, targetId, DbRowType.UPDATE);
@@ -183,27 +190,35 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     if(targetPK) {
                         targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
                     }
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
-                            .getValues()
-                            .addValue(join.getTarget(), add ? srcValue : null);
+                    if(!dbRelationship.isToMany()) {
+                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
+                                .getValues()
+                                .addValue(join.getTarget(), add ? srcValue : null);
+                    }
                 } else {
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     }
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
-                            .getValues()
-                            .addValue(join.getSource(), add ? dstValue : null);
+                    if(!dbRelationship.getReverseRelationship().isToMany()) {
+                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
+                                .getValues()
+                                .addValue(join.getSource(), add ? dstValue : null);
+                    }
                 }
             } else {
                 // case 1
                 if(srcPK) {
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
-                            .getValues()
-                            .addValue(join.getTarget(), add ? srcValue : null);
+                    if(add || !dbRelationship.isToMany()) {
+                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
+                                .getValues()
+                                .addValue(join.getTarget(), add ? srcValue : null);
+                    }
                 } else {
-                    factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
-                            .getValues()
-                            .addValue(join.getSource(), add ? dstValue : null);
+                    if(add || !dbRelationship.getReverseRelationship().isToMany()) {
+                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
+                                .getValues()
+                                .addValue(join.getSource(), add ? dstValue : null);
+                    }
                 }
             }
         }
