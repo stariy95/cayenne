@@ -69,4 +69,9 @@ class ObjectIdValueSupplier implements Supplier<Object> {
     public int hashCode() {
         return 31 * id.hashCode() + attribute.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "{id=" + id + ", attr=" + attribute + '}';
+    }
 }

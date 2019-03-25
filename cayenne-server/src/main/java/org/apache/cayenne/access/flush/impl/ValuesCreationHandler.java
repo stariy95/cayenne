@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.access.flush.row.DbRow;
 import org.apache.cayenne.access.flush.row.DbRowWithValues;
 import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
@@ -34,11 +35,15 @@ import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.util.CayenneMapEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class ValuesCreationHandler implements GraphChangeHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     private final DbRowFactory factory;
     private final DbRowType defaultType;
@@ -80,17 +85,20 @@ public class ValuesCreationHandler implements GraphChangeHandler {
     @Override
     public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
         ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, (ObjectId) targetNodeId, arcId);
+        LOGGER.info("Create arc " + arcId.getForwardArc() + " <-> " + arcId.getReverseArc());
         processArcChange(arcTarget, true);
     }
 
     @Override
     public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
         ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, (ObjectId) targetNodeId, arcId);
+        LOGGER.info("Delete arc " + arcId.getForwardArc() + " <-> " + arcId.getReverseArc());
         processArcChange(arcTarget, false);
     }
 
     private void processArcChange(ArcTarget arcTarget, boolean created) {
         if(factory.getProcessedArcs().contains(arcTarget.getReversed())) {
+            LOGGER.info("arc already processed, skipping...");
             return;
         }
 
@@ -208,16 +216,14 @@ public class ValuesCreationHandler implements GraphChangeHandler {
             } else {
                 // case 1
                 if(srcPK) {
-                    if(add || !dbRelationship.isToMany()) {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
-                                .getValues()
-                                .addValue(join.getTarget(), add ? srcValue : null);
+                    DbRow row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    if(row instanceof DbRowWithValues) {
+                        ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
                     }
                 } else {
-                    if(add || !dbRelationship.getReverseRelationship().isToMany()) {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
-                                .getValues()
-                                .addValue(join.getSource(), add ? dstValue : null);
+                    DbRow row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
+                    if(row instanceof DbRowWithValues) {
+                        ((DbRowWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
                     }
                 }
             }

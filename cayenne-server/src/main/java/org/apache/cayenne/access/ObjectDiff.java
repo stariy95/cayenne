@@ -144,11 +144,11 @@ public class ObjectDiff extends NodeDiff {
         return classDescriptor;
     }
 
-    Object getSnapshotValue(String propertyName) {
+    public Object getSnapshotValue(String propertyName) {
         return snapshot != null ? snapshot.get(propertyName) : null;
     }
 
-    ObjectId getArcSnapshotValue(String propertyName) {
+    public ObjectId getArcSnapshotValue(String propertyName) {
         Object value = arcSnapshot != null ? arcSnapshot.get(propertyName) : null;
 
         if (value instanceof Fault) {

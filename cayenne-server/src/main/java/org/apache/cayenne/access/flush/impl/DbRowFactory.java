@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
@@ -54,11 +53,10 @@ public class DbRowFactory {
     protected final ObjectStore store;
     protected final ClassDescriptor descriptor;
     protected final Persistent object;
-
     protected final Set<ArcTarget> processedArcs;
     protected final Map<ObjectId, DbRow> dbRows;
 
-    public DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object, Set<ArcTarget> processedArcs) {
+    DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object, Set<ArcTarget> processedArcs) {
         this.resolver = resolver;
         this.store = store;
         this.descriptor = descriptor;
@@ -67,14 +65,11 @@ public class DbRowFactory {
         this.processedArcs = processedArcs;
     }
 
-    public Collection<? extends DbRow> createRows(ObjectDiff diff) {
+    Collection<? extends DbRow> createRows(ObjectDiff diff) {
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
         DbRow row = getOrCreate(rootEntity, object.getObjectId(), DbRowType.forObject(object));
         row.accept(new RootRowProcessor(diff));
-        return dbRows.values()
-                .stream()
-                .map(next -> next.accept(new ReplacementVisitor()))
-                .collect(Collectors.toList());
+        return dbRows.values();
     }
 
     @SuppressWarnings("unchecked")
@@ -125,38 +120,8 @@ public class DbRowFactory {
         }
     }
 
-    public Set<ArcTarget> getProcessedArcs() {
+    Set<ArcTarget> getProcessedArcs() {
         return processedArcs;
-    }
-
-    private static class ReplacementVisitor implements DbRowVisitor<DbRow> {
-        @Override
-        public DbRow visitUpdate(UpdateDbRow dbRow) {
-            return dbRow;
-//            Map<String, Object> snapshot = dbRow.getValues().getSnapshot();
-//            for(DbAttribute pk: dbRow.getEntity().getPrimaryKeys()) {
-//                if(dbRow.getValues().getUpdatedAttributes().contains(pk)) {
-//                    Object value = snapshot.get(pk.getName());
-//                    if(value instanceof Supplier) {
-//                        value = ((Supplier) value).get();
-//                    }
-//                    if(value != null) {
-//                        return dbRow;
-//                    }
-//                }
-//            }
-//            return new DeleteDbRow(dbRow.getObject(), dbRow.getEntity(), dbRow.getChangeId());
-        }
-
-        @Override
-        public DbRow visitInsert(InsertDbRow dbRow) {
-            return dbRow;
-        }
-
-        @Override
-        public DbRow visitDelete(DeleteDbRow dbRow) {
-            return dbRow;
-        }
     }
 
     private class RootRowProcessor implements DbRowVisitor<Void> {
@@ -175,7 +140,7 @@ public class DbRowFactory {
         @Override
         public Void visitUpdate(UpdateDbRow dbRow) {
             diff.apply(new ValuesCreationHandler(DbRowFactory.this, DbRowType.UPDATE));
-            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(DbRowFactory.this, dbRow));
+            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
             return null;
         }
 
@@ -187,7 +152,7 @@ public class DbRowFactory {
             }
             Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
             flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(getDbEntity(id), id, DbRowType.DELETE));
-            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(DbRowFactory.this, dbRow));
+            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
             return null;
         }
     }

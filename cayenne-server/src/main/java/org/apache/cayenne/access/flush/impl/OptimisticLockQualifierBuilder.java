@@ -19,7 +19,10 @@
 
 package org.apache.cayenne.access.flush.impl;
 
-import org.apache.cayenne.Persistent;
+import java.util.function.Supplier;
+
+import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.flush.row.DbRowWithQualifier;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbJoin;
@@ -35,40 +38,39 @@ import org.apache.cayenne.reflect.ToOneProperty;
  * @since 4.2
  */
 class OptimisticLockQualifierBuilder implements PropertyVisitor {
-    private DbRowFactory factory;
     private final DbRowWithQualifier dbRow;
+    private final ObjectDiff diff;
 
-    OptimisticLockQualifierBuilder(DbRowFactory factory, DbRowWithQualifier dbRow) {
-        this.factory = factory;
+    OptimisticLockQualifierBuilder(DbRowWithQualifier dbRow, ObjectDiff diff) {
         this.dbRow = dbRow;
+        this.diff = diff;
     }
 
     @Override
     public boolean visitAttribute(AttributeProperty property) {
-        // TODO: nead to read this from snapshot if any.
         ObjAttribute attribute = property.getAttribute();
         DbAttribute dbAttribute = attribute.getDbAttribute();
         if (attribute.isUsedForLocking() && dbAttribute.getEntity() == dbRow.getEntity()) {
-            dbRow.getQualifier().addOptimisticLockQualifier(dbAttribute, property.readPropertyDirectly(factory.object));
+            dbRow.getQualifier()
+                    .addOptimisticLockQualifier(dbAttribute, diff.getSnapshotValue(property.getName()));
+
         }
         return true;
     }
 
     @Override
     public boolean visitToOne(ToOneProperty property) {
-        // TODO: nead to read this from snapshot if any.
         // TODO: implement all cases...
         ObjRelationship relationship = property.getRelationship();
         if(relationship.isUsedForLocking()) {
+            ObjectId value = diff.getArcSnapshotValue(property.getName());
             DbRelationship dbRelationship = relationship.getDbRelationships().get(0);
             for(DbJoin join : dbRelationship.getJoins()) {
                 DbAttribute source = join.getSource();
                 if(!source.isPrimaryKey()) {
-                    if(join.getTarget().isPrimaryKey()) {
-                        Persistent targetObject = (Persistent)property.readPropertyDirectly(factory.object);
-                        Object value = targetObject.getObjectId().getIdSnapshot().get(join.getTargetName());
-                        dbRow.getQualifier().addOptimisticLockQualifier(source, value);
-                    }
+                    dbRow.getQualifier().addOptimisticLockQualifier(source,
+                                    (Supplier)() -> value.getIdSnapshot().get(join.getTargetName())
+                    );
                 }
             }
         }

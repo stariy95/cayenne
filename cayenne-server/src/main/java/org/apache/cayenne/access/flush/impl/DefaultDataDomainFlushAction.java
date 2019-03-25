@@ -111,7 +111,7 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
                 LOGGER.info("Process " + dbRow);
                 dbRows.compute(dbRow, (key, value) -> {
                     if (value != null) {
-                        return value.accept(new DbRowMerger(dbRow));
+                        return dbRow.accept(new DbRowMerger(value));
                     }
                     return dbRow;
                 });
@@ -151,20 +151,18 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         ObjectStore objectStore = context.getObjectStore();
 
         PostprocessVisitor postprocessor = new PostprocessVisitor(context);
-        dbRows.forEach(row -> {
-            row.accept(postprocessor);
-        });
+        dbRows.forEach(row -> row.accept(postprocessor));
 
-        DataDomainIndirectDiffBuilder dataDomainIndirectDiffBuilder = new DataDomainIndirectDiffBuilder(context.getEntityResolver());
-        dataDomainIndirectDiffBuilder.processIndirectChanges(changes);
+        DataDomainIndirectDiffBuilder indirectDiffBuilder = new DataDomainIndirectDiffBuilder(context.getEntityResolver());
+        indirectDiffBuilder.processChanges(changes);
 
         objectStore.getDataRowCache()
                 .processSnapshotChanges(
                         objectStore,
                         postprocessor.getUpdatedSnapshots(),
-                        postprocessor.getDeletedIds(), // TODO: old tmp id should go int this collection too...
+                        postprocessor.getDeletedIds(), // TODO: old tmp id should go into this collection too...
                         Collections.emptyList(),
-                        dataDomainIndirectDiffBuilder.getIndirectModifications()
+                        indirectDiffBuilder.getIndirectModifications()
                 );
         objectStore.postprocessAfterCommit(result);
     }

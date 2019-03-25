@@ -58,8 +58,21 @@ class DbRowMerger implements DbRowVisitor<DbRow> {
         return mergeValues((DbRowWithValues) dbRow, other);
     }
 
+    @Override
+    public DbRow visitDelete(DeleteDbRow other) {
+        LOGGER.info("Replace " + dbRow + " with " + other);
+        return other;
+    }
+
     private DbRow mergeValues(DbRowWithValues left, DbRowWithValues right) {
-        left.getValues().merge(right.getValues());
-        return left;
+        if(right.getChangeId() == right.getObject().getObjectId()) {
+            LOGGER.info("Merger right");
+            right.getValues().merge(left.getValues());
+            return right;
+        } else {
+            LOGGER.info("Merger left");
+            left.getValues().merge(right.getValues());
+            return left;
+        }
     }
 }

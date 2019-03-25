@@ -44,7 +44,7 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
         this.resolver = resolver;
     }
 
-    void processIndirectChanges(GraphDiff allChanges) {
+    void processChanges(GraphDiff allChanges) {
         // extract flattened and indirect changes and remove duplicate changes...
         allChanges.apply(this);
     }
@@ -76,11 +76,9 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
                 indirectModifications.add(nodeId);
             }
 
-            if (relationship.isFlattened()) {
-                if (relationship.isReadOnly()) {
-                    throw new CayenneRuntimeException("Cannot change the read-only flattened relationship %s in ObjEntity '%s'."
-                            , relationship.getName(), relationship.getSourceEntity().getName());
-                }
+            if (relationship.isFlattened() && relationship.isReadOnly()) {
+                throw new CayenneRuntimeException("Cannot change the read-only flattened relationship %s in ObjEntity '%s'."
+                        , relationship.getName(), relationship.getSourceEntity().getName());
             }
         }
     }
