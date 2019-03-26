@@ -100,7 +100,7 @@ class ReplacementIdVisitor implements DbRowVisitor<Void> {
                     }
                 }
             }
+            result.add(new NodeIdChangeOperation(id, replacementId));
         }
-        result.add(new NodeIdChangeOperation(id, replacementId));
     }
 }

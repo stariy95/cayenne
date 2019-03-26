@@ -19,6 +19,10 @@
 
 package org.apache.cayenne.dbsync.reverse.configuration;
 
+import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.impl.DefaultDbRowSorter;
+import org.apache.cayenne.access.flush.row.DbRowSorter;
 import org.apache.cayenne.access.translator.batch.BatchTranslatorFactory;
 import org.apache.cayenne.access.translator.batch.DefaultBatchTranslatorFactory;
 import org.apache.cayenne.access.types.DefaultValueObjectTypeRegistry;
@@ -129,6 +133,8 @@ public class ToolsModule implements Module {
         binder.bind(HandlerFactory.class).to(ExtensionAwareHandlerFactory.class);
         binder.bind(DataChannelMetaData.class).to(DefaultDataChannelMetaData.class);
         binder.bind(XMLReader.class).toProviderInstance(new XMLReaderProvider(true)).withoutScope();
+        binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
+        binder.bind(DbRowSorter.class).to(DefaultDbRowSorter.class);
 
         ProjectModule.contributeExtensions(binder);
     }
