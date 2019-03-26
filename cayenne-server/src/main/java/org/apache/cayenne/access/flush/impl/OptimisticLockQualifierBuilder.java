@@ -52,7 +52,7 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
         DbAttribute dbAttribute = attribute.getDbAttribute();
         if (attribute.isUsedForLocking() && dbAttribute.getEntity() == dbRow.getEntity()) {
             dbRow.getQualifier()
-                    .addOptimisticLockQualifier(dbAttribute, diff.getSnapshotValue(property.getName()));
+                    .addAdditionalQualifier(dbAttribute, diff.getSnapshotValue(property.getName()), true);
 
         }
         return true;
@@ -68,9 +68,8 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
             for(DbJoin join : dbRelationship.getJoins()) {
                 DbAttribute source = join.getSource();
                 if(!source.isPrimaryKey()) {
-                    dbRow.getQualifier().addOptimisticLockQualifier(source,
-                                    (Supplier)() -> value.getIdSnapshot().get(join.getTargetName())
-                    );
+                    dbRow.getQualifier().addAdditionalQualifier(source,
+                            (Supplier)() -> value.getIdSnapshot().get(join.getTargetName()), true);
                 }
             }
         }

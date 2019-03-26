@@ -24,19 +24,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.access.flush.impl.DbRowFactory;
 import org.apache.cayenne.map.DbAttribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class Values {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     protected final DbRow row;
     protected final boolean includeId;
@@ -63,9 +58,6 @@ public class Values {
     }
 
     private void computeSnapshotValue(String attribute, Object value) {
-        if(attribute.equals("PARENT_GROUP_ID")) {
-            LOGGER.info(row.getChangeId() + ": set PARENT_GROUP_ID to " + value);
-        }
         snapshot.putIfAbsent(attribute, value);
     }
 

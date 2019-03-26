@@ -29,8 +29,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.ObjectDiff;
@@ -46,16 +44,11 @@ import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.BatchQuery;
-import org.apache.cayenne.reflect.ClassDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     protected final DataDomain dataDomain;
     protected final DbRowSorter snapshotSorter;
@@ -100,22 +93,14 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         Set<ArcTarget> processedArcs = new HashSet<>();
 
         changesByObjectId.forEach((obj, diff) -> {
-            ObjectId id = (ObjectId)obj;
-            Persistent object = (Persistent) objectStore.getNode(id);
-            ClassDescriptor descriptor = resolver.getClassDescriptor(id.getEntityName());
-
-            DbRowFactory factory = new DbRowFactory(resolver, objectStore, descriptor, object, processedArcs);
-            LOGGER.info("Get rows for object " + obj);
-            Collection<? extends DbRow> rows = factory.createRows(diff);
-            rows.forEach(dbRow -> {
-                LOGGER.info("Process " + dbRow);
-                dbRows.compute(dbRow, (key, value) -> {
-                    if (value != null) {
-                        return dbRow.accept(new DbRowMerger(value));
-                    }
-                    return dbRow;
-                });
-            });
+            DbRowFactory factory = new DbRowFactory(resolver, objectStore, diff, processedArcs);
+            Collection<? extends DbRow> rows = factory.createRows();
+            rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
+                if (value != null) {
+                    return dbRow.accept(new DbRowMerger(value));
+                }
+                return dbRow;
+            }));
         });
 
         return dbRows.values();

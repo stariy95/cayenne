@@ -36,8 +36,9 @@ public class Qualifier {
 
     protected final DbRow row;
     // additional qualifier for optimistic lock
-    protected Map<DbAttribute, Object> optimisticLockQualifier;
+    protected Map<DbAttribute, Object> additionalQualifier;
     protected List<String> nullNames;
+    protected boolean optimisticLock;
 
     protected Qualifier(DbRow row) {
         this.row = row;
@@ -45,26 +46,37 @@ public class Qualifier {
 
     public Map<String, Object> getSnapshot() {
         Map<String, Object> idSnapshot = row.getChangeId().getIdSnapshot();
-        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
+        if(additionalQualifier == null || additionalQualifier.isEmpty()) {
             return idSnapshot;
         }
 
-        Map<String, Object> qualifier = new HashMap<>(optimisticLockQualifier.size() + idSnapshot.size());
-        qualifier.putAll(idSnapshot);
-        optimisticLockQualifier.forEach((attr, value) -> {
-            qualifier.put(attr.getName(), value);
+        Map<String, Object> qualifier = new HashMap<>(additionalQualifier.size() + idSnapshot.size());
+        idSnapshot.forEach((attr, value) -> {
+            if(value != null) {
+                qualifier.put(attr, value);
+            }
         });
+        additionalQualifier.forEach((attr, value) ->
+                qualifier.put(attr.getName(), value)
+        );
 
         return qualifier;
     }
 
     public List<DbAttribute> getQualifierAttributes() {
-        if(optimisticLockQualifier == null || optimisticLockQualifier.isEmpty()) {
-            return row.getEntity().getPrimaryKeys();
+        List<DbAttribute> primaryKeys = row.getEntity().getPrimaryKeys();
+        if(additionalQualifier == null || additionalQualifier.isEmpty()) {
+            return primaryKeys;
         }
 
-        List<DbAttribute> attributes = new ArrayList<>(row.getEntity().getPrimaryKeys());
-        attributes.addAll(optimisticLockQualifier.keySet());
+        List<DbAttribute> attributes = new ArrayList<>();
+        Map<String, Object> idSnapshot = row.getChangeId().getIdSnapshot();
+        primaryKeys.forEach(pk -> {
+            if(idSnapshot.containsKey(pk.getName())) {
+                attributes.add(pk);
+            }
+        });
+        attributes.addAll(additionalQualifier.keySet());
         return attributes;
     }
 
@@ -75,29 +87,37 @@ public class Qualifier {
         return nullNames;
     }
 
-    public void addOptimisticLockQualifier(DbAttribute dbAttribute, Object value) {
-        if(optimisticLockQualifier == null) {
-            optimisticLockQualifier = new HashMap<>();
+    public void addAdditionalQualifier(DbAttribute dbAttribute, Object value) {
+        addAdditionalQualifier(dbAttribute, value, false);
+    }
+
+    public void addAdditionalQualifier(DbAttribute dbAttribute, Object value, boolean optimisticLock) {
+        if(additionalQualifier == null) {
+            additionalQualifier = new HashMap<>();
         }
 
-        optimisticLockQualifier.put(dbAttribute, value);
+        additionalQualifier.put(dbAttribute, value);
         if(value == null) {
             if(nullNames == null) {
                 nullNames = new ArrayList<>();
             }
             nullNames.add(dbAttribute.getName());
         }
+
+        if(optimisticLock) {
+            this.optimisticLock = true;
+        }
     }
 
     public boolean isUsingOptimisticLocking() {
-        return optimisticLockQualifier != null && !optimisticLockQualifier.isEmpty();
+        return optimisticLock;
     }
 
     public boolean isSameBatch(Qualifier other) {
-        if(optimisticLockQualifier == null) {
-            return other.optimisticLockQualifier == null;
+        if(additionalQualifier == null) {
+            return other.additionalQualifier == null;
         }
-        if (!optimisticLockQualifier.values().equals(other.optimisticLockQualifier.values())) {
+        if (!additionalQualifier.values().equals(other.additionalQualifier.values())) {
             return false;
         }
         return Objects.equals(nullNames, other.nullNames);

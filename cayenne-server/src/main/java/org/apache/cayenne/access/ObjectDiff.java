@@ -161,6 +161,20 @@ public class ObjectDiff extends NodeDiff {
         return (ObjectId) value;
     }
 
+    /**
+     * @since 4.2
+     */
+    public ObjectId getCurrentArcSnapshotValue(String propertyName) {
+        Object value = currentArcSnapshot != null ? currentArcSnapshot.get(propertyName) : null;
+        if (value instanceof Fault) {
+            Persistent target = (Persistent) ((Fault) value).resolveFault(object, propertyName);
+
+            value = target != null ? target.getObjectId() : null;
+            currentArcSnapshot.put(propertyName, value);
+        }
+        return (ObjectId) value;
+    }
+
     boolean containsArcSnapshot(String propertyName) {
         return arcSnapshot != null && arcSnapshot.containsKey(propertyName);
     }

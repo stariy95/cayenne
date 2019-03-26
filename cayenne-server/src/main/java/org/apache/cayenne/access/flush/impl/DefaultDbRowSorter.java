@@ -44,6 +44,11 @@ import org.apache.cayenne.map.ObjEntity;
  */
 public class DefaultDbRowSorter implements DbRowSorter {
 
+    // This is default order of operations
+    private static final int INSERT = 1;
+    private static final int UPDATE = 2;
+    private static final int DELETE = 3;
+
     @Inject
     private Provider<DataDomain> dataDomainProvider;
 
@@ -119,6 +124,7 @@ public class DefaultDbRowSorter implements DbRowSorter {
             int rightType = DbRowTypeExtractor.INSTANCE.apply(right);
 
             int result;
+            // TODO: check this in real example of meaningful PK insert/delete cycle
             if(left.getChangeId().equals(right.getChangeId())) {
                 result = Integer.compare(rightType, leftType);
             } else {
@@ -131,7 +137,8 @@ public class DefaultDbRowSorter implements DbRowSorter {
 
             result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
             if(result != 0) {
-                if(leftType == 3) {
+                if(leftType == DELETE) {
+                    // invert order for delete
                     return -result;
                 }
                 return result;
@@ -157,17 +164,17 @@ public class DefaultDbRowSorter implements DbRowSorter {
 
         @Override
         public Integer visitInsert(InsertDbRow diffSnapshot) {
-            return 1;
+            return INSERT;
         }
 
         @Override
         public Integer visitUpdate(UpdateDbRow diffSnapshot) {
-            return 2;
+            return UPDATE;
         }
 
         @Override
         public Integer visitDelete(DeleteDbRow diffSnapshot) {
-            return 3;
+            return DELETE;
         }
     }
 }

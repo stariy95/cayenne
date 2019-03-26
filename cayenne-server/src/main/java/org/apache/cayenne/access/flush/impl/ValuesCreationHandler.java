@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.row.DbRow;
+import org.apache.cayenne.access.flush.row.DbRowWithQualifier;
 import org.apache.cayenne.access.flush.row.DbRowWithValues;
 import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
@@ -35,15 +36,11 @@ import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.util.CayenneMapEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class ValuesCreationHandler implements GraphChangeHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
 
     private final DbRowFactory factory;
     private final DbRowType defaultType;
@@ -84,21 +81,28 @@ public class ValuesCreationHandler implements GraphChangeHandler {
 
     @Override
     public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
-        ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, (ObjectId) targetNodeId, arcId);
-        LOGGER.info("Create arc " + arcId.getForwardArc() + " <-> " + arcId.getReverseArc());
+        ObjectId actualTargetId = (ObjectId)targetNodeId;
+        ObjectId snapshotId = factory.getDiff().getCurrentArcSnapshotValue(arcId.getForwardArc());
+        if(snapshotId != null) {
+            actualTargetId = snapshotId;
+        }
+        ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, actualTargetId, arcId);
         processArcChange(arcTarget, true);
     }
 
     @Override
     public void arcDeleted(Object nodeId, Object targetNodeId, ArcId arcId) {
-        ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, (ObjectId) targetNodeId, arcId);
-        LOGGER.info("Delete arc " + arcId.getForwardArc() + " <-> " + arcId.getReverseArc());
+        ObjectId actualTargetId = (ObjectId)targetNodeId;
+        ObjectId snapshotId = factory.getDiff().getCurrentArcSnapshotValue(arcId.getForwardArc());
+        if(snapshotId != null) {
+            actualTargetId = snapshotId;
+        }
+        ArcTarget arcTarget = new ArcTarget((ObjectId) nodeId, actualTargetId, arcId);
         processArcChange(arcTarget, false);
     }
 
     private void processArcChange(ArcTarget arcTarget, boolean created) {
         if(factory.getProcessedArcs().contains(arcTarget.getReversed())) {
-            LOGGER.info("arc already processed, skipping...");
             return;
         }
 
@@ -110,7 +114,8 @@ public class ValuesCreationHandler implements GraphChangeHandler {
         }
 
         if(objRelationship.isFlattened()) {
-            processFlattenedPath(arcTarget.getSourceId(), arcTarget.getTargetId(), entity.getDbEntity(), objRelationship.getDbRelationshipPath(), created);
+            processFlattenedPath(arcTarget.getSourceId(), arcTarget.getTargetId(), entity.getDbEntity(),
+                    objRelationship.getDbRelationshipPath(), created);
         } else {
             DbRelationship dbRelationship = objRelationship.getDbRelationships().get(0);
             processRelationship(dbRelationship, arcTarget.getSourceId(), arcTarget.getTargetId(), created);
@@ -219,11 +224,15 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     DbRow row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
                     if(row instanceof DbRowWithValues) {
                         ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
+                    } else {
+                        ((DbRowWithQualifier)row).getQualifier().addAdditionalQualifier(join.getTarget(), srcValue);
                     }
                 } else {
                     DbRow row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
                     if(row instanceof DbRowWithValues) {
                         ((DbRowWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
+                    } else {
+                        ((DbRowWithQualifier)row).getQualifier().addAdditionalQualifier(join.getSource(), dstValue);
                     }
                 }
             }

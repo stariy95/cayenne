@@ -39,33 +39,32 @@ import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.reflect.ClassDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class DbRowFactory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbRowFactory.class);
-
     protected final EntityResolver resolver;
     protected final ObjectStore store;
     protected final ClassDescriptor descriptor;
     protected final Persistent object;
+    protected final ObjectDiff diff;
     protected final Set<ArcTarget> processedArcs;
     protected final Map<ObjectId, DbRow> dbRows;
 
-    DbRowFactory(EntityResolver resolver, ObjectStore store, ClassDescriptor descriptor, Persistent object, Set<ArcTarget> processedArcs) {
+    DbRowFactory(EntityResolver resolver, ObjectStore store, ObjectDiff diff, Set<ArcTarget> processedArcs) {
+        ObjectId id = (ObjectId)diff.getNodeId();
         this.resolver = resolver;
         this.store = store;
-        this.descriptor = descriptor;
-        this.object = object;
+        this.diff = diff;
+        this.descriptor = resolver.getClassDescriptor(id.getEntityName());
+        this.object = (Persistent) store.getNode(id);
         this.dbRows = new HashMap<>();
         this.processedArcs = processedArcs;
     }
 
-    Collection<? extends DbRow> createRows(ObjectDiff diff) {
+    Collection<? extends DbRow> createRows() {
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
         DbRow row = getOrCreate(rootEntity, object.getObjectId(), DbRowType.forObject(object));
         row.accept(new RootRowProcessor(diff));
@@ -85,13 +84,10 @@ public class DbRowFactory {
     private DbRow createRow(DbEntity entity, ObjectId id, DbRowType type) {
         switch (type) {
             case INSERT:
-                LOGGER.info("Create insert for " + entity.getName() + " " + id);
                 return new InsertDbRow(object, entity, id);
             case UPDATE:
-                LOGGER.info("Create update for " + entity.getName() + " " + id);
                 return new UpdateDbRow(object, entity, id);
             case DELETE:
-                LOGGER.info("Create delete for " + entity.getName() + " " + id);
                 return new DeleteDbRow(object, entity, id);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
@@ -107,6 +103,10 @@ public class DbRowFactory {
 
     public ObjectStore getStore() {
         return store;
+    }
+
+    public ObjectDiff getDiff() {
+        return diff;
     }
 
     private DbEntity getDbEntity(ObjectId id) {
@@ -140,7 +140,9 @@ public class DbRowFactory {
         @Override
         public Void visitUpdate(UpdateDbRow dbRow) {
             diff.apply(new ValuesCreationHandler(DbRowFactory.this, DbRowType.UPDATE));
-            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
+            if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
+                descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
+            }
             return null;
         }
 
@@ -152,7 +154,9 @@ public class DbRowFactory {
             }
             Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
             flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(getDbEntity(id), id, DbRowType.DELETE));
-            descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
+            if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
+                descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
+            }
             return null;
         }
     }
