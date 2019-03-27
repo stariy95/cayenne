@@ -61,11 +61,7 @@ public class InsertDbRow extends BaseDbRow implements DbRowWithValues {
         if(!(row instanceof InsertDbRow)) {
             return false;
         }
-        InsertDbRow other = (InsertDbRow)row;
-        if(!row.getEntity().getName().equals(getEntity().getName())) {
-            return false;
-        }
-        return values.isSameBatch(other.values);
+        return row.getEntity().getName().equals(getEntity().getName());
     }
 
     @Override
