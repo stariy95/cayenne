@@ -49,7 +49,7 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
         allChanges.apply(this);
     }
 
-    public Collection<ObjectId> getIndirectModifications() {
+    Collection<ObjectId> getIndirectModifications() {
         return indirectModifications;
     }
 
