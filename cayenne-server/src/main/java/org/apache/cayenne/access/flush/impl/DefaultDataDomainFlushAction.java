@@ -72,13 +72,12 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         List<BatchQuery> queries = createQueries(sortedDbRows);
         executeQueries(queries);
         createReplacementIds(objectStore, result, sortedDbRows);
-
         postprocess(context, changes, result, sortedDbRows);
 
         return result;
     }
 
-    private List<DbRow> sort(Collection<DbRow> dbRows) {
+    protected List<DbRow> sort(Collection<DbRow> dbRows) {
         return snapshotSorter.sort(dbRows);
     }
 
