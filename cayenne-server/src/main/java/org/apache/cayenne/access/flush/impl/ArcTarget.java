@@ -57,13 +57,20 @@ public class ArcTarget {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ArcTarget arcTarget = (ArcTarget) o;
-
-        if (!sourceId.equals(arcTarget.sourceId)) return false;
-        if (!targetId.equals(arcTarget.targetId)) return false;
+        if (!sourceId.equals(arcTarget.sourceId)) {
+            return false;
+        }
+        if (!targetId.equals(arcTarget.targetId)) {
+            return false;
+        }
         return arcId.equals(arcTarget.arcId);
     }
 

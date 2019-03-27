@@ -124,8 +124,7 @@ public class DefaultDbRowSorter implements DbRowSorter {
             int rightType = DbRowTypeExtractor.INSTANCE.apply(right);
 
             int result;
-            // TODO: check this in real example of meaningful PK insert/delete cycle
-            if(left.getChangeId().equals(right.getChangeId())) {
+            if(left.getChangeId().getIdSnapshot().equals(right.getChangeId().getIdSnapshot())) {
                 result = Integer.compare(rightType, leftType);
             } else {
                 result = Integer.compare(leftType, rightType);

@@ -29,6 +29,7 @@ import org.apache.cayenne.query.ObjectIdQuery;
 import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.testdo.meaningful_pk.MeaningfulPKDep;
 import org.apache.cayenne.testdo.meaningful_pk.MeaningfulPKTest1;
+import org.apache.cayenne.testdo.meaningful_pk.MeaningfulPk;
 import org.apache.cayenne.testdo.meaningful_pk.MeaningfulPkTest2;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
@@ -188,5 +189,17 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
         assertEquals(2, objects.size());
         assertEquals(1, obj1.getPkAttribute());
         assertEquals(2, obj2.getPkAttribute());
+    }
+
+    @Test
+    public void testInsertDelete() {
+        MeaningfulPk pkObj = context.newObject(MeaningfulPk.class);
+        pkObj.setPk("123");
+        context.commitChanges();
+
+        context.deleteObject(pkObj);
+        MeaningfulPk pkObj2 = context.newObject(MeaningfulPk.class);
+        pkObj2.setPk("123");
+        context.commitChanges();
     }
 }
