@@ -75,8 +75,10 @@ public class ValuesCreationHandler implements GraphChangeHandler {
         }
 
         // TODO: any actual check that we can cast DbRow to DbRowWithValues?
-        DbRowWithValues dbRow = factory.get(id);
-        dbRow.getValues().addValue(dbAttribute, newValue);
+        DbRow dbRow = factory.get(id);
+        if(dbRow instanceof DbRowWithValues) {
+            ((DbRowWithValues)dbRow).getValues().addValue(dbAttribute, newValue);
+        }
     }
 
     @Override
@@ -203,19 +205,17 @@ public class ValuesCreationHandler implements GraphChangeHandler {
                     if(targetPK) {
                         targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
                     }
-                    if(!dbRelationship.isToMany()) {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType)
-                                .getValues()
-                                .addValue(join.getTarget(), add ? srcValue : null);
+                    DbRow row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    if(row instanceof DbRowWithValues && !dbRelationship.isToMany()) {
+                        ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
                     }
                 } else {
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     }
-                    if(!dbRelationship.getReverseRelationship().isToMany()) {
-                        factory.<DbRowWithValues>getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType)
-                                .getValues()
-                                .addValue(join.getSource(), add ? dstValue : null);
+                    DbRow row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
+                    if(row instanceof DbRowWithValues && !dbRelationship.getReverseRelationship().isToMany()) {
+                        ((DbRowWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
                     }
                 }
             } else {

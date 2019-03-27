@@ -152,6 +152,7 @@ public class DbRowFactory {
                 throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
                         "Can't commit changes.", descriptor.getEntity().getName());
             }
+            diff.apply(new ValuesCreationHandler(DbRowFactory.this, DbRowType.DELETE));
             Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
             flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(getDbEntity(id), id, DbRowType.DELETE));
             if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
