@@ -19,6 +19,10 @@
 
 package org.apache.cayenne.access.flush.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.cayenne.access.flush.row.DbRow;
 import org.apache.cayenne.access.flush.row.DbRowVisitor;
 import org.apache.cayenne.access.flush.row.DeleteDbRow;
 import org.apache.cayenne.access.flush.row.InsertDbRow;
@@ -31,45 +35,77 @@ import org.apache.cayenne.query.UpdateBatchQuery;
 /**
  * @since 4.2
  */
-class QueryCreatorVisitor implements DbRowVisitor<BatchQuery> {
+// TODO: pass snapshot as argument directly to batch...
+class QueryCreatorVisitor implements DbRowVisitor<Void> {
 
-    @Override
-    public BatchQuery visitInsert(InsertDbRow dbRow) {
-        // TODO: pass snapshot as argument directly to batch...
-        InsertBatchQuery query = new InsertBatchQuery(dbRow.getEntity(), 1);
-        query.add(dbRow.getValues().getSnapshot(), dbRow.getChangeId());
-        return query;
+    private final List<BatchQuery> queryList = new ArrayList<>();
+    private DbRow lastRow = null;
+    private BatchQuery lastBatch = null;
+
+    public List<BatchQuery> getQueryList() {
+        return queryList;
     }
 
     @Override
-    public BatchQuery visitUpdate(UpdateDbRow dbRow) {
+    public Void visitInsert(InsertDbRow dbRow) {
+        InsertBatchQuery query;
+        if(lastRow == null || !lastRow.isSameBatch(dbRow)) {
+            query = new InsertBatchQuery(dbRow.getEntity(), 4);
+            queryList.add(query);
+            lastBatch = query;
+        } else {
+            query = (InsertBatchQuery)lastBatch;
+        }
+        query.add(dbRow.getValues().getSnapshot(), dbRow.getChangeId());
+        lastRow = dbRow;
+        return null;
+    }
+
+    @Override
+    public Void visitUpdate(UpdateDbRow dbRow) {
         // skip empty update..
         if(dbRow.getValues().isEmpty()) {
             return null;
         }
-        // TODO: pass snapshot as argument directly to batch...
-        UpdateBatchQuery query = new UpdateBatchQuery(
-                dbRow.getEntity(),
-                dbRow.getQualifier().getQualifierAttributes(),
-                dbRow.getValues().getUpdatedAttributes(),
-                dbRow.getQualifier().getNullQualifierNames(),
-                1
-        );
-        query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
+
+        UpdateBatchQuery query;
+        if(lastRow == null || !lastRow.isSameBatch(dbRow)) {
+            query = new UpdateBatchQuery(
+                    dbRow.getEntity(),
+                    dbRow.getQualifier().getQualifierAttributes(),
+                    dbRow.getValues().getUpdatedAttributes(),
+                    dbRow.getQualifier().getNullQualifierNames(),
+                    4
+            );
+            query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
+            queryList.add(query);
+            lastBatch = query;
+        } else {
+            query = (UpdateBatchQuery)lastBatch;
+        }
         query.add(dbRow.getQualifier().getSnapshot(), dbRow.getValues().getSnapshot(), dbRow.getChangeId());
-        return query;
+        lastRow = dbRow;
+        return null;
     }
 
     @Override
-    public BatchQuery visitDelete(DeleteDbRow dbRow) {
-        DeleteBatchQuery query = new DeleteBatchQuery(
-                dbRow.getEntity(),
-                dbRow.getQualifier().getQualifierAttributes(),
-                dbRow.getQualifier().getNullQualifierNames(),
-                1
-        );
-        query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
+    public Void visitDelete(DeleteDbRow dbRow) {
+        DeleteBatchQuery query;
+        if(lastRow == null || !lastRow.isSameBatch(dbRow)) {
+            query = new DeleteBatchQuery(
+                    dbRow.getEntity(),
+                    dbRow.getQualifier().getQualifierAttributes(),
+                    dbRow.getQualifier().getNullQualifierNames(),
+                    4
+            );
+            query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
+            queryList.add(query);
+            lastBatch = query;
+        } else {
+            query = (DeleteBatchQuery)lastBatch;
+        }
         query.add(dbRow.getQualifier().getSnapshot());
-        return query;
+        lastRow = dbRow;
+        return null;
     }
 }

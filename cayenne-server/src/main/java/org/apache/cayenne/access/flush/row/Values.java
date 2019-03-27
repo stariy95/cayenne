@@ -138,7 +138,9 @@ public class Values {
         if(snapshot == null) {
             return other.snapshot == null;
         }
-
-        return snapshot.values().equals(other.snapshot.values());
+        if(other.snapshot == null) {
+            return false;
+        }
+        return snapshot.keySet().equals(other.snapshot.keySet());
     }
 }

@@ -53,6 +53,9 @@ public class DeleteDbRow extends BaseDbRow implements DbRowWithQualifier {
         if(!(row instanceof DeleteDbRow)) {
             return false;
         }
+        if(!row.getEntity().getName().equals(getEntity().getName())) {
+            return false;
+        }
         DeleteDbRow other = (DeleteDbRow)row;
         return qualifier.isSameBatch(other.qualifier);
     }

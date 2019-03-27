@@ -117,7 +117,13 @@ public class Qualifier {
         if(additionalQualifier == null) {
             return other.additionalQualifier == null;
         }
-        if (!additionalQualifier.values().equals(other.additionalQualifier.values())) {
+        if(optimisticLock != other.optimisticLock) {
+            return false;
+        }
+        if(other.additionalQualifier == null) {
+            return false;
+        }
+        if(!additionalQualifier.keySet().equals(other.additionalQualifier.keySet())) {
             return false;
         }
         return Objects.equals(nullNames, other.nullNames);

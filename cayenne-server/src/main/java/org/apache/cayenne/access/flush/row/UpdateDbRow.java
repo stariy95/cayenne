@@ -57,11 +57,13 @@ public class UpdateDbRow extends BaseDbRow implements DbRowWithValues, DbRowWith
         if(!(row instanceof UpdateDbRow)) {
             return false;
         }
+        if(!row.getEntity().getName().equals(getEntity().getName())) {
+            return false;
+        }
         UpdateDbRow other = (UpdateDbRow)row;
         if(!values.isSameBatch(other.values)) {
             return false;
         }
-
         return qualifier.isSameBatch(other.qualifier);
     }
 

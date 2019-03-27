@@ -25,9 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
@@ -108,15 +106,13 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected void updateObjectIds(Collection<DbRow> dbRows) {
         DbRowVisitor<Void> permIdVisitor = new PermanentObjectIdVisitor(dataDomain);
-        dbRows.forEach(snapshot -> snapshot.accept(permIdVisitor));
+        dbRows.forEach(row -> row.accept(permIdVisitor));
     }
 
     protected List<BatchQuery> createQueries(List<DbRow> dbRows) {
-        DbRowVisitor<BatchQuery> queryCreator = new QueryCreatorVisitor();
-        return dbRows.stream()
-                .map(row -> row.accept(queryCreator))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        QueryCreatorVisitor queryCreator = new QueryCreatorVisitor();
+        dbRows.forEach(row -> row.accept(queryCreator));
+        return queryCreator.getQueryList();
     }
 
     protected void executeQueries(List<BatchQuery> queries) {
