@@ -76,7 +76,7 @@ class ReplacementIdVisitor implements DbRowVisitor<Void> {
         return null;
     }
 
-    protected void updateId(DbRow dbRow) {
+    private void updateId(DbRow dbRow) {
         ObjectId id = dbRow.getChangeId();
         if (!id.isReplacementIdAttached()) {
             if (id.isTemporary()) {

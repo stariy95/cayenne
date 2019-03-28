@@ -56,12 +56,17 @@ class ObjectIdValueSupplier implements Supplier<Object> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ObjectIdValueSupplier that = (ObjectIdValueSupplier) o;
-
-        if (!id.equals(that.id)) return false;
+        if (!id.equals(that.id)) {
+            return false;
+        }
         return attribute.equals(that.attribute);
     }
 

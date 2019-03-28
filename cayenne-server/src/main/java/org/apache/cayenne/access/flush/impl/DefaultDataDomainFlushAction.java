@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
@@ -116,10 +117,9 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected void executeQueries(List<BatchQuery> queries) {
         OperationObserver observer = new FlushOperationObserver(jdbcEventLogger);
-        // TODO: batch queries by node change, when queries are sorted should speedup a bit
-        queries.forEach(query -> dataDomain
-                .lookupDataNode(query.getDbEntity().getDataMap())
-                .performQueries(Collections.singleton(query), observer));
+        queries.stream()
+                .collect(Collectors.groupingBy(query -> dataDomain.lookupDataNode(query.getDbEntity().getDataMap())))
+                .forEach((node, nodeQueries) -> node.performQueries(nodeQueries, observer));
     }
 
     protected void createReplacementIds(ObjectStore store, CompoundDiff result, List<DbRow> dbRows) {

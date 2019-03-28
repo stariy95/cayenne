@@ -42,7 +42,7 @@ class QueryCreatorVisitor implements DbRowVisitor<Void> {
     private DbRow lastRow = null;
     private BatchQuery lastBatch = null;
 
-    public List<BatchQuery> getQueryList() {
+    List<BatchQuery> getQueryList() {
         return queryList;
     }
 
