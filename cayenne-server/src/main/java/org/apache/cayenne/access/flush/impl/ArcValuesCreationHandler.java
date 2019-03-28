@@ -149,8 +149,6 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
         for(DbJoin join : dbRelationship.getJoins()) {
             boolean srcPK = join.getSource().isPrimaryKey();
             boolean targetPK = join.getTarget().isPrimaryKey();
-            Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
-            Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
 
             // Push values from/to source to/from target...
             // We have 3 cases globally here:
@@ -160,6 +158,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
             if(srcPK == targetPK) {
                 // case 2 and 3
                 if(dbRelationship.isToDependentPK()) {
+                    Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
                     if(targetPK) {
                         targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
                     }
@@ -168,6 +167,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                         ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
                     }
                 } else {
+                    Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     }
@@ -179,6 +179,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
             } else {
                 // case 1
                 if(srcPK) {
+                    Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
                     DbRow row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
                     if(row instanceof DbRowWithValues) {
                         ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
@@ -186,6 +187,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                         ((DbRowWithQualifier)row).getQualifier().addAdditionalQualifier(join.getTarget(), srcValue);
                     }
                 } else {
+                    Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
                     DbRow row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
                     if(row instanceof DbRowWithValues) {
                         ((DbRowWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);

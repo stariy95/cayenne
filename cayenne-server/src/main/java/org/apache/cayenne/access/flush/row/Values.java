@@ -131,6 +131,9 @@ public class Values {
     }
 
     public boolean isEmpty() {
+        if(includeId) {
+            return false;
+        }
         return snapshot == null || snapshot.isEmpty();
     }
 
