@@ -27,31 +27,31 @@ import org.apache.cayenne.graph.ArcId;
 /**
  * @since 4.2
  */
-public class ArcTarget {
+class ArcTarget {
 
     private final ObjectId sourceId;
     private final ObjectId targetId;
     private final ArcId arcId;
 
-    public ArcTarget(ObjectId sourceId, ObjectId targetId, ArcId arcId) {
+    ArcTarget(ObjectId sourceId, ObjectId targetId, ArcId arcId) {
         this.sourceId = Objects.requireNonNull(sourceId);
         this.targetId = Objects.requireNonNull(targetId);
         this.arcId = Objects.requireNonNull(arcId);
     }
 
-    public ArcTarget getReversed() {
+    ArcTarget getReversed() {
         return new ArcTarget(targetId, sourceId, arcId.getReverseId());
     }
 
-    public ArcId getArcId() {
+    ArcId getArcId() {
         return arcId;
     }
 
-    public ObjectId getSourceId() {
+    ObjectId getSourceId() {
         return sourceId;
     }
 
-    public ObjectId getTargetId() {
+    ObjectId getTargetId() {
         return targetId;
     }
 

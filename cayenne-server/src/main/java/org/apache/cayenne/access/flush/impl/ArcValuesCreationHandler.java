@@ -81,7 +81,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
             processRelationship(dbRelationship, arcTarget.getSourceId(), arcTarget.getTargetId(), created);
         }
 
-        factory.processedArcs.add(arcTarget);
+        factory.getProcessedArcs().add(arcTarget);
     }
 
     protected ObjectId processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {

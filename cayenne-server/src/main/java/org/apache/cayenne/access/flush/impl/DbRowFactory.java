@@ -43,15 +43,15 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.2
  */
-public class DbRowFactory {
+class DbRowFactory {
 
-    protected final EntityResolver resolver;
-    protected final ObjectStore store;
-    protected final ClassDescriptor descriptor;
-    protected final Persistent object;
-    protected final ObjectDiff diff;
-    protected final Set<ArcTarget> processedArcs;
-    protected final Map<ObjectId, DbRow> dbRows;
+    private final EntityResolver resolver;
+    private final ObjectStore store;
+    private final ClassDescriptor descriptor;
+    private final Persistent object;
+    private final ObjectDiff diff;
+    private final Set<ArcTarget> processedArcs;
+    private final Map<ObjectId, DbRow> dbRows;
 
     DbRowFactory(EntityResolver resolver, ObjectStore store, ObjectDiff diff, Set<ArcTarget> processedArcs) {
         ObjectId id = (ObjectId)diff.getNodeId();
@@ -93,19 +93,19 @@ public class DbRowFactory {
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
     }
 
-    public ClassDescriptor getDescriptor() {
+    ClassDescriptor getDescriptor() {
         return descriptor;
     }
 
-    public Persistent getObject() {
+    Persistent getObject() {
         return object;
     }
 
-    public ObjectStore getStore() {
+    ObjectStore getStore() {
         return store;
     }
 
-    public ObjectDiff getDiff() {
+    ObjectDiff getDiff() {
         return diff;
     }
 

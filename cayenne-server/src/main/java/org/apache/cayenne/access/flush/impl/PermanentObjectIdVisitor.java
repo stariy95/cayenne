@@ -41,7 +41,7 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.2
  */
-public class PermanentObjectIdVisitor implements DbRowVisitor<Void> {
+class PermanentObjectIdVisitor implements DbRowVisitor<Void> {
 
     public static final String DB_ID_PREFIX = "db:";
 
@@ -54,7 +54,7 @@ public class PermanentObjectIdVisitor implements DbRowVisitor<Void> {
     private DataNode lastNode;
     private String lastEntityName;
 
-    public PermanentObjectIdVisitor(DataDomain dataDomain) {
+    PermanentObjectIdVisitor(DataDomain dataDomain) {
         this.dataDomain = dataDomain;
         this.resolver = dataDomain.getEntityResolver();
     }
