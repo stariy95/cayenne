@@ -51,6 +51,7 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
         ObjAttribute attribute = property.getAttribute();
         DbAttribute dbAttribute = attribute.getDbAttribute();
         if (attribute.isUsedForLocking() && dbAttribute.getEntity() == dbRow.getEntity()) {
+            // TODO: dbAttribute.getEntity() != dbRow.getEntity() ???
             dbRow.getQualifier()
                     .addAdditionalQualifier(dbAttribute, diff.getSnapshotValue(property.getName()), true);
 

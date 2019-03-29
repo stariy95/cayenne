@@ -29,15 +29,11 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.cayenne.map.DbAttribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class Qualifier {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Qualifier.class);
 
     protected final DbRow row;
     // additional qualifier for optimistic lock
@@ -60,19 +56,12 @@ public class Qualifier {
         idSnapshot.forEach((attr, value) -> {
             if(value != null) {
                 qualifier.put(attr, value);
-                LOGGER.info("Add PK attr '" + attr + "' = '" + value + "' to qualifier");
             } else {
                 hasPK.set(false);
-                LOGGER.info("Null value for PK attr '" + attr + "'");
             }
         });
 
         if(!hasPK.get() || optimisticLock) {
-            if(!hasPK.get()) {
-                LOGGER.warn("No PK");
-            } else if(optimisticLock) {
-                LOGGER.warn("Optimistic lock");
-            }
             additionalQualifier.forEach((attr, value) ->
                     qualifier.put(attr.getName(), value)
             );
