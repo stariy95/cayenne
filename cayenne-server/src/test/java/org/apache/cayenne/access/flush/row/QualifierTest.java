@@ -80,7 +80,7 @@ public class QualifierTest {
         DbRow row = mockRow(persistent);
 
         Qualifier qualifier = new Qualifier(row);
-        qualifier.addAdditionalQualifier(new DbAttribute("attr"), 42);
+        qualifier.addAdditionalQualifier(new DbAttribute("attr"), 42, true);
 
         Map<String, Object> qualifierSnapshot = qualifier.getSnapshot();
 
@@ -89,7 +89,7 @@ public class QualifierTest {
         expectedSnapshot.put("attr", 42);
 
         assertEquals(expectedSnapshot, qualifierSnapshot);
-        assertFalse(qualifier.isUsingOptimisticLocking());
+        assertTrue(qualifier.isUsingOptimisticLocking());
 
         qualifierSnapshot = qualifier.getSnapshot();
         assertEquals(expectedSnapshot, qualifierSnapshot);

@@ -26,13 +26,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.cayenne.map.DbAttribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @since 4.2
  */
 public class Qualifier {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Qualifier.class);
 
     protected final DbRow row;
     // additional qualifier for optimistic lock
@@ -51,14 +56,27 @@ public class Qualifier {
         }
 
         Map<String, Object> qualifier = new HashMap<>(additionalQualifier.size() + idSnapshot.size());
+        AtomicBoolean hasPK = new AtomicBoolean(!idSnapshot.isEmpty());
         idSnapshot.forEach((attr, value) -> {
             if(value != null) {
                 qualifier.put(attr, value);
+                LOGGER.info("Add PK attr '" + attr + "' = '" + value + "' to qualifier");
+            } else {
+                hasPK.set(false);
+                LOGGER.info("Null value for PK attr '" + attr + "'");
             }
         });
-        additionalQualifier.forEach((attr, value) ->
-                qualifier.put(attr.getName(), value)
-        );
+
+        if(!hasPK.get() || optimisticLock) {
+            if(!hasPK.get()) {
+                LOGGER.warn("No PK");
+            } else if(optimisticLock) {
+                LOGGER.warn("Optimistic lock");
+            }
+            additionalQualifier.forEach((attr, value) ->
+                    qualifier.put(attr.getName(), value)
+            );
+        }
 
         return qualifier;
     }
@@ -71,12 +89,18 @@ public class Qualifier {
 
         List<DbAttribute> attributes = new ArrayList<>();
         Map<String, Object> idSnapshot = row.getChangeId().getIdSnapshot();
+        AtomicBoolean hasPK = new AtomicBoolean(!idSnapshot.isEmpty());
         primaryKeys.forEach(pk -> {
-            if(idSnapshot.containsKey(pk.getName())) {
+            if(idSnapshot.get(pk.getName()) != null) {
                 attributes.add(pk);
+            } else {
+                hasPK.set(false);
             }
         });
-        attributes.addAll(additionalQualifier.keySet());
+
+        if(!hasPK.get() || optimisticLock) {
+            attributes.addAll(additionalQualifier.keySet());
+        }
         return attributes;
     }
 
