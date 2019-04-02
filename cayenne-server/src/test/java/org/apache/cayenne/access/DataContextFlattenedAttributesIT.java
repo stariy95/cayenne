@@ -402,16 +402,20 @@ public class DataContextFlattenedAttributesIT extends ServerCase {
 
     @Test
     public void testUpdateDifferentContext() {
-        // insert
-        CompoundPainting o1 = context.newObject(CompoundPainting.class);
-        o1.setArtistName("A1");
-        o1.setEstimatedPrice(new BigDecimal(1d));
-        o1.setGalleryName("G1");
-        o1.setPaintingTitle("P1");
-        o1.setTextReview("T1");
+        Object id;
+        {
+            // insert
+            ObjectContext context1 = runtime.newContext();
+            CompoundPainting o1 = context1.newObject(CompoundPainting.class);
+            o1.setArtistName("A1");
+            o1.setEstimatedPrice(new BigDecimal(1d));
+            o1.setGalleryName("G1");
+            o1.setPaintingTitle("P1");
+            o1.setTextReview("T1");
 
-        context.commitChanges();
-        Object id = o1.getObjectId().getIdSnapshot().get(CompoundPainting.PAINTING_ID_PK_COLUMN);
+            context1.commitChanges();
+            id = o1.getObjectId().getIdSnapshot().get(CompoundPainting.PAINTING_ID_PK_COLUMN);
+        }
 
         {
             // read and update

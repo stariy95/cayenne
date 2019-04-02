@@ -69,7 +69,12 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
         ObjEntity entity = factory.getDescriptor().getEntity();
         ObjRelationship objRelationship = entity.getRelationship(arcTarget.getArcId().getForwardArc());
         if(objRelationship == null) {
-            // todo: process other variants like "db:relname"
+            String arc = arcId.getForwardArc();
+            if(arc.startsWith("db:")) {
+                String relName = arc.substring("db:".length());
+                DbRelationship dbRelationship = entity.getDbEntity().getRelationship(relName);
+                processRelationship(dbRelationship, arcTarget.getSourceId(), arcTarget.getTargetId(), created);
+            }
             return;
         }
 
@@ -200,12 +205,15 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
     }
 
     // not interested in following events in this handler
+    @Override
     public void nodeIdChanged(Object nodeId, Object newId) {
     }
 
+    @Override
     public void nodeCreated(Object nodeId) {
     }
 
+    @Override
     public void nodeRemoved(Object nodeId) {
     }
 

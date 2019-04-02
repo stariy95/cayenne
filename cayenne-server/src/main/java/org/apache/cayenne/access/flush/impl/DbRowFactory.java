@@ -161,5 +161,4 @@ class DbRowFactory {
             return null;
         }
     }
-
 }
