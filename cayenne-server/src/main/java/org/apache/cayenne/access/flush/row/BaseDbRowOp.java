@@ -51,6 +51,7 @@ public abstract class BaseDbRowOp implements DbRowOp {
         return changeId;
     }
 
+    @Override
     public Persistent getObject() {
         return object;
     }
