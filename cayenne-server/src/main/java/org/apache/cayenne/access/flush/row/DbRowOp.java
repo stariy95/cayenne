@@ -26,46 +26,15 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public class InsertDbRow extends BaseDbRow implements DbRowWithValues {
+public interface DbRowOp {
 
-    protected final Values values;
+    <T> T accept(DbRowOpVisitor<T> visitor);
 
-    public InsertDbRow(Persistent object, DbEntity entity, ObjectId id) {
-        super(object, entity, id);
-        values = new Values(this, true);
-    }
+    DbEntity getEntity();
 
-    @Override
-    public <T> T accept(DbRowVisitor<T> visitor) {
-        return visitor.visitInsert(this);
-    }
+    ObjectId getChangeId();
 
-    @Override
-    public Values getValues() {
-        return values;
-    }
+    Persistent getObject();
 
-    @Override
-    public boolean equals(Object o) {
-        // TODO: here go troubles with transitivity
-        //   insert = update, update = delete, delete != insert
-        //   though we need this only to store in a hash map, so it should be ok...
-        if(!(o instanceof DbRowWithValues)) {
-            return false;
-        }
-        return super.equals(o);
-    }
-
-    @Override
-    public boolean isSameBatch(DbRow row) {
-        if(!(row instanceof InsertDbRow)) {
-            return false;
-        }
-        return row.getEntity().getName().equals(getEntity().getName());
-    }
-
-    @Override
-    public String toString() {
-        return "insert " + super.toString();
-    }
+    boolean isSameBatch(DbRowOp row);
 }

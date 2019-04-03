@@ -22,8 +22,8 @@ package org.apache.cayenne.access.flush.row;
 /**
  * @since 4.2
  */
-public interface DbRowWithValues extends DbRow {
+public interface DbRowOpWithQualifier extends DbRowOp {
 
-    Values getValues();
+    Qualifier getQualifier();
 
 }

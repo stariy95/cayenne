@@ -33,9 +33,9 @@ import org.apache.cayenne.access.ObjectMapRetainStrategy;
 import org.apache.cayenne.access.dbsync.DefaultSchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.dbsync.SchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.row.DbRowSorter;
+import org.apache.cayenne.access.flush.row.DbRowOpSorter;
 import org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.impl.DefaultDbRowSorter;
+import org.apache.cayenne.access.flush.impl.DefaultDbRowOpSorter;
 import org.apache.cayenne.access.jdbc.SQLTemplateProcessor;
 import org.apache.cayenne.access.jdbc.reader.DefaultRowReaderFactory;
 import org.apache.cayenne.access.jdbc.reader.RowReaderFactory;
@@ -508,6 +508,6 @@ public class ServerModule implements Module {
 
 //        binder.bind(DataDomainFlushActionFactory.class).to(OldDataDomainFlushActionFactory.class);
         binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
-        binder.bind(DbRowSorter.class).to(DefaultDbRowSorter.class);
+        binder.bind(DbRowOpSorter.class).to(DefaultDbRowOpSorter.class);
     }
 }

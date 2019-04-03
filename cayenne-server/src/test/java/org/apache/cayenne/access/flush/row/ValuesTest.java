@@ -41,7 +41,7 @@ public class ValuesTest {
     public void testEmptyValues() {
         ObjectId id = ObjectId.of("test", "id", 123);
         Persistent persistent = mockObject(id);
-        DbRow row = mockRow(persistent);
+        DbRowOp row = mockRow(persistent);
 
         Values values = new Values(row, false);
 
@@ -55,7 +55,7 @@ public class ValuesTest {
     public void testValuesWithId() {
         ObjectId id = ObjectId.of("test", "id", 123);
         Persistent persistent = mockObject(id);
-        DbRow row = mockRow(persistent);
+        DbRowOp row = mockRow(persistent);
 
         Values values = new Values(row, true);
 
@@ -69,7 +69,7 @@ public class ValuesTest {
     public void testValuesWithUpdatedAttributes() {
         ObjectId id = ObjectId.of("test", "id", 123);
         Persistent persistent = mockObject(id);
-        DbRow row = mockRow(persistent);
+        DbRowOp row = mockRow(persistent);
 
         Values values = new Values(row, false);
         DbAttribute attr1 = new DbAttribute("attr1");
@@ -81,8 +81,8 @@ public class ValuesTest {
         assertFalse(values.isEmpty());
     }
 
-    private DbRow mockRow(Persistent persistent) {
-        DbRow row = mock(DbRow.class);
+    private DbRowOp mockRow(Persistent persistent) {
+        DbRowOp row = mock(DbRowOp.class);
         ObjectId objectId = persistent.getObjectId();
         when(row.getChangeId()).thenReturn(objectId);
         when(row.getObject()).thenReturn(persistent);

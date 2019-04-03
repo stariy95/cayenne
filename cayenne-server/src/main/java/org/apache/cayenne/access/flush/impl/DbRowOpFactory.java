@@ -30,11 +30,11 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.DeleteDbRow;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
-import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjEntity;
@@ -43,7 +43,7 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.2
  */
-class DbRowFactory {
+class DbRowOpFactory {
 
     private final EntityResolver resolver;
     private final ObjectStore store;
@@ -51,9 +51,9 @@ class DbRowFactory {
     private final Persistent object;
     private final ObjectDiff diff;
     private final Set<ArcTarget> processedArcs;
-    private final Map<ObjectId, DbRow> dbRows;
+    private final Map<ObjectId, DbRowOp> dbRows;
 
-    DbRowFactory(EntityResolver resolver, ObjectStore store, ObjectDiff diff, Set<ArcTarget> processedArcs) {
+    DbRowOpFactory(EntityResolver resolver, ObjectStore store, ObjectDiff diff, Set<ArcTarget> processedArcs) {
         ObjectId id = (ObjectId)diff.getNodeId();
         this.resolver = resolver;
         this.store = store;
@@ -64,31 +64,31 @@ class DbRowFactory {
         this.processedArcs = processedArcs;
     }
 
-    Collection<? extends DbRow> createRows() {
+    Collection<? extends DbRowOp> createRows() {
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
-        DbRow row = getOrCreate(rootEntity, object.getObjectId(), DbRowType.forObject(object));
+        DbRowOp row = getOrCreate(rootEntity, object.getObjectId(), DbRowOpType.forObject(object));
         row.accept(new RootRowProcessor(diff));
         return dbRows.values();
     }
 
     @SuppressWarnings("unchecked")
-    <E extends DbRow> E get(ObjectId id) {
+    <E extends DbRowOp> E get(ObjectId id) {
         return Objects.requireNonNull((E) dbRows.get(id));
     }
 
     @SuppressWarnings("unchecked")
-    <E extends DbRow> E getOrCreate(DbEntity entity, ObjectId id, DbRowType type) {
+    <E extends DbRowOp> E getOrCreate(DbEntity entity, ObjectId id, DbRowOpType type) {
         return (E) dbRows.computeIfAbsent(id, nextId -> createRow(entity, id, type));
     }
 
-    private DbRow createRow(DbEntity entity, ObjectId id, DbRowType type) {
+    private DbRowOp createRow(DbEntity entity, ObjectId id, DbRowOpType type) {
         switch (type) {
             case INSERT:
-                return new InsertDbRow(object, entity, id);
+                return new InsertDbRowOp(object, entity, id);
             case UPDATE:
-                return new UpdateDbRow(object, entity, id);
+                return new UpdateDbRowOp(object, entity, id);
             case DELETE:
-                return new DeleteDbRow(object, entity, id);
+                return new DeleteDbRowOp(object, entity, id);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
     }
@@ -124,7 +124,7 @@ class DbRowFactory {
         return processedArcs;
     }
 
-    private class RootRowProcessor implements DbRowVisitor<Void> {
+    private class RootRowProcessor implements DbRowOpVisitor<Void> {
         private final ObjectDiff diff;
 
         RootRowProcessor(ObjectDiff diff) {
@@ -132,14 +132,14 @@ class DbRowFactory {
         }
 
         @Override
-        public Void visitInsert(InsertDbRow dbRow) {
-            diff.apply(new ValuesCreationHandler(DbRowFactory.this, DbRowType.INSERT));
+        public Void visitInsert(InsertDbRowOp dbRow) {
+            diff.apply(new ValuesCreationHandler(DbRowOpFactory.this, DbRowOpType.INSERT));
             return null;
         }
 
         @Override
-        public Void visitUpdate(UpdateDbRow dbRow) {
-            diff.apply(new ValuesCreationHandler(DbRowFactory.this, DbRowType.UPDATE));
+        public Void visitUpdate(UpdateDbRowOp dbRow) {
+            diff.apply(new ValuesCreationHandler(DbRowOpFactory.this, DbRowOpType.UPDATE));
             if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
                 descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
             }
@@ -147,14 +147,14 @@ class DbRowFactory {
         }
 
         @Override
-        public Void visitDelete(DeleteDbRow dbRow) {
+        public Void visitDelete(DeleteDbRowOp dbRow) {
             if(descriptor.getEntity().isReadOnly()) {
                 throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
                         "Can't commit changes.", descriptor.getEntity().getName());
             }
-            diff.apply(new ArcValuesCreationHandler(DbRowFactory.this, DbRowType.DELETE));
+            diff.apply(new ArcValuesCreationHandler(DbRowOpFactory.this, DbRowOpType.DELETE));
             Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
-            flattenedIds.forEach(id -> DbRowFactory.this.getOrCreate(getDbEntity(id), id, DbRowType.DELETE));
+            flattenedIds.forEach(id -> DbRowOpFactory.this.getOrCreate(getDbEntity(id), id, DbRowOpType.DELETE));
             if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
                 descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
             }

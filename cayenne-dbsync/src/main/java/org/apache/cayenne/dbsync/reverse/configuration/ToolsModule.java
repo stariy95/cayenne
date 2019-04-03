@@ -21,8 +21,8 @@ package org.apache.cayenne.dbsync.reverse.configuration;
 
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
 import org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.impl.DefaultDbRowSorter;
-import org.apache.cayenne.access.flush.row.DbRowSorter;
+import org.apache.cayenne.access.flush.impl.DefaultDbRowOpSorter;
+import org.apache.cayenne.access.flush.row.DbRowOpSorter;
 import org.apache.cayenne.access.translator.batch.BatchTranslatorFactory;
 import org.apache.cayenne.access.translator.batch.DefaultBatchTranslatorFactory;
 import org.apache.cayenne.access.types.DefaultValueObjectTypeRegistry;
@@ -57,9 +57,7 @@ import org.apache.cayenne.dba.openbase.OpenBaseSniffer;
 import org.apache.cayenne.dba.oracle.OracleSniffer;
 import org.apache.cayenne.dba.postgres.PostgresSniffer;
 import org.apache.cayenne.dba.sqlite.SQLiteSniffer;
-import org.apache.cayenne.dba.sqlserver.SQLServerAdapter;
 import org.apache.cayenne.dba.sqlserver.SQLServerSniffer;
-import org.apache.cayenne.dba.sybase.SybasePkGenerator;
 import org.apache.cayenne.dba.sybase.SybaseSniffer;
 import org.apache.cayenne.di.AdhocObjectFactory;
 import org.apache.cayenne.di.Binder;
@@ -134,7 +132,7 @@ public class ToolsModule implements Module {
         binder.bind(DataChannelMetaData.class).to(DefaultDataChannelMetaData.class);
         binder.bind(XMLReader.class).toProviderInstance(new XMLReaderProvider(true)).withoutScope();
         binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
-        binder.bind(DbRowSorter.class).to(DefaultDbRowSorter.class);
+        binder.bind(DbRowOpSorter.class).to(DefaultDbRowOpSorter.class);
 
         ProjectModule.contributeExtensions(binder);
     }

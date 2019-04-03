@@ -26,10 +26,10 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectStore;
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
-import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.NodeIdChangeOperation;
 import org.apache.cayenne.map.EntityResolver;
@@ -38,7 +38,7 @@ import org.apache.cayenne.reflect.AttributeProperty;
 /**
  * @since 4.2
  */
-class ReplacementIdVisitor implements DbRowVisitor<Void> {
+class ReplacementIdVisitor implements DbRowOpVisitor<Void> {
 
     private final ObjectStore store;
     private final EntityResolver resolver;
@@ -51,7 +51,7 @@ class ReplacementIdVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitInsert(InsertDbRow dbRow) {
+    public Void visitInsert(InsertDbRowOp dbRow) {
         updateId(dbRow);
         dbRow.getValues().getFlattenedIds().forEach((path, id) -> {
             if(id.isTemporary() && id.isReplacementIdAttached()) {
@@ -71,12 +71,12 @@ class ReplacementIdVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitUpdate(UpdateDbRow dbRow) {
+    public Void visitUpdate(UpdateDbRowOp dbRow) {
         updateId(dbRow);
         return null;
     }
 
-    private void updateId(DbRow dbRow) {
+    private void updateId(DbRowOp dbRow) {
         ObjectId id = dbRow.getChangeId();
         if (!id.isReplacementIdAttached()) {
             if (id.isTemporary()) {

@@ -33,7 +33,7 @@ import org.apache.cayenne.map.DbAttribute;
  */
 public class Values {
 
-    protected final DbRow row;
+    protected final DbRowOp row;
     protected final boolean includeId;
     // new values to store to DB
     protected Map<String, Object> snapshot;
@@ -41,7 +41,7 @@ public class Values {
     // generated flattened Ids for this insert
     protected Map<String, ObjectId> flattenedIds;
 
-    protected Values(DbRow row, boolean includeId) {
+    protected Values(DbRowOp row, boolean includeId) {
         this.row = row;
         this.includeId = includeId;
     }

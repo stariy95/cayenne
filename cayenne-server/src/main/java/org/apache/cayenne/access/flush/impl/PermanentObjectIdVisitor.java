@@ -26,8 +26,8 @@ import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.DataNode;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
 import org.apache.cayenne.dba.PkGenerator;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -41,7 +41,7 @@ import org.apache.cayenne.reflect.ClassDescriptor;
 /**
  * @since 4.2
  */
-class PermanentObjectIdVisitor implements DbRowVisitor<Void> {
+class PermanentObjectIdVisitor implements DbRowOpVisitor<Void> {
 
     public static final String DB_ID_PREFIX = "db:";
 
@@ -60,7 +60,7 @@ class PermanentObjectIdVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitInsert(InsertDbRow dbRow) {
+    public Void visitInsert(InsertDbRowOp dbRow) {
         ObjectId id = dbRow.getChangeId();
         if (id == null || !id.isTemporary()) {
             return null;
@@ -85,7 +85,7 @@ class PermanentObjectIdVisitor implements DbRowVisitor<Void> {
         return null;
     }
 
-    private void createPermanentId(InsertDbRow dbRow) {
+    private void createPermanentId(InsertDbRowOp dbRow) {
         ObjectId id = dbRow.getChangeId();
         boolean supportsGeneratedKeys = lastNode.getAdapter().supportsGeneratedKeys();
         PkGenerator pkGenerator = lastNode.getAdapter().getPkGenerator();

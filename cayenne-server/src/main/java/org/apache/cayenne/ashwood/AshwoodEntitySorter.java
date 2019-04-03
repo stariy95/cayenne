@@ -25,7 +25,7 @@ import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.QueryResponse;
-import org.apache.cayenne.access.flush.row.DbRow;
+import org.apache.cayenne.access.flush.row.DbRowOp;
 import org.apache.cayenne.ashwood.graph.Digraph;
 import org.apache.cayenne.ashwood.graph.IndegreeTopologicalSort;
 import org.apache.cayenne.ashwood.graph.MapDigraph;
@@ -200,8 +200,8 @@ public class AshwoodEntitySorter implements EntitySorter {
 		}
 
 		Object probe = objects.get(0);
-		if (probe instanceof DbRow) {
-			sortObjectsForEntity(objEntity, (List<DbRow>) objects, deleteOrder, DbRow::getObject);
+		if (probe instanceof DbRowOp) {
+			sortObjectsForEntity(objEntity, (List<DbRowOp>) objects, deleteOrder, DbRowOp::getObject);
 		} else if(probe instanceof Persistent) {
 			sortObjectsForEntity(objEntity, (List<Persistent>) objects, deleteOrder, Function.identity());
 		} else {

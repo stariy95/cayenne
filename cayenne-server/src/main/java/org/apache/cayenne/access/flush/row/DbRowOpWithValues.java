@@ -22,17 +22,8 @@ package org.apache.cayenne.access.flush.row;
 /**
  * @since 4.2
  */
-public interface DbRowVisitor<T> {
+public interface DbRowOpWithValues extends DbRowOp {
 
-    default T visitInsert(InsertDbRow dbRow) {
-        return null;
-    }
+    Values getValues();
 
-    default T visitUpdate(UpdateDbRow dbRow) {
-        return null;
-    }
-
-    default T visitDelete(DeleteDbRow dbRow) {
-        return null;
-    }
 }

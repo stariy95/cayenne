@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.access.flush.row;
 
+import java.util.Objects;
+
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbEntity;
@@ -26,49 +28,49 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public class UpdateDbRow extends BaseDbRow implements DbRowWithValues, DbRowWithQualifier {
+public abstract class BaseDbRowOp implements DbRowOp {
 
-    protected final Values values;
-    protected final Qualifier qualifier;
+    protected final Persistent object;
+    protected final DbEntity entity;
+    // Can be ObjEntity id or a DB row id for flattened rows
+    protected final ObjectId changeId;
 
-    public UpdateDbRow(Persistent object, DbEntity entity, ObjectId id) {
-        super(object, entity, id);
-        values = new Values(this, false);
-        qualifier = new Qualifier(this);
+    protected BaseDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
+        this.object = Objects.requireNonNull(object);
+        this.entity = Objects.requireNonNull(entity);
+        this.changeId = Objects.requireNonNull(id);
     }
 
     @Override
-    public <T> T accept(DbRowVisitor<T> visitor) {
-        return visitor.visitUpdate(this);
+    public DbEntity getEntity() {
+        return entity;
     }
 
     @Override
-    public Qualifier getQualifier() {
-        return qualifier;
+    public ObjectId getChangeId() {
+        return changeId;
+    }
+
+    public Persistent getObject() {
+        return object;
     }
 
     @Override
-    public Values getValues() {
-        return values;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DbRowOp)) return false;
+
+        DbRowOp other = (DbRowOp) o;
+        return changeId.equals(other.getChangeId());
     }
 
     @Override
-    public boolean isSameBatch(DbRow row) {
-        if(!(row instanceof UpdateDbRow)) {
-            return false;
-        }
-        if(!row.getEntity().getName().equals(getEntity().getName())) {
-            return false;
-        }
-        UpdateDbRow other = (UpdateDbRow)row;
-        if(!values.isSameBatch(other.values)) {
-            return false;
-        }
-        return qualifier.isSameBatch(other.qualifier);
+    public int hashCode() {
+        return changeId.hashCode();
     }
 
     @Override
     public String toString() {
-        return "update " + super.toString();
+        return entity.getName() + " " + changeId;
     }
 }

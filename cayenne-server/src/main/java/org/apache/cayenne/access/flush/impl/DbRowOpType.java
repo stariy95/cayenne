@@ -26,12 +26,12 @@ import org.apache.cayenne.Persistent;
 /**
  * @since 4.2
  */
-enum DbRowType {
+enum DbRowOpType {
     INSERT,
     UPDATE,
     DELETE;
 
-    static DbRowType forObject(Persistent object) {
+    static DbRowOpType forObject(Persistent object) {
         switch (object.getPersistenceState()) {
             case PersistenceState.NEW:
                 return INSERT;

@@ -35,13 +35,13 @@ import org.apache.cayenne.map.DbAttribute;
  */
 public class Qualifier {
 
-    protected final DbRow row;
+    protected final DbRowOp row;
     // additional qualifier for optimistic lock
     protected Map<DbAttribute, Object> additionalQualifier;
     protected List<String> nullNames;
     protected boolean optimisticLock;
 
-    protected Qualifier(DbRow row) {
+    protected Qualifier(DbRowOp row) {
         this.row = row;
     }
 

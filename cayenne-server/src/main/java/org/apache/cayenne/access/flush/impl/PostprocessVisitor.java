@@ -30,11 +30,11 @@ import org.apache.cayenne.DataObject;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.DataContext;
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.DeleteDbRow;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
-import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 import org.apache.cayenne.reflect.ArcProperty;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.reflect.ToManyMapProperty;
@@ -42,7 +42,7 @@ import org.apache.cayenne.reflect.ToManyMapProperty;
 /**
  * @since 4.2
  */
-class PostprocessVisitor implements DbRowVisitor<Void> {
+class PostprocessVisitor implements DbRowOpVisitor<Void> {
 
     private final DataContext context;
     private Map<ObjectId, DataRow> updatedSnapshots;
@@ -53,18 +53,18 @@ class PostprocessVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitInsert(InsertDbRow dbRow) {
+    public Void visitInsert(InsertDbRowOp dbRow) {
         processObjectChange(dbRow);
         return null;
     }
 
     @Override
-    public Void visitUpdate(UpdateDbRow dbRow) {
+    public Void visitUpdate(UpdateDbRowOp dbRow) {
         processObjectChange(dbRow);
         return null;
     }
 
-    private void processObjectChange(DbRow dbRow) {
+    private void processObjectChange(DbRowOp dbRow) {
         if (dbRow.getChangeId().getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
             return;
         }
@@ -96,7 +96,7 @@ class PostprocessVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitDelete(DeleteDbRow dbRow) {
+    public Void visitDelete(DeleteDbRowOp dbRow) {
         if (dbRow.getChangeId().getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
             return null;
         }

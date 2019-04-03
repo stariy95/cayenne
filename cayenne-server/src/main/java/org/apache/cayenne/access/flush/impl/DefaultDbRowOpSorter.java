@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.cayenne.access.DataDomain;
-import org.apache.cayenne.access.flush.row.DbRowSorter;
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.DeleteDbRow;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
-import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOpSorter;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
 import org.apache.cayenne.map.DbEntity;
@@ -42,7 +42,7 @@ import org.apache.cayenne.map.ObjEntity;
 /**
  * @since 4.2
  */
-public class DefaultDbRowSorter implements DbRowSorter {
+public class DefaultDbRowOpSorter implements DbRowOpSorter {
 
     // This is default order of operations
     private static final int INSERT = 1;
@@ -52,12 +52,12 @@ public class DefaultDbRowSorter implements DbRowSorter {
     @Inject
     private Provider<DataDomain> dataDomainProvider;
 
-    private volatile Comparator<DbRow> comparator;
+    private volatile Comparator<DbRowOp> comparator;
 
     @Override
-    public List<DbRow> sort(Collection<DbRow> dbRows) {
+    public List<DbRowOp> sort(Collection<DbRowOp> dbRows) {
 
-        List<DbRow> sortedDbRows = new ArrayList<>(dbRows);
+        List<DbRowOp> sortedDbRows = new ArrayList<>(dbRows);
         // sort by id, operation type and entity relations
         sortedDbRows.sort(getComparator());
         // sort reflexively dependent objects
@@ -66,7 +66,7 @@ public class DefaultDbRowSorter implements DbRowSorter {
         return sortedDbRows;
     }
 
-    private void sortReflexive(List<DbRow> sortedDbRows) {
+    private void sortReflexive(List<DbRowOp> sortedDbRows) {
         DataDomain dataDomain = dataDomainProvider.get();
         EntitySorter sorter = dataDomain.getEntitySorter();
         EntityResolver resolver = dataDomain.getEntityResolver();
@@ -74,14 +74,14 @@ public class DefaultDbRowSorter implements DbRowSorter {
         DbEntity lastEntity = null;
         int start = 0;
         int idx = 0;
-        DbRow lastRow = null;
-        for(DbRow row : sortedDbRows) {
+        DbRowOp lastRow = null;
+        for(DbRowOp row : sortedDbRows) {
             if (row.getEntity() != lastEntity) {
                 start = idx;
                 if(lastEntity != null && sorter.isReflexive(lastEntity)) {
                     ObjEntity objEntity = resolver.getObjEntity(lastRow.getObject().getObjectId().getEntityName());
-                    List<DbRow> reflexiveSublist = sortedDbRows.subList(start, idx);
-                    sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRow);
+                    List<DbRowOp> reflexiveSublist = sortedDbRows.subList(start, idx);
+                    sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRowOp);
                 }
                 lastEntity = row.getEntity();
             }
@@ -91,13 +91,13 @@ public class DefaultDbRowSorter implements DbRowSorter {
         // sort last chunk
         if(lastEntity != null && sorter.isReflexive(lastEntity)) {
             ObjEntity objEntity = resolver.getObjEntity(lastRow.getObject().getObjectId().getEntityName());
-            List<DbRow> reflexiveSublist = sortedDbRows.subList(start, idx);
-            sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRow);
+            List<DbRowOp> reflexiveSublist = sortedDbRows.subList(start, idx);
+            sorter.sortObjectsForEntity(objEntity, reflexiveSublist, lastRow instanceof DeleteDbRowOp);
         }
     }
 
-    private Comparator<DbRow> getComparator() {
-        Comparator<DbRow> local = comparator;
+    private Comparator<DbRowOp> getComparator() {
+        Comparator<DbRowOp> local = comparator;
         if(local == null) {
             synchronized (this) {
                 local = comparator;
@@ -110,7 +110,7 @@ public class DefaultDbRowSorter implements DbRowSorter {
         return local;
     }
 
-    static class DbRowComparator implements Comparator<DbRow> {
+    static class DbRowComparator implements Comparator<DbRowOp> {
 
         private final EntitySorter entitySorter;
 
@@ -119,7 +119,7 @@ public class DefaultDbRowSorter implements DbRowSorter {
         }
 
         @Override
-        public int compare(DbRow left, DbRow right) {
+        public int compare(DbRowOp left, DbRowOp right) {
             int leftType = DbRowTypeExtractor.INSTANCE.apply(left);
             int rightType = DbRowTypeExtractor.INSTANCE.apply(right);
 
@@ -147,32 +147,32 @@ public class DefaultDbRowSorter implements DbRowSorter {
         }
     }
 
-    private static class DbRowTypeExtractor implements Function<DbRow, Integer> {
+    private static class DbRowTypeExtractor implements Function<DbRowOp, Integer> {
 
         static private final DbRowTypeExtractor INSTANCE = new DbRowTypeExtractor();
 
         @Override
-        public Integer apply(DbRow o) {
+        public Integer apply(DbRowOp o) {
             return o.accept(DbRowTypeVisitor.INSTANCE);
         }
     }
 
-    private static class DbRowTypeVisitor implements DbRowVisitor<Integer> {
+    private static class DbRowTypeVisitor implements DbRowOpVisitor<Integer> {
 
         private static final DbRowTypeVisitor INSTANCE = new DbRowTypeVisitor();
 
         @Override
-        public Integer visitInsert(InsertDbRow diffSnapshot) {
+        public Integer visitInsert(InsertDbRowOp diffSnapshot) {
             return INSERT;
         }
 
         @Override
-        public Integer visitUpdate(UpdateDbRow diffSnapshot) {
+        public Integer visitUpdate(UpdateDbRowOp diffSnapshot) {
             return UPDATE;
         }
 
         @Override
-        public Integer visitDelete(DeleteDbRow diffSnapshot) {
+        public Integer visitDelete(DeleteDbRowOp diffSnapshot) {
             return DELETE;
         }
     }

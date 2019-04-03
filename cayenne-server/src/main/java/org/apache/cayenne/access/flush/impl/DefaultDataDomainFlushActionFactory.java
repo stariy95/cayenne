@@ -22,7 +22,7 @@ package org.apache.cayenne.access.flush.impl;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.flush.DataDomainFlushAction;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.row.DbRowSorter;
+import org.apache.cayenne.access.flush.row.DbRowOpSorter;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.log.JdbcEventLogger;
 
@@ -32,7 +32,7 @@ import org.apache.cayenne.log.JdbcEventLogger;
 public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActionFactory {
 
     @Inject
-    private DbRowSorter operationSorter;
+    private DbRowOpSorter operationSorter;
 
     @Inject
     private JdbcEventLogger jdbcEventLogger;

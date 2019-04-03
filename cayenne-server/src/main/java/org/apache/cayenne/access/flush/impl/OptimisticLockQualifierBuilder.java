@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.ObjectDiff;
-import org.apache.cayenne.access.flush.row.DbRowWithQualifier;
+import org.apache.cayenne.access.flush.row.DbRowOpWithQualifier;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
@@ -38,10 +38,10 @@ import org.apache.cayenne.reflect.ToOneProperty;
  * @since 4.2
  */
 class OptimisticLockQualifierBuilder implements PropertyVisitor {
-    private final DbRowWithQualifier dbRow;
+    private final DbRowOpWithQualifier dbRow;
     private final ObjectDiff diff;
 
-    OptimisticLockQualifierBuilder(DbRowWithQualifier dbRow, ObjectDiff diff) {
+    OptimisticLockQualifierBuilder(DbRowOpWithQualifier dbRow, ObjectDiff diff) {
         this.dbRow = dbRow;
         this.diff = diff;
     }

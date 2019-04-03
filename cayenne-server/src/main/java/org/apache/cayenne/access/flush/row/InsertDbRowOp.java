@@ -19,8 +19,6 @@
 
 package org.apache.cayenne.access.flush.row;
 
-import java.util.Objects;
-
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.map.DbEntity;
@@ -28,49 +26,46 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public abstract class BaseDbRow implements DbRow {
+public class InsertDbRowOp extends BaseDbRowOp implements DbRowOpWithValues {
 
-    protected final Persistent object;
-    protected final DbEntity entity;
-    // Can be ObjEntity id or a DB row id for flattened rows
-    protected final ObjectId changeId;
+    protected final Values values;
 
-    protected BaseDbRow(Persistent object, DbEntity entity, ObjectId id) {
-        this.object = Objects.requireNonNull(object);
-        this.entity = Objects.requireNonNull(entity);
-        this.changeId = Objects.requireNonNull(id);
+    public InsertDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
+        super(object, entity, id);
+        values = new Values(this, true);
     }
 
     @Override
-    public DbEntity getEntity() {
-        return entity;
+    public <T> T accept(DbRowOpVisitor<T> visitor) {
+        return visitor.visitInsert(this);
     }
 
     @Override
-    public ObjectId getChangeId() {
-        return changeId;
-    }
-
-    public Persistent getObject() {
-        return object;
+    public Values getValues() {
+        return values;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DbRow)) return false;
-
-        DbRow other = (DbRow) o;
-        return changeId.equals(other.getChangeId());
+        // TODO: here go troubles with transitivity
+        //   insert = update, update = delete, delete != insert
+        //   though we need this only to store in a hash map, so it should be ok...
+        if(!(o instanceof DbRowOpWithValues)) {
+            return false;
+        }
+        return super.equals(o);
     }
 
     @Override
-    public int hashCode() {
-        return changeId.hashCode();
+    public boolean isSameBatch(DbRowOp row) {
+        if(!(row instanceof InsertDbRowOp)) {
+            return false;
+        }
+        return row.getEntity().getName().equals(getEntity().getName());
     }
 
     @Override
     public String toString() {
-        return entity.getName() + " " + changeId;
+        return "insert " + super.toString();
     }
 }

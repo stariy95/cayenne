@@ -26,37 +26,37 @@ import org.apache.cayenne.map.DbEntity;
 /**
  * @since 4.2
  */
-public class DeleteDbRow extends BaseDbRow implements DbRowWithQualifier {
+public class DeleteDbRowOp extends BaseDbRowOp implements DbRowOpWithQualifier {
 
     protected final Qualifier qualifier;
 
-    public DeleteDbRow(Persistent object, DbEntity entity, ObjectId id) {
+    public DeleteDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
         super(object, entity, id);
         qualifier = new Qualifier(this);
     }
 
     @Override
-    public <T> T accept(DbRowVisitor<T> visitor) {
+    public <T> T accept(DbRowOpVisitor<T> visitor) {
         return visitor.visitDelete(this);
     }
 
     @Override
     public boolean equals(Object o) {
-        if(!(o instanceof DbRowWithQualifier)) {
+        if(!(o instanceof DbRowOpWithQualifier)) {
             return false;
         }
         return super.equals(o);
     }
 
     @Override
-    public boolean isSameBatch(DbRow row) {
-        if(!(row instanceof DeleteDbRow)) {
+    public boolean isSameBatch(DbRowOp row) {
+        if(!(row instanceof DeleteDbRowOp)) {
             return false;
         }
         if(!row.getEntity().getName().equals(getEntity().getName())) {
             return false;
         }
-        DeleteDbRow other = (DeleteDbRow)row;
+        DeleteDbRowOp other = (DeleteDbRowOp)row;
         return qualifier.isSameBatch(other.qualifier);
     }
 

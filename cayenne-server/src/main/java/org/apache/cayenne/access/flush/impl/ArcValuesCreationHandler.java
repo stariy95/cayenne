@@ -22,9 +22,9 @@ package org.apache.cayenne.access.flush.impl;
 import java.util.Iterator;
 
 import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowWithQualifier;
-import org.apache.cayenne.access.flush.row.DbRowWithValues;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpWithQualifier;
+import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
 import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbEntity;
@@ -39,10 +39,10 @@ import org.apache.cayenne.util.CayenneMapEntry;
  */
 class ArcValuesCreationHandler implements GraphChangeHandler {
 
-    final DbRowFactory factory;
-    final DbRowType defaultType;
+    final DbRowOpFactory factory;
+    final DbRowOpType defaultType;
 
-    ArcValuesCreationHandler(DbRowFactory factory, DbRowType defaultType) {
+    ArcValuesCreationHandler(DbRowOpFactory factory, DbRowOpType defaultType) {
         this.factory = factory;
         this.defaultType = defaultType;
     }
@@ -128,19 +128,19 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                         factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
                     }
 
-                    DbRowType type;
+                    DbRowOpType type;
                     if(relationship.isToMany()) {
-                        type = add ? DbRowType.INSERT : DbRowType.DELETE;
+                        type = add ? DbRowOpType.INSERT : DbRowOpType.DELETE;
                         factory.getOrCreate(target, targetId, type);
                     } else {
-                        type = add ? DbRowType.INSERT : DbRowType.UPDATE;
-                        factory.<DbRowWithValues>getOrCreate(target, targetId, type)
+                        type = add ? DbRowOpType.INSERT : DbRowOpType.UPDATE;
+                        factory.<DbRowOpWithValues>getOrCreate(target, targetId, type)
                             .getValues()
                             .addFlattenedId(flattenedPath, targetId);
                     }
                 } else if(dbPathIterator.hasNext()) {
                     // should update existing DB row
-                    factory.getOrCreate(target, targetId, add ? DbRowType.UPDATE : defaultType);
+                    factory.getOrCreate(target, targetId, add ? DbRowOpType.UPDATE : defaultType);
                 }
                 processRelationship(relationship, srcId, targetId, add);
                 srcId = targetId; // use target as next source..
@@ -167,37 +167,37 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                     if(targetPK) {
                         targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
                     }
-                    DbRow row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
-                    if(row instanceof DbRowWithValues && !dbRelationship.isToMany()) {
-                        ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
+                    DbRowOp row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    if(row instanceof DbRowOpWithValues && !dbRelationship.isToMany()) {
+                        ((DbRowOpWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
                     }
                 } else {
                     Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
                     if(srcPK) {
                         srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
                     }
-                    DbRow row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
-                    if(row instanceof DbRowWithValues && !dbRelationship.getReverseRelationship().isToMany()) {
-                        ((DbRowWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
+                    DbRowOp row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
+                    if(row instanceof DbRowOpWithValues && !dbRelationship.getReverseRelationship().isToMany()) {
+                        ((DbRowOpWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
                     }
                 }
             } else {
                 // case 1
                 if(srcPK) {
                     Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
-                    DbRow row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
-                    if(row instanceof DbRowWithValues) {
-                        ((DbRowWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
+                    DbRowOp row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    if(row instanceof DbRowOpWithValues) {
+                        ((DbRowOpWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
                     } else {
-                        ((DbRowWithQualifier)row).getQualifier().addAdditionalQualifier(join.getTarget(), srcValue);
+                        ((DbRowOpWithQualifier)row).getQualifier().addAdditionalQualifier(join.getTarget(), srcValue);
                     }
                 } else {
                     Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
-                    DbRow row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
-                    if(row instanceof DbRowWithValues) {
-                        ((DbRowWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
+                    DbRowOp row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
+                    if(row instanceof DbRowOpWithValues) {
+                        ((DbRowOpWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
                     } else {
-                        ((DbRowWithQualifier)row).getQualifier().addAdditionalQualifier(join.getSource(), dstValue);
+                        ((DbRowOpWithQualifier)row).getQualifier().addAdditionalQualifier(join.getSource(), dstValue);
                     }
                 }
             }

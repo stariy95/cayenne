@@ -119,6 +119,10 @@ class ObjectIdTmp implements ObjectId {
 
     @Override
     public int hashCode() {
-        return 31 * entityName.hashCode() + Arrays.hashCode(id);
+        int result = entityName.hashCode();
+        for (byte next : id) {
+            result = 31 * result + next;
+        }
+        return result;
     }
 }

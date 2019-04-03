@@ -19,44 +19,44 @@
 
 package org.apache.cayenne.access.flush.impl;
 
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.DbRowWithValues;
-import org.apache.cayenne.access.flush.row.DeleteDbRow;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
-import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
+import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 
 /**
  * @since 4.2
  */
-class DbRowMerger implements DbRowVisitor<DbRow> {
+class DbRowOpMerger implements DbRowOpVisitor<DbRowOp> {
 
-    private final DbRow dbRow;
+    private final DbRowOp dbRow;
 
-    DbRowMerger(DbRow dbRow) {
+    DbRowOpMerger(DbRowOp dbRow) {
         this.dbRow = dbRow;
     }
 
     @Override
-    public DbRow visitInsert(InsertDbRow other) {
-        return mergeValues((DbRowWithValues) dbRow, other);
+    public DbRowOp visitInsert(InsertDbRowOp other) {
+        return mergeValues((DbRowOpWithValues) dbRow, other);
     }
 
     @Override
-    public DbRow visitUpdate(UpdateDbRow other) {
+    public DbRowOp visitUpdate(UpdateDbRowOp other) {
         // delete beats update ...
-        if(dbRow instanceof DeleteDbRow) {
+        if(dbRow instanceof DeleteDbRowOp) {
             return dbRow;
         }
-        return mergeValues((DbRowWithValues) dbRow, other);
+        return mergeValues((DbRowOpWithValues) dbRow, other);
     }
 
     @Override
-    public DbRow visitDelete(DeleteDbRow other) {
+    public DbRowOp visitDelete(DeleteDbRowOp other) {
         return other;
     }
 
-    private DbRow mergeValues(DbRowWithValues left, DbRowWithValues right) {
+    private DbRowOp mergeValues(DbRowOpWithValues left, DbRowOpWithValues right) {
         if(right.getChangeId() == right.getObject().getObjectId()) {
             right.getValues().merge(left.getValues());
             return right;

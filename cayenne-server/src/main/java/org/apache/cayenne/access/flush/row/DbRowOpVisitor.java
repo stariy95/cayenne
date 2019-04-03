@@ -22,8 +22,17 @@ package org.apache.cayenne.access.flush.row;
 /**
  * @since 4.2
  */
-public interface DbRowWithQualifier extends DbRow {
+public interface DbRowOpVisitor<T> {
 
-    Qualifier getQualifier();
+    default T visitInsert(InsertDbRowOp dbRow) {
+        return null;
+    }
 
+    default T visitUpdate(UpdateDbRowOp dbRow) {
+        return null;
+    }
+
+    default T visitDelete(DeleteDbRowOp dbRow) {
+        return null;
+    }
 }

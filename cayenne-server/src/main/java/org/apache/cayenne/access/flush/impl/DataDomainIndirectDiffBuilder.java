@@ -24,9 +24,9 @@ import java.util.HashSet;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
-import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
@@ -44,9 +44,11 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
         this.resolver = resolver;
     }
 
-    void processChanges(GraphDiff allChanges) {
+    void processChanges(ObjectStoreGraphDiff allChanges) {
         // extract flattened and indirect changes and remove duplicate changes...
-        allChanges.apply(this);
+        allChanges.getChangesByObjectId().forEach((obj, diff) -> {
+            diff.apply(this);
+        });
     }
 
     Collection<ObjectId> getIndirectModifications() {
@@ -55,7 +57,7 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
 
     @Override
     public void arcCreated(Object nodeId, Object targetNodeId, ArcId arcId) {
-        processArcChange((ObjectId)nodeId, arcId);
+        processArcChange((ObjectId) nodeId, arcId);
     }
 
     @Override
@@ -67,7 +69,7 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
         ObjEntity entity = resolver.getObjEntity(nodeId.getEntityName());
         ObjRelationship relationship = entity.getRelationship(arcId.toString());
 
-        if (relationship.isSourceIndependentFromTargetChange()) {
+        if (relationship != null && relationship.isSourceIndependentFromTargetChange()) {
             // do not record temporary id mods...
             if (!nodeId.isTemporary()) {
                 if(indirectModifications == null) {

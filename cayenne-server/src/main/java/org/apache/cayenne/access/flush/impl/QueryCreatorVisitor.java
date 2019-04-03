@@ -22,11 +22,11 @@ package org.apache.cayenne.access.flush.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
-import org.apache.cayenne.access.flush.row.DeleteDbRow;
-import org.apache.cayenne.access.flush.row.InsertDbRow;
-import org.apache.cayenne.access.flush.row.UpdateDbRow;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
+import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 import org.apache.cayenne.query.BatchQuery;
 import org.apache.cayenne.query.DeleteBatchQuery;
 import org.apache.cayenne.query.InsertBatchQuery;
@@ -36,10 +36,10 @@ import org.apache.cayenne.query.UpdateBatchQuery;
  * @since 4.2
  */
 // TODO: pass snapshot as argument directly to batch...
-class QueryCreatorVisitor implements DbRowVisitor<Void> {
+class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
 
     private final List<BatchQuery> queryList = new ArrayList<>();
-    private DbRow lastRow = null;
+    private DbRowOp lastRow = null;
     private BatchQuery lastBatch = null;
 
     List<BatchQuery> getQueryList() {
@@ -47,7 +47,7 @@ class QueryCreatorVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitInsert(InsertDbRow dbRow) {
+    public Void visitInsert(InsertDbRowOp dbRow) {
         InsertBatchQuery query;
         if(lastRow == null || !lastRow.isSameBatch(dbRow)) {
             query = new InsertBatchQuery(dbRow.getEntity(), 4);
@@ -62,7 +62,7 @@ class QueryCreatorVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitUpdate(UpdateDbRow dbRow) {
+    public Void visitUpdate(UpdateDbRowOp dbRow) {
         // skip empty update..
         if(dbRow.getValues().isEmpty()) {
             return null;
@@ -89,7 +89,7 @@ class QueryCreatorVisitor implements DbRowVisitor<Void> {
     }
 
     @Override
-    public Void visitDelete(DeleteDbRow dbRow) {
+    public Void visitDelete(DeleteDbRowOp dbRow) {
         DeleteBatchQuery query;
         if(lastRow == null || !lastRow.isSameBatch(dbRow)) {
             query = new DeleteBatchQuery(

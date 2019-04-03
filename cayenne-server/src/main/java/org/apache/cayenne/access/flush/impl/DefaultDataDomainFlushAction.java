@@ -35,9 +35,9 @@ import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
 import org.apache.cayenne.access.flush.DataDomainFlushAction;
-import org.apache.cayenne.access.flush.row.DbRowSorter;
-import org.apache.cayenne.access.flush.row.DbRow;
-import org.apache.cayenne.access.flush.row.DbRowVisitor;
+import org.apache.cayenne.access.flush.row.DbRowOpSorter;
+import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
@@ -50,10 +50,10 @@ import org.apache.cayenne.query.BatchQuery;
 public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected final DataDomain dataDomain;
-    protected final DbRowSorter snapshotSorter;
+    protected final DbRowOpSorter snapshotSorter;
     protected final JdbcEventLogger jdbcEventLogger;
 
-    protected DefaultDataDomainFlushAction(DataDomain dataDomain, DbRowSorter snapshotSorter, JdbcEventLogger jdbcEventLogger) {
+    protected DefaultDataDomainFlushAction(DataDomain dataDomain, DbRowOpSorter snapshotSorter, JdbcEventLogger jdbcEventLogger) {
         this.dataDomain = dataDomain;
         this.snapshotSorter = snapshotSorter;
         this.jdbcEventLogger = jdbcEventLogger;
@@ -67,35 +67,35 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         }
 
         ObjectStore objectStore = context.getObjectStore();
-        Collection<DbRow> dbRows = createDbRows(context, (ObjectStoreGraphDiff) changes);
+        Collection<DbRowOp> dbRows = createDbRows(context, (ObjectStoreGraphDiff) changes);
         updateObjectIds(dbRows);
-        List<DbRow> sortedDbRows = sort(dbRows);
+        List<DbRowOp> sortedDbRows = sort(dbRows);
         List<BatchQuery> queries = createQueries(sortedDbRows);
         executeQueries(queries);
         createReplacementIds(objectStore, result, sortedDbRows);
-        postprocess(context, changes, result, sortedDbRows);
+        postprocess(context, (ObjectStoreGraphDiff) changes, result, sortedDbRows);
 
         return result;
     }
 
-    protected List<DbRow> sort(Collection<DbRow> dbRows) {
+    protected List<DbRowOp> sort(Collection<DbRowOp> dbRows) {
         return snapshotSorter.sort(dbRows);
     }
 
-    protected Collection<DbRow> createDbRows(DataContext context, ObjectStoreGraphDiff changes) {
+    protected Collection<DbRowOp> createDbRows(DataContext context, ObjectStoreGraphDiff changes) {
         EntityResolver resolver = dataDomain.getEntityResolver();
         ObjectStore objectStore = context.getObjectStore();
 
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
-        Map<DbRow, DbRow> dbRows = new HashMap<>();
+        Map<DbRowOp, DbRowOp> dbRows = new HashMap<>();
         Set<ArcTarget> processedArcs = new HashSet<>();
 
         changesByObjectId.forEach((obj, diff) -> {
-            DbRowFactory factory = new DbRowFactory(resolver, objectStore, diff, processedArcs);
-            Collection<? extends DbRow> rows = factory.createRows();
+            DbRowOpFactory factory = new DbRowOpFactory(resolver, objectStore, diff, processedArcs);
+            Collection<? extends DbRowOp> rows = factory.createRows();
             rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
                 if (value != null) {
-                    return dbRow.accept(new DbRowMerger(value));
+                    return dbRow.accept(new DbRowOpMerger(value));
                 }
                 return dbRow;
             }));
@@ -104,12 +104,12 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         return dbRows.values();
     }
 
-    protected void updateObjectIds(Collection<DbRow> dbRows) {
-        DbRowVisitor<Void> permIdVisitor = new PermanentObjectIdVisitor(dataDomain);
+    protected void updateObjectIds(Collection<DbRowOp> dbRows) {
+        DbRowOpVisitor<Void> permIdVisitor = new PermanentObjectIdVisitor(dataDomain);
         dbRows.forEach(row -> row.accept(permIdVisitor));
     }
 
-    protected List<BatchQuery> createQueries(List<DbRow> dbRows) {
+    protected List<BatchQuery> createQueries(List<DbRowOp> dbRows) {
         QueryCreatorVisitor queryCreator = new QueryCreatorVisitor();
         dbRows.forEach(row -> row.accept(queryCreator));
         return queryCreator.getQueryList();
@@ -122,12 +122,12 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
                 .forEach((node, nodeQueries) -> node.performQueries(nodeQueries, observer));
     }
 
-    protected void createReplacementIds(ObjectStore store, CompoundDiff result, List<DbRow> dbRows) {
+    protected void createReplacementIds(ObjectStore store, CompoundDiff result, List<DbRowOp> dbRows) {
         ReplacementIdVisitor visitor = new ReplacementIdVisitor(store, dataDomain.getEntityResolver(), result);
         dbRows.forEach(row -> row.accept(visitor));
     }
 
-    protected void postprocess(DataContext context, GraphDiff changes, CompoundDiff result, List<DbRow> dbRows) {
+    protected void postprocess(DataContext context, ObjectStoreGraphDiff changes, CompoundDiff result, List<DbRowOp> dbRows) {
         ObjectStore objectStore = context.getObjectStore();
 
         PostprocessVisitor postprocessor = new PostprocessVisitor(context);

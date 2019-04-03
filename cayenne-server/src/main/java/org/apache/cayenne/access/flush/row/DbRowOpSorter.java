@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * @since 4.2
  */
-public interface DbRowSorter {
+public interface DbRowOpSorter {
 
-    List<DbRow> sort(Collection<DbRow> dbRows);
+    List<DbRowOp> sort(Collection<DbRowOp> dbRows);
 }

@@ -21,7 +21,7 @@ package org.apache.cayenne.access.flush.impl;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.access.flush.row.DbRowWithValues;
+import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.ObjAttribute;
@@ -32,7 +32,7 @@ import org.apache.cayenne.map.ObjEntity;
  */
 class ValuesCreationHandler extends ArcValuesCreationHandler {
 
-    ValuesCreationHandler(DbRowFactory factory, DbRowType defaultType) {
+    ValuesCreationHandler(DbRowOpFactory factory, DbRowOpType defaultType) {
         super(factory, defaultType);
     }
 
@@ -60,7 +60,7 @@ class ValuesCreationHandler extends ArcValuesCreationHandler {
             }
         }
 
-        DbRowWithValues dbRow = factory.get(id);
+        DbRowOpWithValues dbRow = factory.get(id);
         if(dbRow != null) {
             dbRow.getValues().addValue(dbAttribute, newValue);
         }
