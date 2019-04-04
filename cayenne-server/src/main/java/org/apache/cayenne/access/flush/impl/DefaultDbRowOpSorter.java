@@ -113,47 +113,37 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
     static class DbRowComparator implements Comparator<DbRowOp> {
 
         private final EntitySorter entitySorter;
+        private final Function<DbRowOp, Integer> typeExtractor;
 
         DbRowComparator(EntitySorter entitySorter) {
             this.entitySorter = entitySorter;
+            this.typeExtractor = row -> row.accept(DbRowTypeVisitor.INSTANCE);
         }
 
         @Override
         public int compare(DbRowOp left, DbRowOp right) {
-            int leftType = DbRowTypeExtractor.INSTANCE.apply(left);
-            int rightType = DbRowTypeExtractor.INSTANCE.apply(right);
-
-            int result;
-            if(left.getChangeId().getIdSnapshot().equals(right.getChangeId().getIdSnapshot())) {
-                result = Integer.compare(rightType, leftType);
-            } else {
-                result = Integer.compare(leftType, rightType);
+            // 1. sort by op type
+            int leftType = typeExtractor.apply(left);
+            int rightType = typeExtractor.apply(right);
+            int result = Integer.compare(leftType, rightType);
+            if(result != 0
+                    && left.getChangeId().getIdSnapshot().equals(right.getChangeId().getIdSnapshot())) {
+                // need rearrange order of inserts/deletes for same IDs
+                result = -result;
             }
 
             if(result != 0) {
                 return result;
             }
 
+            // 2. sort by entity relations
             result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
             if(result != 0) {
-                if(leftType == DELETE) {
-                    // invert order for delete
-                    return -result;
-                }
-                return result;
+                return leftType == DELETE ? -result : result;
             }
 
+            // TODO: 3. sort updates by attributes to batch it better...
             return 0;
-        }
-    }
-
-    private static class DbRowTypeExtractor implements Function<DbRowOp, Integer> {
-
-        static private final DbRowTypeExtractor INSTANCE = new DbRowTypeExtractor();
-
-        @Override
-        public Integer apply(DbRowOp o) {
-            return o.accept(DbRowTypeVisitor.INSTANCE);
         }
     }
 

@@ -19,8 +19,6 @@
 
 package org.apache.cayenne.access.flush.impl;
 
-import java.util.function.Supplier;
-
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.flush.row.DbRowOpWithQualifier;
@@ -69,8 +67,8 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
             for(DbJoin join : dbRelationship.getJoins()) {
                 DbAttribute source = join.getSource();
                 if(!source.isPrimaryKey()) {
-                    dbRow.getQualifier().addAdditionalQualifier(source,
-                            (Supplier)() -> value.getIdSnapshot().get(join.getTargetName()), true);
+                    dbRow.getQualifier()
+                            .addAdditionalQualifier(source, ObjectIdValueSupplier.getFor(value, join.getTargetName()), true);
                 }
             }
         }

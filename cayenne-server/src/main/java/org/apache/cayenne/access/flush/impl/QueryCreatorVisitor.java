@@ -38,9 +38,16 @@ import org.apache.cayenne.query.UpdateBatchQuery;
 // TODO: pass snapshot as argument directly to batch...
 class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
 
-    private final List<BatchQuery> queryList = new ArrayList<>();
+    private final List<BatchQuery> queryList;
+    private final int batchSize;
     private DbRowOp lastRow = null;
     private BatchQuery lastBatch = null;
+
+    QueryCreatorVisitor(int size) {
+        // TODO: these sizes are pretty much random ...
+        this.queryList = new ArrayList<>(size / 2);
+        this.batchSize = size / 3;
+    }
 
     List<BatchQuery> getQueryList() {
         return queryList;
@@ -50,7 +57,7 @@ class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
     public Void visitInsert(InsertDbRowOp dbRow) {
         InsertBatchQuery query;
         if(lastRow == null || !lastRow.isSameBatch(dbRow)) {
-            query = new InsertBatchQuery(dbRow.getEntity(), 4);
+            query = new InsertBatchQuery(dbRow.getEntity(), batchSize);
             queryList.add(query);
             lastBatch = query;
         } else {
@@ -75,7 +82,7 @@ class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
                     dbRow.getQualifier().getQualifierAttributes(),
                     dbRow.getValues().getUpdatedAttributes(),
                     dbRow.getQualifier().getNullQualifierNames(),
-                    4
+                    batchSize
             );
             query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
             queryList.add(query);
@@ -96,7 +103,7 @@ class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
                     dbRow.getEntity(),
                     dbRow.getQualifier().getQualifierAttributes(),
                     dbRow.getQualifier().getNullQualifierNames(),
-                    4
+                    batchSize
             );
             query.setUsingOptimisticLocking(dbRow.getQualifier().isUsingOptimisticLocking());
             queryList.add(query);

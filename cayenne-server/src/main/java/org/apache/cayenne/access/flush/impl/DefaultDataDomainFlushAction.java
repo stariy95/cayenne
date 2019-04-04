@@ -110,7 +110,7 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
     }
 
     protected List<BatchQuery> createQueries(List<DbRowOp> dbRows) {
-        QueryCreatorVisitor queryCreator = new QueryCreatorVisitor();
+        QueryCreatorVisitor queryCreator = new QueryCreatorVisitor(dbRows.size());
         dbRows.forEach(row -> row.accept(queryCreator));
         return queryCreator.getQueryList();
     }
@@ -140,7 +140,7 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
                 .processSnapshotChanges(
                         objectStore,
                         postprocessor.getUpdatedSnapshots(),
-                        postprocessor.getDeletedIds(), // TODO: old tmp id should go into this collection too...
+                        postprocessor.getDeletedIds(),
                         Collections.emptyList(),
                         indirectDiffBuilder.getIndirectModifications()
                 );

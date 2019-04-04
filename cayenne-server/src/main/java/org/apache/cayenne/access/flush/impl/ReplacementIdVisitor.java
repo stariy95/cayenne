@@ -91,7 +91,6 @@ class ReplacementIdVisitor implements DbRowOpVisitor<Void> {
         if (object.getObjectId() == id && !replacementId.getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
             object.setObjectId(replacementId);
             // update meaningful PKs
-            // TODO: optimize this?
             for (AttributeProperty property: resolver.getClassDescriptor(replacementId.getEntityName()).getIdProperties()) {
                 if(property.getAttribute() != null) {
                     Object value = replacement.get(property.getAttribute().getDbAttributeName());
