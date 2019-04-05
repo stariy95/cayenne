@@ -49,10 +49,13 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
     private static final int UPDATE = 2;
     private static final int DELETE = 3;
 
-    @Inject
-    private Provider<DataDomain> dataDomainProvider;
+    private final Provider<DataDomain> dataDomainProvider;
 
     private volatile Comparator<DbRowOp> comparator;
+
+    public DefaultDbRowOpSorter(@Inject Provider<DataDomain> dataDomainProvider) {
+        this.dataDomainProvider = dataDomainProvider;
+    }
 
     @Override
     public List<DbRowOp> sort(Collection<DbRowOp> dbRows) {

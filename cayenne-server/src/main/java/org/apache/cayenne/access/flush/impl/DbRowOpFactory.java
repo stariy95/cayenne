@@ -31,7 +31,6 @@ import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.flush.row.DbRowOp;
-import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
 import org.apache.cayenne.access.flush.row.InsertDbRowOp;
 import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
@@ -67,7 +66,7 @@ class DbRowOpFactory {
     Collection<? extends DbRowOp> createRows() {
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
         DbRowOp row = getOrCreate(rootEntity, object.getObjectId(), DbRowOpType.forObject(object));
-        row.accept(new RootRowProcessor(diff));
+        row.accept(new RootRowOpProcessor(this, diff));
         return dbRows.values();
     }
 
@@ -109,7 +108,7 @@ class DbRowOpFactory {
         return diff;
     }
 
-    private DbEntity getDbEntity(ObjectId id) {
+    DbEntity getDbEntity(ObjectId id) {
         String entityName = id.getEntityName();
         if(entityName.startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
             entityName = entityName.substring(PermanentObjectIdVisitor.DB_ID_PREFIX.length());
@@ -122,43 +121,5 @@ class DbRowOpFactory {
 
     Set<ArcTarget> getProcessedArcs() {
         return processedArcs;
-    }
-
-    private class RootRowProcessor implements DbRowOpVisitor<Void> {
-        private final ObjectDiff diff;
-
-        RootRowProcessor(ObjectDiff diff) {
-            this.diff = diff;
-        }
-
-        @Override
-        public Void visitInsert(InsertDbRowOp dbRow) {
-            diff.apply(new ValuesCreationHandler(DbRowOpFactory.this, DbRowOpType.INSERT));
-            return null;
-        }
-
-        @Override
-        public Void visitUpdate(UpdateDbRowOp dbRow) {
-            diff.apply(new ValuesCreationHandler(DbRowOpFactory.this, DbRowOpType.UPDATE));
-            if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
-                descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
-            }
-            return null;
-        }
-
-        @Override
-        public Void visitDelete(DeleteDbRowOp dbRow) {
-            if(descriptor.getEntity().isReadOnly()) {
-                throw new CayenneRuntimeException("Attempt to modify object(s) mapped to a read-only entity: '%s'. " +
-                        "Can't commit changes.", descriptor.getEntity().getName());
-            }
-            diff.apply(new ArcValuesCreationHandler(DbRowOpFactory.this, DbRowOpType.DELETE));
-            Collection<ObjectId> flattenedIds = store.getFlattenedIds(dbRow.getChangeId());
-            flattenedIds.forEach(id -> DbRowOpFactory.this.getOrCreate(getDbEntity(id), id, DbRowOpType.DELETE));
-            if(descriptor.getEntity().getDeclaredLockType() == ObjEntity.LOCK_TYPE_OPTIMISTIC) {
-                descriptor.visitAllProperties(new OptimisticLockQualifierBuilder(dbRow, diff));
-            }
-            return null;
-        }
     }
 }
