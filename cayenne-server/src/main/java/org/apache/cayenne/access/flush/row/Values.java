@@ -41,7 +41,7 @@ public class Values {
     // generated flattened Ids for this insert
     protected Map<String, ObjectId> flattenedIds;
 
-    protected Values(DbRowOp row, boolean includeId) {
+    public Values(DbRowOp row, boolean includeId) {
         this.row = row;
         this.includeId = includeId;
     }

@@ -150,7 +150,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
         return targetId;
     }
 
-    private void processRelationship(DbRelationship dbRelationship, ObjectId srcId, ObjectId targetId, boolean add) {
+    protected void processRelationship(DbRelationship dbRelationship, ObjectId srcId, ObjectId targetId, boolean add) {
         for(DbJoin join : dbRelationship.getJoins()) {
             boolean srcPK = join.getSource().isPrimaryKey();
             boolean targetPK = join.getTarget().isPrimaryKey();
