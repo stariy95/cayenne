@@ -24,7 +24,6 @@ import java.util.Iterator;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.row.DbRowOp;
 import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
-import org.apache.cayenne.access.flush.row.DbRowOpWithQualifier;
 import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
 import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
 import org.apache.cayenne.access.flush.row.InsertDbRowOp;
@@ -166,11 +165,11 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
             ObjectId id;
             boolean processDelete;
 
-            // Push values from/to source to/from target...
-            // We have 3 cases globally here:
-            // 1. PK -> FK: just grab value from PK and propagate it to FK
-            // 2. PK -> PK: check isToDep flag and set dependent
-            // 3. NON-PK -> FK (not supported fully for now): also check isToDep flag, but get value from DbRow, not ObjID
+            // We manage 3 cases here:
+            // 1. PK -> FK: just propagate value from PK and to FK
+            // 2. PK -> PK: check isToDep flag and set dependent one
+            // 3. NON-PK -> FK (not supported fully for now, see CAY-2488): also check isToDep flag,
+            //    but get value from DbRow, not ObjID
             if(srcPK != targetPK) {
                 // case 1
                 processDelete = true;
@@ -213,7 +212,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                 id.getReplacementIdMap().put(attribute.getName(), valueToUse);
             }
             if(rowOp != null) {
-                rowOp.accept(new RowOpVisitor(attribute, add, valueToUse, processDelete));
+                rowOp.accept(new ValuePropagationVisitor(attribute, add, valueToUse, processDelete));
             }
         }
     }
@@ -235,13 +234,13 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
     public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
     }
 
-    private static class RowOpVisitor implements DbRowOpVisitor<Void> {
+    private static class ValuePropagationVisitor implements DbRowOpVisitor<Void> {
         private final DbAttribute attribute;
         private final boolean add;
         private final Object valueToUse;
         private final boolean processDelete;
 
-        private RowOpVisitor(DbAttribute attribute, boolean add, Object valueToUse, boolean processDelete) {
+        private ValuePropagationVisitor(DbAttribute attribute, boolean add, Object valueToUse, boolean processDelete) {
             this.attribute = attribute;
             this.add = add;
             this.valueToUse = valueToUse;
