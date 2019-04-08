@@ -52,9 +52,14 @@ class ValuesCreationHandler extends ArcValuesCreationHandler {
             id = processFlattenedPath(id, null, dbEntity, attribute.getDbAttributePath(), newValue != null);
         }
 
+        if(id == null) {
+            // some extra safety, shouldn't happen
+            throw new CayenneRuntimeException("Unable to resolve DB row PK for object's %s update of property '%s'"
+                    , nodeId, property);
+        }
+
         DbAttribute dbAttribute = attribute.getDbAttribute();
-        // TODO: id == null?
-        if(id != null && dbAttribute.isPrimaryKey()) {
+        if(dbAttribute.isPrimaryKey()) {
             if(!(newValue instanceof Number) || ((Number) newValue).longValue() != 0) {
                 id.getReplacementIdMap().put(dbAttribute.getName(), newValue);
             }

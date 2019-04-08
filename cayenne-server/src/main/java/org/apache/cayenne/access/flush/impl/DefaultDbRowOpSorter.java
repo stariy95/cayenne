@@ -145,7 +145,7 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
                 return leftType == DELETE ? -result : result;
             }
 
-            // TODO: 3. sort updates by attributes to batch it better...
+            // TODO: 3. sort updates by changed and null attributes to batch it better...
             return 0;
         }
     }

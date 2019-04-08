@@ -146,6 +146,7 @@ class PermanentObjectIdVisitor implements DbRowOpVisitor<Void> {
         }
     }
 
+    // TODO: do we need this part? it should be dealt with at DbRowOp creation time
     String getPropagatedTargetName(DbAttribute attribute) {
 
         for (DbRelationship dbRel : attribute.getEntity().getRelationships()) {

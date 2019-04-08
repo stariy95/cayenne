@@ -23,10 +23,15 @@ import java.util.Iterator;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.row.DbRowOp;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.row.DbRowOpWithQualifier;
 import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
+import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.InsertDbRowOp;
+import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
@@ -155,51 +160,60 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
             boolean srcPK = join.getSource().isPrimaryKey();
             boolean targetPK = join.getTarget().isPrimaryKey();
 
+            Object valueToUse;
+            DbRowOp rowOp;
+            DbAttribute attribute;
+            ObjectId id;
+            boolean processDelete;
+
             // Push values from/to source to/from target...
             // We have 3 cases globally here:
             // 1. PK -> FK: just grab value from PK and propagate it to FK
-            // 2. PK -> PK: check isToDep flag and
+            // 2. PK -> PK: check isToDep flag and set dependent
             // 3. NON-PK -> FK (not supported fully for now): also check isToDep flag, but get value from DbRow, not ObjID
-            if(srcPK == targetPK) {
-                // case 2 and 3
-                if(dbRelationship.isToDependentPK()) {
-                    Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
-                    if(targetPK) {
-                        targetId.getReplacementIdMap().put(join.getTargetName(), srcValue);
-                    }
-                    DbRowOp row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
-                    if(row instanceof DbRowOpWithValues && !dbRelationship.isToMany()) {
-                        ((DbRowOpWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
-                    }
+            if(srcPK != targetPK) {
+                // case 1
+                processDelete = true;
+                id = null;
+                if(srcPK) {
+                    valueToUse = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
+                    rowOp = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    attribute = join.getTarget();
                 } else {
-                    Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
-                    if(srcPK) {
-                        srcId.getReplacementIdMap().put(join.getSourceName(), dstValue);
-                    }
-                    DbRowOp row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
-                    if(row instanceof DbRowOpWithValues && !dbRelationship.getReverseRelationship().isToMany()) {
-                        ((DbRowOpWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
-                    }
+                    valueToUse = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
+                    rowOp = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
+                    attribute = join.getSource();
                 }
             } else {
-                // case 1
-                if(srcPK) {
-                    Object srcValue = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
-                    DbRowOp row = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
-                    if(row instanceof DbRowOpWithValues) {
-                        ((DbRowOpWithValues)row).getValues().addValue(join.getTarget(), add ? srcValue : null);
-                    } else {
-                        ((DbRowOpWithQualifier)row).getQualifier().addAdditionalQualifier(join.getTarget(), srcValue);
+                // case 2 and 3
+                processDelete = false;
+                if(dbRelationship.isToDependentPK()) {
+                    valueToUse = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
+                    rowOp = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    attribute = join.getTarget();
+                    id = targetId;
+                    if(dbRelationship.isToMany()) {
+                        // strange mapping toDepPK and toMany, but just skip it
+                        rowOp = null;
                     }
                 } else {
-                    Object dstValue = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
-                    DbRowOp row = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
-                    if(row instanceof DbRowOpWithValues) {
-                        ((DbRowOpWithValues)row).getValues().addValue(join.getSource(), add ? dstValue : null);
-                    } else {
-                        ((DbRowOpWithQualifier)row).getQualifier().addAdditionalQualifier(join.getSource(), dstValue);
+                    valueToUse = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
+                    rowOp = factory.getOrCreate(dbRelationship.getSourceEntity(), srcId, defaultType);
+                    attribute = join.getSource();
+                    id = srcId;
+                    if(dbRelationship.getReverseRelationship().isToMany()) {
+                        // strange mapping toDepPK and toMany, but just skip it
+                        rowOp = null;
                     }
                 }
+            }
+
+            // propagated master -> child PK
+            if(id != null && attribute.isPrimaryKey()) {
+                id.getReplacementIdMap().put(attribute.getName(), valueToUse);
+            }
+            if(rowOp != null) {
+                rowOp.accept(new RowOpVisitor(attribute, add, valueToUse, processDelete));
             }
         }
     }
@@ -219,5 +233,39 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
 
     @Override
     public void nodePropertyChanged(Object nodeId, String property, Object oldValue, Object newValue) {
+    }
+
+    private static class RowOpVisitor implements DbRowOpVisitor<Void> {
+        private final DbAttribute attribute;
+        private final boolean add;
+        private final Object valueToUse;
+        private final boolean processDelete;
+
+        private RowOpVisitor(DbAttribute attribute, boolean add, Object valueToUse, boolean processDelete) {
+            this.attribute = attribute;
+            this.add = add;
+            this.valueToUse = valueToUse;
+            this.processDelete = processDelete;
+        }
+
+        @Override
+        public Void visitInsert(InsertDbRowOp dbRow) {
+            dbRow.getValues().addValue(attribute, add ? valueToUse : null);
+            return null;
+        }
+
+        @Override
+        public Void visitUpdate(UpdateDbRowOp dbRow) {
+            dbRow.getValues().addValue(attribute, add ? valueToUse : null);
+            return null;
+        }
+
+        @Override
+        public Void visitDelete(DeleteDbRowOp dbRow) {
+            if(processDelete) {
+                dbRow.getQualifier().addAdditionalQualifier(attribute, valueToUse);
+            }
+            return null;
+        }
     }
 }

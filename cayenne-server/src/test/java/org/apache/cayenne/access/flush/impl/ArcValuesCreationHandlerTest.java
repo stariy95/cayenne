@@ -26,6 +26,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
+import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.row.InsertDbRowOp;
 import org.apache.cayenne.access.flush.row.Values;
 import org.apache.cayenne.map.DbAttribute;
@@ -51,6 +52,7 @@ public class ArcValuesCreationHandlerTest {
     private InsertDbRowOp dbRowOp;
     private Values values;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setup() {
         factory = mock(DbRowOpFactory.class);
@@ -69,6 +71,7 @@ public class ArcValuesCreationHandlerTest {
         when(relationship.getDbRelationships()).thenReturn(Collections.singletonList(dbRelationship));
         when(entity.getRelationship(anyString())).thenReturn(relationship);
         when(descriptor.getEntity()).thenReturn(entity);
+        when(dbRowOp.accept(any(DbRowOpVisitor.class))).thenCallRealMethod();
         when(dbRowOp.getValues()).thenReturn(values);
         when(factory.getDiff()).thenReturn(diff);
         when(factory.getDescriptor()).thenReturn(descriptor);
