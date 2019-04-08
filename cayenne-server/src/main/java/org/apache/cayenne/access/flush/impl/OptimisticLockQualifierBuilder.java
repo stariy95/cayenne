@@ -49,17 +49,18 @@ class OptimisticLockQualifierBuilder implements PropertyVisitor {
         ObjAttribute attribute = property.getAttribute();
         DbAttribute dbAttribute = attribute.getDbAttribute();
         if (attribute.isUsedForLocking() && dbAttribute.getEntity() == dbRow.getEntity()) {
-            // TODO: dbAttribute.getEntity() != dbRow.getEntity() ???
             dbRow.getQualifier()
                     .addAdditionalQualifier(dbAttribute, diff.getSnapshotValue(property.getName()), true);
 
+        } else {
+            // unimplemented case, see CAY-2560 for details.
+            // we can't grab sub entity row here as no good accessor for this implemented.
         }
         return true;
     }
 
     @Override
     public boolean visitToOne(ToOneProperty property) {
-        // TODO: implement all cases...
         ObjRelationship relationship = property.getRelationship();
         if(relationship.isUsedForLocking()) {
             ObjectId value = diff.getArcSnapshotValue(property.getName());
