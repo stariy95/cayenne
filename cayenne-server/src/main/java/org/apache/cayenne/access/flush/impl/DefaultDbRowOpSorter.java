@@ -128,25 +128,24 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
             // 1. sort by op type
             int leftType = typeExtractor.apply(left);
             int rightType = typeExtractor.apply(right);
-            int result = Integer.compare(leftType, rightType);
+            int result;
+
+            // 1. sort by entity relations
+            result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
+            if(result != 0) {
+                return leftType == DELETE ? -result : result;
+            }
+
+            // 2. sort by op type
+            result = Integer.compare(leftType, rightType);
             if(result != 0
                     && left.getChangeId().getIdSnapshot().equals(right.getChangeId().getIdSnapshot())) {
                 // need rearrange order of inserts/deletes for same IDs
                 result = -result;
             }
 
-            if(result != 0) {
-                return result;
-            }
-
-            // 2. sort by entity relations
-            result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
-            if(result != 0) {
-                return leftType == DELETE ? -result : result;
-            }
-
             // TODO: 3. sort updates by changed and null attributes to batch it better...
-            return 0;
+            return result;
         }
     }
 
