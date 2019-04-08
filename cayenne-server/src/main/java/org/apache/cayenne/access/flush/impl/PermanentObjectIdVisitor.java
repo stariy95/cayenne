@@ -123,13 +123,6 @@ class PermanentObjectIdVisitor implements DbRowOpVisitor<Void> {
                 continue;
             }
 
-            // skip propagated
-            String targetName;
-            if ((targetName = getPropagatedTargetName(dbAttr)) != null) {
-                idMap.put(dbAttrName, (Supplier<Object>) () -> id.getIdSnapshot().get(targetName));
-                continue;
-            }
-
             // only a single key can be generated from DB... if this is done already in this loop, we must bail out.
             if (autoPkDone) {
                 throw new CayenneRuntimeException("Primary Key autogeneration only works for a single attribute.");
@@ -144,23 +137,5 @@ class PermanentObjectIdVisitor implements DbRowOpVisitor<Void> {
                 throw new CayenneRuntimeException("Error generating PK: %s", ex,  ex.getMessage());
             }
         }
-    }
-
-    // TODO: do we need this part? it should be dealt with at DbRowOp creation time
-    String getPropagatedTargetName(DbAttribute attribute) {
-
-        for (DbRelationship dbRel : attribute.getEntity().getRelationships()) {
-            if (!dbRel.isToMasterPK()) {
-                continue;
-            }
-
-            for (DbJoin join : dbRel.getJoins()) {
-                if (attribute.getName().equals(join.getSourceName())) {
-                    return join.getTargetName();
-                }
-            }
-        }
-
-        return null;
     }
 }
