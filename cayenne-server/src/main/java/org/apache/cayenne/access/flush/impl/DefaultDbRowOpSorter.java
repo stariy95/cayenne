@@ -129,17 +129,21 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
             int rightType = typeExtractor.apply(right);
             int result;
 
-            // 1. sort by entity relations
-            result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
-            if(result != 0) {
-                return leftType == DELETE ? -result : result;
-            }
-
-            // 2. sort by op type, inverting for meaningful PK
+            // 1. sort by op type, inverting for meaningful PK
             if(left.isMeaningfulPk() || right.isMeaningfulPk()) {
                 result = Integer.compare(rightType, leftType);
             } else {
                 result = Integer.compare(leftType, rightType);
+            }
+
+            if(result != 0) {
+                return result;
+            }
+
+            // 2. sort by entity relations
+            result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
+            if(result != 0) {
+                return leftType == DELETE ? -result : result;
             }
 
             // TODO: 3. sort updates by changed and null attributes to batch it better...
