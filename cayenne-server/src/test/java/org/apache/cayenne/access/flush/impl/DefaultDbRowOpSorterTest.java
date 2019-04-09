@@ -167,7 +167,7 @@ public class DefaultDbRowOpSorterTest {
         op[8] = new DeleteDbRowOp(mockObject(id9),  test2, id9, true);
         op[9] = new DeleteDbRowOp(mockObject(id10), test,  id10,true);
 
-        List<DbRowOp> expected = Arrays.asList(op[8], op[2], op[5], op[9], op[3], op[1], op[6], op[7], op[0], op[4]);
+        List<DbRowOp> expected = Arrays.asList(op[8], op[2], op[5], op[9], op[3], op[7], op[1], op[6], op[0], op[4]);
         List<DbRowOp> sorted = sorter.sort(Arrays.asList(op));
 
         assertEquals(expected, sorted);
