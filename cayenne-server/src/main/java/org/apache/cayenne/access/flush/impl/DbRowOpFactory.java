@@ -81,13 +81,17 @@ class DbRowOpFactory {
     }
 
     private DbRowOp createRow(DbEntity entity, ObjectId id, DbRowOpType type) {
+        boolean meaningfulPk = false;
+        if(id == object.getObjectId()) {
+            meaningfulPk = !descriptor.getIdProperties().isEmpty();
+        }
         switch (type) {
             case INSERT:
-                return new InsertDbRowOp(object, entity, id);
+                return new InsertDbRowOp(object, entity, id, meaningfulPk);
             case UPDATE:
-                return new UpdateDbRowOp(object, entity, id);
+                return new UpdateDbRowOp(object, entity, id, meaningfulPk);
             case DELETE:
-                return new DeleteDbRowOp(object, entity, id);
+                return new DeleteDbRowOp(object, entity, id, meaningfulPk);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
     }

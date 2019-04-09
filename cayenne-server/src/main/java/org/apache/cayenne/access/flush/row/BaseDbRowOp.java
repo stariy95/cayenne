@@ -34,11 +34,13 @@ public abstract class BaseDbRowOp implements DbRowOp {
     protected final DbEntity entity;
     // Can be ObjEntity id or a DB row id for flattened rows
     protected final ObjectId changeId;
+    protected final boolean meaningfulPk;
 
-    protected BaseDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
+    protected BaseDbRowOp(Persistent object, DbEntity entity, ObjectId id, boolean meaningfulPk) {
         this.object = Objects.requireNonNull(object);
         this.entity = Objects.requireNonNull(entity);
         this.changeId = Objects.requireNonNull(id);
+        this.meaningfulPk = meaningfulPk;
     }
 
     @Override
@@ -73,5 +75,9 @@ public abstract class BaseDbRowOp implements DbRowOp {
     @Override
     public String toString() {
         return entity.getName() + " " + changeId;
+    }
+
+    public boolean isMeaningfulPk() {
+        return meaningfulPk;
     }
 }

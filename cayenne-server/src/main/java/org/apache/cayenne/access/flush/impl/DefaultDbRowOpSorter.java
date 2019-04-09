@@ -125,7 +125,6 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
 
         @Override
         public int compare(DbRowOp left, DbRowOp right) {
-            // 1. sort by op type
             int leftType = typeExtractor.apply(left);
             int rightType = typeExtractor.apply(right);
             int result;
@@ -136,12 +135,11 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
                 return leftType == DELETE ? -result : result;
             }
 
-            // 2. sort by op type
-            result = Integer.compare(leftType, rightType);
-            if(result != 0
-                    && left.getChangeId().getIdSnapshot().equals(right.getChangeId().getIdSnapshot())) {
-                // need rearrange order of inserts/deletes for same IDs
-                result = -result;
+            // 2. sort by op type, inverting for meaningful PK
+            if(left.isMeaningfulPk() || right.isMeaningfulPk()) {
+                result = Integer.compare(rightType, leftType);
+            } else {
+                result = Integer.compare(leftType, rightType);
             }
 
             // TODO: 3. sort updates by changed and null attributes to batch it better...

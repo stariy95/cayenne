@@ -31,7 +31,11 @@ public class InsertDbRowOp extends BaseDbRowOp implements DbRowOpWithValues {
     protected final Values values;
 
     public InsertDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
-        super(object, entity, id);
+        this(object, entity, id, false);
+    }
+
+    public InsertDbRowOp(Persistent object, DbEntity entity, ObjectId id, boolean meaningfulPk) {
+        super(object, entity, id, meaningfulPk);
         values = new Values(this, true);
     }
 

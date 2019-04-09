@@ -37,4 +37,6 @@ public interface DbRowOp {
     Persistent getObject();
 
     boolean isSameBatch(DbRowOp row);
+
+    boolean isMeaningfulPk();
 }
