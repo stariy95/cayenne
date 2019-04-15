@@ -34,11 +34,14 @@ import org.apache.cayenne.map.ObjEntity;
  * @since 4.2
  */
 class RootRowOpProcessor implements DbRowOpVisitor<Void> {
-    private DbRowOpFactory dbRowOpFactory;
-    private final ObjectDiff diff;
+    private final DbRowOpFactory dbRowOpFactory;
+    private ObjectDiff diff;
 
-    RootRowOpProcessor(DbRowOpFactory dbRowOpFactory, ObjectDiff diff) {
+    RootRowOpProcessor(DbRowOpFactory dbRowOpFactory) {
         this.dbRowOpFactory = dbRowOpFactory;
+    }
+
+    void setDiff(ObjectDiff diff) {
         this.diff = diff;
     }
 

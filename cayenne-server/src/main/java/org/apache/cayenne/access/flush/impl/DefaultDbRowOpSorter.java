@@ -127,15 +127,9 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
         public int compare(DbRowOp left, DbRowOp right) {
             int leftType = typeExtractor.apply(left);
             int rightType = typeExtractor.apply(right);
-            int result;
+            int result = Integer.compare(leftType, rightType);
 
             // 1. sort by op type, inverting for meaningful PK
-            if(left.isMeaningfulPk() || right.isMeaningfulPk()) {
-                result = Integer.compare(rightType, leftType);
-            } else {
-                result = Integer.compare(leftType, rightType);
-            }
-
             if(result != 0) {
                 return result;
             }

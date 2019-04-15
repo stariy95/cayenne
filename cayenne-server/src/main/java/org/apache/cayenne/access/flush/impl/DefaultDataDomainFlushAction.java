@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.ObjectDiff;
@@ -65,15 +67,21 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         if (changes == null) {
             return result;
         }
+        if(!(changes instanceof ObjectStoreGraphDiff)) {
+            throw new CayenneRuntimeException("Instance of ObjectStoreGraphDiff expected, got %s", changes.getClass());
+        }
 
         ObjectStore objectStore = context.getObjectStore();
-        Collection<DbRowOp> dbRows = createDbRows(context, (ObjectStoreGraphDiff) changes);
+        ObjectStoreGraphDiff objectStoreGraphDiff = (ObjectStoreGraphDiff) changes;
+
+        Collection<DbRowOp> dbRows = createDbRows(context, objectStoreGraphDiff);
         updateObjectIds(dbRows);
+        dbRows = mergeSameObjectIds(dbRows);
         List<DbRowOp> sortedDbRows = sort(dbRows);
         List<BatchQuery> queries = createQueries(sortedDbRows);
         executeQueries(queries);
         createReplacementIds(objectStore, result, sortedDbRows);
-        postprocess(context, (ObjectStoreGraphDiff) changes, result, sortedDbRows);
+        postprocess(context, objectStoreGraphDiff, result, sortedDbRows);
 
         return result;
     }
@@ -87,12 +95,12 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         ObjectStore objectStore = context.getObjectStore();
 
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
-        Map<DbRowOp, DbRowOp> dbRows = new HashMap<>();
+        Map<DbRowOp, DbRowOp> dbRows = new HashMap<>(changesByObjectId.size());
         Set<ArcTarget> processedArcs = new HashSet<>();
+        DbRowOpFactory factory = new DbRowOpFactory(resolver, objectStore, processedArcs);
 
         changesByObjectId.forEach((obj, diff) -> {
-            DbRowOpFactory factory = new DbRowOpFactory(resolver, objectStore, diff, processedArcs);
-            Collection<? extends DbRowOp> rows = factory.createRows();
+            Collection<? extends DbRowOp> rows = factory.createRows(diff);
             rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
                 if (value != null) {
                     return dbRow.accept(new DbRowOpMerger(value));
@@ -102,6 +110,18 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         });
 
         return dbRows.values();
+    }
+
+    protected Collection<DbRowOp> mergeSameObjectIds(Collection<DbRowOp> dbRows) {
+        Map<EffectiveId, DbRowOp> index = new HashMap<>(dbRows.size());
+        dbRows.forEach(row -> index.compute(new EffectiveId(row.getChangeId()),
+                (id, value) -> {
+                    if(value != null) {
+                        return row.accept(new DbRowOpMerger(value));
+                    }
+                    return row;
+                }));
+        return index.values();
     }
 
     protected void updateObjectIds(Collection<DbRowOp> dbRows) {
@@ -147,4 +167,37 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         objectStore.postprocessAfterCommit(result);
     }
 
+
+    static class EffectiveId {
+        private final String entityName;
+        private final Map<String, Object> snapshot;
+
+        EffectiveId(ObjectId id) {
+            this.entityName = id.getEntityName();
+            this.snapshot = id.getIdSnapshot();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            if(snapshot.isEmpty()) {
+                return false;
+            }
+
+            EffectiveId that = (EffectiveId) o;
+
+            if (!entityName.equals(that.entityName)) return false;
+            return snapshot.equals(that.snapshot);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = entityName.hashCode();
+            result = 31 * result + snapshot.hashCode();
+            return result;
+        }
+    }
 }

@@ -46,27 +46,36 @@ class DbRowOpFactory {
 
     private final EntityResolver resolver;
     private final ObjectStore store;
-    private final ClassDescriptor descriptor;
-    private final Persistent object;
-    private final ObjectDiff diff;
     private final Set<ArcTarget> processedArcs;
     private final Map<ObjectId, DbRowOp> dbRows;
+    private final RootRowOpProcessor rootRowOpProcessor;
 
-    DbRowOpFactory(EntityResolver resolver, ObjectStore store, ObjectDiff diff, Set<ArcTarget> processedArcs) {
-        ObjectId id = (ObjectId)diff.getNodeId();
+    private ClassDescriptor descriptor;
+    private Persistent object;
+    private ObjectDiff diff;
+
+    DbRowOpFactory(EntityResolver resolver, ObjectStore store, Set<ArcTarget> processedArcs) {
         this.resolver = resolver;
         this.store = store;
+        this.dbRows = new HashMap<>(4);
+        this.processedArcs = processedArcs;
+        this.rootRowOpProcessor = new RootRowOpProcessor(this);
+    }
+
+    private void setDiff(ObjectDiff diff) {
+        ObjectId id = (ObjectId)diff.getNodeId();
         this.diff = diff;
         this.descriptor = resolver.getClassDescriptor(id.getEntityName());
         this.object = (Persistent) store.getNode(id);
-        this.dbRows = new HashMap<>();
-        this.processedArcs = processedArcs;
+        this.dbRows.clear();
     }
 
-    Collection<? extends DbRowOp> createRows() {
+    Collection<? extends DbRowOp> createRows(ObjectDiff diff) {
+        setDiff(diff);
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
         DbRowOp row = getOrCreate(rootEntity, object.getObjectId(), DbRowOpType.forObject(object));
-        row.accept(new RootRowOpProcessor(this, diff));
+        rootRowOpProcessor.setDiff(diff);
+        row.accept(rootRowOpProcessor);
         return dbRows.values();
     }
 

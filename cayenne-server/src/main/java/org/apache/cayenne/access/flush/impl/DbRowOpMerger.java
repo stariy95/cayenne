@@ -23,6 +23,7 @@ import org.apache.cayenne.access.flush.row.DbRowOp;
 import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
 import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.row.DeleteInsertDbRowOp;
 import org.apache.cayenne.access.flush.row.InsertDbRowOp;
 import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 
@@ -39,6 +40,9 @@ class DbRowOpMerger implements DbRowOpVisitor<DbRowOp> {
 
     @Override
     public DbRowOp visitInsert(InsertDbRowOp other) {
+        if(dbRow instanceof DeleteDbRowOp) {
+            return new DeleteInsertDbRowOp((DeleteDbRowOp)dbRow, other);
+        }
         return mergeValues((DbRowOpWithValues) dbRow, other);
     }
 
@@ -53,6 +57,13 @@ class DbRowOpMerger implements DbRowOpVisitor<DbRowOp> {
 
     @Override
     public DbRowOp visitDelete(DeleteDbRowOp other) {
+        if(dbRow.getChangeId() == other.getChangeId()) {
+            return other;
+        }
+        // clash of Insert/Delete with equal ObjectId
+        if(dbRow instanceof InsertDbRowOp) {
+            return new DeleteInsertDbRowOp(other, (InsertDbRowOp)dbRow);
+        }
         return other;
     }
 
