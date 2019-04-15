@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.access.flush.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,21 +96,12 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         ObjectStore objectStore = context.getObjectStore();
 
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
-        Map<DbRowOp, DbRowOp> dbRows = new HashMap<>(changesByObjectId.size());
+        List<DbRowOp> ops = new ArrayList<>(changesByObjectId.size());
         Set<ArcTarget> processedArcs = new HashSet<>();
         DbRowOpFactory factory = new DbRowOpFactory(resolver, objectStore, processedArcs);
+        changesByObjectId.forEach((obj, diff) -> ops.addAll(factory.createRows(diff)));
 
-        changesByObjectId.forEach((obj, diff) -> {
-            Collection<? extends DbRowOp> rows = factory.createRows(diff);
-            rows.forEach(dbRow -> dbRows.compute(dbRow, (key, value) -> {
-                if (value != null) {
-                    return dbRow.accept(new DbRowOpMerger(value));
-                }
-                return dbRow;
-            }));
-        });
-
-        return dbRows.values();
+        return ops;
     }
 
     protected Collection<DbRowOp> mergeSameObjectIds(Collection<DbRowOp> dbRows) {
