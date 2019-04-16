@@ -128,10 +128,10 @@ public class DefaultDbRowOpSorterTest {
         ObjectId id4 = ObjectId.of("test", "id", 3);
 
         DbEntity test = mockEntity("test");
-        InsertDbRowOp op1 = new InsertDbRowOp(mockObject(id1), test, id1, true);
-        InsertDbRowOp op2 = new InsertDbRowOp(mockObject(id2), test, id2, true);
-        DeleteDbRowOp op3 = new DeleteDbRowOp(mockObject(id3), test, id3, true);
-        DeleteDbRowOp op4 = new DeleteDbRowOp(mockObject(id4), test, id4, true);
+        InsertDbRowOp op1 = new InsertDbRowOp(mockObject(id1), test, id1);
+        InsertDbRowOp op2 = new InsertDbRowOp(mockObject(id2), test, id2);
+        DeleteDbRowOp op3 = new DeleteDbRowOp(mockObject(id3), test, id3);
+        DeleteDbRowOp op4 = new DeleteDbRowOp(mockObject(id4), test, id4);
 
         List<DbRowOp> rows = Arrays.asList(op1, op2, op3, op4);
         List<DbRowOp> expected = Arrays.asList(op1, op2, op3, op4);
@@ -156,21 +156,21 @@ public class DefaultDbRowOpSorterTest {
         DbEntity test = mockEntity("test");
         DbEntity test2 = mockEntity("test2");
         BaseDbRowOp[] op = new BaseDbRowOp[10];
-        op[0] = new InsertDbRowOp(mockObject(id1),  test2, id1, true);
-        op[1] = new InsertDbRowOp(mockObject(id2),  test,  id2, true);
-        op[2] = new DeleteDbRowOp(mockObject(id3),  test,  id3, true);
-        op[3] = new UpdateDbRowOp(mockObject(id4),  test,  id4, true);
-        op[4] = new InsertDbRowOp(mockObject(id5),  test2, id5, true);
-        op[5] = new DeleteDbRowOp(mockObject(id6),  test,  id6, true);
-        op[6] = new InsertDbRowOp(mockObject(id7),  test,  id7, true);
-        op[7] = new UpdateDbRowOp(mockObject(id8),  test2, id8, true);
-        op[8] = new DeleteDbRowOp(mockObject(id9),  test2, id9, true);
-        op[9] = new DeleteDbRowOp(mockObject(id10), test,  id10,true);
+        op[0] = new InsertDbRowOp(mockObject(id1),  test2, id1);
+        op[1] = new InsertDbRowOp(mockObject(id2),  test,  id2);
+        op[2] = new DeleteDbRowOp(mockObject(id3),  test,  id3);
+        op[3] = new UpdateDbRowOp(mockObject(id4),  test,  id4);
+        op[4] = new InsertDbRowOp(mockObject(id5),  test2, id5);
+        op[5] = new DeleteDbRowOp(mockObject(id6),  test,  id6);
+        op[6] = new InsertDbRowOp(mockObject(id7),  test,  id7);
+        op[7] = new UpdateDbRowOp(mockObject(id8),  test2, id8);
+        op[8] = new DeleteDbRowOp(mockObject(id9),  test2, id9);
+        op[9] = new DeleteDbRowOp(mockObject(id10), test,  id10);
 
-        List<DbRowOp> expected = Arrays.asList(op[8], op[2], op[5], op[9], op[3], op[7], op[1], op[6], op[0], op[4]);
+        List<DbRowOp> expected = Arrays.asList(op[1], op[6], op[0], op[4], op[3], op[7], op[8], op[2], op[5], op[9]);
         List<DbRowOp> sorted = sorter.sort(Arrays.asList(op));
 
-//        assertEquals(expected, sorted);
+        assertEquals(expected, sorted);
     }
 
     @Test

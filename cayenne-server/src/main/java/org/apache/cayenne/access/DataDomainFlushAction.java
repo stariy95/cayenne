@@ -46,9 +46,11 @@ import java.util.Map;
  * DataContextCommitAction resolves primary key dependencies, referential integrity
  * dependencies (including multi-reflexive entities), generates primary keys, creates
  * batches for massive data modifications, assigns operations to data nodes.
- * 
+ *
  * @since 1.2
+ * @deprecated this implementation is deprecated since 4.2, {@link org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushAction} is used
  */
+@Deprecated
 public class DataDomainFlushAction implements org.apache.cayenne.access.flush.DataDomainFlushAction {
 
     private final DataDomain domain;

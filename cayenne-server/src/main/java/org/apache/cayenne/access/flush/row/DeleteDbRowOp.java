@@ -31,11 +31,7 @@ public class DeleteDbRowOp extends BaseDbRowOp implements DbRowOpWithQualifier {
     protected final Qualifier qualifier;
 
     public DeleteDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
-        this(object, entity, id, false);
-    }
-
-    public DeleteDbRowOp(Persistent object, DbEntity entity, ObjectId id, boolean meaningfulPk) {
-        super(object, entity, id, meaningfulPk);
+        super(object, entity, id);
         qualifier = new Qualifier(this);
     }
 

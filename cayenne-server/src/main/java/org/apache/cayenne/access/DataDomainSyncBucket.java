@@ -48,7 +48,9 @@ import java.util.function.Supplier;
  * A superclass of batch query wrappers.
  * 
  * @since 1.2
+ * @deprecated since 4.2 as part of deprecated {@link DataDomainFlushAction}
  */
+@Deprecated
 abstract class DataDomainSyncBucket {
 
     final Map<ClassDescriptor, List<Persistent>> objectsByDescriptor;

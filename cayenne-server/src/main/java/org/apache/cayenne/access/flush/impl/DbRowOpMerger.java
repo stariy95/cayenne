@@ -19,6 +19,8 @@
 
 package org.apache.cayenne.access.flush.impl;
 
+import java.util.function.BiFunction;
+
 import org.apache.cayenne.access.flush.row.DbRowOp;
 import org.apache.cayenne.access.flush.row.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.row.DbRowOpWithValues;
@@ -30,12 +32,17 @@ import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
 /**
  * @since 4.2
  */
-class DbRowOpMerger implements DbRowOpVisitor<DbRowOp> {
+class DbRowOpMerger implements DbRowOpVisitor<DbRowOp>, BiFunction<DbRowOp, DbRowOp, DbRowOp> {
 
-    private final DbRowOp dbRow;
+    private DbRowOp dbRow;
 
-    DbRowOpMerger(DbRowOp dbRow) {
-        this.dbRow = dbRow;
+    DbRowOpMerger() {
+    }
+
+    @Override
+    public DbRowOp apply(DbRowOp oldValue, DbRowOp newValue) {
+        this.dbRow = oldValue;
+        return newValue.accept(this);
     }
 
     @Override

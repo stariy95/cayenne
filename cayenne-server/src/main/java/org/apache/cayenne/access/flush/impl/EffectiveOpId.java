@@ -17,33 +17,45 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush.row;
+package org.apache.cayenne.access.flush.impl;
+
+import java.util.Map;
+
+import org.apache.cayenne.ObjectId;
 
 /**
- * Special case op, that describes delete/insert sequence of different objects
- * that have same ObjectId (known example: meaningful PK set to same value as used before).
- *
- * @since 4.2
+ * Helper value-object class that used to compare operations by "effective" id (i.e. by id snapshot, t
+ * hat will include replacement id if any)
  */
-public class DeleteInsertDbRowOp extends BaseDbRowOp {
+class EffectiveOpId {
+    private final String entityName;
+    private final Map<String, Object> snapshot;
 
-    private final DeleteDbRowOp delete;
-    private final InsertDbRowOp insert;
-
-    public DeleteInsertDbRowOp(DeleteDbRowOp delete, InsertDbRowOp insert) {
-        super(delete.getObject(), delete.getEntity(), delete.getChangeId());
-        this.delete = delete;
-        this.insert = insert;
+    EffectiveOpId(ObjectId id) {
+        this.entityName = id.getEntityName();
+        this.snapshot = id.getIdSnapshot();
     }
 
     @Override
-    public <T> T accept(DbRowOpVisitor<T> visitor) {
-        visitor.visitDelete(delete);
-        return visitor.visitInsert(insert);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        if(snapshot.isEmpty()) {
+            return false;
+        }
+
+        EffectiveOpId that = (EffectiveOpId) o;
+
+        if (!entityName.equals(that.entityName)) return false;
+        return snapshot.equals(that.snapshot);
+
     }
 
     @Override
-    public boolean isSameBatch(DbRowOp row) {
-        return false;
+    public int hashCode() {
+        int result = entityName.hashCode();
+        result = 31 * result + snapshot.hashCode();
+        return result;
     }
 }

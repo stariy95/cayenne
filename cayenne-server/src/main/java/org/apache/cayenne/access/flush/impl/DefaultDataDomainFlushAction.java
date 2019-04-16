@@ -48,6 +48,8 @@ import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.BatchQuery;
 
 /**
+ * Default implementation of {@link DataDomainFlushAction}.
+ *
  * @since 4.2
  */
 public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
@@ -87,10 +89,12 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         return result;
     }
 
-    protected List<DbRowOp> sort(Collection<DbRowOp> dbRows) {
-        return snapshotSorter.sort(dbRows);
-    }
-
+    /**
+     * Create ops based on incoming graph changes
+     * @param context originating context
+     * @param changes object graph diff
+     * @return collection of {@link DbRowOp}
+     */
     protected Collection<DbRowOp> createDbRows(DataContext context, ObjectStoreGraphDiff changes) {
         EntityResolver resolver = dataDomain.getEntityResolver();
         ObjectStore objectStore = context.getObjectStore();
@@ -98,30 +102,58 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
         List<DbRowOp> ops = new ArrayList<>(changesByObjectId.size());
         Set<ArcTarget> processedArcs = new HashSet<>();
+
         DbRowOpFactory factory = new DbRowOpFactory(resolver, objectStore, processedArcs);
         changesByObjectId.forEach((obj, diff) -> ops.addAll(factory.createRows(diff)));
 
         return ops;
     }
 
-    protected Collection<DbRowOp> mergeSameObjectIds(Collection<DbRowOp> dbRows) {
-        Map<EffectiveId, DbRowOp> index = new HashMap<>(dbRows.size());
-        dbRows.forEach(row -> index.merge(new EffectiveId(row.getChangeId()), row,
-                (oldValue, value) -> value.accept(new DbRowOpMerger(oldValue))));
-        return index.values();
-    }
-
+    /**
+     * Fill in replacement IDs' data for given operations
+     * @param dbRows collection of {@link DbRowOp}
+     */
     protected void updateObjectIds(Collection<DbRowOp> dbRows) {
         DbRowOpVisitor<Void> permIdVisitor = new PermanentObjectIdVisitor(dataDomain);
         dbRows.forEach(row -> row.accept(permIdVisitor));
     }
 
+    /**
+     * @param dbRows collection of {@link DbRowOp}
+     * @return collection of ops with merged duplicates
+     */
+    protected Collection<DbRowOp> mergeSameObjectIds(Collection<DbRowOp> dbRows) {
+        Map<EffectiveOpId, DbRowOp> index = new HashMap<>(dbRows.size());
+        DbRowOpMerger merger = new DbRowOpMerger();
+        dbRows.forEach(row -> index.merge(new EffectiveOpId(row.getChangeId()), row, merger));
+        return index.values();
+    }
+
+    /**
+     * Sort all operations
+     * @param dbRows collection of {@link DbRowOp}
+     * @return sorted collection of operations
+     * @see DbRowOpSorter interface and it's default implementation
+     */
+    protected List<DbRowOp> sort(Collection<DbRowOp> dbRows) {
+        return snapshotSorter.sort(dbRows);
+    }
+
+    /**
+     *
+     * @param dbRows collection of {@link DbRowOp}
+     * @return collection of corresponding {@link BatchQuery}
+     */
     protected List<BatchQuery> createQueries(List<DbRowOp> dbRows) {
         QueryCreatorVisitor queryCreator = new QueryCreatorVisitor(dbRows.size());
         dbRows.forEach(row -> row.accept(queryCreator));
         return queryCreator.getQueryList();
     }
 
+    /**
+     * Execute queries, grouping them by nodes
+     * @param queries to execute
+     */
     protected void executeQueries(List<BatchQuery> queries) {
         OperationObserver observer = new FlushOperationObserver(jdbcEventLogger);
         queries.stream()
@@ -129,11 +161,26 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
                 .forEach((node, nodeQueries) -> node.performQueries(nodeQueries, observer));
     }
 
+    /**
+     * Set final {@link ObjectId} for persistent objects
+     *
+     * @param store object store
+     * @param result result graph diff
+     * @param dbRows collection of {@link DbRowOp}
+     */
     protected void createReplacementIds(ObjectStore store, CompoundDiff result, List<DbRowOp> dbRows) {
         ReplacementIdVisitor visitor = new ReplacementIdVisitor(store, dataDomain.getEntityResolver(), result);
         dbRows.forEach(row -> row.accept(visitor));
     }
 
+    /**
+     * Notify {@link ObjectStore} and it's data row cache about actual changes we performed.
+     *
+     * @param context originating context
+     * @param changes incoming diff
+     * @param result resulting diff
+     * @param dbRows collection of {@link DbRowOp}
+     */
     protected void postprocess(DataContext context, ObjectStoreGraphDiff changes, CompoundDiff result, List<DbRowOp> dbRows) {
         ObjectStore objectStore = context.getObjectStore();
 
@@ -154,37 +201,4 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         objectStore.postprocessAfterCommit(result);
     }
 
-
-    static class EffectiveId {
-        private final String entityName;
-        private final Map<String, Object> snapshot;
-
-        EffectiveId(ObjectId id) {
-            this.entityName = id.getEntityName();
-            this.snapshot = id.getIdSnapshot();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            if(snapshot.isEmpty()) {
-                return false;
-            }
-
-            EffectiveId that = (EffectiveId) o;
-
-            if (!entityName.equals(that.entityName)) return false;
-            return snapshot.equals(that.snapshot);
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = entityName.hashCode();
-            result = 31 * result + snapshot.hashCode();
-            return result;
-        }
-    }
 }

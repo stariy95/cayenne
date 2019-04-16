@@ -38,7 +38,9 @@ import org.apache.cayenne.map.ObjRelationship;
  * and to-many relationships.
  * 
  * @since 1.2
+ * @deprecated since 4.2 as part of deprecated {@link DataDomainFlushAction}
  */
+@Deprecated
 final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
 
     private final DataDomainFlushAction parent;

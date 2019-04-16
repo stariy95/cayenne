@@ -32,11 +32,7 @@ public class UpdateDbRowOp extends BaseDbRowOp implements DbRowOpWithValues, DbR
     protected final Qualifier qualifier;
 
     public UpdateDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
-        this(object, entity, id, false);
-    }
-
-    public UpdateDbRowOp(Persistent object, DbEntity entity, ObjectId id, boolean meaningfulPk) {
-        super(object, entity, id, meaningfulPk);
+        super(object, entity, id);
         values = new Values(this, false);
         qualifier = new Qualifier(this);
     }

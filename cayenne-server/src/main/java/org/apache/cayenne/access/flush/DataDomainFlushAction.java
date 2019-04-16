@@ -23,6 +23,11 @@ import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.graph.GraphDiff;
 
 /**
+ * A stateful commit handler used by DataContext to perform commit operation.
+ * DataDomainFlushAction resolves primary key dependencies, referential integrity
+ * dependencies (including multi-reflexive entities), generates primary keys, creates
+ * batches for massive data modifications, assigns operations to data nodes.
+ *
  * @since 4.2
  */
 public interface DataDomainFlushAction {

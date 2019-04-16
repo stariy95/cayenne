@@ -49,14 +49,14 @@ public class DbRowOpMergerTest {
         DeleteDbRowOp row2 = new DeleteDbRowOp(mockObject(id), mockEntity(), id);
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row1);
-            DbRowOp row = row2.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row1, row2);
             assertSame(row2, row);
         }
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row2);
-            DbRowOp row = row1.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row2, row1);
             assertSame(row2, row);
         }
     }
@@ -69,8 +69,8 @@ public class DbRowOpMergerTest {
         DeleteDbRowOp row2 = new DeleteDbRowOp(mockObject(id), mockEntity(), id);
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row1);
-            DbRowOp row = row2.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row1, row2);
             assertSame(row2, row);
         }
     }
@@ -83,14 +83,14 @@ public class DbRowOpMergerTest {
         InsertDbRowOp row2 = new InsertDbRowOp(mockObject(id), mockEntity(), id);
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row1);
-            DbRowOp row = row2.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row1, row2);
             assertSame(row2, row);
         }
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row2);
-            DbRowOp row = row1.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row2, row1);
             assertSame(row1, row);
         }
     }
@@ -108,8 +108,8 @@ public class DbRowOpMergerTest {
         row2.getValues().addValue(attr2, 2);
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row1);
-            DbRowOp row = row2.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row1, row2);
             assertSame(row2, row);
             Map<String, Object> snapshot = ((InsertDbRowOp) row).getValues().getSnapshot();
             assertEquals(2, snapshot.size());
@@ -118,8 +118,8 @@ public class DbRowOpMergerTest {
         }
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row2);
-            DbRowOp row = row1.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row2, row1);
             assertSame(row1, row);
             Map<String, Object> snapshot = ((InsertDbRowOp) row).getValues().getSnapshot();
             assertEquals(2, snapshot.size());
@@ -141,8 +141,8 @@ public class DbRowOpMergerTest {
         row2.getValues().addValue(attr2, 2);
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row1);
-            DbRowOp row = row2.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row1, row2);
             assertSame(row2, row);
             Map<String, Object> snapshot = ((UpdateDbRowOp) row).getValues().getSnapshot();
             assertEquals(2, snapshot.size());
@@ -151,8 +151,8 @@ public class DbRowOpMergerTest {
         }
 
         {
-            DbRowOpMerger merger = new DbRowOpMerger(row2);
-            DbRowOp row = row1.accept(merger);
+            DbRowOpMerger merger = new DbRowOpMerger();
+            DbRowOp row = merger.apply(row2, row1);
             assertSame(row1, row);
             Map<String, Object> snapshot = ((UpdateDbRowOp) row).getValues().getSnapshot();
             assertEquals(2, snapshot.size());
