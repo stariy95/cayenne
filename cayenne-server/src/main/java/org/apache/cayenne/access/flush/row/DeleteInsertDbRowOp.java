@@ -20,6 +20,9 @@
 package org.apache.cayenne.access.flush.row;
 
 /**
+ * Special case op, that describes delete/insert sequence of different objects
+ * that have same ObjectId (known example: meaningful PK set to same value as used before).
+ *
  * @since 4.2
  */
 public class DeleteInsertDbRowOp extends BaseDbRowOp {

@@ -129,7 +129,7 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
             int rightType = typeExtractor.apply(right);
             int result = Integer.compare(leftType, rightType);
 
-            // 1. sort by op type, inverting for meaningful PK
+            // 1. sort by op type
             if(result != 0) {
                 return result;
             }
@@ -137,10 +137,12 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
             // 2. sort by entity relations
             result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
             if(result != 0) {
+                // invert result for delete
                 return leftType == DELETE ? -result : result;
             }
 
-            // TODO: 3. sort updates by changed and null attributes to batch it better...
+            // TODO: 3. sort updates by changed and null attributes to batch it better,
+            //  need to check cost vs benefit though
             return result;
         }
     }
