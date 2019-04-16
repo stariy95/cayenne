@@ -106,13 +106,8 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     protected Collection<DbRowOp> mergeSameObjectIds(Collection<DbRowOp> dbRows) {
         Map<EffectiveId, DbRowOp> index = new HashMap<>(dbRows.size());
-        dbRows.forEach(row -> index.compute(new EffectiveId(row.getChangeId()),
-                (id, value) -> {
-                    if(value != null) {
-                        return row.accept(new DbRowOpMerger(value));
-                    }
-                    return row;
-                }));
+        dbRows.forEach(row -> index.merge(new EffectiveId(row.getChangeId()), row,
+                (oldValue, value) -> value.accept(new DbRowOpMerger(oldValue))));
         return index.values();
     }
 
