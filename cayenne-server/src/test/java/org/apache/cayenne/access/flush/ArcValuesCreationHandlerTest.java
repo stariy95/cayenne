@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush.impl;
+package org.apache.cayenne.access.flush;
 
 import java.util.Collections;
 import java.util.Map;
@@ -26,9 +26,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
-import org.apache.cayenne.access.flush.ArcValuesCreationHandler;
-import org.apache.cayenne.access.flush.DbRowOpFactory;
-import org.apache.cayenne.access.flush.DbRowOpType;
+import org.apache.cayenne.access.flush.operation.DbRowOpType;
 import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
 import org.apache.cayenne.access.flush.operation.Values;

@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush.impl;
+package org.apache.cayenne.access.flush;
 
 import java.util.ArrayList;
 import java.util.Arrays;
