@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.ObjectDiff;
+import org.apache.cayenne.access.flush.operation.DbRowOpType;
 import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
 import org.apache.cayenne.access.flush.operation.InsertDbRowOp;

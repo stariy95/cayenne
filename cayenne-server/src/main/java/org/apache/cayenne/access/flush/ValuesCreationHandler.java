@@ -21,6 +21,7 @@ package org.apache.cayenne.access.flush;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.access.flush.operation.DbRowOpType;
 import org.apache.cayenne.access.flush.operation.DbRowOpWithValues;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;

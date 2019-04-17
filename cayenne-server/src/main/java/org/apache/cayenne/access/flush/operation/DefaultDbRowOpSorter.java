@@ -17,19 +17,12 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.operation;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.cayenne.access.DataDomain;
-import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
-import org.apache.cayenne.access.flush.operation.DbRowOp;
-import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
-import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
-import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
-import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
 import org.apache.cayenne.map.DbEntity;
@@ -42,14 +35,8 @@ import org.apache.cayenne.map.ObjEntity;
  */
 public class DefaultDbRowOpSorter implements DbRowOpSorter {
 
-    // This is default order of operations
-    private static final int INSERT = 1;
-    private static final int UPDATE = 2;
-    private static final int DELETE = 3;
-
-    private final Provider<DataDomain> dataDomainProvider;
-
-    private volatile Comparator<DbRowOp> comparator;
+    protected final Provider<DataDomain> dataDomainProvider;
+    protected volatile Comparator<DbRowOp> comparator;
 
     public DefaultDbRowOpSorter(@Inject Provider<DataDomain> dataDomainProvider) {
         this.dataDomainProvider = dataDomainProvider;
@@ -65,7 +52,7 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
         return dbRows;
     }
 
-    private void sortReflexive(List<DbRowOp> sortedDbRows) {
+    protected void sortReflexive(List<DbRowOp> sortedDbRows) {
         DataDomain dataDomain = dataDomainProvider.get();
         EntitySorter sorter = dataDomain.getEntitySorter();
         EntityResolver resolver = dataDomain.getEntityResolver();
@@ -95,7 +82,7 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
         }
     }
 
-    private Comparator<DbRowOp> getComparator() {
+    protected Comparator<DbRowOp> getComparator() {
         Comparator<DbRowOp> local = comparator;
         if(local == null) {
             synchronized (this) {
@@ -109,21 +96,19 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
         return local;
     }
 
-    static class DbRowComparator implements Comparator<DbRowOp> {
+    protected static class DbRowComparator implements Comparator<DbRowOp> {
 
         private final EntitySorter entitySorter;
-        private final Function<DbRowOp, Integer> typeExtractor;
 
-        DbRowComparator(EntitySorter entitySorter) {
+        protected DbRowComparator(EntitySorter entitySorter) {
             this.entitySorter = entitySorter;
-            this.typeExtractor = row -> row.accept(DbRowTypeVisitor.INSTANCE);
         }
 
         @Override
         public int compare(DbRowOp left, DbRowOp right) {
-            int leftType = typeExtractor.apply(left);
-            int rightType = typeExtractor.apply(right);
-            int result = Integer.compare(leftType, rightType);
+            DbRowOpType leftType = left.accept(DbRowTypeVisitor.INSTANCE);
+            DbRowOpType rightType = right.accept(DbRowTypeVisitor.INSTANCE);
+            int result = leftType.compareTo(rightType);
 
             // 1. sort by op type
             if(result != 0) {
@@ -134,7 +119,7 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
             result = entitySorter.getDbEntityComparator().compare(left.getEntity(), right.getEntity());
             if(result != 0) {
                 // invert result for delete
-                return leftType == DELETE ? -result : result;
+                return leftType == DbRowOpType.DELETE ? -result : result;
             }
 
             // TODO: 3. sort updates by changed and null attributes to batch it better,
@@ -143,23 +128,23 @@ public class DefaultDbRowOpSorter implements DbRowOpSorter {
         }
     }
 
-    private static class DbRowTypeVisitor implements DbRowOpVisitor<Integer> {
+    protected static class DbRowTypeVisitor implements DbRowOpVisitor<DbRowOpType> {
 
         private static final DbRowTypeVisitor INSTANCE = new DbRowTypeVisitor();
 
         @Override
-        public Integer visitInsert(InsertDbRowOp diffSnapshot) {
-            return INSERT;
+        public DbRowOpType visitInsert(InsertDbRowOp diffSnapshot) {
+            return DbRowOpType.INSERT;
         }
 
         @Override
-        public Integer visitUpdate(UpdateDbRowOp diffSnapshot) {
-            return UPDATE;
+        public DbRowOpType visitUpdate(UpdateDbRowOp diffSnapshot) {
+            return DbRowOpType.UPDATE;
         }
 
         @Override
-        public Integer visitDelete(DeleteDbRowOp diffSnapshot) {
-            return DELETE;
+        public DbRowOpType visitDelete(DeleteDbRowOp diffSnapshot) {
+            return DbRowOpType.DELETE;
         }
     }
 }

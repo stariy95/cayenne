@@ -30,6 +30,7 @@ import org.apache.cayenne.access.flush.operation.DbRowOp;
 import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
 import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
+import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.NodeIdChangeOperation;
 import org.apache.cayenne.map.EntityResolver;
@@ -88,7 +89,7 @@ class ReplacementIdVisitor implements DbRowOpVisitor<Void> {
         Persistent object = dbRow.getObject();
         Map<String, Object> replacement = id.getReplacementIdMap();
         ObjectId replacementId = id.createReplacementId();
-        if (object.getObjectId() == id && !replacementId.getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
+        if (object.getObjectId() == id && !replacementId.getEntityName().startsWith(ASTDbPath.DB_PREFIX)) {
             object.setObjectId(replacementId);
             // update meaningful PKs
             for (AttributeProperty property: resolver.getClassDescriptor(replacementId.getEntityName()).getIdProperties()) {

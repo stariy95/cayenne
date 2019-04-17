@@ -31,9 +31,11 @@ import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.flush.operation.DbRowOp;
+import org.apache.cayenne.access.flush.operation.DbRowOpType;
 import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
 import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
 import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
+import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjEntity;
@@ -119,8 +121,8 @@ class DbRowOpFactory {
 
     DbEntity getDbEntity(ObjectId id) {
         String entityName = id.getEntityName();
-        if(entityName.startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
-            entityName = entityName.substring(PermanentObjectIdVisitor.DB_ID_PREFIX.length());
+        if(entityName.startsWith(ASTDbPath.DB_PREFIX)) {
+            entityName = entityName.substring(ASTDbPath.DB_PREFIX.length());
             return resolver.getDbEntity(entityName);
         } else {
             ObjEntity objEntity = resolver.getObjEntity(entityName);

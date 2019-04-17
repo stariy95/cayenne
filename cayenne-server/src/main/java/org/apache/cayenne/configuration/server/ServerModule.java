@@ -35,7 +35,7 @@ import org.apache.cayenne.access.dbsync.SchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
 import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
 import org.apache.cayenne.access.flush.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.DefaultDbRowOpSorter;
+import org.apache.cayenne.access.flush.operation.DefaultDbRowOpSorter;
 import org.apache.cayenne.access.jdbc.SQLTemplateProcessor;
 import org.apache.cayenne.access.jdbc.reader.DefaultRowReaderFactory;
 import org.apache.cayenne.access.jdbc.reader.RowReaderFactory;

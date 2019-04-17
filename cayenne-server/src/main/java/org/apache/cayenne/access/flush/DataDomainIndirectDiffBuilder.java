@@ -66,7 +66,7 @@ final class DataDomainIndirectDiffBuilder implements GraphChangeHandler {
 
     private void processArcChange(ObjectId nodeId, ArcId arcId) {
         ObjEntity entity = resolver.getObjEntity(nodeId.getEntityName());
-        ObjRelationship relationship = entity.getRelationship(arcId.toString());
+        ObjRelationship relationship = entity.getRelationship(arcId.getForwardArc());
 
         if (relationship != null && relationship.isSourceIndependentFromTargetChange()) {
             // do not record temporary id mods...

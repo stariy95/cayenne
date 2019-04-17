@@ -22,7 +22,7 @@ package org.apache.cayenne.event;
 import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
 import org.apache.cayenne.access.flush.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.DefaultDbRowOpSorter;
+import org.apache.cayenne.access.flush.operation.DefaultDbRowOpSorter;
 import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
 import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.configuration.DefaultRuntimeProperties;

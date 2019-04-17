@@ -44,9 +44,9 @@ class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
     private BatchQuery lastBatch = null;
 
     QueryCreatorVisitor(int size) {
-        // TODO: these sizes are pretty much random ...
-        this.queryList = new ArrayList<>(size / 2);
-        this.batchSize = size / 3;
+        // these sizes are pretty much random ...
+        this.queryList = new ArrayList<>(Math.min(4, size / 2));
+        this.batchSize = Math.min(2, size / 3);
     }
 
     List<BatchQuery> getQueryList() {

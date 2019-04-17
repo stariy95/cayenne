@@ -23,11 +23,13 @@ import java.util.Iterator;
 
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.access.flush.operation.DbRowOp;
+import org.apache.cayenne.access.flush.operation.DbRowOpType;
 import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.operation.DbRowOpWithValues;
 import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
 import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
 import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
+import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.graph.ArcId;
 import org.apache.cayenne.graph.GraphChangeHandler;
 import org.apache.cayenne.map.DbAttribute;
@@ -74,8 +76,8 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
         ObjRelationship objRelationship = entity.getRelationship(arcTarget.getArcId().getForwardArc());
         if(objRelationship == null) {
             String arc = arcId.getForwardArc();
-            if(arc.startsWith("db:")) {
-                String relName = arc.substring("db:".length());
+            if(arc.startsWith(ASTDbPath.DB_PREFIX)) {
+                String relName = arc.substring(ASTDbPath.DB_PREFIX.length());
                 DbRelationship dbRelationship = entity.getDbEntity().getRelationship(relName);
                 processRelationship(dbRelationship, arcTarget.getSourceId(), arcTarget.getTargetId(), created);
             }
@@ -127,7 +129,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
 
                 if(targetId == null) {
                     // should insert, regardless of original operation (insert/update)
-                    targetId = ObjectId.of(PermanentObjectIdVisitor.DB_ID_PREFIX + target.getName());
+                    targetId = ObjectId.of(ASTDbPath.DB_PREFIX + target.getName());
                     if(!relationship.isToMany()) {
                         factory.getStore().markFlattenedPath(id, flattenedPath, targetId);
                     }

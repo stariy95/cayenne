@@ -17,26 +17,18 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.operation;
 
 import java.util.function.BiFunction;
-
-import org.apache.cayenne.access.flush.operation.DbRowOp;
-import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
-import org.apache.cayenne.access.flush.operation.DbRowOpWithValues;
-import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
-import org.apache.cayenne.access.flush.operation.DeleteInsertDbRowOp;
-import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
-import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
 
 /**
  * @since 4.2
  */
-class DbRowOpMerger implements DbRowOpVisitor<DbRowOp>, BiFunction<DbRowOp, DbRowOp, DbRowOp> {
+public class DbRowOpMerger implements DbRowOpVisitor<DbRowOp>, BiFunction<DbRowOp, DbRowOp, DbRowOp> {
 
     private DbRowOp dbRow;
 
-    DbRowOpMerger() {
+    public DbRowOpMerger() {
     }
 
     @Override

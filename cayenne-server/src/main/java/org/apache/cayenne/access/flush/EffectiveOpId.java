@@ -27,11 +27,11 @@ import org.apache.cayenne.ObjectId;
  * Helper value-object class that used to compare operations by "effective" id (i.e. by id snapshot, t
  * hat will include replacement id if any)
  */
-class EffectiveOpId {
+public class EffectiveOpId {
     private final String entityName;
     private final Map<String, Object> snapshot;
 
-    EffectiveOpId(ObjectId id) {
+    public EffectiveOpId(ObjectId id) {
         this.entityName = id.getEntityName();
         this.snapshot = id.getIdSnapshot();
     }

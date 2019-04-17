@@ -35,6 +35,7 @@ import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
 import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
 import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
 import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
+import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.reflect.ArcProperty;
 import org.apache.cayenne.reflect.ClassDescriptor;
 import org.apache.cayenne.reflect.ToManyMapProperty;
@@ -65,7 +66,7 @@ class PostprocessVisitor implements DbRowOpVisitor<Void> {
     }
 
     private void processObjectChange(DbRowOp dbRow) {
-        if (dbRow.getChangeId().getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
+        if (dbRow.getChangeId().getEntityName().startsWith(ASTDbPath.DB_PREFIX)) {
             return;
         }
 
@@ -97,7 +98,7 @@ class PostprocessVisitor implements DbRowOpVisitor<Void> {
 
     @Override
     public Void visitDelete(DeleteDbRowOp dbRow) {
-        if (dbRow.getChangeId().getEntityName().startsWith(PermanentObjectIdVisitor.DB_ID_PREFIX)) {
+        if (dbRow.getChangeId().getEntityName().startsWith(ASTDbPath.DB_PREFIX)) {
             return null;
         }
         if (deletedIds == null) {

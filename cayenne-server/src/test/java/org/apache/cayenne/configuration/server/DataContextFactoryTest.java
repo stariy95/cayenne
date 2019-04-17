@@ -27,7 +27,7 @@ import org.apache.cayenne.access.ObjectMapRetainStrategy;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
 import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
 import org.apache.cayenne.access.flush.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.DefaultDbRowOpSorter;
+import org.apache.cayenne.access.flush.operation.DefaultDbRowOpSorter;
 import org.apache.cayenne.ashwood.AshwoodEntitySorter;
 import org.apache.cayenne.cache.MapQueryCache;
 import org.apache.cayenne.cache.QueryCache;

@@ -28,7 +28,7 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
 import org.apache.cayenne.access.DataDomain;
-import org.apache.cayenne.access.flush.DefaultDbRowOpSorter;
+import org.apache.cayenne.access.flush.operation.DefaultDbRowOpSorter;
 import org.apache.cayenne.access.flush.operation.BaseDbRowOp;
 import org.apache.cayenne.access.flush.operation.DbRowOp;
 import org.apache.cayenne.access.flush.operation.DbRowOpSorter;

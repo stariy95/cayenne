@@ -37,6 +37,7 @@ import org.apache.cayenne.access.ObjectDiff;
 import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.ObjectStoreGraphDiff;
 import org.apache.cayenne.access.OperationObserver;
+import org.apache.cayenne.access.flush.operation.DbRowOpMerger;
 import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
 import org.apache.cayenne.access.flush.operation.DbRowOp;
 import org.apache.cayenne.access.flush.operation.DbRowOpVisitor;
@@ -126,7 +127,10 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         DbRowOpMerger merger = new DbRowOpMerger();
         // new EffectiveOpId()
         dbRows.forEach(row -> index.merge(row.getChangeId(), row, merger));
-        return new ArrayList<>(index.values());
+        // reuse list
+        dbRows.clear();
+        dbRows.addAll(index.values());
+        return dbRows;
     }
 
     /**

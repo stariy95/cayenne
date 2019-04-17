@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush;
+package org.apache.cayenne.access.flush.operation;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.PersistenceState;
@@ -26,12 +26,12 @@ import org.apache.cayenne.Persistent;
 /**
  * @since 4.2
  */
-enum DbRowOpType {
+public enum DbRowOpType implements Comparable<DbRowOpType> {
     INSERT,
     UPDATE,
     DELETE;
 
-    static DbRowOpType forObject(Persistent object) {
+    public static DbRowOpType forObject(Persistent object) {
         switch (object.getPersistenceState()) {
             case PersistenceState.NEW:
                 return INSERT;
