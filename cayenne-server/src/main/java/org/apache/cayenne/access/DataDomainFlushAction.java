@@ -24,6 +24,7 @@ import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.access.flush.DefaultDataDomainFlushAction;
 import org.apache.cayenne.graph.CompoundDiff;
 import org.apache.cayenne.graph.GraphDiff;
 import org.apache.cayenne.log.JdbcEventLogger;
@@ -48,7 +49,7 @@ import java.util.Map;
  * batches for massive data modifications, assigns operations to data nodes.
  *
  * @since 1.2
- * @deprecated this implementation is deprecated since 4.2, {@link org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushAction} is used
+ * @deprecated this implementation is deprecated since 4.2, {@link DefaultDataDomainFlushAction} is used
  */
 @Deprecated
 public class DataDomainFlushAction implements org.apache.cayenne.access.flush.DataDomainFlushAction {

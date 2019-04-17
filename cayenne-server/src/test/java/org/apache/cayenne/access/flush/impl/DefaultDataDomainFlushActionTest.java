@@ -27,16 +27,17 @@ import java.util.List;
 import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.PersistenceState;
 import org.apache.cayenne.Persistent;
-import org.apache.cayenne.access.flush.row.BaseDbRowOp;
-import org.apache.cayenne.access.flush.row.DbRowOp;
-import org.apache.cayenne.access.flush.row.DeleteDbRowOp;
-import org.apache.cayenne.access.flush.row.InsertDbRowOp;
-import org.apache.cayenne.access.flush.row.UpdateDbRowOp;
+import org.apache.cayenne.access.flush.DefaultDataDomainFlushAction;
+import org.apache.cayenne.access.flush.operation.BaseDbRowOp;
+import org.apache.cayenne.access.flush.operation.DbRowOp;
+import org.apache.cayenne.access.flush.operation.DeleteDbRowOp;
+import org.apache.cayenne.access.flush.operation.InsertDbRowOp;
+import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.query.BatchQuery;
 import org.apache.cayenne.query.DeleteBatchQuery;
 import org.apache.cayenne.query.InsertBatchQuery;
+import org.apache.cayenne.query.Query;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -77,7 +78,7 @@ public class DefaultDataDomainFlushActionTest {
         op[9] = new DeleteDbRowOp(mockObject(id10), test,  id10);// -
 
         DefaultDataDomainFlushAction action = mock(DefaultDataDomainFlushAction.class);
-        when(action.mergeSameObjectIds((Collection<DbRowOp>) any(Collection.class))).thenCallRealMethod();
+        when(action.mergeSameObjectIds((List<DbRowOp>) any(List.class))).thenCallRealMethod();
 
         Collection<DbRowOp> merged = action.mergeSameObjectIds(Arrays.asList(op));
         assertEquals(7, merged.size());
@@ -115,7 +116,7 @@ public class DefaultDataDomainFlushActionTest {
         DefaultDataDomainFlushAction action = mock(DefaultDataDomainFlushAction.class);
         when(action.createQueries((List<DbRowOp>) any(List.class))).thenCallRealMethod();
 
-        List<BatchQuery> queries = action.createQueries(ops);
+        List<? extends Query> queries = action.createQueries(ops);
         assertEquals(4, queries.size());
         assertThat(queries.get(0), instanceOf(InsertBatchQuery.class));
         InsertBatchQuery insert1 = (InsertBatchQuery)queries.get(0);

@@ -20,9 +20,9 @@
 package org.apache.cayenne.dbsync.reverse.configuration;
 
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.impl.DefaultDataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.impl.DefaultDbRowOpSorter;
-import org.apache.cayenne.access.flush.row.DbRowOpSorter;
+import org.apache.cayenne.access.flush.DefaultDataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.DefaultDbRowOpSorter;
+import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
 import org.apache.cayenne.access.translator.batch.BatchTranslatorFactory;
 import org.apache.cayenne.access.translator.batch.DefaultBatchTranslatorFactory;
 import org.apache.cayenne.access.types.DefaultValueObjectTypeRegistry;
