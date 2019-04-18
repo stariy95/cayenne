@@ -178,7 +178,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                 id = null;
                 if(srcPK) {
                     valueToUse = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
-                    rowOp = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    rowOp = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, DbRowOpType.UPDATE);
                     attribute = join.getTarget();
                 } else {
                     valueToUse = ObjectIdValueSupplier.getFor(targetId, join.getTargetName());
@@ -190,7 +190,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
                 processDelete = false;
                 if(dbRelationship.isToDependentPK()) {
                     valueToUse = ObjectIdValueSupplier.getFor(srcId, join.getSourceName());
-                    rowOp = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, defaultType);
+                    rowOp = factory.getOrCreate(dbRelationship.getTargetEntity(), targetId, DbRowOpType.UPDATE);
                     attribute = join.getTarget();
                     id = targetId;
                     if(dbRelationship.isToMany()) {

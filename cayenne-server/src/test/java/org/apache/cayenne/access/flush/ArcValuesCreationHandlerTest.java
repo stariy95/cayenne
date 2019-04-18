@@ -92,7 +92,7 @@ public class ArcValuesCreationHandlerTest {
         handler.processRelationship(relationship, srcId, targetId, true);
 
         assertNotNull(handler);
-        verify(factory).getOrCreate(isNull(), eq(targetId), eq(DbRowOpType.INSERT));
+        verify(factory).getOrCreate(isNull(), eq(targetId), eq(DbRowOpType.UPDATE));
         assertTrue(targetId.isReplacementIdAttached());
         assertEquals(1, targetId.getReplacementIdMap().size());
         assertEquals(1, targetId.getReplacementIdMap().get("id2"));
@@ -128,7 +128,7 @@ public class ArcValuesCreationHandlerTest {
         handler.processRelationship(relationship, srcId, targetId, true);
 
         assertNotNull(handler);
-        verify(factory).getOrCreate(isNull(), eq(targetId), eq(DbRowOpType.INSERT));
+        verify(factory).getOrCreate(isNull(), eq(targetId), eq(DbRowOpType.UPDATE));
         assertFalse(srcId.isReplacementIdAttached());
         assertFalse(targetId.isReplacementIdAttached());
 

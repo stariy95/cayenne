@@ -98,6 +98,9 @@ class DbRowOpFactory {
             case UPDATE:
                 return new UpdateDbRowOp(object, entity, id);
             case DELETE:
+                if(object.getObjectId() != id) {
+                    System.out.println("!!!");
+                }
                 return new DeleteDbRowOp(object, entity, id);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);
