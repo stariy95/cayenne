@@ -80,7 +80,7 @@ public class DefaultDataDomainFlushActionTest {
         DefaultDataDomainFlushAction action = mock(DefaultDataDomainFlushAction.class);
         when(action.mergeSameObjectIds((List<DbRowOp>) any(List.class))).thenCallRealMethod();
 
-        Collection<DbRowOp> merged = action.mergeSameObjectIds(Arrays.asList(op));
+        Collection<DbRowOp> merged = action.mergeSameObjectIds(new ArrayList<>(Arrays.asList(op)));
         assertEquals(7, merged.size());
         assertThat(merged, hasItems(op[0], op[3], op[5], op[7]));
         assertThat(merged, not(hasItem(sameInstance(op[1]))));
