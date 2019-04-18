@@ -55,6 +55,8 @@ public class Cayenne {
      */
     final static String PROPERTY_COLLECTION_SIZE = "@size";
 
+    final static String PROPERTY_ID = "@id";
+
     /**
      * Returns mapped ObjEntity for object. If an object is transient or is not
      * mapped returns null.
@@ -140,7 +142,11 @@ public class Cayenne {
         if (o == null) {
             return null;
         } else if (o instanceof DataObject) {
-            return ((DataObject) o).readNestedProperty(path);
+            DataObject dataObject = (DataObject) o;
+            if(path.equals(PROPERTY_ID)) {
+                return Cayenne.pkForObject(dataObject);
+            }
+            return dataObject.readNestedProperty(path);
         } else if (o instanceof Collection<?>) {
 
             // This allows people to put @size at the end of a property

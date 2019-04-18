@@ -61,10 +61,19 @@ abstract class PathProcessor<T extends Entity> implements PathTranslationResult 
     public PathTranslationResult process(String path) {
         PathComponents components = new PathComponents(path);
         String[] rawComponents = components.getAll();
-        for(int i=0; i<rawComponents.length; i++) {
+        int length = rawComponents.length;
+        if(rawComponents[length - 1].equals("@id")) {
+            if(length == 1) {
+                // TODO: resolve root id
+            } else {
+                // skip id, as it will be correctly resolved anyway...
+                length--;
+            }
+        }
+        for(int i=0; i<length; i++) {
             String next = rawComponents[i];
             isOuterJoin = false;
-            lastComponent = i == rawComponents.length - 1;
+            lastComponent = i == length - 1;
             String alias = pathSplitAliases.get(next);
             if(alias != null) {
                 currentAlias = next;

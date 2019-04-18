@@ -20,6 +20,7 @@ package org.apache.cayenne.query;
 
 import java.util.List;
 
+import org.apache.cayenne.Cayenne;
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ResultBatchIterator;
@@ -29,6 +30,7 @@ import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
+import org.apache.cayenne.testdo.testmap.Painting;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
@@ -222,5 +224,19 @@ public class ObjectSelect_RunIT extends ServerCase {
 				.select(context);
 
 		assertEquals(1, artists.size());
+	}
+
+	@Test
+	public void testOrderingById() {
+		List<Painting> paintings = ObjectSelect.query(Painting.class).select(context);
+
+		Ordering ordering = Painting.TO_ARTIST.dot("@id").asc();
+		ordering.orderList(paintings);
+
+		assertEquals(20, paintings.size());
+		assertEquals(1L, Cayenne.longPKForObject(paintings.get(0).getToArtist()));
+		assertEquals(5L, Cayenne.longPKForObject(paintings.get(19).getToArtist()));
+
+		ObjectSelect.query(Painting.class).orderBy(ordering).select(context);
 	}
 }

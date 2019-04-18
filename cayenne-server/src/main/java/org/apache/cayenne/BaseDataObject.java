@@ -199,6 +199,10 @@ public abstract class BaseDataObject extends PersistentObject implements DataObj
     }
 
     Object readSimpleProperty(String property) {
+        // Special ID property
+        if(property.equals(Cayenne.PROPERTY_ID)) {
+            return Cayenne.pkForObject(this);
+        }
 
         // side effect - resolves HOLLOW object
         Object object = readProperty(property);
@@ -365,6 +369,9 @@ public abstract class BaseDataObject extends PersistentObject implements DataObj
 
     @Override
     public void setToOneTarget(String relationshipName, DataObject value, boolean setReverse) {
+        if(objectContext == null) {
+            throw new CayenneRuntimeException("Object %s is detached from context or created explicitly.", this);
+        }
 
         willConnect(relationshipName, value);
 
@@ -373,7 +380,7 @@ public abstract class BaseDataObject extends PersistentObject implements DataObj
             return;
         }
 
-        getObjectContext().propertyChanged(this, relationshipName, oldTarget, value);
+        objectContext.propertyChanged(this, relationshipName, oldTarget, value);
 
         if (setReverse) {
             // unset old reverse relationship
