@@ -369,9 +369,6 @@ public abstract class BaseDataObject extends PersistentObject implements DataObj
 
     @Override
     public void setToOneTarget(String relationshipName, DataObject value, boolean setReverse) {
-        if(objectContext == null) {
-            throw new CayenneRuntimeException("Object %s is detached from context or created explicitly.", this);
-        }
 
         willConnect(relationshipName, value);
 
