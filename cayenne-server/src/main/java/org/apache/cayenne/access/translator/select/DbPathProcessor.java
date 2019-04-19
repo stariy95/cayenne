@@ -64,6 +64,11 @@ class DbPathProcessor extends PathProcessor<DbEntity> {
     }
 
     @Override
+    protected void processId() {
+        attributes.addAll(entity.getPrimaryKeys());
+    }
+
+    @Override
     protected void processAliasedAttribute(String next, String alias) {
         DbRelationship relationship = entity.getRelationship(alias);
         if(relationship == null) {

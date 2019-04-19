@@ -55,6 +55,8 @@ public class PropertyFactory {
      */
     public static final DateProperty<LocalDateTime> NOW = createDate(FunctionExpressionFactory.currentTimestamp(), LocalDateTime.class);
 
+    public static final BaseProperty<?> ID = createBase("@id", Object.class);
+
     // BaseProperty
 
     /**

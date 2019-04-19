@@ -27,6 +27,8 @@ import org.apache.cayenne.ResultBatchIterator;
 import org.apache.cayenne.ResultIterator;
 import org.apache.cayenne.access.DataContext;
 import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.exp.property.NumericProperty;
+import org.apache.cayenne.exp.property.PropertyFactory;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
@@ -228,15 +230,26 @@ public class ObjectSelect_RunIT extends ServerCase {
 
 	@Test
 	public void testOrderingById() {
-		List<Painting> paintings = ObjectSelect.query(Painting.class).select(context);
+		NumericProperty<Long> artistId = PropertyFactory.createNumeric("@id", Long.class);
+		Ordering ordering = Painting.TO_ARTIST.dot(artistId).asc();
 
-		Ordering ordering = Painting.TO_ARTIST.dot("@id").asc();
+		List<Painting> paintings = ObjectSelect.query(Painting.class).select(context);
 		ordering.orderList(paintings);
 
 		assertEquals(20, paintings.size());
 		assertEquals(1L, Cayenne.longPKForObject(paintings.get(0).getToArtist()));
 		assertEquals(5L, Cayenne.longPKForObject(paintings.get(19).getToArtist()));
 
-		ObjectSelect.query(Painting.class).orderBy(ordering).select(context);
+		paintings = ObjectSelect.query(Painting.class).orderBy(ordering).select(context);
+
+		assertEquals(20, paintings.size());
+		assertEquals(1L, Cayenne.longPKForObject(paintings.get(0).getToArtist()));
+		assertEquals(5L, Cayenne.longPKForObject(paintings.get(19).getToArtist()));
+
+		List<Object[]> ids = ObjectSelect.columnQuery(Artist.class, artistId, Artist.PAINTING_ARRAY.count())
+				.having(Artist.PAINTING_ARRAY.count().gt(0L))
+				.orderBy(artistId.desc())
+				.select(context);
+		assertEquals(5, ids.size());
 	}
 }

@@ -84,6 +84,20 @@ class PathComponentIterator implements Iterator<PathComponent<Attribute, Relatio
             return aliasedPathComponent;
         }
 
+        // TODO: @id const..
+        if(pathComp.equals("@id")) {
+            DbEntity dbEntity;
+            if(currentEntity instanceof ObjEntity) {
+                dbEntity = ((ObjEntity) currentEntity).getDbEntity();
+            } else {
+                dbEntity = (DbEntity)currentEntity;
+            }
+            if(dbEntity.getPrimaryKeys().size() > 1) {
+                throw invalidPathException("Can't resolve @id attribute, entity " + dbEntity.getName() + " has compound PK", pathComp);
+            }
+            return new AttributePathComponent<>(dbEntity.getPrimaryKeys().iterator().next());
+        }
+
         throw invalidPathException("Can't resolve path component", pathComp);
     }
 

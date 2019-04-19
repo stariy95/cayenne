@@ -64,7 +64,9 @@ abstract class PathProcessor<T extends Entity> implements PathTranslationResult 
         int length = rawComponents.length;
         if(rawComponents[length - 1].equals("@id")) {
             if(length == 1) {
-                // TODO: resolve root id
+                // resolve root id
+                processId();
+                return this;
             } else {
                 // skip id, as it will be correctly resolved anyway...
                 length--;
@@ -99,6 +101,8 @@ abstract class PathProcessor<T extends Entity> implements PathTranslationResult 
     abstract protected void processAliasedAttribute(String next, String alias);
 
     abstract protected void processNormalAttribute(String next);
+
+    abstract protected void processId();
 
     @Override
     public List<DbAttribute> getDbAttributes() {
