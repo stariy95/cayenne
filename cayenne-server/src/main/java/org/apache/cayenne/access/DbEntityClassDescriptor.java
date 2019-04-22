@@ -36,7 +36,7 @@ import java.util.List;
  * commit.
  * 
  * @since 3.0
- * @deprecated since 4.2 as part of deprecated {@link DataDomainFlushAction}
+ * @deprecated since 4.2 as part of deprecated {@link LegacyDataDomainFlushAction}
  */
 @Deprecated
 class DbEntityClassDescriptor {

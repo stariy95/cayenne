@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.cayenne.map.DbAttribute;
 
 /**
- * Qualifier of DB row. I uses PK plus optimistic lock qualifier if any.
+ * Qualifier of DB row. It uses PK and optimistic lock qualifier if any.
  *
  * @since 4.2
  */

@@ -52,7 +52,7 @@ import java.util.Map;
  * @deprecated this implementation is deprecated since 4.2, {@link DefaultDataDomainFlushAction} is used
  */
 @Deprecated
-public class DataDomainFlushAction implements org.apache.cayenne.access.flush.DataDomainFlushAction {
+public class LegacyDataDomainFlushAction implements org.apache.cayenne.access.flush.DataDomainFlushAction {
 
     private final DataDomain domain;
     private DataContext context;
@@ -72,7 +72,7 @@ public class DataDomainFlushAction implements org.apache.cayenne.access.flush.Da
 
     private JdbcEventLogger logger;
 
-    public DataDomainFlushAction(DataDomain domain) {
+    public LegacyDataDomainFlushAction(DataDomain domain) {
         this.domain = domain;
     }
 

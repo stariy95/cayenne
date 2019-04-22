@@ -36,12 +36,12 @@ import org.apache.cayenne.query.Query;
 
 /**
  * @since 1.2
- * @deprecated since 4.2 as part of deprecated {@link DataDomainFlushAction}
+ * @deprecated since 4.2 as part of deprecated {@link LegacyDataDomainFlushAction}
  */
 @Deprecated
 class DataDomainDeleteBucket extends DataDomainSyncBucket {
 
-    DataDomainDeleteBucket(DataDomainFlushAction parent) {
+    DataDomainDeleteBucket(LegacyDataDomainFlushAction parent) {
         super(parent);
     }
 

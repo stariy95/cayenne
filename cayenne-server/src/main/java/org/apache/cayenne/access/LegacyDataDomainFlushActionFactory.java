@@ -17,31 +17,29 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.access.flush.operation;
+package org.apache.cayenne.access;
 
-import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.Persistent;
-import org.apache.cayenne.map.DbEntity;
+import org.apache.cayenne.access.flush.DataDomainFlushAction;
+import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
+import org.apache.cayenne.di.Inject;
+import org.apache.cayenne.log.JdbcEventLogger;
 
 /**
- * Object that represents some change on DB level.
- * Common cases are insert/update/delete of single DB row.
+ * Factory for {@link LegacyDataDomainFlushAction}.
+ * A fallback factory to use deprecated implementation if absolutely needed.
  *
  * @since 4.2
  */
-public interface DbRowOp {
+@Deprecated
+public class LegacyDataDomainFlushActionFactory implements DataDomainFlushActionFactory {
 
-    <T> T accept(DbRowOpVisitor<T> visitor);
+    @Inject
+    private JdbcEventLogger jdbcEventLogger;
 
-    DbEntity getEntity();
-
-    ObjectId getChangeId();
-
-    Persistent getObject();
-
-    /**
-     * @param rowOp to check
-     * @return is this and rowOp operations belong to same sql batch
-     */
-    boolean isSameBatch(DbRowOp rowOp);
+    @Override
+    public DataDomainFlushAction createFlushAction(DataDomain dataDomain) {
+        LegacyDataDomainFlushAction action = new LegacyDataDomainFlushAction(dataDomain);
+        action.setJdbcEventLogger(jdbcEventLogger);
+        return action;
+    }
 }

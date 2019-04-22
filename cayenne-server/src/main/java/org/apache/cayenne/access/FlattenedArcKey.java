@@ -48,7 +48,7 @@ import java.util.Map;
  * A holder of flattened relationship modification data.
  * 
  * @since 1.2
- * @deprecated since 4.2 as part of deprecated {@link DataDomainFlushAction}
+ * @deprecated since 4.2 as part of deprecated {@link LegacyDataDomainFlushAction}
  */
 @Deprecated
 final class FlattenedArcKey {
