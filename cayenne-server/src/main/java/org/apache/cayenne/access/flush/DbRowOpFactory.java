@@ -42,6 +42,8 @@ import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
+ * Factory that produces a collection of {@link DbRowOp} from given {@link ObjectDiff}.
+ *
  * @since 4.2
  */
 class DbRowOpFactory {
@@ -64,7 +66,7 @@ class DbRowOpFactory {
         this.rootRowOpProcessor = new RootRowOpProcessor(this);
     }
 
-    private void setDiff(ObjectDiff diff) {
+    private void udpateDiff(ObjectDiff diff) {
         ObjectId id = (ObjectId)diff.getNodeId();
         this.diff = diff;
         this.descriptor = resolver.getClassDescriptor(id.getEntityName());
@@ -73,7 +75,7 @@ class DbRowOpFactory {
     }
 
     Collection<? extends DbRowOp> createRows(ObjectDiff diff) {
-        setDiff(diff);
+        udpateDiff(diff);
         DbEntity rootEntity = descriptor.getEntity().getDbEntity();
         DbRowOp row = getOrCreate(rootEntity, object.getObjectId(), DbRowOpType.forObject(object));
         rootRowOpProcessor.setDiff(diff);
@@ -98,9 +100,6 @@ class DbRowOpFactory {
             case UPDATE:
                 return new UpdateDbRowOp(object, entity, id);
             case DELETE:
-                if(object.getObjectId() != id) {
-                    System.out.println("!!!");
-                }
                 return new DeleteDbRowOp(object, entity, id);
         }
         throw new CayenneRuntimeException("Unknown DbRowType '%s'", type);

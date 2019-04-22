@@ -49,14 +49,14 @@ public class DeleteDbRowOp extends BaseDbRowOp implements DbRowOpWithQualifier {
     }
 
     @Override
-    public boolean isSameBatch(DbRowOp row) {
-        if(!(row instanceof DeleteDbRowOp)) {
+    public boolean isSameBatch(DbRowOp rowOp) {
+        if(!(rowOp instanceof DeleteDbRowOp)) {
             return false;
         }
-        if(!row.getEntity().getName().equals(getEntity().getName())) {
+        if(!rowOp.getEntity().getName().equals(getEntity().getName())) {
             return false;
         }
-        DeleteDbRowOp other = (DeleteDbRowOp)row;
+        DeleteDbRowOp other = (DeleteDbRowOp) rowOp;
         return qualifier.isSameBatch(other.qualifier);
     }
 

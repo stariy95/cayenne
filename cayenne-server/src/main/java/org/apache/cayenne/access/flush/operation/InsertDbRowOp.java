@@ -57,11 +57,11 @@ public class InsertDbRowOp extends BaseDbRowOp implements DbRowOpWithValues {
     }
 
     @Override
-    public boolean isSameBatch(DbRowOp row) {
-        if(!(row instanceof InsertDbRowOp)) {
+    public boolean isSameBatch(DbRowOp rowOp) {
+        if(!(rowOp instanceof InsertDbRowOp)) {
             return false;
         }
-        return row.getEntity().getName().equals(getEntity().getName());
+        return rowOp.getEntity().getName().equals(getEntity().getName());
     }
 
     @Override

@@ -22,6 +22,7 @@ package org.apache.cayenne.access.flush;
 import org.apache.cayenne.access.DataDomain;
 
 /**
+ * Factory that produces {@link DataDomainFlushAction}
  * @since 4.2
  */
 public interface DataDomainFlushActionFactory {

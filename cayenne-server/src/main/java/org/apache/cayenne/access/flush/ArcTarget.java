@@ -25,6 +25,9 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.graph.ArcId;
 
 /**
+ * Value object describing exact arc between two objects.
+ * Implements {@link #equals(Object)} and {@link #hashCode()} methods.
+ *
  * @since 4.2
  */
 class ArcTarget {

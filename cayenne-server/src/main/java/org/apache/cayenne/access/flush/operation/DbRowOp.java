@@ -36,5 +36,9 @@ public interface DbRowOp {
 
     Persistent getObject();
 
-    boolean isSameBatch(DbRowOp row);
+    /**
+     * @param rowOp to check
+     * @return is this and rowOp operations belong to same sql batch
+     */
+    boolean isSameBatch(DbRowOp rowOp);
 }

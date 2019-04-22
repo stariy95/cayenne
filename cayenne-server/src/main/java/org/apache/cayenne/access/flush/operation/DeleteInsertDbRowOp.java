@@ -43,7 +43,7 @@ public class DeleteInsertDbRowOp extends BaseDbRowOp {
     }
 
     @Override
-    public boolean isSameBatch(DbRowOp row) {
+    public boolean isSameBatch(DbRowOp rowOp) {
         return false;
     }
 }

@@ -25,6 +25,8 @@ import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.log.JdbcEventLogger;
 
 /**
+ * Factory that produces {@link DefaultDataDomainFlushAction}.
+ *
  * @since 4.2
  */
 public class DefaultDataDomainFlushActionFactory implements DataDomainFlushActionFactory {

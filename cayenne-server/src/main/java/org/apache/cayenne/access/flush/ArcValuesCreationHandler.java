@@ -41,6 +41,9 @@ import org.apache.cayenne.map.ObjRelationship;
 import org.apache.cayenne.util.CayenneMapEntry;
 
 /**
+ * Graph handler that collects information about arc changes into
+ * {@link org.apache.cayenne.access.flush.operation.Values} and/or {@link org.apache.cayenne.access.flush.operation.Qualifier}.
+ *
  * @since 4.2
  */
 class ArcValuesCreationHandler implements GraphChangeHandler {
@@ -95,7 +98,7 @@ class ArcValuesCreationHandler implements GraphChangeHandler {
         factory.getProcessedArcs().add(arcTarget);
     }
 
-    protected ObjectId processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {
+    ObjectId processFlattenedPath(ObjectId id, ObjectId finalTargetId, DbEntity entity, String dbPath, boolean add) {
         Iterator<CayenneMapEntry> dbPathIterator = entity.resolvePathComponents(dbPath);
         StringBuilder path = new StringBuilder();
 

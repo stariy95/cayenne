@@ -22,6 +22,9 @@ package org.apache.cayenne.access.flush.operation;
 import java.util.List;
 
 /**
+ * Sorter of {@link DbRowOp} operations.
+ * @see DefaultDbRowOpSorter default implementation.
+ *
  * @since 4.2
  */
 public interface DbRowOpSorter {

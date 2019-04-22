@@ -22,9 +22,13 @@ package org.apache.cayenne.access.flush.operation;
 import java.util.function.BiFunction;
 
 /**
+ * BiFunction that merges two {@link DbRowOp} changing same object.
+ *
  * @since 4.2
  */
 public class DbRowOpMerger implements DbRowOpVisitor<DbRowOp>, BiFunction<DbRowOp, DbRowOp, DbRowOp> {
+
+    public static final DbRowOpMerger INSTANCE = new DbRowOpMerger();
 
     private DbRowOp dbRow;
 

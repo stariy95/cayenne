@@ -53,14 +53,14 @@ public class UpdateDbRowOp extends BaseDbRowOp implements DbRowOpWithValues, DbR
     }
 
     @Override
-    public boolean isSameBatch(DbRowOp row) {
-        if(!(row instanceof UpdateDbRowOp)) {
+    public boolean isSameBatch(DbRowOp rowOp) {
+        if(!(rowOp instanceof UpdateDbRowOp)) {
             return false;
         }
-        if(!row.getEntity().getName().equals(getEntity().getName())) {
+        if(!rowOp.getEntity().getName().equals(getEntity().getName())) {
             return false;
         }
-        UpdateDbRowOp other = (UpdateDbRowOp)row;
+        UpdateDbRowOp other = (UpdateDbRowOp) rowOp;
         if(!values.isSameBatch(other.values)) {
             return false;
         }

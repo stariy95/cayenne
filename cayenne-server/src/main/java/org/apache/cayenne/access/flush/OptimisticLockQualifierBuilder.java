@@ -33,6 +33,8 @@ import org.apache.cayenne.reflect.ToManyProperty;
 import org.apache.cayenne.reflect.ToOneProperty;
 
 /**
+ * {@link PropertyVisitor} that builds optimistic lock qualifier for given db change.
+ *
  * @since 4.2
  */
 class OptimisticLockQualifierBuilder implements PropertyVisitor {

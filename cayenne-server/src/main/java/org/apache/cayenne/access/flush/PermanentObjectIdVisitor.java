@@ -37,6 +37,8 @@ import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.reflect.ClassDescriptor;
 
 /**
+ * Visitor that fills replacement map of {@link ObjectId}s of inserted objects.
+ *
  * @since 4.2
  */
 class PermanentObjectIdVisitor implements DbRowOpVisitor<Void> {

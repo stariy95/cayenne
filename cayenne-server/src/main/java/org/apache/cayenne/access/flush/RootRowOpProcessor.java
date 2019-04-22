@@ -32,6 +32,10 @@ import org.apache.cayenne.access.flush.operation.UpdateDbRowOp;
 import org.apache.cayenne.map.ObjEntity;
 
 /**
+ * Visitor that runs all required actions based on operation type.
+ * <p>
+ * E.g. it creates values for insert and update, it fills optimistic lock qualifier for update and delete, etc.
+ *
  * @since 4.2
  */
 class RootRowOpProcessor implements DbRowOpVisitor<Void> {

@@ -29,6 +29,8 @@ import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 
 /**
+ * Extension of {@link ArcValuesCreationHandler} that also tracks property changes.
+ *
  * @since 4.2
  */
 class ValuesCreationHandler extends ArcValuesCreationHandler {

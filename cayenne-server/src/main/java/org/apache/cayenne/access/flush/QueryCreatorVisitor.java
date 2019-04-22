@@ -33,9 +33,12 @@ import org.apache.cayenne.query.InsertBatchQuery;
 import org.apache.cayenne.query.UpdateBatchQuery;
 
 /**
+ * Visitor that creates batch queries.
+ * It relies on correct sorting of {@link DbRowOp} to just linearly scan of rows and put them in batches.
+ *
  * @since 4.2
  */
-// TODO: pass snapshot as argument directly to batch...
+// TODO: pass DbRowOp as argument directly to batch...
 class QueryCreatorVisitor implements DbRowOpVisitor<Void> {
 
     private final List<BatchQuery> queryList;

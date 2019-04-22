@@ -57,11 +57,13 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
     protected final DataDomain dataDomain;
     protected final DbRowOpSorter dbRowOpSorter;
     protected final JdbcEventLogger jdbcEventLogger;
+    protected final OperationObserver observer;
 
     protected DefaultDataDomainFlushAction(DataDomain dataDomain, DbRowOpSorter dbRowOpSorter, JdbcEventLogger jdbcEventLogger) {
         this.dataDomain = dataDomain;
         this.dbRowOpSorter = dbRowOpSorter;
         this.jdbcEventLogger = jdbcEventLogger;
+        this.observer = new FlushObserver(jdbcEventLogger);
     }
 
     @Override
@@ -77,27 +79,26 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
         ObjectStore objectStore = context.getObjectStore();
         ObjectStoreGraphDiff objectStoreGraphDiff = (ObjectStoreGraphDiff) changes;
 
-        List<DbRowOp> dbRows = createDbRows(context, objectStoreGraphDiff);
-        updateObjectIds(dbRows);
-        List<DbRowOp> deduplicatedRows = mergeSameObjectIds(dbRows);
-        List<DbRowOp> sortedDbRows = sort(deduplicatedRows);
-        List<? extends Query> queries = createQueries(sortedDbRows);
+        List<DbRowOp> dbRowOps = createDbRowOps(objectStore, objectStoreGraphDiff);
+        updateObjectIds(dbRowOps);
+        List<DbRowOp> deduplicatedOps = mergeSameObjectIds(dbRowOps);
+        List<DbRowOp> sortedOps = sort(deduplicatedOps);
+        List<? extends Query> queries = createQueries(sortedOps);
         executeQueries(queries);
-        createReplacementIds(objectStore, afterCommitDiff, sortedDbRows);
-        postprocess(context, objectStoreGraphDiff, afterCommitDiff, sortedDbRows);
+        createReplacementIds(objectStore, afterCommitDiff, sortedOps);
+        postprocess(context, objectStoreGraphDiff, afterCommitDiff, sortedOps);
 
         return afterCommitDiff;
     }
 
     /**
      * Create ops based on incoming graph changes
-     * @param context originating context
+     * @param objectStore originating object store
      * @param changes object graph diff
      * @return collection of {@link DbRowOp}
      */
-    protected List<DbRowOp> createDbRows(DataContext context, ObjectStoreGraphDiff changes) {
+    protected List<DbRowOp> createDbRowOps(ObjectStore objectStore, ObjectStoreGraphDiff changes) {
         EntityResolver resolver = dataDomain.getEntityResolver();
-        ObjectStore objectStore = context.getObjectStore();
 
         Map<Object, ObjectDiff> changesByObjectId = changes.getChangesByObjectId();
         List<DbRowOp> ops = new ArrayList<>(changesByObjectId.size());
@@ -111,46 +112,45 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
 
     /**
      * Fill in replacement IDs' data for given operations
-     * @param dbRows collection of {@link DbRowOp}
+     * @param dbRowOps collection of {@link DbRowOp}
      */
-    protected void updateObjectIds(Collection<DbRowOp> dbRows) {
+    protected void updateObjectIds(Collection<DbRowOp> dbRowOps) {
         DbRowOpVisitor<Void> permIdVisitor = new PermanentObjectIdVisitor(dataDomain);
-        dbRows.forEach(row -> row.accept(permIdVisitor));
+        dbRowOps.forEach(row -> row.accept(permIdVisitor));
     }
 
     /**
-     * @param dbRows collection of {@link DbRowOp}
+     * @param dbRowOps collection of {@link DbRowOp}
      * @return collection of ops with merged duplicates
      */
-    protected List<DbRowOp> mergeSameObjectIds(List<DbRowOp> dbRows) {
-        Map<ObjectId, DbRowOp> index = new HashMap<>(dbRows.size());
-        DbRowOpMerger merger = new DbRowOpMerger();
+    protected List<DbRowOp> mergeSameObjectIds(List<DbRowOp> dbRowOps) {
+        Map<ObjectId, DbRowOp> index = new HashMap<>(dbRowOps.size());
         // new EffectiveOpId()
-        dbRows.forEach(row -> index.merge(row.getChangeId(), row, merger));
+        dbRowOps.forEach(row -> index.merge(row.getChangeId(), row, DbRowOpMerger.INSTANCE));
         // reuse list
-        dbRows.clear();
-        dbRows.addAll(index.values());
-        return dbRows;
+        dbRowOps.clear();
+        dbRowOps.addAll(index.values());
+        return dbRowOps;
     }
 
     /**
      * Sort all operations
-     * @param dbRows collection of {@link DbRowOp}
+     * @param dbRowOps collection of {@link DbRowOp}
      * @return sorted collection of operations
      * @see DbRowOpSorter interface and it's default implementation
      */
-    protected List<DbRowOp> sort(List<DbRowOp> dbRows) {
-        return dbRowOpSorter.sort(dbRows);
+    protected List<DbRowOp> sort(List<DbRowOp> dbRowOps) {
+        return dbRowOpSorter.sort(dbRowOps);
     }
 
     /**
      *
-     * @param dbRows collection of {@link DbRowOp}
+     * @param dbRowOps collection of {@link DbRowOp}
      * @return collection of {@link Query} to perform
      */
-    protected List<? extends Query> createQueries(List<DbRowOp> dbRows) {
-        QueryCreatorVisitor queryCreator = new QueryCreatorVisitor(dbRows.size());
-        dbRows.forEach(row -> row.accept(queryCreator));
+    protected List<? extends Query> createQueries(List<DbRowOp> dbRowOps) {
+        QueryCreatorVisitor queryCreator = new QueryCreatorVisitor(dbRowOps.size());
+        dbRowOps.forEach(row -> row.accept(queryCreator));
         return queryCreator.getQueryList();
     }
 
@@ -160,7 +160,6 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
      */
     protected void executeQueries(List<? extends Query> queries) {
         EntityResolver entityResolver = dataDomain.getEntityResolver();
-        OperationObserver observer = new FlushObserver(jdbcEventLogger);
         queries.stream()
                 .collect(Collectors.groupingBy(query
                         -> dataDomain.lookupDataNode(query.getMetaData(entityResolver).getDataMap())))
@@ -173,11 +172,11 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
      *
      * @param store object store
      * @param afterCommitDiff result graph diff
-     * @param dbRows collection of {@link DbRowOp}
+     * @param dbRowOps collection of {@link DbRowOp}
      */
-    protected void createReplacementIds(ObjectStore store, CompoundDiff afterCommitDiff, List<DbRowOp> dbRows) {
+    protected void createReplacementIds(ObjectStore store, CompoundDiff afterCommitDiff, List<DbRowOp> dbRowOps) {
         ReplacementIdVisitor visitor = new ReplacementIdVisitor(store, dataDomain.getEntityResolver(), afterCommitDiff);
-        dbRows.forEach(row -> row.accept(visitor));
+        dbRowOps.forEach(row -> row.accept(visitor));
     }
 
     /**
@@ -186,13 +185,13 @@ public class DefaultDataDomainFlushAction implements DataDomainFlushAction {
      * @param context originating context
      * @param changes incoming diff
      * @param afterCommitDiff resulting diff
-     * @param dbRows collection of {@link DbRowOp}
+     * @param dbRowOps collection of {@link DbRowOp}
      */
-    protected void postprocess(DataContext context, ObjectStoreGraphDiff changes, CompoundDiff afterCommitDiff, List<DbRowOp> dbRows) {
+    protected void postprocess(DataContext context, ObjectStoreGraphDiff changes, CompoundDiff afterCommitDiff, List<DbRowOp> dbRowOps) {
         ObjectStore objectStore = context.getObjectStore();
 
         PostprocessVisitor postprocessor = new PostprocessVisitor(context);
-        dbRows.forEach(row -> row.accept(postprocessor));
+        dbRowOps.forEach(row -> row.accept(postprocessor));
 
         DataDomainIndirectDiffBuilder indirectDiffBuilder = new DataDomainIndirectDiffBuilder(context.getEntityResolver());
         indirectDiffBuilder.processChanges(changes);

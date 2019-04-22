@@ -29,6 +29,8 @@ import org.apache.cayenne.ObjectId;
 import org.apache.cayenne.map.DbAttribute;
 
 /**
+ * Collection of values that should be inserted or updated in DB.
+ *
  * @since 4.2
  */
 public class Values {
