@@ -29,12 +29,11 @@ import org.apache.cayenne.access.DataDomain;
 import org.apache.cayenne.access.DataRowStoreFactory;
 import org.apache.cayenne.access.DefaultDataRowStoreFactory;
 import org.apache.cayenne.access.DefaultObjectMapRetainStrategy;
-import org.apache.cayenne.access.LegacyDataDomainFlushActionFactory;
 import org.apache.cayenne.access.ObjectMapRetainStrategy;
 import org.apache.cayenne.access.dbsync.DefaultSchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.dbsync.SchemaUpdateStrategyFactory;
 import org.apache.cayenne.access.flush.DataDomainFlushActionFactory;
-import org.apache.cayenne.access.flush.DefaultDataDomainFlushActionFactory;
+import org.apache.cayenne.access.flush.MeaningfulPkAwareDataDomainFlushActionFactory;
 import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
 import org.apache.cayenne.access.flush.operation.DefaultDbRowOpSorter;
 import org.apache.cayenne.access.jdbc.SQLTemplateProcessor;
@@ -505,7 +504,7 @@ public class ServerModule implements Module {
         binder.bind(DataChannelMetaData.class).to(NoopDataChannelMetaData.class);
         binder.bind(XMLReader.class).toProviderInstance(new XMLReaderProvider(false)).withoutScope();
 
-        binder.bind(DataDomainFlushActionFactory.class).to(DefaultDataDomainFlushActionFactory.class);
+        binder.bind(DataDomainFlushActionFactory.class).to(MeaningfulPkAwareDataDomainFlushActionFactory.class);
         binder.bind(DbRowOpSorter.class).to(DefaultDbRowOpSorter.class);
     }
 }

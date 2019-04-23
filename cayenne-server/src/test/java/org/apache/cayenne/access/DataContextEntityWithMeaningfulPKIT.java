@@ -193,7 +193,6 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
     }
 
     @Test
-    @Ignore("Insert will fail")
     public void testInsertDelete() {
         MeaningfulPk pkObj = context.newObject(MeaningfulPk.class);
         pkObj.setPk("123");
