@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.util.Date;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 
 /**
@@ -18,6 +19,7 @@ public abstract class _ArtistCallback extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Integer> ARTIST_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("ARTIST_ID"), Integer.class);
     public static final String ARTIST_ID_PK_COLUMN = "ARTIST_ID";
 
     public static final Property<String> ARTIST_NAME = Property.create("artistName", String.class);

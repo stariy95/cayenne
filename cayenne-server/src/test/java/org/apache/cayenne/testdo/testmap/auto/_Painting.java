@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.testmap.ArtDataObject;
 import org.apache.cayenne.testdo.testmap.Artist;
@@ -21,6 +22,7 @@ public abstract class _Painting extends ArtDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Integer> PAINTING_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("PAINTING_ID"), Integer.class);
     public static final String PAINTING_ID_PK_COLUMN = "PAINTING_ID";
 
     public static final Property<BigDecimal> ESTIMATED_PRICE = Property.create("estimatedPrice", BigDecimal.class);

@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.testmap.Painting;
 
@@ -18,6 +19,7 @@ public abstract class _PaintingInfo extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Integer> PAINTING_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("PAINTING_ID"), Integer.class);
     public static final String PAINTING_ID_PK_COLUMN = "PAINTING_ID";
 
     public static final Property<byte[]> IMAGE_BLOB = Property.create("imageBlob", byte[].class);

@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 
 /**

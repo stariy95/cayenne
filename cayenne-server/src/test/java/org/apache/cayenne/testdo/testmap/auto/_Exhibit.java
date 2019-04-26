@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.testmap.ArtistExhibit;
 import org.apache.cayenne.testdo.testmap.Gallery;
@@ -21,6 +22,7 @@ public abstract class _Exhibit extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Integer> EXHIBIT_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("EXHIBIT_ID"), Integer.class);
     public static final String EXHIBIT_ID_PK_COLUMN = "EXHIBIT_ID";
 
     public static final Property<Date> CLOSING_DATE = Property.create("closingDate", Date.class);

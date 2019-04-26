@@ -7,6 +7,7 @@ import java.sql.Date;
 import java.util.List;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.testmap.Painting;
 
@@ -20,6 +21,7 @@ public abstract class _ROArtist extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Long> ARTIST_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("ARTIST_ID"), Long.class);
     public static final String ARTIST_ID_PK_COLUMN = "ARTIST_ID";
 
     public static final Property<String> ARTIST_NAME = Property.create("artistName", String.class);

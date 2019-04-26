@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-map xmlns="http://cayenne.apache.org/schema/10/modelMap"
 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://cayenne.apache.org/schema/10/modelMap http://cayenne.apache.org/schema/10/modelMap.xsd"
+	 xsi:schemaLocation="http://cayenne.apache.org/schema/10/modelMap https://cayenne.apache.org/schema/10/modelMap.xsd"
 	 project-version="10">
 	<property name="defaultPackage" value="org.apache.cayenne.testdo.testmap"/>
 	<property name="defaultSuperclass" value="org.apache.cayenne.CayenneDataObject"/>
@@ -278,7 +278,7 @@ VALUES (#bind($id), #bind($title), #bind($price))]]></sql>
 		<ordering><![CDATA[dateOfBirth]]></ordering>
 	</query>
 	<query name="QueryWithPrefetch" type="SelectQuery" root="obj-entity" root-name="Gallery">
-		<prefetch>paintingArray</prefetch>
+		<prefetch><![CDATA[paintingArray]]></prefetch>
 	</query>
 	<query name="QueryWithQualifier" type="SelectQuery" root="obj-entity" root-name="Artist">
 		<qualifier><![CDATA[artistName = $param1]]></qualifier>
@@ -296,4 +296,17 @@ VALUES (#bind($id), #bind($title), #bind($price))]]></sql>
 		<property name="cayenne.GenericSelectQuery.fetchingDataRows" value="true"/>
 		<sql><![CDATA[select * from ARTIST]]></sql>
 	</query>
+	<cgen xmlns="http://cayenne.apache.org/schema/10/cgen">
+		<destDir>../java</destDir>
+		<mode>entity</mode>
+		<template>templates/v4_1/subclass.vm</template>
+		<superTemplate>templates/v4_1/superclass.vm</superTemplate>
+		<outputPattern>*.java</outputPattern>
+		<makePairs>true</makePairs>
+		<usePkgPath>true</usePkgPath>
+		<overwrite>false</overwrite>
+		<createPropertyNames>false</createPropertyNames>
+		<createPKProperties>true</createPKProperties>
+		<client>false</client>
+	</cgen>
 </data-map>

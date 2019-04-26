@@ -19,6 +19,7 @@
 package org.apache.cayenne.map;
 
 import org.apache.cayenne.exp.ExpressionException;
+import org.apache.cayenne.exp.parser.ASTDbPath;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,7 +85,36 @@ class PathComponentIterator implements Iterator<PathComponent<Attribute, Relatio
             return aliasedPathComponent;
         }
 
+        // DB subpath part
+        PathComponent<Attribute, Relationship> dbSubPathComponent = resolveDbSubPathComponent(pathComp);
+        if(dbSubPathComponent != null) {
+            return dbSubPathComponent;
+        }
+
         throw invalidPathException("Can't resolve path component", pathComp);
+    }
+
+    private PathComponent<Attribute, Relationship> resolveDbSubPathComponent(String pathComp) {
+        if (!pathComp.startsWith(ASTDbPath.DB_PREFIX)) {
+            return null;
+        }
+
+        pathComp = pathComp.substring(ASTDbPath.DB_PREFIX.length());
+
+        if(currentEntity instanceof DbEntity) {
+            DbEntity dbEntity = (DbEntity)currentEntity;
+            Attribute attribute = dbEntity.getAttribute(pathComp);
+            if(attribute != null) {
+                return new AttributePathComponent<>(attribute);
+            }
+        } else {
+            ObjAttribute objAttribute = new ObjAttribute("--cayenne-generated");
+            objAttribute.setEntity(currentEntity);
+            objAttribute.setDbAttributePath(pathComp);
+            return new AttributePathComponent<>(objAttribute);
+        }
+
+        return null;
     }
 
     private PathComponent<Attribute, Relationship> getAliasedPathComponent(String pathComp) {

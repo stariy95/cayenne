@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.cayenne.CayenneRuntimeException;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTPath;
 import org.apache.cayenne.query.Ordering;
 import org.apache.cayenne.query.Orderings;
@@ -200,7 +201,20 @@ public class Property<E> {
      * @return a newly created Property object.
      */
     public <T> Property<T> dot(Property<T> property) {
-        return create(getName() + "." + property.getName(), property.getType());
+        String name;
+        if(property.getName() == null) {
+            Expression expression = property.getExpression();
+            if(expression.getType() == Expression.OBJ_PATH) {
+                name = ((ASTPath)expression).getPath();
+            } else if(expression.getType() == Expression.DB_PATH) {
+                name = ASTDbPath.DB_PREFIX + ((ASTPath)expression).getPath();
+            } else {
+                throw new CayenneRuntimeException("Can use dot() operator only with properties that mapped on path expression.");
+            }
+        } else {
+            name = property.getName();
+        }
+        return create(getName() + "." + name, property.getType());
     }
 
     /**

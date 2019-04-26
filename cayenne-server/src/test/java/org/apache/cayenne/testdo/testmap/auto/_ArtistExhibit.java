@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.testmap.Artist;
 import org.apache.cayenne.testdo.testmap.Exhibit;
@@ -19,7 +20,9 @@ public abstract class _ArtistExhibit extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Long> ARTIST_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("ARTIST_ID"), Long.class);
     public static final String ARTIST_ID_PK_COLUMN = "ARTIST_ID";
+    public static final Property<Integer> EXHIBIT_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("EXHIBIT_ID"), Integer.class);
     public static final String EXHIBIT_ID_PK_COLUMN = "EXHIBIT_ID";
 
     public static final Property<Artist> TO_ARTIST = Property.create("toArtist", Artist.class);

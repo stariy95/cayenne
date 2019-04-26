@@ -32,6 +32,7 @@ import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.test.jdbc.DBHelper;
 import org.apache.cayenne.test.jdbc.TableHelper;
 import org.apache.cayenne.testdo.testmap.Artist;
+import org.apache.cayenne.testdo.testmap.Painting;
 import org.apache.cayenne.unit.di.server.CayenneProjects;
 import org.apache.cayenne.unit.di.server.ServerCase;
 import org.apache.cayenne.unit.di.server.UseServerRuntime;
@@ -201,4 +202,18 @@ public class ObjectSelect_RunIT extends ServerCase {
 		assertEquals("artist1", a.getArtistName());
 	}
 
+	@Test
+	public void testPkProperty() {
+		Property<Long> artistId = Painting.TO_ARTIST.dot(Artist.ARTIST_ID_PK_PROPERTY);
+		List<Painting> paintings = ObjectSelect.query(Painting.class)
+				.where(artistId.lte(2L))
+				.orderBy(artistId.asc(), Painting.PAINTING_ID_PK_PROPERTY.desc())
+				.select(context);
+
+		assertEquals(8, paintings.size());
+		assertEquals("painting20", paintings.get(0).getPaintingTitle());
+		assertEquals("painting5", paintings.get(3).getPaintingTitle());
+		assertEquals("painting16", paintings.get(4).getPaintingTitle());
+		assertEquals("painting1", paintings.get(7).getPaintingTitle());
+	}
 }

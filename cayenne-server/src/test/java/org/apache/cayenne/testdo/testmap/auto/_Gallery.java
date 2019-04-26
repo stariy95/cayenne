@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 
 import org.apache.cayenne.BaseDataObject;
+import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.Property;
 import org.apache.cayenne.testdo.testmap.Exhibit;
 import org.apache.cayenne.testdo.testmap.Painting;
@@ -20,6 +21,7 @@ public abstract class _Gallery extends BaseDataObject {
 
     private static final long serialVersionUID = 1L; 
 
+    public static final Property<Integer> GALLERY_ID_PK_PROPERTY = Property.create(ExpressionFactory.dbPathExp("GALLERY_ID"), Integer.class);
     public static final String GALLERY_ID_PK_COLUMN = "GALLERY_ID";
 
     public static final Property<String> GALLERY_NAME = Property.create("galleryName", String.class);
