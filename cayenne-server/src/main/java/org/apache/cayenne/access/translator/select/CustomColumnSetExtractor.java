@@ -100,12 +100,6 @@ class CustomColumnSetExtractor implements ColumnExtractor {
 
         // extract required columns of entity
         extractor.extract(prefix);
-
-        // Reset data row key as ObjectResolver expects it to match attribute name.
-        // Maybe we should change resolver, as it seems cleaner to have path from root as prefix in data row key.
-        for(int i=index; i<context.getResultNodeList().size(); i++) {
-            context.getResultNodeList().get(i).setDataRowKey(null);
-        }
     }
 
     /**

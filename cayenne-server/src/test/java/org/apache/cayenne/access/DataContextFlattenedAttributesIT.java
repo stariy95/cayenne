@@ -22,10 +22,16 @@ package org.apache.cayenne.access;
 import org.apache.cayenne.Cayenne;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.PersistenceState;
+import org.apache.cayenne.access.translator.select.DefaultSelectTranslator;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.exp.ExpressionFactory;
+import org.apache.cayenne.exp.property.EntityProperty;
+import org.apache.cayenne.exp.property.PropertyFactory;
+import org.apache.cayenne.query.ColumnSelect;
 import org.apache.cayenne.query.EJBQLQuery;
+import org.apache.cayenne.query.EntityResultSegment;
+import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.SelectById;
 import org.apache.cayenne.query.SelectQuery;
 import org.apache.cayenne.reflect.PersistentDescriptor;
@@ -45,10 +51,7 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @UseServerRuntime(CayenneProjects.TESTMAP_PROJECT)
 public class DataContextFlattenedAttributesIT extends ServerCase {
@@ -426,5 +429,27 @@ public class DataContextFlattenedAttributesIT extends ServerCase {
             assertEquals("PX1", o3.getPaintingTitle());
             assertEquals("TX1", o3.getTextReview());
         }
+    }
+
+    @Test
+    public void testColumnQueryWithFlattenedAttr() throws Exception {
+        createTestDataSet();
+
+        EntityProperty<CompoundPaintingLongNames> paintingProperty =
+                PropertyFactory.createSelf(CompoundPaintingLongNames.class);
+        ColumnSelect<CompoundPaintingLongNames> originalQuery = ObjectSelect.query(CompoundPaintingLongNames.class)
+                .column(paintingProperty);
+
+        DataNode dataNode = context.getParentDataDomain().getDataNodes().iterator().next();
+        DefaultSelectTranslator translator = new DefaultSelectTranslator(originalQuery, dataNode.getAdapter(), context.getEntityResolver());
+        translator.getSql();
+
+        EntityResultSegment segment = (EntityResultSegment) originalQuery
+                .getMetaData(context.getEntityResolver())
+                .getResultSetMapping()
+                .get(0);
+
+        assertEquals(12, segment.getColumns());
+        assertEquals(12, translator.getResultColumns().length);
     }
 }

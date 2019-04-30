@@ -39,6 +39,10 @@ public interface EntityResultSegment {
      */
     Map<String, String> getFields();
 
+    default int getColumns() {
+        return getFields().size();
+    }
+
     /**
      * Performs a reverse lookup of the column path for a given ResultSet label.
      */

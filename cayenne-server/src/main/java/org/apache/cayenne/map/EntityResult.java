@@ -64,7 +64,8 @@ public class EntityResult {
             if (field.isDbAttribute() || field.getAttributeName().startsWith("fetch.")) {
                 dbFields.put(field.getAttributeName(), field.getColumn());
             } else {
-                ObjEntity entity = field.getEntityName() != null ? resolver.getObjEntity(field.getEntityName())
+                ObjEntity entity = field.getEntityName() != null
+                        ? resolver.getObjEntity(field.getEntityName())
                         : getRootEntity(resolver);
 
                 ObjAttribute attribute = entity.getAttribute(field.getAttributeName());
@@ -73,6 +74,11 @@ public class EntityResult {
         }
 
         return dbFields;
+    }
+
+
+    public int getFieldsCount() {
+        return fields.size();
     }
 
     private ObjEntity getRootEntity(EntityResolver resolver) {
