@@ -93,20 +93,16 @@ public class FrontBasePkGenerator extends JdbcPkGenerator {
 
     @Override
     protected String pkCreateString(String entName) {
-        StringBuilder buf = new StringBuilder();
-        buf.append("SET UNIQUE = ").append(pkStartValue).append(" FOR \"").append(entName).append("\"");
-        return buf.toString();
+        return "SET UNIQUE = " + pkStartValue + " FOR \"" + entName + "\"";
     }
 
     @Override
-    protected String pkSelectString(String entName) {
-        StringBuilder buf = new StringBuilder();
-        buf.append("SELECT UNIQUE FROM \"").append(entName).append("\"");
-        return buf.toString();
+    protected String pkSelectString(DbEntity entity) {
+        return "SELECT UNIQUE FROM \"" + entity.getName() + "\"";
     }
 
     @Override
-    protected String pkUpdateString(String entName) {
+    protected String pkUpdateString(DbEntity entity) {
         return "";
     }
 

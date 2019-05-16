@@ -85,6 +85,7 @@ import org.apache.cayenne.dba.ingres.IngresAdapter;
 import org.apache.cayenne.dba.ingres.IngresPkGenerator;
 import org.apache.cayenne.dba.mysql.MySQLAdapter;
 import org.apache.cayenne.dba.mysql.MySQLPkGenerator;
+import org.apache.cayenne.dba.nuodb.NuoDbAdapter;
 import org.apache.cayenne.dba.openbase.OpenBaseAdapter;
 import org.apache.cayenne.dba.openbase.OpenBasePkGenerator;
 import org.apache.cayenne.dba.oracle.Oracle8Adapter;
@@ -118,6 +119,7 @@ import org.apache.cayenne.unit.H2UnitDbAdapter;
 import org.apache.cayenne.unit.HSQLDBUnitDbAdapter;
 import org.apache.cayenne.unit.IngresUnitDbAdapter;
 import org.apache.cayenne.unit.MySQLUnitDbAdapter;
+import org.apache.cayenne.unit.NuoDbUnitDbAdapter;
 import org.apache.cayenne.unit.OpenBaseUnitDbAdapter;
 import org.apache.cayenne.unit.OracleUnitDbAdapter;
 import org.apache.cayenne.unit.PostgresUnitDbAdapter;
@@ -164,7 +166,8 @@ public class ServerCaseModule implements Module {
                 .put(H2Adapter.class.getName(), H2UnitDbAdapter.class.getName())
                 .put(FrontBaseAdapter.class.getName(), FrontBaseUnitDbAdapter.class.getName())
                 .put(IngresAdapter.class.getName(), IngresUnitDbAdapter.class.getName())
-                .put(SQLiteAdapter.class.getName(), SQLiteUnitDbAdapter.class.getName());
+                .put(SQLiteAdapter.class.getName(), SQLiteUnitDbAdapter.class.getName())
+                .put(NuoDbAdapter.class.getName(), NuoDbUnitDbAdapter.class.getName());
         ServerModule.contributeProperties(binder)
                 // Use soft references instead of default weak.
                 // Should remove problems with random-failing tests (those that are GC-sensitive).

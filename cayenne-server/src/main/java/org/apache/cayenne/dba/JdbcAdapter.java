@@ -451,7 +451,6 @@ public class JdbcAdapter implements DbAdapter {
         StringBuilder refBuf = new StringBuilder();
 
         buf.append("ALTER TABLE ");
-
         buf.append(quotingStrategy.quotedFullyQualifiedName(source));
         buf.append(" ADD FOREIGN KEY (");
 

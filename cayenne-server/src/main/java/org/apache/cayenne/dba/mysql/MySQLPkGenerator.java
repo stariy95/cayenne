@@ -86,7 +86,7 @@ public class MySQLPkGenerator extends JdbcPkGenerator {
 
             try (Statement st = con.createStatement()) {
                 try {
-                    pk = getLongPrimaryKey(st, entity.getName());
+                    pk = getLongPrimaryKey(st, entity);
                     con.commit();
                 } catch (SQLException pkEx) {
                     try {
@@ -150,34 +150,34 @@ public class MySQLPkGenerator extends JdbcPkGenerator {
     /**
      * @since 3.0
      */
-    protected long getLongPrimaryKey(Statement statement, String entityName) throws SQLException {
+    protected long getLongPrimaryKey(Statement statement, DbEntity entity) throws SQLException {
         // lock
         String lockString = "LOCK TABLES AUTO_PK_SUPPORT WRITE";
         adapter.getJdbcEventLogger().log(lockString);
         statement.execute(lockString);
 
         // select
-        String selectString = super.pkSelectString(entityName);
+        String selectString = super.pkSelectString(entity);
         adapter.getJdbcEventLogger().log(selectString);
         long pk;
         try (ResultSet rs = statement.executeQuery(selectString)) {
             if (!rs.next()) {
-                throw new SQLException("No rows for '" + entityName + "'");
+                throw new SQLException("No rows for '" + entity.getName() + "'");
             }
 
             pk = rs.getLong(1);
             if (rs.next()) {
-                throw new SQLException("More than one row for '" + entityName + "'");
+                throw new SQLException("More than one row for '" + entity.getName() + "'");
             }
         }
 
         // update
-        String updateString = super.pkUpdateString(entityName) + " AND NEXT_ID = " + pk;
+        String updateString = super.pkUpdateString(entity) + " AND NEXT_ID = " + pk;
         adapter.getJdbcEventLogger().log(updateString);
         int updated = statement.executeUpdate(updateString);
         // optimistic lock failure...
         if (updated != 1) {
-            throw new SQLException("Error updating PK count '" + entityName + "': " + updated);
+            throw new SQLException("Error updating PK count '" + entity.getName() + "': " + updated);
         }
 
         return pk;

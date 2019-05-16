@@ -71,7 +71,7 @@ public class DefaultQuotingStrategy implements QuotingStrategy {
             return;
         }
 
-        boolean quoting = dataMap != null && dataMap.isQuotingSQLIdentifiers();
+        boolean quoting = needQuoting(dataMap, identifier);
         try {
             if (quoting) {
                 appender.append(startQuote).append(identifier).append(endQuote);
@@ -83,11 +83,18 @@ public class DefaultQuotingStrategy implements QuotingStrategy {
         }
     }
 
+    protected boolean needQuoting(DataMap dataMap, CharSequence identifier) {
+        return dataMap != null && dataMap.isQuotingSQLIdentifiers();
+    }
+
     @Override
     public String quotedIdentifier(DataMap dataMap, String... identifierParts) {
-        boolean quoting = dataMap != null && dataMap.isQuotingSQLIdentifiers();
-        StringBuilder buffer = new StringBuilder();
+        if(identifierParts.length == 0) {
+            return "";
+        }
 
+        boolean quoting = needQuoting(dataMap, identifierParts[0]);
+        StringBuilder buffer = new StringBuilder();
         for (String part : identifierParts) {
             if (part == null) {
                 continue;

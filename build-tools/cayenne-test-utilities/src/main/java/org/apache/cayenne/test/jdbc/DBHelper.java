@@ -24,8 +24,10 @@ import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -158,9 +160,67 @@ public class DBHelper {
 
 							// check for the right NULL type
 							if (parameters == null) {
-								parameters = st.getParameterMetaData();
-							}
+								try {
+									parameters = st.getParameterMetaData();
+								} catch (SQLFeatureNotSupportedException ex) {
+									parameters = new ParameterMetaData() {
+										@Override
+										public int getParameterCount() throws SQLException {
+											return 0;
+										}
 
+										@Override
+										public int isNullable(int param) throws SQLException {
+											return 0;
+										}
+
+										@Override
+										public boolean isSigned(int param) throws SQLException {
+											return false;
+										}
+
+										@Override
+										public int getPrecision(int param) throws SQLException {
+											return 0;
+										}
+
+										@Override
+										public int getScale(int param) throws SQLException {
+											return 0;
+										}
+
+										@Override
+										public int getParameterType(int param) throws SQLException {
+											return Types.INTEGER;
+										}
+
+										@Override
+										public String getParameterTypeName(int param) throws SQLException {
+											return null;
+										}
+
+										@Override
+										public String getParameterClassName(int param) throws SQLException {
+											return null;
+										}
+
+										@Override
+										public int getParameterMode(int param) throws SQLException {
+											return 0;
+										}
+
+										@Override
+										public <T> T unwrap(Class<T> iface) throws SQLException {
+											return null;
+										}
+
+										@Override
+										public boolean isWrapperFor(Class<?> iface) throws SQLException {
+											return false;
+										}
+									};
+								}
+							}
 							type = parameters.getParameterType(i + 1);
 						} else {
 							type = columnTypes[i];

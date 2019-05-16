@@ -115,6 +115,9 @@ import org.apache.cayenne.dba.mariadb.MariaDBSniffer;
 import org.apache.cayenne.dba.mysql.MySQLAdapter;
 import org.apache.cayenne.dba.mysql.MySQLPkGenerator;
 import org.apache.cayenne.dba.mysql.MySQLSniffer;
+import org.apache.cayenne.dba.nuodb.NuoDbAdapter;
+import org.apache.cayenne.dba.nuodb.NuoDbPkGenerator;
+import org.apache.cayenne.dba.nuodb.NuoDbSniffer;
 import org.apache.cayenne.dba.openbase.OpenBaseAdapter;
 import org.apache.cayenne.dba.openbase.OpenBasePkGenerator;
 import org.apache.cayenne.dba.openbase.OpenBaseSniffer;
@@ -372,7 +375,8 @@ public class ServerModule implements Module {
                 .add(OracleSniffer.class)
                 .add(PostgresSniffer.class)
                 .add(MySQLSniffer.class)
-                .add(MariaDBSniffer.class);
+                .add(MariaDBSniffer.class)
+                .add(NuoDbSniffer.class);
 
         //installing Pk for adapters
         binder.bind(PkGeneratorFactoryProvider.class).to(PkGeneratorFactoryProvider.class);
@@ -391,7 +395,8 @@ public class ServerModule implements Module {
                 .put(Oracle8Adapter.class.getName(), OraclePkGenerator.class)
                 .put(PostgresAdapter.class.getName(), PostgresPkGenerator.class)
                 .put(SQLServerAdapter.class.getName(), SybasePkGenerator.class)
-                .put(SybaseAdapter.class.getName(), SybasePkGenerator.class);
+                .put(SybaseAdapter.class.getName(), SybasePkGenerator.class)
+                .put(NuoDbAdapter.class.getName(), NuoDbPkGenerator.class);
 
         // configure a filter chain with only one TransactionFilter as default
         contributeDomainFilters(binder);

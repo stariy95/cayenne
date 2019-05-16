@@ -1714,6 +1714,23 @@
 			</dependencies>
 		</profile>
 		<profile>
+			<id>nuodb</id>
+			<activation>
+				<property>
+					<name>cayenneTestConnection</name>
+					<value>nuodb</value>
+				</property>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>com.nuodb.jdbc</groupId>
+					<artifactId>nuodb-jdbc</artifactId>
+					<version>20.1.0</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
 			<id>java8-disable-strict-javadoc</id>
 			<activation>
 				<jdk>[1.8,)</jdk>

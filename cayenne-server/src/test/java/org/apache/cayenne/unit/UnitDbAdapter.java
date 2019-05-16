@@ -114,11 +114,8 @@ public class UnitDbAdapter {
             QuotingStrategy strategy = adapter.getQuotingStrategy();
 
             for (String constraint : constraints) {
-                StringBuilder drop = new StringBuilder();
-
-                drop.append("ALTER TABLE ").append(strategy.quotedFullyQualifiedName(entity))
-                        .append(" DROP CONSTRAINT ").append(constraint);
-                executeDDL(conn, drop.toString());
+                String drop = "ALTER TABLE " + strategy.quotedFullyQualifiedName(entity) + " DROP CONSTRAINT " + constraint;
+                executeDDL(conn, drop);
             }
         }
     }
@@ -195,11 +192,8 @@ public class UnitDbAdapter {
     }
 
     public boolean supportsFKConstraints(DbEntity entity) {
-        if ("FK_OF_DIFFERENT_TYPE".equals(entity.getName())) {
-            return false;
-        }
+        return !"FK_OF_DIFFERENT_TYPE".equals(entity.getName());
 
-        return true;
     }
 
     public boolean supportsFKConstraints() {
@@ -252,12 +246,8 @@ public class UnitDbAdapter {
 
     protected void executeDDL(Connection con, String ddl) throws Exception {
         logger.info(ddl);
-        Statement st = con.createStatement();
-
-        try {
+        try (Statement st = con.createStatement()) {
             st.execute(ddl);
-        } finally {
-            st.close();
         }
     }
 
@@ -270,7 +260,7 @@ public class UnitDbAdapter {
      * database.
      */
     private String ddlString(String database, String name) {
-        StringBuffer location = new StringBuffer();
+        StringBuilder location = new StringBuilder();
         location.append("ddl/").append(database).append("/").append(name);
 
         InputStream resource = Thread.currentThread().getContextClassLoader().getResourceAsStream(location.toString());
@@ -279,22 +269,14 @@ public class UnitDbAdapter {
             throw new CayenneRuntimeException("Can't find DDL file: " + location);
         }
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(resource));
-        StringBuffer buf = new StringBuffer();
-        try {
-            String line = null;
+        StringBuilder buf = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(resource))) {
+            String line;
             while ((line = in.readLine()) != null) {
                 buf.append(line).append('\n');
             }
         } catch (IOException e) {
             throw new CayenneRuntimeException("Error reading DDL file: " + location);
-        } finally {
-
-            try {
-                in.close();
-            } catch (IOException e) {
-
-            }
         }
         return buf.toString();
     }
@@ -323,25 +305,19 @@ public class UnitDbAdapter {
             QuotingStrategy strategy = adapter.getQuotingStrategy();
 
             // Get all constraints for the table
-            ResultSet rs = metadata.getExportedKeys(entity.getCatalog(), entity.getSchema(), entity.getName());
-            try {
+            try (ResultSet rs = metadata.getExportedKeys(entity.getCatalog(), entity.getSchema(), entity.getName())) {
                 while (rs.next()) {
                     String fk = rs.getString("FK_NAME");
+                    if (fk == null || fk.isEmpty()) {
+                        continue;
+                    }
                     String fkTable = rs.getString("FKTABLE_NAME");
-
-                    if (fk != null && fkTable != null) {
-                        Collection<String> constraints = constraintMap.get(fkTable);
-                        if (constraints == null) {
-                            // use a set to avoid duplicate constraints
-                            constraints = new HashSet<String>();
-                            constraintMap.put(fkTable, constraints);
-                        }
-
-                        constraints.add(strategy.quotedIdentifier(entity, fk));
+                    if (fkTable != null) {
+                        constraintMap
+                                .computeIfAbsent(fkTable, k -> new HashSet<>())
+                                .add(strategy.quotedIdentifier(entity, fk));
                     }
                 }
-            } finally {
-                rs.close();
             }
         }
 

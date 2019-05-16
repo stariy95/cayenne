@@ -144,12 +144,13 @@ public class JdbcPkGenerator implements PkGenerator {
         return "INSERT INTO AUTO_PK_SUPPORT (TABLE_NAME, NEXT_ID) VALUES ('" + entName + "', " + pkStartValue + ")";
     }
 
-    protected String pkSelectString(String entName) {
-        return "SELECT NEXT_ID FROM AUTO_PK_SUPPORT WHERE TABLE_NAME = '" + entName + '\'';
+    protected String pkSelectString(DbEntity entity) {
+        return "SELECT #result('NEXT_ID' 'long' 'NEXT_ID') FROM AUTO_PK_SUPPORT "
+                + "WHERE TABLE_NAME = '" + entity.getName() + '\'';
     }
 
-    protected String pkUpdateString(String entName) {
-        return "UPDATE AUTO_PK_SUPPORT SET NEXT_ID = NEXT_ID + " + pkCacheSize + " WHERE TABLE_NAME = '" + entName + '\'';
+    protected String pkUpdateString(DbEntity entity) {
+        return "UPDATE AUTO_PK_SUPPORT SET NEXT_ID = NEXT_ID + " + pkCacheSize + " WHERE TABLE_NAME = '" + entity.getName() + '\'';
     }
 
     protected String dropAutoPkString() {
@@ -265,13 +266,12 @@ public class JdbcPkGenerator implements PkGenerator {
      * @since 3.0
      */
     protected long longPkFromDatabase(DataNode node, DbEntity entity) throws Exception {
-        String select = "SELECT #result('NEXT_ID' 'long' 'NEXT_ID') FROM AUTO_PK_SUPPORT "
-                + "WHERE TABLE_NAME = '" + entity.getName() + '\'';
+        String select = pkSelectString(entity);
 
         // run queries via DataNode to utilize its transactional behavior
         List<Query> queries = new ArrayList<>(2);
         queries.add(new SQLTemplate(entity, select));
-        queries.add(new SQLTemplate(entity, pkUpdateString(entity.getName())));
+        queries.add(new SQLTemplate(entity, pkUpdateString(entity)));
 
         PkRetrieveProcessor observer = new PkRetrieveProcessor(entity.getName());
         node.performQueries(queries, observer);
