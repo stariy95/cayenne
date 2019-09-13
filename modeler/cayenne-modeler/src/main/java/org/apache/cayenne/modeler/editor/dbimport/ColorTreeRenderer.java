@@ -35,9 +35,8 @@ import static org.apache.cayenne.modeler.editor.dbimport.DbImportNodeHandler.NON
  */
 public class ColorTreeRenderer extends DbImportTreeCellRenderer {
 
-    private DbImportNodeHandler handler;
+    private final DbImportNodeHandler handler;
     private DbImportTree reverseEngineeringTree;
-
 
     public ColorTreeRenderer() {
         super();
@@ -50,15 +49,15 @@ public class ColorTreeRenderer extends DbImportTreeCellRenderer {
                                                   boolean expanded,
                                                   boolean leaf, int row,
                                                   boolean hasFocus) {
-        super.getTreeCellRendererComponent(tree, value, sel,
-                expanded, leaf, row, hasFocus);
+        super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
         DbImportTree renderedTree = (DbImportTree) tree;
+
         handler.setDbSchemaNode(node);
         if (node.isLabel()) {
             setForeground(LABEL_COLOR);
             return this;
         }
-        if (handler.isContainer(node) || (handler.isFirstNodeIsPrimitive(renderedTree))) {
+        if (handler.isContainer(node) || handler.isFirstNodeIsPrimitive(renderedTree)) {
             handler.setHasEntitiesInEmptyContainer(false);
         }
         if (selected) {
@@ -66,46 +65,34 @@ public class ColorTreeRenderer extends DbImportTreeCellRenderer {
             node.setColorized(node.isColorized());
             return this;
         }
-        DbImportTreeNode root;
+
         handler.findFirstLevelIncludeTable();
         if (!handler.checkTreesLevels(renderedTree)) {
             setForeground(NON_INCLUDE_COLOR);
             node.setColorized(false);
             return this;
         }
-        if (reverseEngineeringTree.getSelectionPath() != null) {
-            root = reverseEngineeringTree.getSelectedNode();
-        } else {
-            root = reverseEngineeringTree.getRootNode();
-        }
+
+        DbImportTreeNode root = reverseEngineeringTree.getSelectionPath() != null
+                ? reverseEngineeringTree.getSelectedNode()
+                : reverseEngineeringTree.getRootNode();
         renderedTree.getRootNode().setColorized(true);
 
-        int traverseResult = handler.traverseTree(root);
-        if (traverseResult > 0) {
+        if (handler.traverseTree(root) > 0) {
+            // Case on IncludeColumn or IncludeProcedure on zero level is selected
+            if (root.getUserObject().getClass() == IncludeColumn.class
+                    || root.getUserObject().getClass() == IncludeProcedure.class) {
+                if (handler.nodesIsEqual(root)) {
+                    setForeground(handler.getColorByNodeType(root));
+                    node.setColorized(true);
+                    return this;
+                } else {
+                    setForeground(NON_INCLUDE_COLOR);
+                    node.setColorized(false);
+                    return this;
+                }
+            }
 
-            if (root.getUserObject().getClass() == IncludeColumn.class) {
-                if (handler.nodesIsEqual(root)) {
-                    setForeground(handler.getColorByNodeType(root));
-                    node.setColorized(true);
-                    return this;
-                } else {
-                    setForeground(NON_INCLUDE_COLOR);
-                    node.setColorized(false);
-                    return this;
-                }
-            }
-            // Case on IncludeProcedure on zero level is selected
-            if (root.getUserObject().getClass() == IncludeProcedure.class) {
-                if (handler.nodesIsEqual(root)) {
-                    setForeground(handler.getColorByNodeType(root));
-                    node.setColorized(true);
-                    return this;
-                } else {
-                    setForeground(NON_INCLUDE_COLOR);
-                    node.setColorized(false);
-                    return this;
-                }
-            }
             // If ReverseEngineering doesn't have catalogs or schemas on zero level
             if (!handler.isExistCatalogsOrSchemas()) {
                 if ((root.isExcludeTable()) || (root.isExcludeProcedure() || root.isExcludeColumn())) {
@@ -118,42 +105,30 @@ public class ColorTreeRenderer extends DbImportTreeCellRenderer {
                     node.setColorized(false);
                     return this;
                 }
+
                 if (root.equals(node)) {
                     setForeground(handler.getColorByNodeType(root));
                     node.setColorized(true);
                     return this;
                 }
             }
-            // Recursion painting, if parent is colorized
-            if (handler.isParentIncluded()) {
+
+            if (handler.isParentIncluded()
+                    || reverseEngineeringTree.getSelectionPath() != null
+                    || !handler.isExistCatalogsOrSchemas()) {
                 setForeground(handler.getColorByNodeType(root));
                 node.setColorized(true);
                 return this;
             }
-        } else {
-            setForeground(NON_INCLUDE_COLOR);
-            node.setColorized(false);
-            return this;
-        }
-        if ((handler.isParentIncluded()) || (reverseEngineeringTree.getSelectionPath() != null)) {
-            setForeground(handler.getColorByNodeType(root));
-            node.setColorized(true);
-            return this;
-        } else {
-            if (!handler.isExistCatalogsOrSchemas()) {
-                setForeground(handler.getColorByNodeType(root));
-                node.setColorized(true);
-                return this;
-            }
-            setForeground(NON_INCLUDE_COLOR);
-            node.setColorized(false);
-            return this;
         }
 
+        setForeground(NON_INCLUDE_COLOR);
+        node.setColorized(false);
+        return this;
     }
 
     public void setReverseEngineeringTree(DbImportTree reverseEngineeringTree) {
         this.reverseEngineeringTree = reverseEngineeringTree;
-        handler.setReverseEngineeringTree(reverseEngineeringTree);
+        this.handler.setReverseEngineeringTree(reverseEngineeringTree);
     }
 }

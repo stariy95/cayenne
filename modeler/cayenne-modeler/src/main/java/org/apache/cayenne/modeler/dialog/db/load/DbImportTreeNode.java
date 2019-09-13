@@ -32,6 +32,7 @@ import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import java.util.ArrayList;
 
 
@@ -129,10 +130,15 @@ public class DbImportTreeNode extends DefaultMutableTreeNode {
         ArrayList<DbImportTreeNode> parents = new ArrayList<>();
         DbImportTreeNode tmpNode = this;
         while (tmpNode.getParent() != null) {
-            parents.add((DbImportTreeNode) tmpNode.getParent());
-            tmpNode = (DbImportTreeNode) tmpNode.getParent();
+            parents.add(tmpNode.getParent());
+            tmpNode = tmpNode.getParent();
         }
         return parents;
+    }
+
+    @Override
+    public DbImportTreeNode getParent() {
+        return (DbImportTreeNode)super.getParent();
     }
 
     protected String getFormattedName(String className, String nodeName) {

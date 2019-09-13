@@ -183,7 +183,7 @@ public class DbImportView extends JPanel {
         treePanel.setTreeToolbar(treeToolbar);
         model.setDbSchemaTree(draggableTree);
         draggableTreeModel.setDbSchemaTree(draggableTree);
-        ((ColorTreeRenderer) draggableTreePanel.getSourceTree().getCellRenderer()).
+        ((ColorTreeRendererNew) draggableTreePanel.getSourceTree().getCellRenderer()).
                 setReverseEngineeringTree(reverseEngineeringTree);
 
         configPanel = new ReverseEngineeringConfigPanel(projectController, this);
