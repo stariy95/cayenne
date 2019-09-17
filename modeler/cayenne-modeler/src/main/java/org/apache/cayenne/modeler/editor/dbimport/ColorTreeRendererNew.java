@@ -64,24 +64,25 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
             return this;
         }
 
-        Status status = getStatus();
-        setForeground(status.getColor());
-        node.setColorized(status != Status.NONE);
+        PathCheckResult checkResult = check();
+        setForeground(checkResult.getStatus().getColor());
+        node.setColorized(checkResult.getStatus() != Status.NONE);
         return this;
     }
 
-    Status getStatus() {
+    PathCheckResult check() {
         List<DbImportNode> path = getPath();
         FilterContainer config = reverseEngineeringTree.getReverseEngineering();
 
+        PathCheckResult result = PathCheckResult.none(config);
         for(DbImportNode segment : path) {
-            Status status = segment.getType().getChecker().apply(segment, config);
-            if(status == Status.EXCLUDED) {
-                return status;
+            result = segment.getType().getChecker().apply(segment, result.getNextStep());
+            if(result.getStatus() == Status.EXCLUDED) {
+                return result;
             }
         }
 
-        return Status.NONE;
+        return result;
     }
 
     private List<DbImportNode> getPath() {
@@ -128,6 +129,35 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
         this.reverseEngineeringTree = reverseEngineeringTree;
     }
 
+    private static class Node {
+        private Node parent;
+
+        Node getParent() {
+            return parent;
+        }
+
+        boolean isExcluded() {
+            return false;
+        }
+    }
+
+    private static class CatalogNode extends Node {
+
+    }
+
+    private static class SchemaNode extends Node {
+
+    }
+
+    private static class TableNode extends Node {
+
+    }
+
+    private static class ColumnNode extends Node {
+
+    }
+
+
     // TODO: use as a UserObject directly
     private static class DbImportNode {
         private final ObjectType type;
@@ -148,9 +178,10 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
     }
 
     private enum Status {
-        INCLUDED(new Color(60,179,113)),
-        EXCLUDED(new Color(178, 0, 0)),
-        NONE(Color.LIGHT_GRAY);
+        INCLUDED    (new Color(60,179,113)),
+        EXCLUDED    (new Color(178, 0, 0)),
+        UNKNOWN     (Color.BLUE), // TODO: BLUE for debug only, change to LIGHT_GRAY
+        NONE        (Color.LIGHT_GRAY);
         private final Color color;
         Status(Color color) {
             this.color = color;
@@ -160,22 +191,65 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
         }
     }
 
+    private static class PathCheckResult {
+
+        private static final PathCheckResult EXCLUDED
+                = new PathCheckResult(Status.EXCLUDED, null);
+
+        private static final PathCheckResult UNKNOWN
+                = new PathCheckResult(Status.UNKNOWN, null);
+
+        private final Status status;
+        private final Object nextStep;
+
+        static PathCheckResult excluded() {
+            return EXCLUDED;
+        }
+
+        static PathCheckResult none(Object next) {
+            return new PathCheckResult(Status.NONE, next);
+        }
+
+        static PathCheckResult included(Object next) {
+            return new PathCheckResult(Status.INCLUDED, next);
+        }
+
+        static PathCheckResult unknown() {
+            return UNKNOWN;
+        }
+
+        private PathCheckResult(Status status, Object nextStep) {
+            this.status = status;
+            this.nextStep = nextStep;
+        }
+
+        public Object getNextStep() {
+            return nextStep;
+        }
+
+        public Status getStatus() {
+            return status;
+        }
+    }
+
     private enum ObjectType {
-        UNKNOWN     ((node, config) -> Status.NONE),
+        UNKNOWN     ((node, config) -> PathCheckResult.unknown()),
 
         CATALOG     ((node, config) -> {
             if(config instanceof ReverseEngineering) {
                 Collection<Catalog> catalogs = ((ReverseEngineering) config).getCatalogs();
                 for(Catalog catalog : catalogs) {
                     if(catalog.getName().equals(node.getValue())) {
-                        return Status.INCLUDED;
+                        return PathCheckResult.included(catalog);
                     }
                 }
                 if(!catalogs.isEmpty()) {
-                    return Status.EXCLUDED;
+                    return PathCheckResult.none(config);
+                } else {
+                    return PathCheckResult.included(config);
                 }
             }
-            return Status.NONE;
+            return PathCheckResult.unknown();
         }),
 
         SCHEMA      ((node, config) -> {
@@ -183,29 +257,55 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
                 Collection<Schema> schemas = ((SchemaContainer) config).getSchemas();
                 for(Schema schema : schemas) {
                     if(schema.getName().equals(node.getValue())) {
-                        return Status.INCLUDED;
+                        return PathCheckResult.included(schema);
                     }
                 }
                 if(!schemas.isEmpty()) {
-                    return Status.EXCLUDED;
+                    return PathCheckResult.none(config);
+                } else {
+                    return PathCheckResult.included(config);
                 }
             }
-            return Status.NONE;
+            return PathCheckResult.unknown();
         }),
 
-        TABLE       ((node, config) -> Status.NONE),
+        TABLE       ((node, config) -> {
+            if(config instanceof FilterContainer) {
+                Collection<IncludeTable> includeTables = ((FilterContainer) config).getIncludeTables();
+                for(IncludeTable includeTable : includeTables) {
+                    if(node.getValue().matches(includeTable.getPattern())) {
+                        return PathCheckResult.included(includeTable);
+                    }
+                }
+                if(!includeTables.isEmpty()) {
+                    return PathCheckResult.none(config);
+                }
+                Collection<ExcludeTable> excludeTables = ((FilterContainer) config).getExcludeTables();
+                for(ExcludeTable excludeTable : excludeTables) {
+                    if(node.getValue().matches(excludeTable.getPattern())) {
+                        return PathCheckResult.excluded();
+                    }
+                }
+                if(!excludeTables.isEmpty()) {
+                    return PathCheckResult.included(config);
+                }
 
-        COLUMN      ((node, config) -> Status.NONE),
+                return PathCheckResult.included(config);
+            }
+            return PathCheckResult.unknown();
+        }),
 
-        PROCEDURE   ((node, config) -> Status.NONE);
+        COLUMN      ((node, config) -> PathCheckResult.unknown()),
 
-        private final BiFunction<DbImportNode, Object, Status> checker;
+        PROCEDURE   ((node, config) -> PathCheckResult.unknown());
 
-        ObjectType(BiFunction<DbImportNode, Object, Status> checker) {
+        private final BiFunction<DbImportNode, Object, PathCheckResult> checker;
+
+        ObjectType(BiFunction<DbImportNode, Object, PathCheckResult> checker) {
             this.checker = checker;
         }
 
-        public BiFunction<DbImportNode, Object, Status> getChecker() {
+        public BiFunction<DbImportNode, Object, PathCheckResult> getChecker() {
             return checker;
         }
     }
