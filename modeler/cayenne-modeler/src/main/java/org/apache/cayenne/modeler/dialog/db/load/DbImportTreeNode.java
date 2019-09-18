@@ -41,7 +41,6 @@ import java.util.ArrayList;
  */
 public class DbImportTreeNode extends DefaultMutableTreeNode {
 
-    private boolean isColorized;
     private boolean isLoaded;
 
     public DbImportTreeNode() {
@@ -199,14 +198,6 @@ public class DbImportTreeNode extends DefaultMutableTreeNode {
             return false;
         }
         return true;
-    }
-
-    public boolean isColorized() {
-        return isColorized;
-    }
-
-    public void setColorized(boolean colorized) {
-        isColorized = colorized;
     }
 
     public boolean isLoaded() {

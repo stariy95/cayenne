@@ -1,5 +1,26 @@
+/*****************************************************************
+ *   Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ ****************************************************************/
+
 package org.apache.cayenne.modeler.editor.dbimport.tree;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
@@ -7,7 +28,7 @@ import org.apache.cayenne.dbsync.reverse.dbimport.FilterContainer;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 
-public abstract class TableNode<T extends Node> extends Node<T> {
+abstract class TableNode<T extends Node> extends Node<T> {
 
     TableNode(String name, T parent) {
         super(name, parent);
@@ -15,47 +36,52 @@ public abstract class TableNode<T extends Node> extends Node<T> {
     
     @Override
     public Status getStatus(ReverseEngineering config) {
+        Status parentStatus = getParent().getStatus(config);
+        if(parentStatus != Status.INCLUDED) {
+            return parentStatus;
+        }
+
+        List<IncludeTable> includeTables = new ArrayList<>();
+        List<ExcludeTable> excludeTables = new ArrayList<>();
         for(FilterContainer container : getContainers(config)) {
             if(container == null) {
                 continue;
             }
-            Status status = includesTable(container);
-            if(status != Status.NONE) {
-                return status;
-            }
+            includeTables.addAll(container.getIncludeTables());
+            excludeTables.addAll(container.getExcludeTables());
         }
 
-        return Status.NONE;
+        return includesTable(includeTables, excludeTables);
     }
     
     abstract List<FilterContainer> getContainers(ReverseEngineering config);
 
-    Status includesTable(FilterContainer container) {
-        if(container.getIncludeTables().isEmpty() && container.getExcludeTables().isEmpty()) {
+    Status includesTable(Collection<IncludeTable> includeTables, Collection<ExcludeTable> excludeTables) {
+        if(includeTables.isEmpty() && excludeTables.isEmpty()) {
             return Status.INCLUDED;
         }
 
-        if(!container.getIncludeTables().isEmpty()) {
-            if(getIncludeTable(container) != null) {
-                return Status.INCLUDED;
-            } else {
-                return Status.NONE;
-            }
-        }
-
-        if(!container.getExcludeTables().isEmpty()) {
-            if(getExcludeTable(container) != null) {
-                return Status.EXCLUDED;
-            } else {
+        if(!includeTables.isEmpty()) {
+            if(getIncludeTable(includeTables) != null) {
                 return Status.INCLUDED;
             }
         }
 
-        return Status.NONE;
+        if(!excludeTables.isEmpty()) {
+            if(getExcludeTable(excludeTables) != null) {
+                return Status.EXCLUDED_EXPLICIT;
+            } else {
+                return includeTables.isEmpty()
+                        ? Status.INCLUDED
+                        : Status.EXCLUDED_IMPLICIT;
+            }
+        }
+
+        return Status.EXCLUDED_IMPLICIT;
     }
 
-    private IncludeTable getIncludeTable(FilterContainer container) {
-        for(IncludeTable table : container.getIncludeTables()) {
+    IncludeTable getIncludeTable(Collection<IncludeTable> includeTables) {
+        for(IncludeTable table : includeTables) {
             if(getName().matches(table.getPattern())) {
                 return table;
             }
@@ -63,8 +89,8 @@ public abstract class TableNode<T extends Node> extends Node<T> {
         return null;
     }
 
-    private ExcludeTable getExcludeTable(FilterContainer container) {
-        for(ExcludeTable table : container.getExcludeTables()) {
+    ExcludeTable getExcludeTable(Collection<ExcludeTable> excludeTables) {
+        for(ExcludeTable table : excludeTables) {
             if(getName().matches(table.getPattern())) {
                 return table;
             }

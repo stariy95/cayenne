@@ -38,6 +38,7 @@ import org.apache.cayenne.modeler.action.LoadDbSchemaAction;
 import org.apache.cayenne.modeler.action.ReverseEngineeringAction;
 import org.apache.cayenne.modeler.dialog.db.load.DbImportTreeNode;
 import org.apache.cayenne.modeler.dialog.db.load.TransferableNode;
+import org.apache.cayenne.modeler.editor.dbimport.tree.ColorTreeRenderer;
 import org.apache.cayenne.modeler.util.CayenneAction;
 import org.apache.cayenne.modeler.util.ModelerUtil;
 
@@ -183,7 +184,7 @@ public class DbImportView extends JPanel {
         treePanel.setTreeToolbar(treeToolbar);
         model.setDbSchemaTree(draggableTree);
         draggableTreeModel.setDbSchemaTree(draggableTree);
-        ((ColorTreeRendererNew) draggableTreePanel.getSourceTree().getCellRenderer()).
+        ((ColorTreeRenderer) draggableTreePanel.getSourceTree().getCellRenderer()).
                 setReverseEngineeringTree(reverseEngineeringTree);
 
         configPanel = new ReverseEngineeringConfigPanel(projectController, this);

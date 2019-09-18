@@ -19,31 +19,11 @@
 
 package org.apache.cayenne.modeler.editor.dbimport.tree;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.cayenne.dbsync.reverse.dbimport.Catalog;
-import org.apache.cayenne.dbsync.reverse.dbimport.FilterContainer;
-import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
-
-class SchemaTableNode extends TableNode<SchemaNode> {
-
-    SchemaTableNode(String name, SchemaNode parent) {
-        super(name, parent);
-    }
-
-    @Override
-    List<FilterContainer> getContainers(ReverseEngineering config) {
-        List<FilterContainer> containers = new ArrayList<>();
-        if(getParent() != null && getParent().getParent() != null) {
-            Catalog catalog = getParent().getParent().getCatalog(config);
-            if(catalog != null) {
-                containers.add(getParent().getSchema(catalog));
-                containers.add(catalog);
-            }
-            containers.add(getParent().getSchema(config));
-        }
-        containers.add(config);
-        return containers;
-    }
+enum ObjectType {
+    UNKNOWN,
+    CATALOG,
+    SCHEMA,
+    TABLE,
+    COLUMN,
+    PROCEDURE;
 }

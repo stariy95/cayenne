@@ -17,7 +17,7 @@
  *  under the License.
  ****************************************************************/
 
-package org.apache.cayenne.modeler.editor.dbimport;
+package org.apache.cayenne.modeler.editor.dbimport.tree;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -37,23 +37,17 @@ import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.PatternParam;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
 import org.apache.cayenne.modeler.dialog.db.load.DbImportTreeNode;
-import org.apache.cayenne.modeler.editor.dbimport.tree.CatalogNode;
-import org.apache.cayenne.modeler.editor.dbimport.tree.CatalogTableNode;
-import org.apache.cayenne.modeler.editor.dbimport.tree.ColumnNode;
-import org.apache.cayenne.modeler.editor.dbimport.tree.Node;
-import org.apache.cayenne.modeler.editor.dbimport.tree.SchemaNode;
-import org.apache.cayenne.modeler.editor.dbimport.tree.SchemaTableNode;
-import org.apache.cayenne.modeler.editor.dbimport.tree.Status;
-import org.apache.cayenne.modeler.editor.dbimport.tree.TableNode;
+import org.apache.cayenne.modeler.editor.dbimport.DbImportTree;
+import org.apache.cayenne.modeler.editor.dbimport.DbImportTreeCellRenderer;
 
 /**
  * @since 4.1
  */
-public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
+public class ColorTreeRenderer extends DbImportTreeCellRenderer {
 
     private DbImportTree reverseEngineeringTree;
 
-    public ColorTreeRendererNew() {
+    public ColorTreeRenderer() {
         super();
     }
 
@@ -74,50 +68,44 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
         }
         Status status = path.getStatus(reverseEngineeringTree.getReverseEngineering());
         setForeground(status.getColor());
-        node.setColorized(status != Status.NONE);
         return this;
     }
 
     private Node<?> getLogicalTreeNode() {
-        List<DbImportNode> path = new ArrayList<>();
-        path.add(toImportNode(node.getUserObject()));
-        DbImportTreeNode parent = node.getParent();
+        List<Object> path = new ArrayList<>();
+        DbImportTreeNode parent = node;
         while (parent != null) {
-            path.add(toImportNode(parent.getUserObject()));
+            path.add(parent.getUserObject());
             parent = parent.getParent();
         }
         Collections.reverse(path);
 
         Node<?> logicalParent = null;
-        for(DbImportNode node : path) {
-            logicalParent = toLogicalNode(node, logicalParent);
+        for(Object object : path) {
+            logicalParent = toLogicalNode(getObjectType(object), getObjectValue(object), logicalParent);
         }
         return logicalParent;
     }
 
-    private Node<?> toLogicalNode(DbImportNode node, Node<?> logicalParent) {
-        switch (node.getType()) {
+    private Node<?> toLogicalNode(ObjectType type, String value, Node<?> logicalParent) {
+        switch (type) {
             case CATALOG:
-                return new CatalogNode(node.getValue());
+                return new CatalogNode(value);
             case SCHEMA:
-                return new SchemaNode(node.getValue(), (CatalogNode)logicalParent);
+                return new SchemaNode(value, (CatalogNode)logicalParent);
             case TABLE:
                 if(logicalParent instanceof CatalogNode) {
-                    return new CatalogTableNode(node.getValue(), (CatalogNode)logicalParent);
+                    return new CatalogTableNode(value, (CatalogNode)logicalParent);
                 } else {
-                    return new SchemaTableNode(node.getValue(), (SchemaNode)logicalParent);
+                    return new SchemaTableNode(value, (SchemaNode)logicalParent);
                 }
             case COLUMN:
-                return new ColumnNode(node.getValue(), (TableNode<?>) logicalParent);
+                return new ColumnNode(value, (TableNode<?>) logicalParent);
             case PROCEDURE:
                 return null;
             default:
                 return null;
         }
-    }
-
-    private DbImportNode toImportNode(Object object) {
-        return new DbImportNode(getObjectType(object), getObjectValue(object));
     }
 
     private ObjectType getObjectType(Object object) {
@@ -148,31 +136,4 @@ public class ColorTreeRendererNew extends DbImportTreeCellRenderer {
         this.reverseEngineeringTree = reverseEngineeringTree;
     }
 
-    // TODO: use as a UserObject directly
-    private static class DbImportNode {
-        private final ObjectType type;
-        private final String value;
-
-        private DbImportNode(ObjectType type, String value) {
-            this.type = type;
-            this.value = value;
-        }
-
-        ObjectType getType() {
-            return type;
-        }
-
-        String getValue() {
-            return value;
-        }
-    }
-
-    private enum ObjectType {
-        UNKNOWN,
-        CATALOG,
-        SCHEMA,
-        TABLE,
-        COLUMN,
-        PROCEDURE;
-    }
 }

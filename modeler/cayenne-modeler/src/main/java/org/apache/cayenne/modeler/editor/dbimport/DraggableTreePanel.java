@@ -43,6 +43,7 @@ import org.apache.cayenne.modeler.action.dbimport.MoveInvertNodeAction;
 import org.apache.cayenne.modeler.action.dbimport.TreeManipulationAction;
 import org.apache.cayenne.modeler.dialog.db.load.DbImportTreeNode;
 import org.apache.cayenne.modeler.dialog.db.load.TransferableNode;
+import org.apache.cayenne.modeler.editor.dbimport.tree.ColorTreeRenderer;
 import org.apache.cayenne.modeler.util.CayenneAction;
 
 import javax.swing.DropMode;
@@ -155,7 +156,7 @@ public class DraggableTreePanel extends JScrollPane {
 
     private void initElement() {
         sourceTree.setDragEnabled(true);
-        sourceTree.setCellRenderer(new ColorTreeRendererNew());
+        sourceTree.setCellRenderer(new ColorTreeRenderer());
         sourceTree.setDropMode(DropMode.INSERT);
 
         MoveImportNodeAction action = projectController.getApplication().
