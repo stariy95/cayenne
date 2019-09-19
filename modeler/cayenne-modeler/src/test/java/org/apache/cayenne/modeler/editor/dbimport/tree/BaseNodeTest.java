@@ -2,8 +2,10 @@ package org.apache.cayenne.modeler.editor.dbimport.tree;
 
 import org.apache.cayenne.dbsync.reverse.dbimport.Catalog;
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeColumn;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeProcedure;
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeColumn;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
@@ -76,13 +78,13 @@ class BaseNodeTest {
             return this;
         }
 
-        SchemaBuilder includeTable(IncludeTableBuilder tableBuilder) {
-            schema.addIncludeTable(tableBuilder.build());
+        SchemaBuilder excludeTable(String name) {
+            schema.addExcludeTable(new ExcludeTable(name));
             return this;
         }
 
-        SchemaBuilder excludeTable(String name) {
-            schema.addExcludeTable(new ExcludeTable(name));
+        SchemaBuilder includeTable(IncludeTableBuilder tableBuilder) {
+            schema.addIncludeTable(tableBuilder.build());
             return this;
         }
 
@@ -93,6 +95,16 @@ class BaseNodeTest {
 
         SchemaBuilder excludeColumn(String name) {
             schema.addExcludeColumn(new ExcludeColumn(name));
+            return this;
+        }
+
+        SchemaBuilder includeProcedure(String name) {
+            schema.addIncludeProcedure(new IncludeProcedure(name));
+            return this;
+        }
+
+        SchemaBuilder excludeProcedure(String name) {
+            schema.addExcludeProcedure(new ExcludeProcedure(name));
             return this;
         }
 
@@ -135,6 +147,16 @@ class BaseNodeTest {
 
         CatalogBuilder excludeColumn(String name) {
             catalog.addExcludeColumn(new ExcludeColumn(name));
+            return this;
+        }
+
+        CatalogBuilder includeProcedure(String name) {
+            catalog.addIncludeProcedure(new IncludeProcedure(name));
+            return this;
+        }
+
+        CatalogBuilder excludeProcedure(String name) {
+            catalog.addExcludeProcedure(new ExcludeProcedure(name));
             return this;
         }
 
@@ -182,6 +204,16 @@ class BaseNodeTest {
 
         ConfigBuilder excludeColumn(String name) {
             config.addExcludeColumn(new ExcludeColumn(name));
+            return this;
+        }
+
+        ConfigBuilder includeProcedure(String name) {
+            config.addIncludeProcedure(new IncludeProcedure(name));
+            return this;
+        }
+
+        ConfigBuilder excludeProcedure(String name) {
+            config.addExcludeProcedure(new ExcludeProcedure(name));
             return this;
         }
 
