@@ -47,6 +47,9 @@ class ColumnNode extends Node<TableNode<?>> {
         List<ExcludeColumn> excludeColumns = new ArrayList<>();
 
         for (FilterContainer container : containers) {
+            if(container == null) {
+                continue;
+            }
             IncludeTable table = getParent().getIncludeTable(container.getIncludeTables());
             if (table != null) {
                 includeColumns.addAll(table.getIncludeColumns());

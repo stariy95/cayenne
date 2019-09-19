@@ -5,7 +5,7 @@ import org.junit.Test;
 
 public class CatalogNodeTest extends BaseNodeTest {
 
-    CatalogNode node;
+    private CatalogNode node;
 
     @Before
     public void createNode() {

@@ -15,6 +15,13 @@ public class SchemaTableNodeTest extends BaseNodeTest {
     }
 
     @Test
+    public void rootEmpty() {
+        config = config().build();
+
+        assertIncluded(node);
+    }
+
+    @Test
     public void rootInclude() {
         config = config().includeTable("table1").build();
 
@@ -26,6 +33,13 @@ public class SchemaTableNodeTest extends BaseNodeTest {
         config = config().includeTable("table2").build();
 
         assertExcludedImplicitly(node);
+    }
+
+    @Test
+    public void rootExclude() {
+        config = config().excludeTable("table1").build();
+
+        assertExcludedExplicitly(node);
     }
 
     @Test
@@ -43,7 +57,21 @@ public class SchemaTableNodeTest extends BaseNodeTest {
     }
 
     @Test
-    public void schemaIncludeGlobalNoInclude() {
+    public void schemaNoInclude() {
+        config = config().schema(schema("schema").includeTable("table2")).build();
+
+        assertExcludedImplicitly(node);
+    }
+
+    @Test
+    public void schemaExclude() {
+        config = config().schema(schema("schema").excludeTable("table1").includeTable("table2")).build();
+
+        assertExcludedExplicitly(node);
+    }
+
+    @Test
+    public void schemaIncludeRootNoInclude() {
         config = config()
                 .includeTable("table2")
                 .schema(schema("schema").includeTable("table1")).build();
@@ -52,28 +80,11 @@ public class SchemaTableNodeTest extends BaseNodeTest {
     }
 
     @Test
-    public void schemaNoInclude() {
-        config = config().schema(schema("schema").includeTable("table2")).build();
-
-        assertExcludedImplicitly(node);
-    }
-
-    @Test
-    public void schemaNoIncludeGlobalNoInclude() {
+    public void schemaNoIncludeRootNoInclude() {
         config = config()
                 .includeTable("table2")
                 .schema(schema("schema")).build();
 
         assertExcludedImplicitly(node);
-    }
-
-    @Test
-    public void rootExclude() {
-
-    }
-
-    @Test
-    public void schemaExclude() {
-
     }
 }

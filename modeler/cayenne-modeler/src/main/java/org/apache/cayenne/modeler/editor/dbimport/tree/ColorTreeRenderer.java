@@ -102,7 +102,11 @@ public class ColorTreeRenderer extends DbImportTreeCellRenderer {
             case COLUMN:
                 return new ColumnNode(value, (TableNode<?>) logicalParent);
             case PROCEDURE:
-                return null;
+                if(logicalParent instanceof CatalogNode) {
+                    return new CatalogProcedureNode(value, (CatalogNode)logicalParent);
+                } else {
+                    return new SchemaProcedureNode(value, (SchemaNode)logicalParent);
+                }
             default:
                 return null;
         }

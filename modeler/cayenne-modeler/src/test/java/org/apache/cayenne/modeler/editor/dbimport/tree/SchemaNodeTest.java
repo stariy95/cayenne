@@ -5,7 +5,7 @@ import org.junit.Test;
 
 public class SchemaNodeTest extends BaseNodeTest {
 
-    SchemaNode node;
+    private SchemaNode node;
 
     @Before
     public void createNode() {
@@ -22,6 +22,12 @@ public class SchemaNodeTest extends BaseNodeTest {
     @Test
     public void testIncludeSchema() {
         config = config().schema(schema("schema")).build();
+        assertIncluded(node);
+    }
+
+    @Test
+    public void testIncludeMultipleSchemas() {
+        config = config().schema(schema("schema")).schema(schema("schema1")).build();
         assertIncluded(node);
     }
 

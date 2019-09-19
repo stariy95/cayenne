@@ -1,7 +1,9 @@
 package org.apache.cayenne.modeler.editor.dbimport.tree;
 
 import org.apache.cayenne.dbsync.reverse.dbimport.Catalog;
+import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeColumn;
 import org.apache.cayenne.dbsync.reverse.dbimport.ExcludeTable;
+import org.apache.cayenne.dbsync.reverse.dbimport.IncludeColumn;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
@@ -36,6 +38,32 @@ class BaseNodeTest {
         return new CatalogBuilder(name);
     }
 
+    static IncludeTableBuilder table(String name) {
+        return new IncludeTableBuilder(name);
+    }
+
+    static class IncludeTableBuilder {
+        final IncludeTable table;
+
+        IncludeTableBuilder(String name) {
+            table = new IncludeTable(name);
+        }
+
+        IncludeTableBuilder includeColumn(String name) {
+            table.addIncludeColumn(new IncludeColumn(name));
+            return this;
+        }
+
+        IncludeTableBuilder excludeColumn(String name) {
+            table.addExcludeColumn(new ExcludeColumn(name));
+            return this;
+        }
+
+        IncludeTable build() {
+            return table;
+        }
+    }
+
     static class SchemaBuilder {
         Schema schema;
 
@@ -48,8 +76,23 @@ class BaseNodeTest {
             return this;
         }
 
+        SchemaBuilder includeTable(IncludeTableBuilder tableBuilder) {
+            schema.addIncludeTable(tableBuilder.build());
+            return this;
+        }
+
         SchemaBuilder excludeTable(String name) {
             schema.addExcludeTable(new ExcludeTable(name));
+            return this;
+        }
+
+        SchemaBuilder includeColumn(String name) {
+            schema.addIncludeColumn(new IncludeColumn(name));
+            return this;
+        }
+
+        SchemaBuilder excludeColumn(String name) {
+            schema.addExcludeColumn(new ExcludeColumn(name));
             return this;
         }
 
@@ -75,8 +118,23 @@ class BaseNodeTest {
             return this;
         }
 
+        CatalogBuilder includeTable(IncludeTableBuilder tableBuilder) {
+            catalog.addIncludeTable(tableBuilder.build());
+            return this;
+        }
+
         CatalogBuilder excludeTable(String name) {
             catalog.addExcludeTable(new ExcludeTable(name));
+            return this;
+        }
+
+        CatalogBuilder includeColumn(String name) {
+            catalog.addIncludeColumn(new IncludeColumn(name));
+            return this;
+        }
+
+        CatalogBuilder excludeColumn(String name) {
+            catalog.addExcludeColumn(new ExcludeColumn(name));
             return this;
         }
 
@@ -107,8 +165,23 @@ class BaseNodeTest {
             return this;
         }
 
+        ConfigBuilder includeTable(IncludeTableBuilder tableBuilder) {
+            config.addIncludeTable(tableBuilder.build());
+            return this;
+        }
+
         ConfigBuilder excludeTable(String name) {
             config.addExcludeTable(new ExcludeTable(name));
+            return this;
+        }
+
+        ConfigBuilder includeColumn(String name) {
+            config.addIncludeColumn(new IncludeColumn(name));
+            return this;
+        }
+
+        ConfigBuilder excludeColumn(String name) {
+            config.addExcludeColumn(new ExcludeColumn(name));
             return this;
         }
 
