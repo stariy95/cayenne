@@ -35,6 +35,7 @@ import org.apache.cayenne.dbsync.reverse.dbimport.IncludeColumn;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeProcedure;
 import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.PatternParam;
+import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
 import org.apache.cayenne.modeler.dialog.db.load.DbImportTreeNode;
 import org.apache.cayenne.modeler.editor.dbimport.DbImportTree;
@@ -62,14 +63,54 @@ public class ColorTreeRenderer extends DbImportTreeCellRenderer {
             return this;
         }
 
-        Node<?> path = getLogicalTreeNode();
-        if(path == null) {
+        Node<?> logicalTreeNode = getLogicalTreeNode();
+        if(logicalTreeNode == null) {
             return this;
         }
-        Status status = path.getStatus(reverseEngineeringTree.getReverseEngineering());
+
+        Status status = logicalTreeNode.getStatus(reverseEngineeringTree.getReverseEngineering());
+//        ReverseEngineering mask = getConfig();
+//        if (mask != null) {
+//            Status maskStatus = logicalTreeNode.getStatus(mask);
+//            if(maskStatus != status) {
+//                status = maskStatus;
+//            }
+//        }
+
         setForeground(status.getColor());
         return this;
     }
+
+//    private ReverseEngineering getConfig() {
+//        DbImportTreeNode selectedNode = reverseEngineeringTree.getSelectedNode();
+//        if(selectedNode == null) {
+//            return null;
+//        }
+//
+//        ReverseEngineering config = new ReverseEngineering();
+//        if(selectedNode.isCatalog()) {
+//            config.addCatalog((Catalog) selectedNode.getUserObject());
+//        } else if(selectedNode.isSchema()) {
+//            config.addSchema((Schema) selectedNode.getUserObject());
+//        } else if(selectedNode.isIncludeTable()) {
+//            config.addIncludeTable((IncludeTable)selectedNode.getUserObject());
+//        } else if(selectedNode.isExcludeTable()) {
+//            config.addExcludeTable((ExcludeTable)selectedNode.getUserObject());
+//        } else if(selectedNode.isIncludeColumn()) {
+//            config.addIncludeColumn((IncludeColumn)selectedNode.getUserObject());
+//        } else if(selectedNode.isExcludeColumn()) {
+//            config.addExcludeColumn((ExcludeColumn)selectedNode.getUserObject());
+//        } else if(selectedNode.isIncludeProcedure()) {
+//            config.addIncludeProcedure((IncludeProcedure)selectedNode.getUserObject());
+//        } else if(selectedNode.isExcludeProcedure()) {
+//            config.addExcludeProcedure((ExcludeProcedure)selectedNode.getUserObject());
+//        } else if(selectedNode.isReverseEngineering()) {
+//            return reverseEngineeringTree.getReverseEngineering(); // TODO: ???
+//        } else {
+//            return null;
+//        }
+//        return config;
+//    }
 
     private Node<?> getLogicalTreeNode() {
         List<Object> path = new ArrayList<>();

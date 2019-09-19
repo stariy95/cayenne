@@ -341,8 +341,10 @@ public class DbImportTree extends JTree {
         this.addTreeExpansionListener(treeExpansionListener);
     }
 
-
     public DbImportTreeNode getSelectedNode() {
+        if(this.getSelectionPath() == null) {
+            return null;
+        }
         return (DbImportTreeNode) this.getSelectionPath().getLastPathComponent();
     }
 
