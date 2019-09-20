@@ -22,9 +22,9 @@ package org.apache.cayenne.modeler.editor.dbimport.tree;
 import java.awt.Color;
 
 enum Status {
-    INCLUDED             (new Color(60,179,113)),
-    EXCLUDED_EXPLICIT    (new Color(178, 0, 0)),
-    EXCLUDED_IMPLICIT    (Color.LIGHT_GRAY);
+    INCLUDE             (new Color(60,179,113)),
+    EXCLUDE_EXPLICIT    (new Color(178, 0, 0)),
+    EXCLUDE_IMPLICIT    (Color.LIGHT_GRAY);
 
     private final Color color;
 

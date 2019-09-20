@@ -37,7 +37,7 @@ abstract class ProcedureNode<T extends Node> extends Node<T> {
     @Override
     public Status getStatus(ReverseEngineering config) {
         Status parentStatus = getParent().getStatus(config);
-        if(parentStatus != Status.INCLUDED) {
+        if(parentStatus != Status.INCLUDE) {
             return parentStatus;
         }
 
@@ -58,26 +58,26 @@ abstract class ProcedureNode<T extends Node> extends Node<T> {
 
     private Status includesProcedure(Collection<IncludeProcedure> includeProcedures, Collection<ExcludeProcedure> excludeProcedures) {
         if(includeProcedures.isEmpty() && excludeProcedures.isEmpty()) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
 
         if(!includeProcedures.isEmpty()) {
             if(includesProcedure(includeProcedures)) {
-                return Status.INCLUDED;
+                return Status.INCLUDE;
             }
         }
 
         if(!excludeProcedures.isEmpty()) {
             if(excludesProcedure(excludeProcedures)) {
-                return Status.EXCLUDED_EXPLICIT;
+                return Status.EXCLUDE_EXPLICIT;
             } else {
                 return includeProcedures.isEmpty()
-                        ? Status.INCLUDED
-                        : Status.EXCLUDED_IMPLICIT;
+                        ? Status.INCLUDE
+                        : Status.EXCLUDE_IMPLICIT;
             }
         }
 
-        return Status.EXCLUDED_IMPLICIT;
+        return Status.EXCLUDE_IMPLICIT;
     }
 
     private boolean includesProcedure(Collection<IncludeProcedure> includeProcedures) {

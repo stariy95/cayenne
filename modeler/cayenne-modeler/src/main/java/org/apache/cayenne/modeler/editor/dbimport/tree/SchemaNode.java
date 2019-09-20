@@ -35,13 +35,13 @@ class SchemaNode extends Node<CatalogNode> {
         // check via parent path
         if(getParent() != null) {
             Status parentStatus = getParent().getStatus(config);
-            if(parentStatus != Status.INCLUDED) {
+            if(parentStatus != Status.INCLUDE) {
                 return parentStatus;
             }
 
             Catalog parentCatalog = getParent().getCatalog(config);
-            if(parentCatalog != null && includesSchema(parentCatalog) == Status.INCLUDED) {
-                return Status.INCLUDED;
+            if(parentCatalog != null && includesSchema(parentCatalog) == Status.INCLUDE) {
+                return Status.INCLUDE;
             }
         }
 
@@ -51,12 +51,12 @@ class SchemaNode extends Node<CatalogNode> {
 
     Status includesSchema(SchemaContainer container) {
         if(container.getSchemas().isEmpty()) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
         if(getSchema(container) != null) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
-        return Status.EXCLUDED_IMPLICIT;
+        return Status.EXCLUDE_IMPLICIT;
     }
 
     Schema getSchema(SchemaContainer container) {

@@ -37,7 +37,7 @@ abstract class TableNode<T extends Node> extends Node<T> {
     @Override
     public Status getStatus(ReverseEngineering config) {
         Status parentStatus = getParent().getStatus(config);
-        if(parentStatus != Status.INCLUDED) {
+        if(parentStatus != Status.INCLUDE) {
             return parentStatus;
         }
 
@@ -58,26 +58,26 @@ abstract class TableNode<T extends Node> extends Node<T> {
 
     Status includesTable(Collection<IncludeTable> includeTables, Collection<ExcludeTable> excludeTables) {
         if(includeTables.isEmpty() && excludeTables.isEmpty()) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
 
         if(!includeTables.isEmpty()) {
             if(getIncludeTable(includeTables) != null) {
-                return Status.INCLUDED;
+                return Status.INCLUDE;
             }
         }
 
         if(!excludeTables.isEmpty()) {
             if(getExcludeTable(excludeTables) != null) {
-                return Status.EXCLUDED_EXPLICIT;
+                return Status.EXCLUDE_EXPLICIT;
             } else {
                 return includeTables.isEmpty()
-                        ? Status.INCLUDED
-                        : Status.EXCLUDED_IMPLICIT;
+                        ? Status.INCLUDE
+                        : Status.EXCLUDE_IMPLICIT;
             }
         }
 
-        return Status.EXCLUDED_IMPLICIT;
+        return Status.EXCLUDE_IMPLICIT;
     }
 
     IncludeTable getIncludeTable(Collection<IncludeTable> includeTables) {

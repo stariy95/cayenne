@@ -37,6 +37,7 @@ import org.apache.cayenne.dbsync.reverse.dbimport.IncludeTable;
 import org.apache.cayenne.dbsync.reverse.dbimport.PatternParam;
 import org.apache.cayenne.dbsync.reverse.dbimport.ReverseEngineering;
 import org.apache.cayenne.dbsync.reverse.dbimport.Schema;
+import org.apache.cayenne.dbsync.reverse.dbimport.SchemaContainer;
 import org.apache.cayenne.modeler.dialog.db.load.DbImportTreeNode;
 import org.apache.cayenne.modeler.editor.dbimport.DbImportTree;
 import org.apache.cayenne.modeler.editor.dbimport.DbImportTreeCellRenderer;
@@ -69,48 +70,128 @@ public class ColorTreeRenderer extends DbImportTreeCellRenderer {
         }
 
         Status status = logicalTreeNode.getStatus(reverseEngineeringTree.getReverseEngineering());
-//        ReverseEngineering mask = getConfig();
-//        if (mask != null) {
-//            Status maskStatus = logicalTreeNode.getStatus(mask);
-//            if(maskStatus != status) {
-//                status = maskStatus;
-//            }
-//        }
+        ReverseEngineering mask = getMask();
+        if (mask != null) {
+            status = logicalTreeNode.getStatus(mask);
+        }
 
         setForeground(status.getColor());
         return this;
     }
 
-//    private ReverseEngineering getConfig() {
-//        DbImportTreeNode selectedNode = reverseEngineeringTree.getSelectedNode();
-//        if(selectedNode == null) {
-//            return null;
-//        }
-//
-//        ReverseEngineering config = new ReverseEngineering();
-//        if(selectedNode.isCatalog()) {
-//            config.addCatalog((Catalog) selectedNode.getUserObject());
-//        } else if(selectedNode.isSchema()) {
-//            config.addSchema((Schema) selectedNode.getUserObject());
-//        } else if(selectedNode.isIncludeTable()) {
-//            config.addIncludeTable((IncludeTable)selectedNode.getUserObject());
-//        } else if(selectedNode.isExcludeTable()) {
-//            config.addExcludeTable((ExcludeTable)selectedNode.getUserObject());
-//        } else if(selectedNode.isIncludeColumn()) {
-//            config.addIncludeColumn((IncludeColumn)selectedNode.getUserObject());
-//        } else if(selectedNode.isExcludeColumn()) {
-//            config.addExcludeColumn((ExcludeColumn)selectedNode.getUserObject());
-//        } else if(selectedNode.isIncludeProcedure()) {
-//            config.addIncludeProcedure((IncludeProcedure)selectedNode.getUserObject());
-//        } else if(selectedNode.isExcludeProcedure()) {
-//            config.addExcludeProcedure((ExcludeProcedure)selectedNode.getUserObject());
-//        } else if(selectedNode.isReverseEngineering()) {
-//            return reverseEngineeringTree.getReverseEngineering(); // TODO: ???
-//        } else {
-//            return null;
-//        }
-//        return config;
-//    }
+    private ReverseEngineering merge(ReverseEngineering config, Object object) {
+        if(mergeAsFilterContainer(config, object)) {
+            return config;
+        } else if(mergeAsSchemaContainer(config, object)) {
+            return config;
+        } else if(object instanceof Catalog) {
+            config.addCatalog((Catalog)object);
+        }
+        return config;
+    }
+
+    private Object merge(Catalog catalog, Object object) {
+        if(mergeAsFilterContainer(catalog, object)) {
+            return catalog;
+        }
+        mergeAsSchemaContainer(catalog, object);
+        return catalog;
+    }
+
+    private Object merge(Schema schema, Object object) {
+        mergeAsFilterContainer(schema, object);
+        return schema;
+    }
+
+    private boolean mergeAsSchemaContainer(SchemaContainer container, Object object) {
+        if(object instanceof Schema) {
+            container.addSchema((Schema)object);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean mergeAsFilterContainer(FilterContainer container, Object object) {
+        if(object instanceof IncludeTable) {
+            container.addIncludeTable((IncludeTable)object);
+            container.addIncludeProcedure(new IncludeProcedure("tmp include to disable include all behaviour"));
+            return true;
+        } else if(object instanceof ExcludeTable) {
+            container.addExcludeTable((ExcludeTable)object);
+            container.addIncludeProcedure(new IncludeProcedure("tmp include to disable include all behaviour"));
+            container.addIncludeTable(new IncludeTable("tmp include to disable include all behaviour"));
+            return true;
+        } else if(object instanceof IncludeProcedure) {
+            container.addIncludeProcedure((IncludeProcedure)object);
+            return true;
+        } else if(object instanceof ExcludeProcedure) {
+            container.addExcludeProcedure((ExcludeProcedure)object);
+            container.addIncludeProcedure(new IncludeProcedure("tmp include to disable include all behaviour"));
+            return true;
+        } else if(object instanceof IncludeColumn) {
+            container.addIncludeColumn((IncludeColumn)object);
+            return true;
+        } else if(object instanceof ExcludeColumn) {
+            container.addExcludeColumn((ExcludeColumn)object);
+            return true;
+        }
+        return false;
+    }
+
+    private IncludeTable merge(IncludeTable includeTable, Object object) {
+        if(object instanceof IncludeColumn) {
+            includeTable.addIncludeColumn((IncludeColumn)object);
+        } else if(object instanceof ExcludeColumn) {
+            includeTable.addExcludeColumn((ExcludeColumn)object);
+            includeTable.addIncludeColumn(new IncludeColumn("tmp include to disable include all behaviour"));
+        }
+        return includeTable;
+    }
+
+    private Object addToMask(Object object, DbImportTreeNode node) {
+        if(object == null) {
+            return node.getUserObject();
+        }
+        String rule = getObjectValue(node.getUserObject());
+        if(node.isCatalog()) {
+            return merge(new Catalog(rule), object);
+        } else if(node.isSchema()) {
+            return merge(new Schema(rule), object);
+        } else if(node.isIncludeTable()) {
+            return merge(new IncludeTable(rule), object);
+        } else if(node.isExcludeTable()) {
+            return new ExcludeTable(rule);
+        } else if(node.isIncludeColumn()) {
+            return new IncludeColumn(rule);
+        } else if(node.isExcludeColumn()) {
+            return new ExcludeColumn(rule);
+        } else if(node.isIncludeProcedure()) {
+            return new IncludeProcedure(rule);
+        } else if(node.isExcludeProcedure()) {
+            return new ExcludeProcedure(rule);
+        }
+
+        return object;
+    }
+
+    private ReverseEngineering getMask() {
+        DbImportTreeNode selectedNode = reverseEngineeringTree.getSelectedNode();
+        if(selectedNode == null) {
+            return null;
+        }
+
+        if(selectedNode.isReverseEngineering()) {
+            return reverseEngineeringTree.getReverseEngineering();
+        }
+
+        ReverseEngineering config = new ReverseEngineering();
+        Object configNode = null;
+        while(!selectedNode.isReverseEngineering()) {
+            configNode = addToMask(configNode, selectedNode);
+            selectedNode = selectedNode.getParent();
+        }
+        return merge(config, configNode);
+    }
 
     private Node<?> getLogicalTreeNode() {
         List<Object> path = new ArrayList<>();

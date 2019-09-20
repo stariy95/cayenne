@@ -38,7 +38,7 @@ class ColumnNode extends Node<TableNode<?>> {
     @Override
     public Status getStatus(ReverseEngineering config) {
         Status parentStatus = getParent().getStatus(config);
-        if (parentStatus != Status.INCLUDED) {
+        if (parentStatus != Status.INCLUDE) {
             return parentStatus;
         }
 
@@ -64,26 +64,26 @@ class ColumnNode extends Node<TableNode<?>> {
 
     private Status includesColumn(Collection<IncludeColumn> includeColumns, Collection<ExcludeColumn> excludeColumns) {
         if (includeColumns.isEmpty() && excludeColumns.isEmpty()) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
 
         if (!includeColumns.isEmpty()) {
             if (getIncludeColumn(includeColumns) != null) {
-                return Status.INCLUDED;
+                return Status.INCLUDE;
             }
         }
 
         if (!excludeColumns.isEmpty()) {
             if (getExcludeColumn(excludeColumns) != null) {
-                return Status.EXCLUDED_EXPLICIT;
+                return Status.EXCLUDE_EXPLICIT;
             } else {
                 return includeColumns.isEmpty()
-                        ? Status.INCLUDED
-                        : Status.EXCLUDED_IMPLICIT;
+                        ? Status.INCLUDE
+                        : Status.EXCLUDE_IMPLICIT;
             }
         }
 
-        return Status.EXCLUDED_IMPLICIT;
+        return Status.EXCLUDE_IMPLICIT;
     }
 
     IncludeColumn getIncludeColumn(Collection<IncludeColumn> includeColumns) {

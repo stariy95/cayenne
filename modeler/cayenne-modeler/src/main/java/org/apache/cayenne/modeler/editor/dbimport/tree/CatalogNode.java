@@ -31,14 +31,14 @@ class CatalogNode extends Node<Node> {
     @Override
     public Status getStatus(ReverseEngineering config) {
         if(config.getCatalogs().isEmpty()) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
 
         if(getCatalog(config) != null) {
-            return Status.INCLUDED;
+            return Status.INCLUDE;
         }
 
-        return Status.EXCLUDED_IMPLICIT;
+        return Status.EXCLUDE_IMPLICIT;
     }
 
     Catalog getCatalog(ReverseEngineering config) {
