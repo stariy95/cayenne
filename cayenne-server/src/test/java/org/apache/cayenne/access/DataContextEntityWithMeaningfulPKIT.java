@@ -204,4 +204,31 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
         pkObj2.setPk("123");
         context.commitChanges();
     }
+
+    @Test
+    public void test_TMP() { // TODO: rename
+        // setup
+        MeaningfulPKTest1 obj = context.newObject(MeaningfulPKTest1.class);
+        obj.setPkAttribute(1000);
+        obj.setDescr("aaa-aaa");
+        context.commitChanges();
+
+        // must be able to set reverse relationship
+        MeaningfulPKDep dep = context.newObject(MeaningfulPKDep.class);
+        dep.setToMeaningfulPK(obj);
+        dep.setPk(10);
+        context.commitChanges();
+
+        // test
+        context.deleteObject(obj);
+
+        MeaningfulPKTest1 obj2 = context.newObject(MeaningfulPKTest1.class);
+        obj2.setPkAttribute(1000);
+        obj2.setDescr("aaa-aaa");
+
+        MeaningfulPKDep dep2 = context.newObject(MeaningfulPKDep.class);
+        dep2.setToMeaningfulPK(obj2);
+        dep2.setPk(10);
+        context.commitChanges();
+    }
 }
