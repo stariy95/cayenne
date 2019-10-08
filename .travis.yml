@@ -18,7 +18,7 @@
 # How to fix: Change build setting or fix code.
 # https://docs.travis-ci.com/user/ci-environment/#Virtualization-environments
 sudo: required
-#group: precise # needed for jdk 7
+group: precise # needed for jdk 7
 
 services:
   - docker
@@ -34,7 +34,7 @@ env:
   - DB_PROFILE=sqlserver-docker
 
 jdk:
-  - openjdk7
+  - oraclejdk7
   - openjdk8
   - openjdk11
 
