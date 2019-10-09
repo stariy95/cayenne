@@ -21,7 +21,7 @@ sudo: required
 group: precise # needed for jdk 7
 
 before_install:
-  - export JAVA_HOME="/usr/lib/jvm/java-7-oracle"; export PATH="${JAVA_HOME}/bin:${PATH}"; fi
+  - export JAVA_HOME="/usr/lib/jvm/java-7-oracle"; export PATH="${JAVA_HOME}/bin:${PATH}"
   - (test ! -d "${JAVA_HOME}" && (curl http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-7u80-linux-x64.tar.gz | sudo tar xz -C /usr/lib/jvm; sudo mv /usr/lib/jvm/jdk1.7.0_80 "${JAVA_HOME}"))
 
 script:
