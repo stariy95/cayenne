@@ -20,29 +20,40 @@
 sudo: required
 group: precise # needed for jdk 7
 
-services:
-  - docker
-
 language: java
-
-env:
-  - DB_PROFILE=hsql
-  - DB_PROFILE=h2
-  - DB_PROFILE=derby
-  - DB_PROFILE=mysql-docker
-  - DB_PROFILE=postgres-docker
-  - DB_PROFILE=sqlserver-docker
-
 jdk:
-  - oraclejdk7 # disable jdk7 as travis seems drop support for it
-  - openjdk8
-  - openjdk11
+  - oraclejdk7
+
+before_install:
+  - if [ "${TRAVIS_JDK_VERSION}" == "oraclejdk7" ]; then export JAVA_HOME="/usr/lib/jvm/java-7-oracle"; export PATH="${JAVA_HOME}/bin:${PATH}"; fi
+  - test "${TRAVIS_JDK_VERSION}" != "oraclejdk7" || (test ! -d "${JAVA_HOME}" && (curl http://ftp.osuosl.org/pub/funtoo/distfiles/oracle-java/jdk-7u80-linux-x64.tar.gz | sudo tar xz -C /usr/lib/jvm; sudo mv /usr/lib/jvm/jdk1.7.0_80 "${JAVA_HOME}"))
 
 script:
-  - travis_wait 30 mvn verify -q -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
-
-# prevent Travis from unneeded "mvn install" run
-install: true
+  - java -version
+#
+#services:
+#  - docker
+#
+#language: java
+#
+#env:
+#  - DB_PROFILE=hsql
+#  - DB_PROFILE=h2
+#  - DB_PROFILE=derby
+#  - DB_PROFILE=mysql-docker
+#  - DB_PROFILE=postgres-docker
+#  - DB_PROFILE=sqlserver-docker
+#
+#jdk:
+#  - oraclejdk7 # disable jdk7 as travis seems drop support for it
+#  - openjdk8
+#  - openjdk11
+#
+#script:
+#  - travis_wait 30 mvn verify -q -DcayenneTestConnection=$DB_PROFILE -DcayenneLogLevel=ERROR
+#
+## prevent Travis from unneeded "mvn install" run
+#install: true
 
 #cache:
 #  directories:
