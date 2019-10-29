@@ -206,11 +206,12 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
     }
 
     @Test
-    public void test_TMP() { // TODO: rename
+    @Ignore("FK constraint will fail")
+    public void test_MeaningfulPkInsertDeleteCascade() {
         // setup
         MeaningfulPKTest1 obj = context.newObject(MeaningfulPKTest1.class);
         obj.setPkAttribute(1000);
-        obj.setDescr("aaa-aaa");
+        obj.setDescr("aaa");
         context.commitChanges();
 
         // must be able to set reverse relationship
@@ -224,7 +225,7 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
 
         MeaningfulPKTest1 obj2 = context.newObject(MeaningfulPKTest1.class);
         obj2.setPkAttribute(1000);
-        obj2.setDescr("aaa-aaa");
+        obj2.setDescr("bbb");
 
         MeaningfulPKDep dep2 = context.newObject(MeaningfulPKDep.class);
         dep2.setToMeaningfulPK(obj2);
