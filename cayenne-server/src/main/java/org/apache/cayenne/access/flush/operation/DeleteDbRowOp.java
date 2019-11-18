@@ -28,11 +28,22 @@ import org.apache.cayenne.map.DbEntity;
  */
 public class DeleteDbRowOp extends BaseDbRowOp implements DbRowOpWithQualifier {
 
+    protected ObjectId changeId;
     protected final Qualifier qualifier;
 
     public DeleteDbRowOp(Persistent object, DbEntity entity, ObjectId id) {
         super(object, entity, id);
         qualifier = new Qualifier(this);
+        changeId = id;
+    }
+
+    @Override
+    public ObjectId getChangeId() {
+        return changeId;
+    }
+
+    public void setChangeId(ObjectId changeId) {
+        this.changeId = changeId;
     }
 
     @Override

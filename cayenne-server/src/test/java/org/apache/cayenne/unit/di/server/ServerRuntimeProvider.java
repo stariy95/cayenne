@@ -24,6 +24,8 @@ import java.util.Collections;
 
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.flush.operation.DbRowOpSorter;
+import org.apache.cayenne.access.flush.operation.GraphBasedDbRowOpSorter;
 import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.configuration.server.DataNodeFactory;
 import org.apache.cayenne.configuration.server.ServerModule;
@@ -87,6 +89,7 @@ public class ServerRuntimeProvider implements Provider<ServerRuntime> {
             binder.bind(DataDomain.class).toProvider(ServerCaseDataDomainProvider.class);
             binder.bind(DataNodeFactory.class).to(ServerCaseDataNodeFactory.class);
             binder.bind(UnitDbAdapter.class).toInstance(unitDbAdapter);
+            binder.bind(DbRowOpSorter.class).to(GraphBasedDbRowOpSorter.class);
 
             ServerModule.contributeProperties(binder)
                     // Use soft references instead of default weak.

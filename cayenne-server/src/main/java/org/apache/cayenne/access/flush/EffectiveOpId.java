@@ -38,12 +38,22 @@ public class EffectiveOpId {
     private final ObjectId id;
 
     public EffectiveOpId(ObjectId id) {
+        this(id.getEntityName(), id);
+    }
+
+    public EffectiveOpId(String entityName, ObjectId id) {
         this.id = id;
-        this.entityName = id.getEntityName();
-        this.snapshot = new HashMap<>(id.getIdSnapshot());
-        this.snapshot.entrySet().forEach(entry -> {
-            if(entry.getValue() instanceof Supplier) {
-                entry.setValue(((Supplier) entry.getValue()).get());
+        this.entityName = entityName;
+        Map<String, Object> idSnapshot = id.getIdSnapshot();
+        this.snapshot = new HashMap<>(idSnapshot.size());
+        idSnapshot.forEach((key, value) -> {
+            if(value instanceof Supplier) {
+                value = ((Supplier) value).get();
+                if(value != null) {
+                    this.snapshot.put(key, value);
+                }
+            } else {
+                this.snapshot.put(key, value);
             }
         });
     }
@@ -57,9 +67,10 @@ public class EffectiveOpId {
 
         if(id == that.id) return true;
 
-        if(snapshot.isEmpty()) {
-            return false;
-        }
+        // TODO:
+//        if(snapshot.isEmpty()) {
+//            return false;
+//        }
 
         if (!entityName.equals(that.entityName)) return false;
         return snapshot.equals(that.snapshot);
