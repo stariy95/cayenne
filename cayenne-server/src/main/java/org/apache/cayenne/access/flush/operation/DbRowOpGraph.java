@@ -92,14 +92,14 @@ class DbRowOpGraph {
 		});
 
 		while (!zeroDegree.isEmpty()) {
-			DbRowOp v = zeroDegree.pop();
+			DbRowOp v = zeroDegree.removeFirst();
 			result.push(v);
 
 			neighbors.get(v).forEach(neighbor ->
 					degree.computeIfPresent(neighbor, (k, oldValue) -> {
 						int newValue = --oldValue;
 						if(newValue == 0) {
-							zeroDegree.push(neighbor);
+							zeroDegree.addLast(neighbor);
 						}
 						return newValue;
 					})

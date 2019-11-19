@@ -20,24 +20,30 @@
 package org.apache.cayenne.access.flush.operation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectId;
+import org.apache.cayenne.Persistent;
 import org.apache.cayenne.QueryResponse;
 import org.apache.cayenne.access.DataDomain;
+import org.apache.cayenne.access.ObjectStore;
 import org.apache.cayenne.access.flush.EffectiveOpId;
 import org.apache.cayenne.di.Inject;
 import org.apache.cayenne.di.Provider;
 import org.apache.cayenne.exp.parser.ASTDbPath;
+import org.apache.cayenne.graph.GraphManager;
 import org.apache.cayenne.map.DbEntity;
-import org.apache.cayenne.map.DbJoin;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.query.ObjectIdQuery;
+import org.apache.cayenne.util.SingleEntryMap;
 
 /**
  * Db operation sorted that builds dependency graph and uses topological sort to get final order.
@@ -100,9 +106,10 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
 
         // build index op by ID
         Map<EffectiveOpId, List<DbRowOp>> indexById = new HashMap<>(dbRows.size());
-        dbRows.forEach(op -> {
-            indexById.computeIfAbsent(new EffectiveOpId(op.getEntity().getName(), op.getChangeId()), id -> new ArrayList<>(2)).add(op);
-        });
+        dbRows.forEach(op -> indexById
+                .computeIfAbsent(effectiveIdFor(op), id -> new ArrayList<>(2))
+                .add(op)
+        );
 
         // build ops dependency graph
         DbRowOpGraph graph = new DbRowOpGraph();
@@ -117,93 +124,120 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
         return sortedOps;
     }
 
-    private void processMeaningfulIds(Map<EffectiveOpId, List<DbRowOp>> indexById, DbRowOpGraph graph, DbRowOp op) {
-        // get graph edges from same ID operations, for such operations insert should depend on delete
-        indexById.get(new EffectiveOpId(op.getEntity().getName(), op.getChangeId())).forEach(sameIdOp -> {
-            if(op != sameIdOp) {
-                DbRowOpType sameIdOpType = sameIdOp.accept(rowOpTypeVisitor);
-                if(sameIdOpType == DbRowOpType.DELETE) {
-                    graph.add(op, sameIdOp);
-                }
-            }
-        });
-    }
-
     private void processRelationships(Map<EffectiveOpId, List<DbRowOp>> indexByDbId, DbRowOpGraph graph, DbRowOp op) {
         // get graph edges for reflexive relationships
-        relationships.getOrDefault(op.getEntity(), Collections.emptyList()).forEach(relationship -> {
-            EffectiveOpId parentOpId = getParentOpId(op, relationship);
-            if(parentOpId == null) {
+        DbRowOpType opType = op.accept(rowOpTypeVisitor);
+        relationships.getOrDefault(op.getEntity(), Collections.emptyList()).forEach(relationship ->
+            getParentsOpId(op, relationship).forEach(parentOpId ->
+                indexByDbId.getOrDefault(parentOpId, Collections.emptyList()).forEach(parentOp -> {
+                    if(op == parentOp) {
+                        return;
+                    }
+                    DbRowOpType parentOpType = parentOp.accept(rowOpTypeVisitor);
+                    if(opType == DbRowOpType.DELETE || parentOpType == DbRowOpType.DELETE) {
+                        graph.add(parentOp, op);
+                    } else {
+                        graph.add(op, parentOp);
+                    }
+                })
+            )
+        );
+    }
+
+    private void processMeaningfulIds(Map<EffectiveOpId, List<DbRowOp>> indexById, DbRowOpGraph graph, DbRowOp op) {
+        // get graph edges from same ID operations, for such operations delete depends on other operations
+        indexById.get(effectiveIdFor(op)).forEach(sameIdOp -> {
+            if(op == sameIdOp) {
                 return;
             }
-            indexByDbId.getOrDefault(parentOpId, Collections.emptyList()).forEach(parentOp -> {
-                if(parentOp == op) {
-                    return;
-                }
-                graph.add(op, parentOp);
-            });
+            DbRowOpType sameIdOpType = sameIdOp.accept(rowOpTypeVisitor);
+            if(sameIdOpType == DbRowOpType.DELETE) {
+                graph.add(op, sameIdOp);
+            }
         });
     }
 
-    private EffectiveOpId getParentOpId(DbRowOp op, DbRelationship relationship) {
-        Map<String, Object> opSnapshot = op.accept(snapshotVisitor);
-        if(opSnapshot == null) {
-            return null;
-        }
+    private Collection<EffectiveOpId> getParentsOpId(DbRowOp op, DbRelationship relationship) {
+        return op.accept(snapshotVisitor).stream()
+                .map(snapshot -> this.effectiveIdFor(relationship, snapshot))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 
-        Map<String, Object> idMap;
+    private EffectiveOpId effectiveIdFor(DbRowOp op) {
+        return new EffectiveOpId(op.getEntity().getName(), op.getChangeId());
+    }
+
+    private EffectiveOpId effectiveIdFor(DbRelationship relationship, Map<String, Object> opSnapshot) {
         int len = relationship.getJoins().size();
-        if (len == 1) {
-            // optimize for the most common single column join
-            DbJoin join = relationship.getJoins().get(0);
+        Map<String, Object> idMap = len == 1
+                ? new SingleEntryMap<>(relationship.getJoins().get(0).getTargetName())
+                : new HashMap<>(len);
+        relationship.getJoins().forEach(join -> {
             Object value = opSnapshot.get(join.getSourceName());
             if(value == null) {
-                return null;
+                return;
             }
-            idMap = Collections.singletonMap(join.getTargetName(), value);
-        } else {
-            // general case
-            idMap = new HashMap<>(len);
-            for(DbJoin join : relationship.getJoins()) {
-                Object value = opSnapshot.get(join.getSourceName());
-                if(value == null) {
-                    break;
-                }
-                idMap.put(join.getTargetName(), value);
-            }
-            // no full id
-            if(idMap.size() != len) {
-                return null;
-            }
+            idMap.put(join.getTargetName(), value);
+        });
+        if(idMap.size() != len) {
+            return null;
         }
-
-        // TODO: can optimize map usage here
         return new EffectiveOpId(ObjectId.of(relationship.getTargetEntityName(), idMap));
     }
 
-    private static class DbRowOpSnapshotVisitor implements DbRowOpVisitor<Map<String, Object>> {
+    private static class DbRowOpSnapshotVisitor implements DbRowOpVisitor<Collection<Map<String, Object>>> {
 
         @Override
-        public Map<String, Object> visitUpdate(UpdateDbRowOp dbRow) {
-            return dbRow.getValues().getSnapshot();
+        public Collection<Map<String, Object>> visitInsert(InsertDbRowOp dbRow) {
+            return Collections.singletonList(dbRow.getValues().getSnapshot());
         }
 
         @Override
-        public Map<String, Object> visitInsert(InsertDbRowOp dbRow) {
-            return dbRow.getValues().getSnapshot();
-        }
-
-        @Override
-        public Map<String, Object> visitDelete(DeleteDbRowOp dbRow) {
+        public Collection<Map<String, Object>> visitUpdate(UpdateDbRowOp dbRow) {
+            List<Map<String, Object>> result;
+            Map<String, Object> updatedSnapshot = dbRow.getValues().getSnapshot();
             if(dbRow.getChangeId().getEntityName().startsWith(ASTDbPath.DB_PREFIX)) {
-                return null;
+                return Collections.singletonList(updatedSnapshot);
             }
-            ObjectIdQuery query = new ObjectIdQuery(dbRow.getChangeId(), true, ObjectIdQuery.CACHE);
-            QueryResponse response = dbRow.getObject().getObjectContext().getChannel().onQuery(null, query);
+            result = new ArrayList<>(2);
+            // get updated state from operation
+            result.add(updatedSnapshot);
+            // get previous state from cache, but only for update attributes
+            Map<String, Object> cachedSnapshot = getCachedSnapshot(dbRow.getObject());
+            cachedSnapshot.entrySet().forEach(entry -> {
+                if(!updatedSnapshot.containsKey(entry.getKey())) {
+                    entry.setValue(null);
+                }
+            });
+            result.add(cachedSnapshot);
+            return result;
+        }
+
+        @Override
+        public Collection<Map<String, Object>> visitDelete(DeleteDbRowOp dbRow) {
+            Map<String, Object> cachedSnapshot = getCachedSnapshot(dbRow.getObject());
+            if(dbRow.getChangeId().getEntityName().startsWith(ASTDbPath.DB_PREFIX)) {
+                GraphManager graphManager = dbRow.getObject().getObjectContext().getGraphManager();
+                // merge cached snapshot with flattened IDs
+                if(graphManager instanceof ObjectStore) {
+                    ObjectStore store = (ObjectStore)graphManager;
+                    store.getFlattenedIds(dbRow.getObject().getObjectId()).forEach(flattenedId -> {
+                        cachedSnapshot.putAll(flattenedId.getIdSnapshot());
+                    });
+                }
+            }
+            cachedSnapshot.putAll(dbRow.getQualifier().getSnapshot());
+            return Collections.singletonList(cachedSnapshot);
+        }
+
+        private Map<String, Object> getCachedSnapshot(Persistent object) {
+            ObjectIdQuery query = new ObjectIdQuery(object.getObjectId(), true, ObjectIdQuery.CACHE);
+            QueryResponse response = object.getObjectContext().getChannel().onQuery(null, query);
             @SuppressWarnings("unchecked")
-            List<DataRow> result = (List<DataRow>)response.firstList();
+            List<DataRow> result = (List<DataRow>) response.firstList();
             if (result == null || result.size() == 0) {
-                return null;
+                return Collections.emptyMap();
             }
             return result.get(0);
         }
