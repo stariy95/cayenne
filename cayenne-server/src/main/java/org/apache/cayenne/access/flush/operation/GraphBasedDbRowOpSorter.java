@@ -57,7 +57,6 @@ import org.apache.cayenne.util.SingleEntryMap;
 public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
 
     private final DbRowOpTypeVisitor rowOpTypeVisitor = new DbRowOpTypeVisitor();
-    private final DbRowOpSnapshotVisitor snapshotVisitor = new DbRowOpSnapshotVisitor();
     private final Provider<DataDomain> dataDomainProvider;
 
     private volatile Map<DbEntity, List<DbRelationship>> relationships;
@@ -158,7 +157,7 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
     }
 
     private Collection<EffectiveOpId> getParentsOpId(DbRowOp op, DbRelationship relationship) {
-        return op.accept(snapshotVisitor).stream()
+        return op.accept(new DbRowOpSnapshotVisitor(relationship)).stream()
                 .map(snapshot -> this.effectiveIdFor(relationship, snapshot))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -187,6 +186,12 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
     }
 
     private static class DbRowOpSnapshotVisitor implements DbRowOpVisitor<Collection<Map<String, Object>>> {
+
+        private final DbRelationship relationship;
+
+        private DbRowOpSnapshotVisitor(DbRelationship relationship) {
+            this.relationship = relationship;
+        }
 
         @Override
         public Collection<Map<String, Object>> visitInsert(InsertDbRowOp dbRow) {
@@ -217,15 +222,21 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
         @Override
         public Collection<Map<String, Object>> visitDelete(DeleteDbRowOp dbRow) {
             Map<String, Object> cachedSnapshot = getCachedSnapshot(dbRow.getObject());
-            if(dbRow.getChangeId().getEntityName().startsWith(ASTDbPath.DB_PREFIX)) {
-                GraphManager graphManager = dbRow.getObject().getObjectContext().getGraphManager();
-                // merge cached snapshot with flattened IDs
-                if(graphManager instanceof ObjectStore) {
-                    ObjectStore store = (ObjectStore)graphManager;
-                    store.getFlattenedIds(dbRow.getObject().getObjectId()).forEach(flattenedId -> {
-                        cachedSnapshot.putAll(flattenedId.getIdSnapshot());
+
+            // check and merge flattened IDs snapshots
+            GraphManager graphManager = dbRow.getObject().getObjectContext().getGraphManager();
+            if(graphManager instanceof ObjectStore) {
+                ObjectStore store = (ObjectStore)graphManager;
+                store.getFlattenedIds(dbRow.getObject().getObjectId()).forEach(flattenedId -> {
+                    // map values of flattened ids from target to source
+                    Map<String, Object> idSnapshot = flattenedId.getIdSnapshot();
+                    relationship.getJoins().forEach(join -> {
+                        Object value = idSnapshot.get(join.getTargetName());
+                        if(value != null) {
+                            cachedSnapshot.put(join.getSourceName(), value);
+                        }
                     });
-                }
+                });
             }
             cachedSnapshot.putAll(dbRow.getQualifier().getSnapshot());
             return Collections.singletonList(cachedSnapshot);
@@ -239,7 +250,7 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
             if (result == null || result.size() == 0) {
                 return Collections.emptyMap();
             }
-            return result.get(0);
+            return new HashMap<>(result.get(0));
         }
     }
 
