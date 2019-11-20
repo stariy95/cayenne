@@ -47,12 +47,10 @@ public class EffectiveOpId {
         Map<String, Object> idSnapshot = id.getIdSnapshot();
         this.snapshot = new HashMap<>(idSnapshot.size());
         idSnapshot.forEach((key, value) -> {
-            if(value instanceof Supplier) {
+            while(value instanceof Supplier) {
                 value = ((Supplier) value).get();
-                if(value != null) {
-                    this.snapshot.put(key, value);
-                }
-            } else {
+            }
+            if(value != null) {
                 this.snapshot.put(key, value);
             }
         });
