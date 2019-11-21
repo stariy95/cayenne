@@ -266,6 +266,7 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
             if (result == null || result.size() == 0) {
                 return Collections.emptyMap();
             }
+            // copy snapshot as we can modify it later
             return new HashMap<>(result.get(0));
         }
     }
