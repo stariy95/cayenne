@@ -205,7 +205,6 @@ public class DataContextEntityWithMeaningfulPKIT extends ServerCase {
     }
 
     @Test
-    @Ignore("FK constraint will fail")
     public void test_MeaningfulPkInsertDeleteCascade() {
         // setup
         MeaningfulPKTest1 obj = context.newObject(MeaningfulPKTest1.class);

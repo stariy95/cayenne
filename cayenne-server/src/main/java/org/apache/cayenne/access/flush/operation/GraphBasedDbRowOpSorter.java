@@ -133,10 +133,26 @@ public class GraphBasedDbRowOpSorter implements DbRowOpSorter {
                         return;
                     }
                     DbRowOpType parentOpType = parentOp.accept(rowOpTypeVisitor);
-                    if(opType == DbRowOpType.DELETE || parentOpType == DbRowOpType.DELETE) {
-                        graph.add(parentOp, op);
-                    } else {
-                        graph.add(op, parentOp);
+                    // 1. Our insert can depend on others insert or update
+                    // 2. Our update can depend on others insert or update, or others delete can depend on our update
+                    // 3. Others delete can depend on our delete
+                    switch (opType) {
+                        case INSERT:
+                            if(parentOpType != DbRowOpType.DELETE) {
+                                graph.add(op, parentOp);
+                            }
+                            break;
+                        case UPDATE:
+                            if(parentOpType != DbRowOpType.DELETE) {
+                                graph.add(op, parentOp);
+                            } else {
+                                graph.add(parentOp, op);
+                            }
+                            break;
+                        case DELETE:
+                            if(parentOpType == DbRowOpType.DELETE) {
+                                graph.add(parentOp, op);
+                            }
                     }
                 })
             )
