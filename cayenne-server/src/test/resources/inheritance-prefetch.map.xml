@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-map xmlns="http://cayenne.apache.org/schema/10/modelMap"
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://cayenne.apache.org/schema/10/modelMap https://cayenne.apache.org/schema/10/modelMap.xsd"
+	 project-version="10">
+	<property name="defaultPackage" value="org.apache.cayenne.testdo.inheritance_prefetch"/>
+	<db-entity name="IP_DEP1">
+		<db-attribute name="ID" type="INTEGER" isPrimaryKey="true" isMandatory="true"/>
+		<db-attribute name="NAME" type="VARCHAR" length="255"/>
+	</db-entity>
+	<db-entity name="IP_DEP2">
+		<db-attribute name="ID" type="INTEGER" isPrimaryKey="true" isMandatory="true"/>
+		<db-attribute name="NAME" type="VARCHAR" length="255"/>
+	</db-entity>
+	<db-entity name="IP_ROOT">
+		<db-attribute name="DEP1_ID" type="INTEGER"/>
+		<db-attribute name="DEP2_ID" type="INTEGER"/>
+		<db-attribute name="ID" type="INTEGER" isPrimaryKey="true" isMandatory="true"/>
+		<db-attribute name="NAME" type="VARCHAR" length="255"/>
+		<db-attribute name="SUB2_FIELD" type="VARCHAR" length="255"/>
+		<db-attribute name="TYPE" type="INTEGER" isMandatory="true"/>
+	</db-entity>
+	<obj-entity name="Dep1" className="org.apache.cayenne.testdo.inheritance_prefetch.Dep1" dbEntityName="IP_DEP1">
+		<obj-attribute name="name" type="java.lang.String" db-attribute-path="NAME"/>
+	</obj-entity>
+	<obj-entity name="Dep2" className="org.apache.cayenne.testdo.inheritance_prefetch.Dep2" dbEntityName="IP_DEP2">
+		<obj-attribute name="name" type="java.lang.String" db-attribute-path="NAME"/>
+	</obj-entity>
+	<obj-entity name="Root" className="org.apache.cayenne.testdo.inheritance_prefetch.Root" dbEntityName="IP_ROOT">
+		<qualifier><![CDATA[type = 0]]></qualifier>
+		<obj-attribute name="name" type="java.lang.String" db-attribute-path="NAME"/>
+		<obj-attribute name="type" type="int" db-attribute-path="TYPE"/>
+	</obj-entity>
+	<obj-entity name="Sub1" superEntityName="Root" className="org.apache.cayenne.testdo.inheritance_prefetch.Sub1">
+		<qualifier><![CDATA[type = 1]]></qualifier>
+	</obj-entity>
+	<obj-entity name="Sub2" superEntityName="Root" className="org.apache.cayenne.testdo.inheritance_prefetch.Sub2">
+		<qualifier><![CDATA[type = 2]]></qualifier>
+		<obj-attribute name="field" type="java.lang.String" db-attribute-path="SUB2_FIELD"/>
+	</obj-entity>
+	<db-relationship name="roots" source="IP_DEP1" target="IP_ROOT" toMany="true">
+		<db-attribute-pair source="ID" target="DEP1_ID"/>
+	</db-relationship>
+	<db-relationship name="roots" source="IP_DEP2" target="IP_ROOT" toMany="true">
+		<db-attribute-pair source="ID" target="DEP2_ID"/>
+	</db-relationship>
+	<db-relationship name="dep1" source="IP_ROOT" target="IP_DEP1">
+		<db-attribute-pair source="DEP1_ID" target="ID"/>
+	</db-relationship>
+	<db-relationship name="dep2" source="IP_ROOT" target="IP_DEP2">
+		<db-attribute-pair source="DEP2_ID" target="ID"/>
+	</db-relationship>
+	<obj-relationship name="roots" source="Dep1" target="Root" deleteRule="Deny" db-relationship-path="roots"/>
+	<obj-relationship name="subs" source="Dep2" target="Sub2" deleteRule="Deny" db-relationship-path="roots"/>
+	<obj-relationship name="dep1" source="Root" target="Dep1" deleteRule="Nullify" db-relationship-path="dep1"/>
+	<obj-relationship name="dep2" source="Sub2" target="Dep2" deleteRule="Nullify" db-relationship-path="dep2"/>
+	<cgen xmlns="http://cayenne.apache.org/schema/10/cgen">
+		<destDir>..\java</destDir>
+		<mode>entity</mode>
+		<template>templates/v4_1/subclass.vm</template>
+		<superTemplate>templates/v4_1/superclass.vm</superTemplate>
+		<outputPattern>*.java</outputPattern>
+		<makePairs>true</makePairs>
+		<usePkgPath>true</usePkgPath>
+		<overwrite>false</overwrite>
+		<createPropertyNames>false</createPropertyNames>
+		<createPKProperties>false</createPKProperties>
+		<client>false</client>
+	</cgen>
+</data-map>
