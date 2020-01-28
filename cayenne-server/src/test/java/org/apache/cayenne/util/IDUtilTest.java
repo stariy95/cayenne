@@ -20,11 +20,16 @@
 
 package org.apache.cayenne.util;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.cayenne.access.types.ByteArrayTypeTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -34,7 +39,7 @@ public class IDUtilTest {
     @Test
     public void testPseudoUniqueByteSequence1() throws Exception {
         try {
-            IDUtil.pseudoUniqueByteSequence(10);
+            IDUtil.pseudoUniqueByteSequence(6);
             fail("must throw an exception on short sequences");
         } catch (IllegalArgumentException ex) {
             // expected
@@ -68,4 +73,33 @@ public class IDUtilTest {
         assertEquals(123, byte123.length);
     }
 
+    @Test
+    public void testUniqueness() {
+        Set<Key> keys = new HashSet<>();
+        for(int i=0; i<100000; i++) {
+            assertTrue(keys.add(new Key(IDUtil.pseudoUniqueByteSequence8())));
+        }
+    }
+
+    static class Key {
+        final byte[] data;
+
+        Key(byte[] data) {
+            this.data = data;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Key key = (Key) o;
+            return Arrays.equals(data, key.data);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(data);
+        }
+    }
 }
