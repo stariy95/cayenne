@@ -45,6 +45,7 @@ CAY-2570 Use MySQL adapter for latest versions of MariaDB
 CAY-2571 DataDomainFlushAction redesign
 CAY-2579 Review and possibly relax usage of readonly flag of ObjRelationship
 
+
 Bug Fixes:
 
 CAY-2019 Optimistic locking always fails on CRYPTO columns
