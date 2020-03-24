@@ -19,6 +19,7 @@
 
 package org.apache.cayenne.remote.hessian;
 
+import com.caucho.hessian.io.FieldDeserializer2Factory;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.util.PersistentObjectList;
 import org.apache.cayenne.util.PersistentObjectMap;
@@ -50,14 +51,14 @@ public class ClientSerializerFactory extends AbstractSerializerFactory {
         //turns out Hessian uses its own (incorrect) serialization mechanism for maps
         if (PersistentObjectMap.class.isAssignableFrom(cl)) {
             if (mapDeserializer == null) {
-                mapDeserializer = new JavaDeserializer(cl);
+                mapDeserializer = new JavaDeserializer(cl, FieldDeserializer2Factory.create());
             }
             return mapDeserializer;
         }
         
         if (PersistentObjectList.class.isAssignableFrom(cl)) {
             if (listDeserializer == null) {
-                listDeserializer = new JavaDeserializer(cl);
+                listDeserializer = new JavaDeserializer(cl, FieldDeserializer2Factory.create());
             }
             return listDeserializer;
         }

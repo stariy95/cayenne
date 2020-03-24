@@ -20,9 +20,11 @@ package org.apache.cayenne.configuration.rop.server;
 
 import org.apache.cayenne.configuration.Constants;
 import org.apache.cayenne.di.Binder;
+import org.apache.cayenne.di.ListBuilder;
 import org.apache.cayenne.di.MapBuilder;
 import org.apache.cayenne.di.Module;
 import org.apache.cayenne.remote.RemoteService;
+import org.apache.cayenne.rop.ROPConstants;
 import org.apache.cayenne.rop.ROPSerializationService;
 import org.apache.cayenne.rop.ServerHessianSerializationServiceProvider;
 import org.apache.cayenne.rop.ServerHttpRemoteService;
@@ -46,15 +48,20 @@ public class ROPServerModule implements Module {
         return binder.bindMap(String.class, Constants.SERVER_ROP_EVENT_BRIDGE_PROPERTIES_MAP);
     }
 
+    public static ListBuilder<String> contributeSerializationWhitelist(Binder binder) {
+        return binder.bindList(String.class, ROPConstants.SERIALIZATION_WHITELIST);
+    }
+
     public ROPServerModule(Map<String, String> eventBridgeProperties) {
         this.eventBridgeProperties = eventBridgeProperties;
     }
 
     public void configure(Binder binder) {
-
+        contributeSerializationWhitelist(binder);
         MapBuilder<String> mapBuilder = contributeROPBridgeProperties(binder);
-        mapBuilder.putAll(eventBridgeProperties);
-
+        if(eventBridgeProperties != null) {
+            mapBuilder.putAll(eventBridgeProperties);
+        }
         binder.bind(RemoteService.class).to(ServerHttpRemoteService.class);
 		binder.bind(ROPSerializationService.class).toProvider(ServerHessianSerializationServiceProvider.class);
     }
