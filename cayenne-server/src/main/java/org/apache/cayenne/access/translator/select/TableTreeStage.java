@@ -25,7 +25,6 @@ import java.util.function.Function;
 import org.apache.cayenne.access.sqlbuilder.ExpressionNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.JoinNodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
-import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.parser.ASTDbPath;
@@ -98,10 +97,10 @@ class TableTreeStage implements TranslationStage {
         return expressionNodeBuilder;
     }
 
-    final class ExpressionTransformer implements Function<Object, Object> {
+    static final class ExpressionTransformer implements Function<Object, Object> {
 
-        private PathComponents attributePath;
-        private DbRelationship dbRelationship;
+        private final PathComponents attributePath;
+        private final DbRelationship dbRelationship;
 
         ExpressionTransformer(TableTreeNode tableTreeNode) {
             this.attributePath = tableTreeNode.getAttributePath();
@@ -117,7 +116,7 @@ class TableTreeStage implements TranslationStage {
                 Expression resultExpression = ExpressionFactory.dbPathExp(expressionPath);
 
                 if(prefix.isEmpty() ||
-                        (!expressionPath.contains(dbRelationship.getName()) &&
+                        (!expressionPath.contains(dbRelationship.getName()) && // TODO: suspicious check ...
                                 attributePath.getParent().isEmpty())) {
                     return new ASTJoinPath((ASTDbPath) resultExpression, null);
                 } else {

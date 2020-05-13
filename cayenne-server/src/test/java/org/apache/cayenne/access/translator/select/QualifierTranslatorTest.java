@@ -41,6 +41,9 @@ import org.apache.cayenne.access.sqlbuilder.sqltree.ValueNode;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.parser.ASTAsterisk;
+import org.apache.cayenne.exp.parser.ASTDbPath;
+import org.apache.cayenne.exp.parser.ASTEqual;
+import org.apache.cayenne.exp.parser.ASTJoinPath;
 import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.map.DataMap;
 import org.apache.cayenne.map.DbAttribute;
@@ -492,6 +495,39 @@ public class QualifierTranslatorTest {
         assertEquals(2, or.getChildrenCount());
         assertThat(or.getChild(0), instanceOf(ColumnNode.class));
         assertThat(or.getChild(1), instanceOf(ValueNode.class));
+    }
+
+    @Test
+    public void translateJoinPath() {
+        ASTJoinPath path = new ASTJoinPath(new ASTDbPath("a"), "");
+        Node node = translator.translate(path);
+        assertNotNull(node);
+        assertEquals(0, node.getChildrenCount());
+
+        assertThat(node, instanceOf(ColumnNode.class));
+        ColumnNode columnNode = (ColumnNode)node;
+        assertEquals("t0", columnNode.getTable());
+        assertEquals("a", columnNode.getColumn());
+        assertNull(columnNode.getAlias());
+    }
+
+    @Test
+    public void translateJoinPathEquals() {
+        ASTJoinPath path1 = new ASTJoinPath(new ASTDbPath("a"), "");
+        ASTJoinPath path2 = new ASTJoinPath(new ASTDbPath("b"), "");
+        ASTEqual equal = new ASTEqual();
+        equal.jjtAddChild(path1, 0);
+        path1.jjtSetParent(equal);
+        equal.jjtAddChild(path2, 1);
+        path2.jjtSetParent(path2);
+
+        Node node = translator.translate(equal);
+        assertNotNull(node);
+        assertThat(node, instanceOf(EqualNode.class));
+        EqualNode expressionNode = (EqualNode)node;
+        assertEquals(2, expressionNode.getChildrenCount());
+        assertThat(expressionNode.getChild(0), instanceOf(ColumnNode.class));
+        assertThat(expressionNode.getChild(1), instanceOf(ColumnNode.class));
     }
 
     @Test

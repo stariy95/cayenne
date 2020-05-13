@@ -23,6 +23,7 @@ import javax.swing.AbstractListModel;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.WindowConstants;
 import javax.swing.table.TableColumn;
 import java.awt.Component;
 import java.awt.event.WindowAdapter;

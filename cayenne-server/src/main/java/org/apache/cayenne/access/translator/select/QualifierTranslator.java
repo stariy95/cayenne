@@ -376,7 +376,7 @@ class QualifierTranslator implements TraversalHandler {
         switch (node.getType()) {
             case NOT_IN: case IN: case NOT_BETWEEN: case BETWEEN: case NOT:
             case BITWISE_NOT: case EQUAL_TO: case NOT_EQUAL_TO: case LIKE: case NOT_LIKE:
-            case LIKE_IGNORE_CASE: case NOT_LIKE_IGNORE_CASE: case OBJ_PATH: case DBID_PATH: case DB_PATH:
+            case LIKE_IGNORE_CASE: case NOT_LIKE_IGNORE_CASE: case OBJ_PATH: case DBID_PATH: case DB_PATH: case JOIN_PATH:
             case FUNCTION_CALL: case ADD: case SUBTRACT: case MULTIPLY: case DIVIDE: case NEGATIVE:
             case BITWISE_AND: case BITWISE_LEFT_SHIFT: case BITWISE_OR: case BITWISE_RIGHT_SHIFT: case BITWISE_XOR:
             case OR: case AND: case LESS_THAN: case LESS_THAN_EQUAL_TO: case GREATER_THAN: case GREATER_THAN_EQUAL_TO:
@@ -404,7 +404,13 @@ class QualifierTranslator implements TraversalHandler {
         if(expressionsToSkip.contains(parentNode)) {
             return;
         }
-        if(parentNode.getType() == OBJ_PATH || parentNode.getType() == DB_PATH || parentNode.getType() == DBID_PATH) {
+
+        // skip all variants of paths or they will have phantom null child
+        if(parentNode.getType() == OBJ_PATH
+                || parentNode.getType() == DB_PATH
+                || parentNode.getType() == DBID_PATH
+                || parentNode.getType() == JOIN_PATH
+        ) {
             return;
         }
 

@@ -22,21 +22,21 @@
 		<obj-attribute name="artistName" type="java.lang.String" db-attribute-path="ARTIST_NAME"/>
 	</obj-entity>
 	<obj-entity name="PaintingInfoJoinExp" className="org.apache.cayenne.testdo.join.PaintingInfoJoinExp" dbEntityName="PAINTING_INFO_JOIN_EXP">
-		<obj-attribute name="infoJoinId" type="int" db-attribute-path="INFO_JOIN_ID"/>
 		<obj-attribute name="info" type="java.lang.String" db-attribute-path="INFO"/>
+		<obj-attribute name="infoJoinId" type="int" db-attribute-path="INFO_JOIN_ID"/>
 	</obj-entity>
 	<obj-entity name="PaintingJoinExp" className="org.apache.cayenne.testdo.join.PaintingJoinExp" dbEntityName="PAINTING_JOIN_EXP">
 		<obj-attribute name="paintingJoinId" type="int" db-attribute-path="PAINTING_JOIN_ID"/>
 		<obj-attribute name="paintingName" type="java.lang.String" db-attribute-path="PAINTING_NAME"/>
 	</obj-entity>
 	<db-relationship name="paintings" source="ARTIST_JOIN_EXP" target="PAINTING_JOIN_EXP" toMany="true">
-		<db-join joinExp="length(db:ARTIST_NAME) = length(db:paintings.PAINTING_NAME)"/>
+		<db-join joinExp="length(trim(db:ARTIST_NAME)) = length(trim(db:paintings.PAINTING_NAME))"/>
 	</db-relationship>
 	<db-relationship name="toPainting" source="PAINTING_INFO_JOIN_EXP" target="PAINTING_JOIN_EXP">
 		<db-join joinExp="(sqrt(db:INFO_JOIN_ID) = sqrt(db:toPainting.PAINTING_JOIN_ID)) and (length(db:INFO) = length(db:toPainting.PAINTING_NAME))"/>
 	</db-relationship>
 	<db-relationship name="toArtist" source="PAINTING_JOIN_EXP" target="ARTIST_JOIN_EXP">
-		<db-join joinExp="length(db:PAINTING_NAME) = length(db:toArtist.ARTIST_NAME)"/>
+		<db-join joinExp="length(trim(db:PAINTING_NAME)) = length(trim(db:toArtist.ARTIST_NAME))"/>
 	</db-relationship>
 	<db-relationship name="paintingInfo" source="PAINTING_JOIN_EXP" target="PAINTING_INFO_JOIN_EXP">
 		<db-join joinExp="sqrt(db:PAINTING_JOIN_ID) = sqrt(db:paintingInfo.INFO_JOIN_ID)"/>
@@ -46,7 +46,7 @@
 	<obj-relationship name="toArtist" source="PaintingJoinExp" target="ArtistJoinExp" deleteRule="Nullify" db-relationship-path="toArtist"/>
 	<obj-relationship name="paintingInfo" source="PaintingJoinExp" target="PaintingInfoJoinExp" deleteRule="Cascade" db-relationship-path="paintingInfo"/>
 	<cgen xmlns="http://cayenne.apache.org/schema/10/cgen">
-		<destDir>../java</destDir>
+		<destDir>..\java</destDir>
 		<mode>entity</mode>
 		<template>templates/v4_1/subclass.vm</template>
 		<superTemplate>templates/v4_1/superclass.vm</superTemplate>

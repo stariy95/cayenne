@@ -192,7 +192,7 @@ public abstract class Expression implements Serializable, XMLSerializable {
 	/**
 	 * @since 4.2
 	 */
-	public static final int JOIN_PATH = 51;
+	public static final int JOIN_PATH = 53;
 
 	protected int type;
 

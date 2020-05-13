@@ -231,6 +231,7 @@ public class ExpressionJoinIT extends ServerCase {
     }
 
     @Test
+    @Deprecated
     public void testSelectQueryWithPrefetch() {
         SelectQuery<ArtistJoinExp> artistSelectQuery = new SelectQuery<>(ArtistJoinExp.class);
         artistSelectQuery.addPrefetch(ArtistJoinExp.PAINTINGS.disjoint());
@@ -340,6 +341,7 @@ public class ExpressionJoinIT extends ServerCase {
     }
 
     @Test
+    @Deprecated
     public void testSelectQueryWithDisjointCompoundPrefetch() {
         SelectQuery<ArtistJoinExp> artistSelectQuery = new SelectQuery<>(ArtistJoinExp.class);
         artistSelectQuery.addPrefetch(ArtistJoinExp.PAINTINGS.disjoint());
