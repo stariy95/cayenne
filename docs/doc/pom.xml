@@ -59,11 +59,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>foundrylogic.vpp</groupId>
-			<artifactId>vpp</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>forms</artifactId>
 		</dependency>

@@ -20,7 +20,6 @@ package org.apache.cayenne.tools;
 
 import java.io.File;
 
-import foundrylogic.vpp.VPPConfig;
 import org.apache.cayenne.configuration.xml.DataChannelMetaData;
 import org.apache.cayenne.dbsync.filter.NamePatternMatcher;
 import org.apache.cayenne.dbsync.reverse.configuration.ToolsModule;
@@ -33,7 +32,6 @@ import org.apache.cayenne.gen.ClientClassGenerationAction;
 import org.apache.cayenne.map.DataMap;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
-import org.apache.velocity.VelocityContext;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -51,10 +49,9 @@ public class CayenneGeneratorTask extends CayenneTask {
      * @since 4.1
      */
     protected String excludeEmbeddablesPattern;
-    protected VPPConfig vppConfig;
 
     protected File map;
-    protected File additionalMaps[];
+    protected File[] additionalMaps;
     protected Boolean client;
     protected File destDir;
     protected String encoding;
@@ -95,11 +92,6 @@ public class CayenneGeneratorTask extends CayenneTask {
     protected String externaltoolconfig;
 
     public CayenneGeneratorTask() {
-    }
-
-    protected VelocityContext getVppContext() {
-        initializeVppConfig();
-        return vppConfig.getVelocityContext();
     }
 
     /**
@@ -406,22 +398,5 @@ public class CayenneGeneratorTask extends CayenneTask {
     public void setExternaltoolconfig(String externaltoolconfig) {
     	this.externaltoolconfig = externaltoolconfig;
     }
-    
-    /**
-     * Provides a <code>VPPConfig</code> object to configure. (Written with createConfig()
-     * instead of addConfig() to avoid run-time dependency on VPP).
-     */
-    public Object createConfig() {
-        this.vppConfig = new VPPConfig();
-        return this.vppConfig;
-    }
 
-    /**
-     * If no VppConfig element specified, use the default one.
-     */
-    private void initializeVppConfig() {
-        if (vppConfig == null) {
-            vppConfig = VPPConfig.getDefaultConfig(getProject());
-        }
-    }
 }
