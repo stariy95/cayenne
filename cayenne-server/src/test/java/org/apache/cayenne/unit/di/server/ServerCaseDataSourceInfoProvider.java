@@ -163,11 +163,11 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
                 container
                         .withUrlParam("useUnicode", "true")
                         .withUrlParam("characterEncoding", "UTF-8")
-                        .withUrlParam("generateSimpleParameterMetadata", "true")
-                        .withUrlParam("useLegacyDatetimeCode", "false")
-                        .withUrlParam("serverTimezone", Calendar.getInstance().getTimeZone().getID())
-                        .withCommand("--character-set-server=utf8mb4")
-                        .withCommand("--collation-server=utf8mb4_unicode_ci");
+                        .withUrlParam("generateSimpleParameterMetadata", "true");
+//                        .withUrlParam("useLegacyDatetimeCode", "false")
+//                        .withUrlParam("serverTimezone", Calendar.getInstance().getTimeZone().getID())
+//                        .withCommand("--character-set-server=utf8mb4")
+//                        .withCommand("--collation-server=utf8mb4_unicode_ci");
                 adapter = MySQLAdapter.class.getName();
                 break;
             case "postgres":
