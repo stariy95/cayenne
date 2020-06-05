@@ -20,17 +20,25 @@ package org.apache.cayenne.unit.di.server;
 
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.conn.DataSourceInfo;
+import org.apache.cayenne.dba.JdbcAdapter;
 import org.apache.cayenne.dba.derby.DerbyAdapter;
 import org.apache.cayenne.dba.h2.H2Adapter;
 import org.apache.cayenne.dba.hsqldb.HSQLDBAdapter;
+import org.apache.cayenne.dba.mysql.MySQLAdapter;
+import org.apache.cayenne.dba.postgres.PostgresAdapter;
 import org.apache.cayenne.dba.sqlite.SQLiteAdapter;
+import org.apache.cayenne.dba.sqlserver.SQLServerAdapter;
 import org.apache.cayenne.di.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -126,6 +134,10 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
             connectionInfo = inMemoryDataSources.get(connectionKey);
         }
 
+        if (connectionInfo == null) {
+            connectionInfo = checkTestContainersDataSource(connectionKey);
+        }
+
         connectionInfo = applyOverrides(connectionInfo);
 
         if (connectionInfo == null) {
@@ -134,6 +146,55 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
 
         logger.info("loaded connection info: " + connectionInfo);
         return connectionInfo;
+    }
+
+    private DataSourceInfo checkTestContainersDataSource(String connectionKey) {
+        // special case for the testcontainers profile
+        if (!connectionKey.endsWith("-tc")) {
+            return null;
+        }
+
+        String db = connectionKey.substring(0, connectionKey.length() - 3);
+        JdbcDatabaseContainer container;
+        String adapter = JdbcAdapter.class.getName();
+        switch (db) {
+            case "mysql":
+                container = new MySQLContainer();
+                container
+                        .withUrlParam("useUnicode", "true")
+                        .withUrlParam("characterEncoding", "UTF-8")
+                        .withUrlParam("generateSimpleParameterMetadata", "true")
+                        .withUrlParam("useLegacyDatetimeCode", "false")
+                        .withUrlParam("serverTimezone", Calendar.getInstance().getTimeZone().getID())
+                        .withCommand("--character-set-server=utf8mb4")
+                        .withCommand("--collation-server=utf8mb4_unicode_ci");
+                adapter = MySQLAdapter.class.getName();
+                break;
+            case "postgres":
+                container = new PostgreSQLContainer();
+                adapter = PostgresAdapter.class.getName();
+                break;
+            case "sqlserver":
+                adapter = SQLServerAdapter.class.getName();
+                // TODO: implement this
+                return null;
+            default:
+                // TODO: could we start some generic container anyway?
+                return null;
+        }
+
+        // To grab properties, should start container first
+        container.start();
+
+        DataSourceInfo sourceInfo = new DataSourceInfo();
+        sourceInfo.setAdapterClassName(adapter);
+        sourceInfo.setUserName(container.getUsername());
+        sourceInfo.setPassword(container.getPassword());
+        sourceInfo.setDataSourceUrl(container.getJdbcUrl());
+        sourceInfo.setJdbcDriver(container.getDriverClassName());
+        sourceInfo.setMinConnections(ConnectionProperties.MIN_CONNECTIONS);
+        sourceInfo.setMaxConnections(ConnectionProperties.MAX_CONNECTIONS);
+        return sourceInfo;
     }
 
     private File connectionPropertiesFile() {

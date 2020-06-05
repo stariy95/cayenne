@@ -40,6 +40,7 @@
         <jacoco.version>0.7.9</jacoco.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<ant.version>1.10.7</ant.version>
+		<testcontainers.version>1.14.3</testcontainers.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -495,6 +496,24 @@
 				<artifactId>geronimo-jms_1.1_spec</artifactId>
 				<version>1.1.1</version>
 				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>mysql</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -1411,6 +1430,43 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<!-- Testcontainers MySQL profile, just adds MySQL driver dependency -->
+			<id>mysql-tc</id>
+			<activation>
+				<property>
+					<name>cayenneTestConnection</name>
+					<value>mysql-tc</value>
+				</property>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>mysql</groupId>
+					<artifactId>mysql-connector-java</artifactId>
+					<version>8.0.20</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<!-- Testcontainers Postgres profile, just adds MySQL driver dependency -->
+			<id>postgres-tc</id>
+			<activation>
+				<property>
+					<name>cayenneTestConnection</name>
+					<value>postgres-tc</value>
+				</property>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.postgresql</groupId>
+					<artifactId>postgresql</artifactId>
+					<version>42.2.12</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
 		<profile>
 			<id>mariadb-docker</id>
 			<activation>
