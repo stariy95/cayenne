@@ -300,7 +300,12 @@ public class MySQLAdapter extends JdbcAdapter {
 	@Override
 	public void createTableAppendColumn(StringBuffer sqlBuffer, DbAttribute column) {
 
-		String[] types = externalTypesForJdbcType(column.getType());
+		int columnType = column.getType();
+		if(columnType == Types.OTHER) {
+			columnType = Types.BLOB;
+		}
+
+		String[] types = externalTypesForJdbcType(columnType);
 		if (types == null || types.length == 0) {
 			String entityName = column.getEntity() != null
 					? column.getEntity().getFullyQualifiedName() : "<null>";

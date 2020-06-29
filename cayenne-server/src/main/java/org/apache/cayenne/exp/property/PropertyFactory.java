@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import org.apache.cayenne.EmbeddableObject;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.Persistent;
+import org.apache.cayenne.dba.types.Json;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.FunctionExpressionFactory;
@@ -413,5 +414,44 @@ public class PropertyFactory {
 
     public static <T extends Number> NumericIdProperty<T> createNumericId(String attribute, String path, String entityName, Class<T> propertyType) {
         return new NumericIdProperty<>(attribute, path, entityName, propertyType);
+    }
+
+    // NumericProperty
+
+    /**
+     * Create Json property
+     *
+     * @param name of the property
+     * @param expression that property will use
+     * @param type type of represented attribute
+     * @param <T> type of represented attribute
+     * @return new property with custom expression
+     */
+    public static <T extends Json> JsonProperty<T> createJson(String name, Expression expression, Class<T> type) {
+        return new JsonProperty<>(name, expression, type);
+    }
+
+    /**
+     * Create Json property
+     *
+     * @param name of the property, will be used as value for path expression
+     * @param type type of represented attribute
+     * @param <T> type of represented attribute
+     * @return new path property
+     */
+    public static <T extends Json> JsonProperty<T> createJson(String name, Class<T> type) {
+        return createJson(name, null, type);
+    }
+
+    /**
+     * Create Json property
+     *
+     * @param expression that property will use
+     * @param type type of represented attribute
+     * @param <T> type of represented attribute
+     * @return new property with custom expression without name
+     */
+    public static <T extends Json> JsonProperty<T> createJson(Expression expression, Class<T> type) {
+        return createJson(null, expression, type);
     }
 }

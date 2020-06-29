@@ -21,15 +21,16 @@ package org.apache.cayenne.dba.postgres;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
-import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ChildProcessor;
 import org.apache.cayenne.access.sqlbuilder.sqltree.FunctionNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LikeNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.LimitOffsetNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
-import org.apache.cayenne.access.sqlbuilder.sqltree.TrimmingColumnNode;
-import org.apache.cayenne.access.translator.select.BaseSQLTreeProcessor;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
+import org.apache.cayenne.access.translator.select.BaseSQLTreeProcessorNew;
 import org.apache.cayenne.dba.postgres.sqltree.PositionFunctionNode;
 import org.apache.cayenne.dba.postgres.sqltree.PostgresExtractFunctionNode;
 import org.apache.cayenne.dba.postgres.sqltree.PostgresLikeNode;
@@ -38,31 +39,29 @@ import org.apache.cayenne.dba.postgres.sqltree.PostgresLimitOffsetNode;
 /**
  * @since 4.2
  */
-public class PostgreSQLTreeProcessor extends BaseSQLTreeProcessor {
+public class PostgreSQLTreeProcessor extends BaseSQLTreeProcessorNew {
 
     private static final Set<String> EXTRACT_FUNCTION_NAMES = new HashSet<>(Arrays.asList(
         "DAY_OF_MONTH", "DAY", "MONTH", "HOUR", "WEEK", "YEAR", "DAY_OF_WEEK", "DAY_OF_YEAR", "MINUTE", "SECOND"
     ));
 
-    @Override
-    protected void onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
-        replaceChild(parent, index, new PostgresLimitOffsetNode(child), false);
+    public PostgreSQLTreeProcessor() {
+        registerProcessor(NodeType.LIMIT_OFFSET,    (ChildProcessor<LimitOffsetNode>)this::onLimitOffsetNode);
+        registerProcessor(NodeType.LIKE,            (ChildProcessor<LikeNode>) this::onLikeNode);
+        registerProcessor(NodeType.FUNCTION,        (ChildProcessor<FunctionNode>) this::onFunctionNode);
     }
 
-    @Override
-    protected void onColumnNode(Node parent, ColumnNode child, int index) {
-        replaceChild(parent, index, new TrimmingColumnNode(child));
+    protected Optional<Node> onLimitOffsetNode(Node parent, LimitOffsetNode child, int index) {
+        return Optional.of(new PostgresLimitOffsetNode(child));
     }
 
-    @Override
-    protected void onLikeNode(Node parent, LikeNode child, int index) {
-        if(child.isIgnoreCase()) {
-            replaceChild(parent, index, new PostgresLikeNode(child.isNot(), child.getEscape()));
-        }
+    protected Optional<Node> onLikeNode(Node parent, LikeNode child, int index) {
+        return child.isIgnoreCase()
+                ? Optional.of(new PostgresLikeNode(child.isNot(), child.getEscape()))
+                : Optional.empty();
     }
 
-    @Override
-    protected void onFunctionNode(Node parent, FunctionNode child, int index) {
+    protected Optional<Node> onFunctionNode(Node parent, FunctionNode child, int index) {
         Node replacement = null;
         String functionName = child.getFunctionName();
         if(EXTRACT_FUNCTION_NAMES.contains(functionName)) {
@@ -75,9 +74,7 @@ public class PostgreSQLTreeProcessor extends BaseSQLTreeProcessor {
             replacement = new PositionFunctionNode(child.getAlias());
         }
 
-        if(replacement != null) {
-            replaceChild(parent, index, replacement);
-        }
+        return Optional.ofNullable(replacement);
     }
 
 }
