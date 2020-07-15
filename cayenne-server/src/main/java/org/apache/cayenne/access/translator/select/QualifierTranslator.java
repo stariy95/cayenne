@@ -404,7 +404,11 @@ class QualifierTranslator implements TraversalHandler {
             return;
         }
 
-        ValueNodeBuilder valueNodeBuilder = value(leaf).attribute(findDbAttribute(parentNode));
+        PathTranslationResult result = findNearestPath(parentNode);
+        ValueNodeBuilder valueNodeBuilder = value(leaf);
+        if(result != null) {
+            valueNodeBuilder.attribute(result.getLastAttribute()).javaType(result.getJavaType());
+        }
         if(parentNode.getType() == Expression.LIST) {
             valueNodeBuilder.array(true);
         }
@@ -414,7 +418,7 @@ class QualifierTranslator implements TraversalHandler {
         nextNode.setParent(currentNode);
     }
 
-    protected DbAttribute findDbAttribute(Expression node) {
+    protected PathTranslationResult findNearestPath(Expression node) {
         if(node.getType() == Expression.LIST) {
             if (node instanceof SimpleNode) {
                 Expression parent = (Expression) ((SimpleNode) node).jjtGetParent();
@@ -428,26 +432,17 @@ class QualifierTranslator implements TraversalHandler {
             return null;
         }
 
-        PathTranslationResult result = null;
         for(int i=0; i<node.getOperandCount(); i++) {
             Object op = node.getOperand(i);
             if(op instanceof ASTObjPath) {
-                result = pathTranslator.translatePath(context.getMetadata().getObjEntity(), ((ASTObjPath) op).getPath());
-                break;
+                return pathTranslator.translatePath(context.getMetadata().getObjEntity(), ((ASTObjPath) op).getPath());
             } else if(op instanceof ASTDbIdPath) {
-                result = pathTranslator.translateIdPath(context.getMetadata().getObjEntity(), ((ASTDbIdPath)op).getPath());
-                break;
+                return pathTranslator.translateIdPath(context.getMetadata().getObjEntity(), ((ASTDbIdPath)op).getPath());
             } else if(op instanceof ASTDbPath) {
-                result = pathTranslator.translatePath(context.getMetadata().getDbEntity(), ((ASTDbPath) op).getPath());
-                break;
+                return pathTranslator.translatePath(context.getMetadata().getDbEntity(), ((ASTDbPath) op).getPath());
             }
         }
-
-        if(result == null) {
-            return null;
-        }
-
-        return result.getLastAttribute();
+        return null;
     }
 
     @Override

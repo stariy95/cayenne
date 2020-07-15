@@ -49,6 +49,11 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
     }
 
     @Override
+    public String getJavaType() {
+        return attribute.getType();
+    }
+
+    @Override
     protected void processNormalAttribute(String next) {
         attribute = fetchAttribute(next);
         if(attribute != null) {
@@ -106,8 +111,7 @@ class ObjPathProcessor extends PathProcessor<ObjEntity> {
         attributes.addAll(result.getDbAttributes());
         attributePaths.addAll(result.getAttributePaths());
         relationship = result.getDbRelationship().orElse(relationship);
-        currentDbPath.delete(0, currentDbPath.length());
-        currentDbPath.append(result.getFinalPath());
+        currentDbPath.delete(0, currentDbPath.length()).append(result.getFinalPath());
     }
 
     protected void processRelationship(ObjRelationship relationship) {

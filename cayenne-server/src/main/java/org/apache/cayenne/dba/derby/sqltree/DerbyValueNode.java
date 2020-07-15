@@ -31,8 +31,8 @@ import org.apache.cayenne.map.DbAttribute;
  */
 public class DerbyValueNode extends ValueNode {
 
-    public DerbyValueNode(Object value, boolean isArray, DbAttribute attribute) {
-        super(value, isArray, attribute);
+    public DerbyValueNode(Object value, boolean isArray, DbAttribute attribute, String javaType) {
+        super(value, isArray, attribute, javaType);
     }
 
     protected void appendStringValue(QuotingAppendable buffer, CharSequence value) {
@@ -46,6 +46,6 @@ public class DerbyValueNode extends ValueNode {
 
     @Override
     public Node copy() {
-        return new DerbyValueNode(getValue(), isArray(), getAttribute());
+        return new DerbyValueNode(getValue(), isArray(), getAttribute(), getJavaType());
     }
 }

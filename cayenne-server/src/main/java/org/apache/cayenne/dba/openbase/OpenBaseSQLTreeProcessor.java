@@ -50,7 +50,7 @@ public class OpenBaseSQLTreeProcessor extends BaseSQLTreeProcessor {
         if(parent.getType() == NodeType.LIKE) {
             if(!((LikeNode)parent).isIgnoreCase() && child.getValue() instanceof CharSequence) {
                 replaceChild(parent, index,
-                        new ValueNode(caseSensitiveLikePattern((CharSequence)child.getValue()), child.isArray(), child.getAttribute()));
+                        new ValueNode(caseSensitiveLikePattern((CharSequence)child.getValue()), child.isArray(), child.getAttribute(), child.getJavaType()));
             }
         }
     }

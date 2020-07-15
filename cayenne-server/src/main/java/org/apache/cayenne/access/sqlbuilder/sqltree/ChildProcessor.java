@@ -28,7 +28,12 @@ import java.util.Optional;
 @FunctionalInterface
 public interface ChildProcessor<T extends Node> {
 
-    ChildProcessor<?> EMPTY = (p,c,i) -> Optional.empty();
+    ChildProcessor<?> EMPTY = (p, c, i) -> Optional.empty();
+
+    @SuppressWarnings("unchecked")
+    static <N extends Node> ChildProcessor<N> empty() {
+        return (ChildProcessor<N>)EMPTY;
+    }
 
     Optional<Node> process(Node parent, T child, int index);
 

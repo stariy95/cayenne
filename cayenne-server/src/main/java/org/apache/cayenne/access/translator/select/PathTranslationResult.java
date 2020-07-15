@@ -35,6 +35,10 @@ interface PathTranslationResult {
 
     String getFinalPath();
 
+    default String getJavaType() {
+        return null;
+    }
+
     Optional<DbRelationship> getDbRelationship();
 
     List<DbAttribute> getDbAttributes();

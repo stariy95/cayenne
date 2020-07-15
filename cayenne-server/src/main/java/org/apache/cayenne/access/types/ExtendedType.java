@@ -84,7 +84,7 @@ public interface ExtendedType<T> {
      * @return
      */
     default ChildProcessor<?> readProcessor() {
-        return ChildProcessor.EMPTY;
+        return ChildProcessor.empty();
     }
 
     /**
@@ -92,6 +92,6 @@ public interface ExtendedType<T> {
      * @return
      */
     default ChildProcessor<?> writeProcessor() {
-        return ChildProcessor.EMPTY;
+        return ChildProcessor.empty();
     }
 }

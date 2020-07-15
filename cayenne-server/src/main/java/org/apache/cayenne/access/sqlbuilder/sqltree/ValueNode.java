@@ -37,12 +37,14 @@ public class ValueNode extends Node {
     private final boolean isArray;
     // Used as hint for type of this value
     private final DbAttribute attribute;
+    private final String javaType;
 
-    public ValueNode(Object value, boolean isArray, DbAttribute attribute) {
+    public ValueNode(Object value, boolean isArray, DbAttribute attribute, String javaType) {
         super(NodeType.VALUE);
         this.value = value;
         this.isArray = isArray;
         this.attribute = attribute;
+        this.javaType = javaType;
     }
 
     public Object getValue() {
@@ -55,6 +57,10 @@ public class ValueNode extends Node {
 
     public boolean isArray() {
         return isArray;
+    }
+
+    public String getJavaType() {
+        return javaType;
     }
 
     @Override
@@ -263,6 +269,6 @@ public class ValueNode extends Node {
 
     @Override
     public Node copy() {
-        return new ValueNode(value, isArray, attribute);
+        return new ValueNode(value, isArray, attribute, javaType);
     }
 }

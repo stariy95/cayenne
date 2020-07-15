@@ -34,6 +34,8 @@ public class ValueNodeBuilder implements NodeBuilder, ExpressionTrait {
 
     private boolean isArray;
 
+    private String javaType;
+
     ValueNodeBuilder(Object value) {
         this.value = value;
     }
@@ -48,8 +50,13 @@ public class ValueNodeBuilder implements NodeBuilder, ExpressionTrait {
         return this;
     }
 
+    public ValueNodeBuilder javaType(String javaType) {
+        this.javaType = javaType;
+        return this;
+    }
+
     @Override
     public Node build() {
-        return new ValueNode(value, isArray, attribute);
+        return new ValueNode(value, isArray, attribute, javaType);
     }
 }
