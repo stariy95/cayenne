@@ -56,7 +56,6 @@ import org.apache.cayenne.exp.parser.ASTObjPath;
 import org.apache.cayenne.exp.parser.ASTSubquery;
 import org.apache.cayenne.exp.parser.PatternMatchNode;
 import org.apache.cayenne.exp.parser.SimpleNode;
-import org.apache.cayenne.exp.property.BaseProperty;
 import org.apache.cayenne.exp.property.Property;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -278,7 +277,7 @@ class QualifierTranslator implements TraversalHandler {
         expressionsToSkip.add(node);
         expressionsToSkip.add(parentNode);
 
-        return buildMultiValueComparision(result, valueSnapshot);
+        return buildMultiValueComparison(result, valueSnapshot);
     }
 
     private Map<String, Object> getEmbeddableValueSnapshot(Embeddable embeddable, Expression node, Expression parentNode) {
@@ -319,10 +318,23 @@ class QualifierTranslator implements TraversalHandler {
             valueSnapshot = relationship.srcFkSnapshotWithTargetSnapshot(valueSnapshot);
         }
 
+        // build compound PK/FK comparison node
+        Node multiValueComparison = buildMultiValueComparison(result, valueSnapshot);
+
+        // replace current node with multi value comparison
+        Node currentNodeParent = currentNode.getParent();
+        currentNodeParent.replaceChild(currentNodeParent.getChildrenCount() - 1, multiValueComparison);
+        multiValueComparison.setParent(currentNodeParent);
+        currentNode = currentNodeParent;
+
+        // we should skip all related nodes as we build this part of the tree manually
         expressionsToSkip.add(node);
         expressionsToSkip.add(parentNode);
+        for(int i=0; i<parentNode.getOperandCount(); i++) {
+            expressionsToSkip.add(parentNode.getOperand(i));
+        }
 
-        return buildMultiValueComparision(result, valueSnapshot);
+        return null;
     }
 
     private Map<String, Object> getMultiAttributeValueSnapshot(Expression node, Expression parentNode) {
@@ -347,7 +359,7 @@ class QualifierTranslator implements TraversalHandler {
                 "List or Persistent object required.");
     }
 
-    private Node buildMultiValueComparision(PathTranslationResult result, Map<String, Object> valueSnapshot) {
+    private Node buildMultiValueComparison(PathTranslationResult result, Map<String, Object> valueSnapshot) {
         ExpressionNodeBuilder expressionNodeBuilder = null;
         ExpressionNodeBuilder eq;
 
