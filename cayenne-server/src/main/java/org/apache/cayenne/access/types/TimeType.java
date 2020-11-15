@@ -29,7 +29,27 @@ import java.util.Calendar;
  */
 public class TimeType implements ExtendedType<Time> {
 
-    private final Calendar calendar = Calendar.getInstance();
+    private final Calendar calendar;
+    private final boolean useCalendar;
+
+    /**
+     * @since 4.2
+     */
+    public TimeType() {
+        this(false);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public TimeType(boolean useCalendar) {
+        this.useCalendar = useCalendar;
+        if(this.useCalendar) {
+            this.calendar = Calendar.getInstance();
+        } else {
+            this.calendar = null;
+        }
+    }
 
     @Override
     public String getClassName() {
@@ -38,12 +58,12 @@ public class TimeType implements ExtendedType<Time> {
 
     @Override
     public Time materializeObject(ResultSet rs, int index, int type) throws Exception {
-        return rs.getTime(index, calendar);
+        return useCalendar ? rs.getTime(index, calendar) : rs.getTime(index);
     }
 
     @Override
     public Time materializeObject(CallableStatement rs, int index, int type) throws Exception {
-        return rs.getTime(index, calendar);
+        return useCalendar ? rs.getTime(index, calendar) : rs.getTime(index);
     }
 
     @Override
@@ -56,8 +76,10 @@ public class TimeType implements ExtendedType<Time> {
 
         if (value == null) {
             statement.setNull(pos, type);
-        } else {
+        } else if(useCalendar) {
             statement.setTime(pos, value, calendar);
+        } else {
+            statement.setTime(pos, value);
         }
     }
 

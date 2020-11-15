@@ -35,7 +35,27 @@ import java.util.Date;
  */
 public class UtilDateType implements ExtendedType<Date> {
 
-    private final Calendar calendar = Calendar.getInstance();
+    private final Calendar calendar;
+    private final boolean useCalendar;
+
+    /**
+     * @since 4.2
+     */
+    public UtilDateType() {
+        this(false);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public UtilDateType(boolean useCalendar) {
+        this.useCalendar = useCalendar;
+        if(this.useCalendar) {
+            this.calendar = Calendar.getInstance();
+        } else {
+            this.calendar = null;
+        }
+    }
 
     /**
      * Returns "java.util.Date".
@@ -50,16 +70,24 @@ public class UtilDateType implements ExtendedType<Date> {
         Date val;
         switch (type) {
             case Types.TIMESTAMP:
-                val = rs.getTimestamp(index, calendar);
+                val = useCalendar
+                        ? rs.getTimestamp(index, calendar)
+                        : rs.getTimestamp(index);
                 break;
             case Types.DATE:
-                val = rs.getDate(index, calendar);
+                val = useCalendar
+                        ? rs.getDate(index, calendar)
+                        : rs.getDate(index);
                 break;
             case Types.TIME:
-                val = rs.getTime(index, calendar);
+                val = useCalendar
+                        ? rs.getTime(index, calendar)
+                        : rs.getTime(index);
                 break;
             default:
-                val = rs.getTimestamp(index, calendar);
+                val = useCalendar
+                        ? rs.getTimestamp(index, calendar)
+                        : rs.getTimestamp(index);
                 break;
         }
 
@@ -72,16 +100,24 @@ public class UtilDateType implements ExtendedType<Date> {
         Date val;
         switch (type) {
             case Types.TIMESTAMP:
-                val = cs.getTimestamp(index, calendar);
+                val = useCalendar
+                        ? cs.getTimestamp(index, calendar)
+                        : cs.getTimestamp(index);
                 break;
             case Types.DATE:
-                val = cs.getDate(index, calendar);
+                val = useCalendar
+                        ? cs.getDate(index, calendar)
+                        : cs.getDate(index);
                 break;
             case Types.TIME:
-                val = cs.getTime(index, calendar);
+                val = useCalendar
+                        ? cs.getTime(index, calendar)
+                        : cs.getTime(index);
                 break;
             default:
-                val = cs.getTimestamp(index, calendar);
+                val = useCalendar
+                        ? cs.getTimestamp(index, calendar)
+                        : cs.getTimestamp(index);
                 break;
         }
 
@@ -101,12 +137,24 @@ public class UtilDateType implements ExtendedType<Date> {
             statement.setNull(pos, type);
         } else {
             if (type == Types.DATE) {
-                statement.setDate(pos, new java.sql.Date(value.getTime()), calendar);
+                if(useCalendar) {
+                    statement.setDate(pos, new java.sql.Date(value.getTime()), calendar);
+                } else {
+                    statement.setDate(pos, new java.sql.Date(value.getTime()));
+                }
             } else if (type == Types.TIME) {
                 Time time = new Time(value.getTime());
-                statement.setTime(pos, time, calendar);
+                if(useCalendar) {
+                    statement.setTime(pos, time, calendar);
+                } else {
+                    statement.setTime(pos, time);
+                }
             } else if (type == Types.TIMESTAMP) {
-                statement.setTimestamp(pos, new java.sql.Timestamp(value.getTime()), calendar);
+                if(useCalendar) {
+                    statement.setTimestamp(pos, new java.sql.Timestamp(value.getTime()), calendar);
+                } else {
+                    statement.setTimestamp(pos, new java.sql.Timestamp(value.getTime()));
+                }
             } else {
                 throw new IllegalArgumentException(
                         "Only DATE, TIME or TIMESTAMP can be mapped as '" + getClassName()

@@ -29,7 +29,27 @@ import java.util.Calendar;
  */
 public class DateType implements ExtendedType<Date> {
 
-    private final Calendar calendar = Calendar.getInstance();
+    private final Calendar calendar;
+    private final boolean useCalendar;
+
+    /**
+     * @since 4.2
+     */
+    public DateType() {
+        this(false);
+    }
+
+    /**
+     * @since 4.2
+     */
+    public DateType(boolean useCalendar) {
+        this.useCalendar = useCalendar;
+        if(this.useCalendar) {
+            this.calendar = Calendar.getInstance();
+        } else {
+            this.calendar = null;
+        }
+    }
 
     @Override
     public String getClassName() {
@@ -38,12 +58,12 @@ public class DateType implements ExtendedType<Date> {
 
     @Override
     public Date materializeObject(ResultSet rs, int index, int type) throws Exception {
-        return rs.getDate(index, calendar);
+        return useCalendar ? rs.getDate(index, calendar) : rs.getDate(index);
     }
 
     @Override
     public Date materializeObject(CallableStatement rs, int index, int type) throws Exception {
-        return rs.getDate(index, calendar);
+        return useCalendar ? rs.getDate(index, calendar) : rs.getDate(index);
     }
 
     @Override
@@ -56,8 +76,10 @@ public class DateType implements ExtendedType<Date> {
 
         if (value == null) {
             statement.setNull(pos, type);
-        } else {
+        } else if(useCalendar) {
             statement.setDate(pos, value, calendar);
+        } else {
+            statement.setDate(pos, value);
         }
     }
 
