@@ -22,11 +22,14 @@ import java.sql.CallableStatement;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Calendar;
 
 /**
  * @since 3.0
  */
 public class DateType implements ExtendedType<Date> {
+
+    private final Calendar calendar = Calendar.getInstance();
 
     @Override
     public String getClassName() {
@@ -35,12 +38,12 @@ public class DateType implements ExtendedType<Date> {
 
     @Override
     public Date materializeObject(ResultSet rs, int index, int type) throws Exception {
-        return rs.getDate(index);
+        return rs.getDate(index, calendar);
     }
 
     @Override
     public Date materializeObject(CallableStatement rs, int index, int type) throws Exception {
-        return rs.getDate(index);
+        return rs.getDate(index, calendar);
     }
 
     @Override
@@ -54,7 +57,7 @@ public class DateType implements ExtendedType<Date> {
         if (value == null) {
             statement.setNull(pos, type);
         } else {
-            statement.setDate(pos, value);
+            statement.setDate(pos, value, calendar);
         }
     }
 
