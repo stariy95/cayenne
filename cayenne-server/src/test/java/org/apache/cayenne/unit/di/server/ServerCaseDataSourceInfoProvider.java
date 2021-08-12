@@ -21,23 +21,30 @@ package org.apache.cayenne.unit.di.server;
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.conn.DataSourceInfo;
 import org.apache.cayenne.dba.JdbcAdapter;
+import org.apache.cayenne.dba.db2.DB2Adapter;
 import org.apache.cayenne.dba.derby.DerbyAdapter;
 import org.apache.cayenne.dba.h2.H2Adapter;
 import org.apache.cayenne.dba.hsqldb.HSQLDBAdapter;
 import org.apache.cayenne.dba.mysql.MySQLAdapter;
+import org.apache.cayenne.dba.oracle.OracleAdapter;
 import org.apache.cayenne.dba.postgres.PostgresAdapter;
 import org.apache.cayenne.dba.sqlite.SQLiteAdapter;
 import org.apache.cayenne.dba.sqlserver.SQLServerAdapter;
 import org.apache.cayenne.di.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Db2Container;
 import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -155,12 +162,12 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
         }
 
         String db = connectionKey.substring(0, connectionKey.length() - 3);
-        JdbcDatabaseContainer container;
-        String adapter = JdbcAdapter.class.getName();
+        JdbcDatabaseContainer<?> container;
+        String adapter;
         switch (db) {
             case "mysql":
-                container = new MySQLContainer();
-                container
+                adapter = MySQLAdapter.class.getName();
+                container = new MySQLContainer<>("mysql:8")
                         .withUrlParam("useUnicode", "true")
                         .withUrlParam("characterEncoding", "UTF-8")
                         .withUrlParam("generateSimpleParameterMetadata", "true")
@@ -169,16 +176,31 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
                         .withCommand("--character-set-server=utf8mb4")
                         .withCommand("--max-allowed-packet=5242880");
 //                        .withCommand("--collation-server=utf8mb4_unicode_ci");
-                adapter = MySQLAdapter.class.getName();
+
                 break;
             case "postgres":
-                container = new PostgreSQLContainer();
                 adapter = PostgresAdapter.class.getName();
+                container = new PostgreSQLContainer<>("postgres:9.6");
                 break;
             case "sqlserver":
                 adapter = SQLServerAdapter.class.getName();
-                // TODO: implement this
-                return null;
+                container = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server")
+                        .acceptLicense();
+                break;
+            case "oracle":
+                adapter = OracleAdapter.class.getName();
+                container = new OracleContainer("oracleinanutshell/oracle-xe-11g")
+                        .withStartupTimeout(Duration.ofMinutes(5))
+                        .withEnv("ORACLE_ALLOW_REMOTE", "true")
+                        .withEnv("ORACLE_DISABLE_ASYNCH_IO", "true");
+                break;
+            case "db2":
+                adapter = DB2Adapter.class.getName();
+                container = new Db2Container("ibmcom/db2")
+                        .withStartupTimeout(Duration.ofMinutes(15))
+                        .withDatabaseName("testdb")
+                        .acceptLicense();
+                break;
             default:
                 // TODO: could we start some generic container anyway?
                 return null;
@@ -186,6 +208,11 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
 
         // To grab properties, should start container first
         container.start();
+
+        try {
+            Thread.sleep(35000);
+        } catch (InterruptedException ignored) {
+        }
 
         DataSourceInfo sourceInfo = new DataSourceInfo();
         sourceInfo.setAdapterClassName(adapter);
