@@ -20,17 +20,31 @@ package org.apache.cayenne.unit.di.server;
 
 import org.apache.cayenne.ConfigurationException;
 import org.apache.cayenne.conn.DataSourceInfo;
+import org.apache.cayenne.dba.JdbcAdapter;
+import org.apache.cayenne.dba.db2.DB2Adapter;
 import org.apache.cayenne.dba.derby.DerbyAdapter;
 import org.apache.cayenne.dba.h2.H2Adapter;
 import org.apache.cayenne.dba.hsqldb.HSQLDBAdapter;
+import org.apache.cayenne.dba.mysql.MySQLAdapter;
+import org.apache.cayenne.dba.oracle.OracleAdapter;
+import org.apache.cayenne.dba.postgres.PostgresAdapter;
 import org.apache.cayenne.dba.sqlite.SQLiteAdapter;
+import org.apache.cayenne.dba.sqlserver.SQLServerAdapter;
 import org.apache.cayenne.di.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Db2Container;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.OracleContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -126,6 +140,10 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
             connectionInfo = inMemoryDataSources.get(connectionKey);
         }
 
+        if (connectionInfo == null) {
+            connectionInfo = checkTestContainersDataSource(connectionKey);
+        }
+
         connectionInfo = applyOverrides(connectionInfo);
 
         if (connectionInfo == null) {
@@ -134,6 +152,76 @@ public class ServerCaseDataSourceInfoProvider implements Provider<DataSourceInfo
 
         logger.info("loaded connection info: " + connectionInfo);
         return connectionInfo;
+    }
+
+    private DataSourceInfo checkTestContainersDataSource(String connectionKey) {
+        // special case for the testcontainers profile
+        if (!connectionKey.endsWith("-tc")) {
+            return null;
+        }
+
+        String db = connectionKey.substring(0, connectionKey.length() - 3);
+        JdbcDatabaseContainer<?> container;
+        String adapter;
+        switch (db) {
+            case "mysql":
+                adapter = MySQLAdapter.class.getName();
+                container = new MySQLContainer<>("mysql:8")
+                        .withUrlParam("useUnicode", "true")
+                        .withUrlParam("characterEncoding", "UTF-8")
+                        .withUrlParam("generateSimpleParameterMetadata", "true")
+                        .withUrlParam("useLegacyDatetimeCode", "false")
+                        .withUrlParam("serverTimezone", Calendar.getInstance().getTimeZone().getID())
+                        .withCommand("--character-set-server=utf8mb4")
+                        .withCommand("--max-allowed-packet=5242880");
+//                        .withCommand("--collation-server=utf8mb4_unicode_ci");
+
+                break;
+            case "postgres":
+                adapter = PostgresAdapter.class.getName();
+                container = new PostgreSQLContainer<>("postgres:9.6");
+                break;
+            case "sqlserver":
+                adapter = SQLServerAdapter.class.getName();
+                container = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server")
+                        .acceptLicense();
+                break;
+            case "oracle":
+                adapter = OracleAdapter.class.getName();
+                container = new OracleContainer("oracleinanutshell/oracle-xe-11g")
+                        .withStartupTimeout(Duration.ofMinutes(5))
+                        .withEnv("ORACLE_ALLOW_REMOTE", "true")
+                        .withEnv("ORACLE_DISABLE_ASYNCH_IO", "true");
+                break;
+            case "db2":
+                adapter = DB2Adapter.class.getName();
+                container = new Db2Container("ibmcom/db2")
+                        .withStartupTimeout(Duration.ofMinutes(15))
+                        .withDatabaseName("testdb")
+                        .acceptLicense();
+                break;
+            default:
+                // TODO: could we start some generic container anyway?
+                return null;
+        }
+
+        // To grab properties, should start container first
+        container.start();
+
+        try {
+            Thread.sleep(35000);
+        } catch (InterruptedException ignored) {
+        }
+
+        DataSourceInfo sourceInfo = new DataSourceInfo();
+        sourceInfo.setAdapterClassName(adapter);
+        sourceInfo.setUserName(container.getUsername());
+        sourceInfo.setPassword(container.getPassword());
+        sourceInfo.setDataSourceUrl(container.getJdbcUrl());
+        sourceInfo.setJdbcDriver(container.getDriverClassName());
+        sourceInfo.setMinConnections(ConnectionProperties.MIN_CONNECTIONS);
+        sourceInfo.setMaxConnections(ConnectionProperties.MAX_CONNECTIONS);
+        return sourceInfo;
     }
 
     private File connectionPropertiesFile() {
