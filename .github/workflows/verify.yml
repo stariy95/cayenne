@@ -20,21 +20,27 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: JDK ${{ matrix.java }}, DB ${{ matrix.db-profile }}
-    continue-on-error: ${{ matrix.java == '17-ea' }}
+    name: JDK ${{ matrix.jdk }}, DB ${{ matrix.db-profile }}
+    continue-on-error: ${{ matrix.jdk == '17-ea' }}
     strategy:
       matrix:
-        java: [8, 11, 17-ea]
+        jdk: [8, 11]
         db-profile: [hsql, h2, derby, mysql-tc, postgres-tc, sqlserver-tc]
+        include:
+          - java: 17-ea
+            db-profile: postgres-tc
+      fail-fast: false # finish all jobs anyway
+    env:
+      JDK_VERSION: ${{ matrix.jdk }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up java ${{ matrix.java }}
+      - name: Set up java ${{ matrix.jdk }}
         uses: actions/setup-java@v1
         with:
-          java-version: ${{ matrix.java }}
+          java-version: ${{ matrix.jdk }}
 
       - uses: actions/cache@v2
         with:

@@ -96,4 +96,10 @@ public class SQLServerUnitDbAdapter extends SybaseUnitDbAdapter {
     public boolean supportsCatalogs() {
         return true;
     }
+
+    @Override
+    public boolean supportsCaseSensitiveLike() {
+        // support depends on the DB setup, for now skip those tests for SQLServer
+        return false;
+    }
 }
