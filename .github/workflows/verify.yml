@@ -27,7 +27,7 @@ jobs:
         jdk: [8, 11]
         db-profile: [hsql, h2, derby, mysql-tc, postgres-tc, sqlserver-tc]
         include:
-          - java: 17-ea
+          - jdk: 17-ea
             db-profile: postgres-tc
       fail-fast: false # finish all jobs anyway
     env:
