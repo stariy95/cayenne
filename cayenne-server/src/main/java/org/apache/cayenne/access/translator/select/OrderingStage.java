@@ -21,10 +21,15 @@ package org.apache.cayenne.access.translator.select;
 
 import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.OrderingNodeBuilder;
+import org.apache.cayenne.access.sqlbuilder.sqltree.ColumnNode;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
+import org.apache.cayenne.access.sqlbuilder.sqltree.NodeType;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.parser.ASTAggregateFunctionCall;
+import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.query.Ordering;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.*;
 
@@ -56,11 +61,13 @@ class OrderingStage implements TranslationStage {
 
         // If query is DISTINCT then we need to add all ORDER BY clauses as result columns
         if(!context.isDistinctSuppression()) {
-            // TODO: need to check duplicates?
-            // need UPPER() function here too, as some DB expect exactly the same expression in select and in ordering
-            ResultNodeDescriptor descriptor = context.addResultNode(nodeBuilder.build().deepCopy());
-            if(exp instanceof ASTAggregateFunctionCall) {
-                descriptor.setAggregate(true);
+            boolean hasAttribute = hasAttribute(context, translatedNode);
+            if(!hasAttribute) {
+                // need UPPER() function here too, as some DB expect exactly the same expression in select and in ordering
+                ResultNodeDescriptor descriptor = context.addResultNode(nodeBuilder.build().deepCopy());
+                if (exp instanceof ASTAggregateFunctionCall) {
+                    descriptor.setAggregate(true);
+                }
             }
         }
 
@@ -69,6 +76,21 @@ class OrderingStage implements TranslationStage {
             orderingNodeBuilder.desc();
         }
         context.getSelectBuilder().orderBy(orderingNodeBuilder);
+    }
+
+    private static boolean hasAttribute(TranslatorContext context, Node translatedNode) {
+        AtomicBoolean hasAttribute = new AtomicBoolean(false);
+        if(translatedNode.getType() == NodeType.COLUMN) {
+            DbAttribute attribute = ((ColumnNode) translatedNode).getAttribute();
+            context.getResultNodeList().forEach(rn -> {
+                if(rn.getNode().getType().equals(NodeType.COLUMN)) {
+                    if(rn.getDbAttribute() == attribute) {
+                        hasAttribute.set(true);
+                    }
+                }
+            });
+        }
+        return hasAttribute.get();
     }
 
 }

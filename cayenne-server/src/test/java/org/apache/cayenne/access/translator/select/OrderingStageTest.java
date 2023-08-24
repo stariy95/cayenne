@@ -32,7 +32,6 @@ import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.query.Ordering;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -44,44 +43,12 @@ import static org.junit.Assert.*;
  */
 public class OrderingStageTest {
 
-    private TranslatorContext context;
-
-    @Before
-    public void prepareContext() {
-        DbEntity dbEntity = new DbEntity();
-        dbEntity.setName("mock");
-        DbAttribute dbAttribute = new DbAttribute();
-        dbAttribute.setName("path");
-        dbEntity.addAttribute(dbAttribute);
-
-        ObjEntity objEntity = new ObjEntity();
-        objEntity.setName("mock");
-        objEntity.setDbEntity(dbEntity);
-
-        ObjAttribute objAttribute = new ObjAttribute();
-        objAttribute.setName("path");
-        objAttribute.setDbAttributePath("path");
-        objEntity.addAttribute(objAttribute);
-
-        DataMap dataMap = new DataMap();
-        dataMap.addObjEntity(objEntity);
-        dataMap.addDbEntity(dbEntity);
-
-        Ordering ordering = new Ordering("path");
-        ordering.setDescending();
-
-        TranslatableQueryWrapper wrapper = new MockQueryWrapperBuilder()
-                .withOrderings(Collections.singleton(ordering))
-                .withMetaData(new MockQueryMetadataBuilder()
-                        .withDbEntity(dbEntity)
-                        .withObjEntity(objEntity)
-                        .build())
-                .build();
-        context = new MockTranslatorContext(wrapper);
-    }
-
     @Test
     public void perform() {
+        Ordering ordering = new Ordering("path");
+        ordering.setDescending();
+        TranslatorContext context = prepareContext(ordering);
+
         OrderingStage orderingStage = new OrderingStage();
         orderingStage.perform(context);
 
@@ -107,5 +74,35 @@ public class OrderingStageTest {
         ColumnNode columnNode = (ColumnNode)child.getChild(0).getChild(0);
         assertEquals("path", columnNode.getColumn());
         assertEquals("Node { DESC}", child.getChild(0).getChild(1).toString());
+    }
+
+    public TranslatorContext prepareContext(Ordering ordering) {
+        DbEntity dbEntity = new DbEntity();
+        dbEntity.setName("mock");
+        DbAttribute dbAttribute = new DbAttribute();
+        dbAttribute.setName("path");
+        dbEntity.addAttribute(dbAttribute);
+
+        ObjEntity objEntity = new ObjEntity();
+        objEntity.setName("mock");
+        objEntity.setDbEntity(dbEntity);
+
+        ObjAttribute objAttribute = new ObjAttribute();
+        objAttribute.setName("path");
+        objAttribute.setDbAttributePath("path");
+        objEntity.addAttribute(objAttribute);
+
+        DataMap dataMap = new DataMap();
+        dataMap.addObjEntity(objEntity);
+        dataMap.addDbEntity(dbEntity);
+
+        TranslatableQueryWrapper wrapper = new MockQueryWrapperBuilder()
+                .withOrderings(Collections.singleton(ordering))
+                .withMetaData(new MockQueryMetadataBuilder()
+                        .withDbEntity(dbEntity)
+                        .withObjEntity(objEntity)
+                        .build())
+                .build();
+        return new MockTranslatorContext(wrapper);
     }
 }
