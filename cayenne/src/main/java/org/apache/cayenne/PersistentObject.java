@@ -98,29 +98,21 @@ public abstract class PersistentObject implements Persistent {
             return ((ToManyMapProperty) property).getMapKey(value);
         }
 
-        throw new IllegalArgumentException("Relationship '"
-                + relationshipName
-                + "' is not a to-many Map");
+        throw new IllegalArgumentException("Relationship '" + relationshipName + "' is not a to-many Map");
     }
 
     @Override
     public String toString() {
-        String state = PersistenceState.persistenceStateName(getPersistenceState());
-
-        StringBuilder buffer = new StringBuilder();
-        buffer
-                .append("<")
-                .append(getClass().getName())
-                .append("@")
-                .append(System.identityHashCode(this))
-                .append(", id=")
-                .append(objectId)
-                .append(", state=")
-                .append(state)
-                .append(", context=")
-                .append(objectContext)
-                .append(">");
-
-        return buffer.toString();
+        return "<" +
+                getClass().getName() +
+                "@" +
+                System.identityHashCode(this) +
+                ", id=" +
+                objectId +
+                ", state=" +
+                PersistenceState.persistenceStateName(getPersistenceState()) +
+                ", context=" +
+                objectContext +
+                ">";
     }
 }

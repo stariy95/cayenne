@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.cayenne.reflect;
 
+import org.apache.cayenne.BaseDataObject;
 import org.apache.cayenne.ObjectId;
-import org.apache.cayenne.PersistentObject;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -116,7 +116,7 @@ public class LifecycleCallbackEventHandlerTest {
         assertEquals("c2Callback", c.callbacks.get(1));
     }
 
-    static class C1 extends PersistentObject {
+    static class C1 extends BaseDataObject {
 
         protected List callbacks = new ArrayList();
 

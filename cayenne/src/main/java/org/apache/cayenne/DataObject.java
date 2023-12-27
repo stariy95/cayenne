@@ -24,7 +24,7 @@ package org.apache.cayenne;
  */
 public interface DataObject extends Persistent {
 
-    public static final long DEFAULT_VERSION = Long.MIN_VALUE;
+    long DEFAULT_VERSION = Long.MIN_VALUE;
 
     /**
      * Modifies a value of a named property without altering the object state in any way,
@@ -32,14 +32,14 @@ public interface DataObject extends Persistent {
      * internal use by Cayenne framework, and shouldn't be called from the application
      * code.
      */
-    public void writePropertyDirectly(String propertyName, Object val);
+    void writePropertyDirectly(String propertyName, Object val);
 
     /**
      * Returns mapped property value as curently stored in the DataObject. Returned value
      * maybe a fault or a real value. This method will not attempt to resolve faults, or
      * to read unmapped properties.
      */
-    public Object readPropertyDirectly(String propertyName);
+    Object readPropertyDirectly(String propertyName);
 
     /**
      * Returns a value of the property identified by a property path. Supports reading
@@ -81,33 +81,33 @@ public interface DataObject extends Persistent {
      * <br>
      * </li>
      * </ul>
-     * 
+     *
      * @since 1.0.5
      */
-    public Object readNestedProperty(String path);
+    Object readNestedProperty(String path);
 
     /**
      * Returns a value of the property identified by propName. Resolves faults if needed.
      * This method can safely be used instead of or in addition to the auto-generated
      * property accessors in subclasses of CayenneDataObject.
      */
-    public Object readProperty(String propName);
+    Object readProperty(String propName);
 
     /**
      * Sets the property to the new value. Resolves faults if needed. This method can be
      * safely used instead of or in addition to the auto-generated property modifiers to
      * set simple properties. Note that to set to-one relationships use
      * {@link #setToOneTarget(String, DataObject, boolean)}.
-     * 
+     *
      * @param propertyName a name of the bean property being modified.
-     * @param value a new value of the property.
+     * @param value        a new value of the property.
      */
-    public void writeProperty(String propertyName, Object value);
+    void writeProperty(String propertyName, Object value);
 
     /**
      * Adds an object to a to-many relationship.
      */
-    public void addToManyTarget(
+    void addToManyTarget(
             String relationshipName,
             DataObject target,
             boolean setReverse);
@@ -115,7 +115,7 @@ public interface DataObject extends Persistent {
     /**
      * Removes an object from a to-many relationship.
      */
-    public void removeToManyTarget(
+    void removeToManyTarget(
             String relationshipName,
             DataObject target,
             boolean unsetReverse);
@@ -124,27 +124,27 @@ public interface DataObject extends Persistent {
      * Sets to-one relationship to a new value. Resolves faults if needed. This method can
      * safely be used instead of or in addition to the auto-generated property modifiers
      * to set properties that are to-one relationships.
-     * 
+     *
      * @param relationshipName a name of the bean property being modified - same as the
-     *            name of ObjRelationship.
-     * @param value a new value of the property.
-     * @param setReverse whether to update the reverse relationship pointing from the old
-     *            and new values of the property to this object.
+     *                         name of ObjRelationship.
+     * @param value            a new value of the property.
+     * @param setReverse       whether to update the reverse relationship pointing from the old
+     *                         and new values of the property to this object.
      */
-    public void setToOneTarget(
+    void setToOneTarget(
             String relationshipName,
             DataObject value,
             boolean setReverse);
 
     /**
      * Returns a version of a DataRow snapshot that was used to create this object.
-     * 
+     *
      * @since 1.1
      */
-    public long getSnapshotVersion();
+    long getSnapshotVersion();
 
     /**
      * @since 1.1
      */
-    public void setSnapshotVersion(long snapshotVersion);
+    void setSnapshotVersion(long snapshotVersion);
 }

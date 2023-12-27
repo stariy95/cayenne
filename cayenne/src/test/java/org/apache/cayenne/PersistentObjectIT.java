@@ -35,7 +35,7 @@ public class PersistentObjectIT extends RuntimeCase {
     @Test
     public void testObjectContext() {
         ObjectContext context = mock(ObjectContext.class);
-        PersistentObject object = new MockPersistentObject();
+        Persistent object = new MockPersistentObject();
 
         assertNull(object.getObjectContext());
         object.setObjectContext(context);
@@ -44,7 +44,7 @@ public class PersistentObjectIT extends RuntimeCase {
 
     @Test
     public void testPersistenceState() {
-        PersistentObject object = new MockPersistentObject();
+        Persistent object = new MockPersistentObject();
         assertEquals(PersistenceState.TRANSIENT, object.getPersistenceState());
         object.setPersistenceState(PersistenceState.DELETED);
         assertEquals(PersistenceState.DELETED, object.getPersistenceState());
@@ -54,7 +54,7 @@ public class PersistentObjectIT extends RuntimeCase {
     public void testObjectID() {
         ObjectId id = ObjectId.of("test");
 
-        PersistentObject object = new MockPersistentObject();
+        Persistent object = new MockPersistentObject();
 
         assertNull(object.getObjectId());
         object.setObjectId(id);

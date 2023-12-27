@@ -37,7 +37,10 @@ import org.apache.cayenne.map.EntityResolver;
 import org.apache.cayenne.map.ObjAttribute;
 import org.apache.cayenne.map.ObjEntity;
 import org.apache.cayenne.map.ObjRelationship;
+import org.apache.cayenne.reflect.ClassDescriptor;
+import org.apache.cayenne.reflect.PropertyDescriptor;
 import org.apache.cayenne.reflect.PropertyUtils;
+import org.apache.cayenne.reflect.ToManyMapProperty;
 import org.apache.cayenne.validation.BeanValidationFailure;
 import org.apache.cayenne.validation.ValidationFailure;
 import org.apache.cayenne.validation.ValidationResult;
@@ -65,11 +68,57 @@ import org.apache.cayenne.validation.ValidationResult;
  *
  * @since 4.1
  */
-public abstract class BaseDataObject extends PersistentObject implements DataObject, Validating {
+public abstract class BaseDataObject implements DataObject, Validating {
 
     private static final long serialVersionUID = 4598677040697008371L;
 
+    protected ObjectId objectId;
+    protected int persistenceState;
     protected long snapshotVersion = DEFAULT_VERSION;
+    protected transient ObjectContext objectContext;
+
+    /**
+     * Creates a new transient object.
+     */
+    public BaseDataObject() {
+        this.persistenceState = PersistenceState.TRANSIENT;
+    }
+
+    public int getPersistenceState() {
+        return persistenceState;
+    }
+
+    public ObjectContext getObjectContext() {
+        return objectContext;
+    }
+
+    public ObjectId getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
+    }
+
+    /**
+     * Returns a map key for a given to-many map relationship and a target object.
+     *
+     * @since 3.0
+     */
+    protected Object getMapKey(String relationshipName, Object value) {
+        EntityResolver resolver = objectContext.getEntityResolver();
+        ClassDescriptor descriptor = resolver.getClassDescriptor(objectId.getEntityName());
+        if (descriptor == null) {
+            throw new IllegalStateException("DataObject's entity is unmapped, objectId: " + objectId);
+        }
+
+        PropertyDescriptor property = descriptor.getProperty(relationshipName);
+        if (property instanceof ToManyMapProperty) {
+            return ((ToManyMapProperty) property).getMapKey(value);
+        }
+
+        throw new IllegalArgumentException("Relationship '" + relationshipName + "' is not a to-many Map");
+    }
 
     @Override
     public Object readPropertyDirectly(String propName) {
@@ -325,11 +374,11 @@ public abstract class BaseDataObject extends PersistentObject implements DataObj
         if(property == null) {
             throw new IllegalArgumentException("unknown relName " + relName);
         }
-        Collection<DataObject> old = null;
+        Collection<? extends DataObject> old;
         if (property instanceof Map) {
-            old = ((Map) property).values();
+            old = ((Map<?, ? extends DataObject>) property).values();
         } else if (property instanceof Collection) {
-            old = (Collection) property;
+            old = (Collection<? extends DataObject>) property;
         } else {
             throw new UnsupportedOperationException("setToManyTarget operates only with Map or Collection types");
         }
@@ -340,18 +389,17 @@ public abstract class BaseDataObject extends PersistentObject implements DataObj
         List<DataObject> removedObjects = new ArrayList<>();
 
         // remove all relationships, which are missing in passed collection
-        Object[] oldValues = old.toArray();
-        for (Object obj : oldValues) {
+        DataObject[] oldValues = old.toArray(new DataObject[0]);
+        for (DataObject obj : oldValues) {
             if (!values.contains(obj)) {
-                DataObject obj2 = (DataObject) obj;
-                removeToManyTarget(relName, obj2, setReverse);
+                removeToManyTarget(relName, obj, setReverse);
                 // collect objects whose relationship was removed
-                removedObjects.add((DataObject) obj2);
+                removedObjects.add(obj);
             }
         }
 
-        // dont add elements which are already present
-        for (Object obj : old) {
+        // don't add elements which are already present
+        for (DataObject obj : old) {
             values.remove(obj);
         }
 

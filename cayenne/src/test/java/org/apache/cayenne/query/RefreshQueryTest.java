@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.cayenne.query;
 
-import org.apache.cayenne.MockPersistentObject;
+import org.apache.cayenne.MockDataObject;
 import org.apache.cayenne.Persistent;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class RefreshQueryTest {
 
     @Test
     public void testCollectionConstructor() {
-        Collection c = new ArrayList();
+        Collection<Object> c = new ArrayList<>();
         c.add(new Object());
         c.add(new Object());
 
@@ -60,7 +60,7 @@ public class RefreshQueryTest {
 
     @Test
     public void testObjectConstructor() {
-        Persistent p = new MockPersistentObject();
+        Persistent p = new MockDataObject();
 
         RefreshQuery q = new RefreshQuery(p);
         assertNotNull(q.getObjects());

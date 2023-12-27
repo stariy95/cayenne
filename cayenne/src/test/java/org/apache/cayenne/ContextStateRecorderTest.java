@@ -58,7 +58,7 @@ public class ContextStateRecorderTest {
 		assertTrue(recorder.dirtyNodes(PersistenceState.TRANSIENT).isEmpty());
 		assertTrue(recorder.dirtyNodes(PersistenceState.HOLLOW).isEmpty());
 
-		MockPersistentObject modified = new MockPersistentObject();
+		MockDataObject modified = new MockDataObject();
 		modified.setObjectId(ObjectId.of("MockPersistentObject", "key", "value1"));
 		modified.setPersistenceState(PersistenceState.MODIFIED);
 		
@@ -72,7 +72,7 @@ public class ContextStateRecorderTest {
 		assertTrue(recorder.dirtyNodes(PersistenceState.TRANSIENT).isEmpty());
 		assertTrue(recorder.dirtyNodes(PersistenceState.HOLLOW).isEmpty());
 
-		MockPersistentObject deleted = new MockPersistentObject();
+		MockDataObject deleted = new MockDataObject();
 		deleted.setObjectId(ObjectId.of("MockPersistentObject", "key", "value2"));
 		deleted.setPersistenceState(PersistenceState.DELETED);
 		when(mockGraphManager.getNode(deleted.getObjectId())).thenReturn(deleted);
@@ -93,7 +93,7 @@ public class ContextStateRecorderTest {
 		assertTrue(recorder.dirtyNodes().isEmpty());
 
 		// introduce a fake dirty object
-		MockPersistentObject object = new MockPersistentObject();
+		MockDataObject object = new MockDataObject();
 		object.setObjectId(ObjectId.of("MockPersistentObject", "key", "value"));
 		object.setPersistenceState(PersistenceState.MODIFIED);
 
@@ -115,7 +115,7 @@ public class ContextStateRecorderTest {
 		assertFalse(recorder.hasChanges());
 
 		// introduce a fake dirty object
-		MockPersistentObject object = new MockPersistentObject();
+		MockDataObject object = new MockDataObject();
 		object.setObjectId(ObjectId.of("MockPersistentObject", "key", "value"));
 		object.setPersistenceState(PersistenceState.MODIFIED);
 		recorder.nodePropertyChanged(object.getObjectId(), "xyz", "a", "b");
