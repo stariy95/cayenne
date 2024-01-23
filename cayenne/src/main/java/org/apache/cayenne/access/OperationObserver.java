@@ -19,7 +19,6 @@
 
 package org.apache.cayenne.access;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.cayenne.ObjectId;
