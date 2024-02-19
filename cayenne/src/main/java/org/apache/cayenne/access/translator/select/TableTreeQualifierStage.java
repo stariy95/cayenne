@@ -37,29 +37,29 @@ class TableTreeQualifierStage implements TranslationStage {
     @Override
     public void perform(TranslatorContext context) {
         context.getTableTree().visit(node -> {
-            Expression dbQualifier = node.getEntity().getQualifier();
-            if (dbQualifier != null) {
-                CayennePath pathToRoot = node.getAttributePath();
-                dbQualifier = dbQualifier.transform(input -> {
-                    if (input instanceof ASTPath) {
-                        CayennePath path = pathToRoot.dot(((ASTPath) input).getPath());
-                        return new ASTDbPath(path);
-                    }
-                    return input;
-                });
-                Node rootQualifier = context.getQualifierNode();
-                Node translatedQualifier = context.getQualifierTranslator().translate(dbQualifier);
-                if (rootQualifier != null) {
-                    NodeBuilder expressionNodeBuilder = exp(node(rootQualifier)).and(node(translatedQualifier));
-                    context.setQualifierNode(expressionNodeBuilder.build());
-                } else {
-                    context.setQualifierNode(translatedQualifier);
-                }
-            }
+            appendQualifier(context, node, node.getEntity().getQualifier());
+            appendQualifier(context, node, node.getAdditionalQualifier());
         });
 
         if(context.getQualifierNode() != null) {
             context.getSelectBuilder().where(context.getQualifierNode());
         }
+    }
+
+    private static void appendQualifier(TranslatorContext context, TableTreeNode node, Expression dbQualifier) {
+        if (dbQualifier == null) {
+            return;
+        }
+
+        CayennePath pathToRoot = node.getAttributePath();
+        dbQualifier = dbQualifier.transform(input -> {
+            if (input instanceof ASTPath) {
+                CayennePath path = pathToRoot.dot(((ASTPath) input).getPath());
+                return new ASTDbPath(path);
+            }
+            return input;
+        });
+        Node translatedQualifier = context.getQualifierTranslator().translate(dbQualifier);
+        context.appendQualifierNode(translatedQualifier);
     }
 }

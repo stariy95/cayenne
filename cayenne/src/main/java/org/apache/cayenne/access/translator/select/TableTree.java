@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.cayenne.CayenneRuntimeException;
+import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.path.CayennePath;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
@@ -57,11 +58,16 @@ class TableTree {
     }
 
     void addJoinTable(CayennePath path, DbRelationship relationship, JoinType joinType) {
-        if (tableNodes.get(path) != null) {
+        addJoinTable(path, relationship, joinType, null);
+    }
+
+    void addJoinTable(String path, DbRelationship relationship, JoinType joinType, Expression additionalQualifier) {
+        TableTreeNode treeNode = tableNodes.get(path);
+        if (treeNode != null) {
             return;
         }
 
-        TableTreeNode node = new TableTreeNode(path, relationship, nextTableAlias(), joinType);
+        TableTreeNode node = new TableTreeNode(path, relationship, nextTableAlias(), joinType, additionalQualifier);
         tableNodes.put(path, node);
     }
 

@@ -26,6 +26,7 @@ import org.apache.cayenne.exp.path.CayennePath;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.parser.ASTDbPath;
+import org.apache.cayenne.exp.parser.ASTPath;
 import org.apache.cayenne.exp.path.CayennePathSegment;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -81,9 +82,11 @@ class PrefetchNodeStage implements TranslationStage {
 
         for(PrefetchTreeNode node : prefetch.adjacentJointNodes()) {
             Expression prefetchExp = ExpressionFactory.pathExp(node.getPath());
+            ObjRelationship targetRel = (ObjRelationship) prefetchExp.evaluate(objEntity);
             ASTDbPath dbPrefetch = (ASTDbPath) objEntity.translateToDbPath(prefetchExp);
             CayennePath dbPath = dbPrefetch.getPath();
             DbEntity dbEntity = objEntity.getDbEntity();
+            Expression targetQualifier = targetRel.getTargetEntity().getDeclaredQualifier();
 
             CayennePath fullPath = CayennePath.EMPTY_PATH.withMarker(CayennePath.PREFETCH_MARKER);
 
@@ -94,13 +97,16 @@ class PrefetchNodeStage implements TranslationStage {
                 }
 
                 fullPath = fullPath.dot(c);
-                context.getTableTree().addJoinTable(fullPath, rel, JoinType.LEFT_OUTER);
+                if(targetQualifier != null && c == dbPath.last()) {
+                    targetQualifier = targetRel.getTargetEntity().translateToDbPath(targetQualifier);
+                    context.getTableTree().addJoinTable(fullPath.withModifier(CayennePath.PREFETCH), rel, JoinType.LEFT_OUTER, targetQualifier);
+                } else {
+                    context.getTableTree().addJoinTable(fullPath.withModifier(CayennePath.PREFETCH), rel, JoinType.LEFT_OUTER);
+                }
                 dbEntity = rel.getTargetEntity();
             }
 
-            ObjRelationship targetRel = (ObjRelationship) prefetchExp.evaluate(objEntity);
             ClassDescriptor prefetchClassDescriptor = context.getResolver().getClassDescriptor(targetRel.getTargetEntityName());
-
             DescriptorColumnExtractor columnExtractor = new DescriptorColumnExtractor(context, prefetchClassDescriptor);
             columnExtractor.extract(dbPath.withMarker(CayennePath.PREFETCH_MARKER));
 
