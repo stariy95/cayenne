@@ -26,7 +26,6 @@ import org.apache.cayenne.exp.path.CayennePath;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.ExpressionFactory;
 import org.apache.cayenne.exp.parser.ASTDbPath;
-import org.apache.cayenne.exp.parser.ASTPath;
 import org.apache.cayenne.exp.path.CayennePathSegment;
 import org.apache.cayenne.map.DbAttribute;
 import org.apache.cayenne.map.DbEntity;
@@ -86,7 +85,7 @@ class PrefetchNodeStage implements TranslationStage {
             ASTDbPath dbPrefetch = (ASTDbPath) objEntity.translateToDbPath(prefetchExp);
             CayennePath dbPath = dbPrefetch.getPath();
             DbEntity dbEntity = objEntity.getDbEntity();
-            Expression targetQualifier = targetRel.getTargetEntity().getDeclaredQualifier();
+            Expression targetQualifier = context.getResolver().getClassDescriptor(targetRel.getTargetEntityName()).getEntityInheritanceTree().qualifierForEntityAndSubclasses();
 
             CayennePath fullPath = CayennePath.EMPTY_PATH.withMarker(CayennePath.PREFETCH_MARKER);
 
@@ -98,10 +97,10 @@ class PrefetchNodeStage implements TranslationStage {
 
                 fullPath = fullPath.dot(c);
                 if(targetQualifier != null && c == dbPath.last()) {
-                    targetQualifier = targetRel.getTargetEntity().translateToDbPath(targetQualifier);
-                    context.getTableTree().addJoinTable(fullPath.withModifier(CayennePath.PREFETCH), rel, JoinType.LEFT_OUTER, targetQualifier);
+                    targetQualifier = translateToPrefetchQualifier(targetRel.getTargetEntity(), targetQualifier);
+                    context.getTableTree().addJoinTable(fullPath.withMarker(CayennePath.PREFETCH_MARKER), rel, JoinType.LEFT_OUTER, targetQualifier);
                 } else {
-                    context.getTableTree().addJoinTable(fullPath.withModifier(CayennePath.PREFETCH), rel, JoinType.LEFT_OUTER);
+                    context.getTableTree().addJoinTable(fullPath.withMarker(CayennePath.PREFETCH_MARKER), rel, JoinType.LEFT_OUTER);
                 }
                 dbEntity = rel.getTargetEntity();
             }
@@ -121,6 +120,13 @@ class PrefetchNodeStage implements TranslationStage {
             LOGGER.warn("The query uses both limit/offset and a joint prefetch, this most probably will lead to an incorrect result. " +
                     "Either use disjointById prefetch or get a full result set.");
         }
+    }
+
+    Expression translateToPrefetchQualifier(ObjEntity entity, Expression targetQualifier) {
+        Expression expression = entity.translateToDbPath(targetQualifier);
+        return expression.transform(o -> o instanceof ASTDbPath
+                ? ExpressionFactory.dbPathExp(((ASTDbPath) o).getPath().withMarker(CayennePath.PREFETCH_MARKER))
+                : o);
     }
 
     private void processPrefetchQuery(TranslatorContext context) {

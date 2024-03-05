@@ -62,6 +62,9 @@ abstract class PathProcessor<T extends Entity<?,?,?>> implements PathTranslation
     }
 
     public PathTranslationResult process(CayennePath path) {
+        if(path.marker() != CayennePath.NO_MARKER) {
+            currentDbPath = currentDbPath.withMarker(path.marker());
+        }
         List<CayennePathSegment> segments = path.segments();
         int size = segments.size();
         for (int i = 0; i < size; i++) {

@@ -30,7 +30,6 @@ import org.apache.cayenne.exp.path.CayennePath;
 import org.apache.cayenne.map.DbEntity;
 import org.apache.cayenne.map.DbRelationship;
 import org.apache.cayenne.map.JoinType;
-import org.apache.cayenne.util.Util;
 
 /**
  * @since 4.2
@@ -61,7 +60,7 @@ class TableTree {
         addJoinTable(path, relationship, joinType, null);
     }
 
-    void addJoinTable(String path, DbRelationship relationship, JoinType joinType, Expression additionalQualifier) {
+    void addJoinTable(CayennePath path, DbRelationship relationship, JoinType joinType, Expression additionalQualifier) {
         TableTreeNode treeNode = tableNodes.get(path);
         if (treeNode != null) {
             return;

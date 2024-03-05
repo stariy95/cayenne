@@ -19,15 +19,11 @@
 
 package org.apache.cayenne.access.translator.select;
 
-import org.apache.cayenne.access.sqlbuilder.NodeBuilder;
 import org.apache.cayenne.access.sqlbuilder.sqltree.Node;
 import org.apache.cayenne.exp.Expression;
 import org.apache.cayenne.exp.parser.ASTDbPath;
 import org.apache.cayenne.exp.parser.ASTPath;
 import org.apache.cayenne.exp.path.CayennePath;
-
-import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.exp;
-import static org.apache.cayenne.access.sqlbuilder.SQLBuilder.node;
 
 /**
  * @since 4.2
@@ -52,13 +48,12 @@ class TableTreeQualifierStage implements TranslationStage {
         }
 
         CayennePath pathToRoot = node.getAttributePath();
-        dbQualifier = dbQualifier.transform(input -> {
-            if (input instanceof ASTPath) {
-                CayennePath path = pathToRoot.dot(((ASTPath) input).getPath());
-                return new ASTDbPath(path);
-            }
-            return input;
-        });
+        dbQualifier = dbQualifier.transform(input ->
+                // here we are not only marking path as prefetch, but changing ObjPath to DB (without )
+                input instanceof ASTPath
+                        ? new ASTDbPath(pathToRoot.dot(((ASTPath) input).getPath()).withMarker(CayennePath.PREFETCH_MARKER))
+                        : input
+        );
         Node translatedQualifier = context.getQualifierTranslator().translate(dbQualifier);
         context.appendQualifierNode(translatedQualifier);
     }
