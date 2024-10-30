@@ -341,6 +341,16 @@ public class DataContextPrefetchMultistepIT extends RuntimeCase {
 
         assertNotNull(gallery2.getPaintingArray().get(0).getToArtist());
         assertNotNull(gallery.getPaintingArray().get(0).getToArtist());
+
+        /*
+        DisjointProcessor.startDisjointPrefetch()
+        PrefetchNode.setObjects()
+        DisjointProcessor.startDisjointPrefetch()
+        PrefetchNode.setObjects()
+        DisjointProcessor.startJointPrefetch()
+        JointProcessor.startJointPrefetch()
+        PrefetchProcessorJointNode.putResolved()
+         */
     }
 
     @Test
@@ -356,6 +366,27 @@ public class DataContextPrefetchMultistepIT extends RuntimeCase {
                 .select(context);
 
         assertNotNull(gallery.getPaintingArray().get(0).getToArtist());
+
+        /*
+        DisjointByIdProcessor.startDisjointByIdPrefetch()
+        DisjointByIdProcessor.startDisjointByIdPrefetch() - empty parent rows
+        DisjointProcessor.startDisjointPrefetch()
+        DisjointProcessor.startJointPrefetch()
+        JointProcessor.startJointPrefetch()
+        PrefetchProcessorJointNode.putResolved()
+        DisjointProcessor.startDisjointByIdPrefetch()
+        DisjointProcessor.startDisjointPrefetch()
+
+
+        DisjointProcessor.startDisjointPrefetch()
+        PrefetchNode.setObjects()
+        DisjointProcessor.startDisjointByIdPrefetch()
+        DisjointProcessor.startDisjointPrefetch()
+        DisjointProcessor.startJointPrefetch()
+        JointProcessor.startJointPrefetch()
+        PrefetchProcessorJointNode.putResolved()
+        DisjointByIdProcessor.startDisjointByIdPrefetch()
+         */
     }
 
     @Test
@@ -416,6 +447,16 @@ public class DataContextPrefetchMultistepIT extends RuntimeCase {
                 .select(context);
 
         assertNotNull(gallery.getPaintingArray().get(0).getToArtist());
+
+        /*
+        DisjointByIdProcessor.startDisjointByIdPrefetch()
+        DisjointProcessor.startDisjointPrefetch()
+        DisjointProcessor.startDisjointByIdPrefetch()
+        DisjointProcessor.startDisjointPrefetch()
+        DisjointProcessor.startJointPrefetch()
+        JointProcessor.startJointPrefetch()
+        PrefetchProcessorJointNode.putResolved()
+         */
     }
 
     @Test

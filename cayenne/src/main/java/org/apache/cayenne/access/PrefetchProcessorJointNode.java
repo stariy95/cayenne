@@ -127,6 +127,7 @@ class PrefetchProcessorJointNode extends PrefetchProcessorNode {
      */
     void putResolved(Map id, Persistent object) {
         resolved.put(id, object);
+        System.out.println("PrefetchProcessorJointNode.putResolved()");
     }
 
     /**

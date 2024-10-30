@@ -205,6 +205,7 @@ class PrefetchProcessorNode extends PrefetchTreeNode {
     }
 
     void setObjects(List<Persistent> objects) {
+        System.out.println("PrefetchNode.setObjects()");
         this.objects = objects;
     }
 

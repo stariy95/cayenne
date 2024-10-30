@@ -79,8 +79,19 @@ class HierarchicalObjectResolver {
 
         PrefetchProcessorNode decoratedTree = decorateTree(tree, mainResultRows, extraResultsByPath);
 
+        /*
+        Order of processing (before any changes):
+        1. DisjointByIdProcessor.startDisjointByIdPrefetch()
+            - empty parent rows, need them to get id
+        2. DisjointProcessor.startDisjointPrefetch()
+            - calls processorNode.setObjects(objects);
+        3. DisjointProcessor.startJointPrefetch()
+            - calls JointProcessor.startJointPrefetch()
+            - parent data rows filled only here, but it needs objects set
+         */
+
         // prepare data for disjoint by id prefetches
-        decoratedTree.traverse(new DisjointByIdProcessor());
+        decoratedTree.traverse(new DisjointByIdProcessor()); // <--- TODO: this is called before joint prefetch node gets data
 
         // resolve objects under global lock to keep object graph consistent
         synchronized (context.getObjectStore()) {
@@ -109,6 +120,7 @@ class HierarchicalObjectResolver {
 
         @Override
         public boolean startDisjointByIdPrefetch(PrefetchTreeNode node) {
+            System.out.println("DisjointByIdProcessor.startDisjointByIdPrefetch()");
             if (node.getParent().isPhantom()) {
                 // doing nothing in current implementation if parent node is phantom
                 return true;
@@ -135,6 +147,10 @@ class HierarchicalObjectResolver {
                 parentDataRows = ((PrefetchProcessorJointNode) parentProcessorNode).getResolvedRows();
             } else {
                 parentDataRows = parentProcessorNode.getDataRows();
+            }
+
+            if(parentDataRows == null || parentDataRows.isEmpty()) {
+                System.out.println("DisjointByIdProcessor.startDisjointByIdPrefetch() - empty parent rows");
             }
 
             int maxIdQualifierSize = context.getParentDataDomain().getMaxIdQualifierSize();
@@ -296,7 +312,7 @@ class HierarchicalObjectResolver {
 
         @Override
         public boolean startDisjointPrefetch(PrefetchTreeNode node) {
-
+            System.out.println("DisjointProcessor.startDisjointPrefetch()");
             PrefetchProcessorNode processorNode = (PrefetchProcessorNode) node;
 
             // this means something bad happened during fetch
@@ -317,12 +333,13 @@ class HierarchicalObjectResolver {
 
         @Override
         public boolean startDisjointByIdPrefetch(PrefetchTreeNode node) {
+            System.out.println("DisjointProcessor.startDisjointByIdPrefetch()");
             return startDisjointPrefetch(node);
         }
 
         @Override
         public boolean startJointPrefetch(PrefetchTreeNode node) {
-
+            System.out.println("DisjointProcessor.startJointPrefetch()");
             // delegate processing of the top level joint prefetch to a joint processor,
             // skip non-top joint nodes
             if (node.getParent() == null || node.getParent().isJointPrefetch()) {
@@ -343,7 +360,7 @@ class HierarchicalObjectResolver {
 
             List<DataRow> parentRows = parent.getDataRows();
             // phantom node?
-            if (parentRows == null || parentRows.size() == 0) {
+            if (parentRows == null || parentRows.isEmpty()) {
                 return false;
             }
 
@@ -413,16 +430,19 @@ class HierarchicalObjectResolver {
         public boolean startDisjointPrefetch(PrefetchTreeNode node) {
             // disjoint prefetch that is not the root terminates the walk...
             // don't process the root node itself..
+            System.out.println("JointProcessor.startDisjointPrefetch()");
             return node == rootNode;
         }
 
         @Override
         public boolean startDisjointByIdPrefetch(PrefetchTreeNode node) {
+            System.out.println("JointProcessor.startDisjointByIdPrefetch()");
             return startDisjointPrefetch(node);
         }
 
         @Override
         public boolean startJointPrefetch(PrefetchTreeNode node) {
+            System.out.println("JointProcessor.startJointPrefetch()");
             PrefetchProcessorJointNode processorNode = (PrefetchProcessorJointNode) node;
 
             // find existing object, if found skip further processing

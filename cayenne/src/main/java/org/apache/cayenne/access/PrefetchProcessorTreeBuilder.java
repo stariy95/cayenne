@@ -92,24 +92,20 @@ final class PrefetchProcessorTreeBuilder implements PrefetchProcessor {
     }
 
     private PrefetchProcessorNode createDisjointNode(PrefetchTreeNode node) {
-        // TODO, Andrus, 11/16/2005 - minor inefficiency: 'adjacentJointNodes'
-        // would
-        // grab ALL nodes, we just need to find first and stop...
-        PrefetchProcessorNode decorated = !node.adjacentJointNodes().isEmpty() ? new PrefetchProcessorJointNode(
-                getParent(), node.getName()) : new PrefetchProcessorNode(getParent(), node.getName());
+        // TODO: Andrus, 11/16/2005 - minor inefficiency: 'adjacentJointNodes'
+        //       would grab ALL nodes, we just need to find first and stop...
+        PrefetchProcessorNode decorated = !node.adjacentJointNodes().isEmpty()
+                ? new PrefetchProcessorJointNode(getParent(), node.getName())
+                : new PrefetchProcessorNode(getParent(), node.getName());
         decorated.setPhantom(false);
         return decorated;
     }
 
     public boolean startDisjointPrefetch(PrefetchTreeNode node) {
-        // look ahead for joint children as joint children will require a
-        // different
-        // node type.
+        // look ahead for joint children as joint children will require a different node type.
         PrefetchProcessorNode decorated = createDisjointNode(node);
 
-        // semantics has to be "DISJOINT" even if the node is joint, as
-        // semantics
-        // defines relationship with parent..
+        // semantics has to be "DISJOINT" even if the node is joint, as semantics defines relationship with parent..
         decorated.setSemantics(PrefetchTreeNode.DISJOINT_PREFETCH_SEMANTICS);
         return addNode(decorated);
     }
@@ -129,7 +125,9 @@ final class PrefetchProcessorTreeBuilder implements PrefetchProcessor {
 
         // set "jointChildren" flag on all nodes in the same "join group"
         PrefetchProcessorNode groupNode = decorated;
-        while (groupNode.getParent() != null && !groupNode.isDisjointPrefetch() && !groupNode.isDisjointByIdPrefetch()) {
+        while (groupNode.getParent() != null
+                && !groupNode.isDisjointPrefetch()
+                && !groupNode.isDisjointByIdPrefetch()) {
             groupNode = (PrefetchProcessorNode) groupNode.getParent();
             groupNode.setJointChildren(true);
         }
