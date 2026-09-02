@@ -184,6 +184,12 @@
 		<!-- WINDOWS launcher: "CayenneModeler.jar" plus a "CayenneModeler.exe". Builds on Windows -->
 		<profile>
 			<id>windows</id>
+			<properties>
+				<!-- Authenticode signing is opt-in: the ASF is billed for every signature, so a plain
+					 "-Pwindows" build must never reach the signing service. Release managers turn it on
+					 with "-Dmodeler.codesign.skip=false" -->
+				<modeler.codesign.skip>true</modeler.codesign.skip>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -205,6 +211,50 @@
 									<os>windows</os>
 									<jvm0>21</jvm0>
 									<jvm0Options>-Xmx500m --enable-native-access=ALL-UNNAMED</jvm0Options>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!--
+						Authenticode signature over the NSIS launcher, using the ASF code signing service.
+						Declared after japp and bound to the same "verify" phase, so it runs on the exe japp
+						has just produced: within a phase, executions run in plugin declaration order. Nothing
+						rewrites the exe afterwards, and an Authenticode signature lives inside the PE
+						certificate table, so it survives the "cayenne-assembly" copy into "bin/" and the zip.
+						Service setup: https://infra.apache.org/code-signing-use.html
+					-->
+					<plugin>
+						<groupId>net.jsign</groupId>
+						<artifactId>jsign-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-modeler-exe</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+								<configuration>
+									<skip>${modeler.codesign.skip}</skip>
+									<file>${project.build.directory}/apps/windows/CayenneModeler.exe</file>
+									<!-- shown by SmartScreen and the UAC prompt -->
+									<name>Apache Cayenne Modeler</name>
+									<url>https://cayenne.apache.org</url>
+									<storetype>ESIGNER</storetype>
+									<!-- the ASF's shared eSigner key, published by Infra. Not a secret -->
+									<alias>d97c5110-c66a-4c0c-ac0c-1cd6af812ee6</alias>
+									<!-- Credentials resolve out of the release manager's "settings.xml" and are
+										 never stored here nor passed on the command line. "asf-codesigning" holds
+										 "<apache-id>@apache.org|<ssl.com password>" as a single string,
+										 "asf-codesigning-otp" the eSigner secret code (the signing MFA seed,
+										 not the PIN). See the release guide -->
+									<storepass>mvn:asf-codesigning</storepass>
+									<keypass>mvn:asf-codesigning-otp</keypass>
+									<tsaurl>http://ts.ssl.com</tsaurl>
+									<tsmode>RFC3161</tsmode>
+									<!-- re-signing stacks a second signature onto the file rather than
+										 replacing the first one, so a repeated build would leave a mess -->
+									<replace>true</replace>
 								</configuration>
 							</execution>
 						</executions>

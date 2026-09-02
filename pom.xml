@@ -84,6 +84,7 @@
         <exec-maven-plugin.version>3.6.3</exec-maven-plugin.version>
         <japp-maven-plugin.version>3.9</japp-maven-plugin.version>
         <javacc-maven-plugin.version>2.6</javacc-maven-plugin.version>
+        <jsign-maven-plugin.version>7.5</jsign-maven-plugin.version>
         <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
         <maven-bundle-plugin.version>5.1.9</maven-bundle-plugin.version>
@@ -823,6 +824,11 @@
                     <groupId>org.objectstyle.japp</groupId>
                     <artifactId>japp-maven-plugin</artifactId>
                     <version>${japp-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>net.jsign</groupId>
+                    <artifactId>jsign-maven-plugin</artifactId>
+                    <version>${jsign-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
