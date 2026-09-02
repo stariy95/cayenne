@@ -202,6 +202,26 @@ jobs:
           "$RUNNER_TEMP/spike/checkpoint.sh" "6. after plain zip round-trip (control)" \
                   "out-zip/CayenneModeler.app"
 
+      - name: Tamper detection (calibration - both rows MUST fail)
+        # The plain-zip control turned out to be vacuous: this bundle's signature lives in
+        # Contents/_CodeSignature (Format="app bundle with generic"), not in an xattr on the
+        # script, so zip preserves it. These two rows are the real negative control - they
+        # prove the checkpoint actually detects a broken seal rather than always saying PASS.
+        run: |
+          set -uo pipefail
+          cd "$RUNNER_TEMP/spike"
+          rm -rf tamper-jar.app tamper-stub.app
+
+          cp -Rp "$APP" tamper-jar.app
+          J=$(ls tamper-jar.app/Contents/Java/*.jar | head -1)
+          echo "tampering with sealed resource: $(basename "$J")"
+          printf '\0' >> "$J"
+          "$RUNNER_TEMP/spike/checkpoint.sh" "7. tampered jar (MUST FAIL)" tamper-jar.app
+
+          cp -Rp "$APP" tamper-stub.app
+          echo '# tampered' >> tamper-stub.app/Contents/MacOS/CayenneModeler
+          "$RUNNER_TEMP/spike/checkpoint.sh" "8. tampered stub (MUST FAIL)" tamper-stub.app
+
       - name: Summary
         if: always()
         run: |
@@ -218,8 +238,9 @@ jobs:
             echo '|---|---|---|'
             tail -n +2 "$RESULTS" | awk -F'\t' '{printf "| %s | %s | `%s` |\n", $1, $2, $3}'
             echo
-            echo 'Row 0 is expected to FAIL (unsigned). Row 1 must PASS.'
-            echo 'The first FAIL after row 1 is the pipeline step that destroys the signature.'
+            echo 'Rows 0, 7 and 8 MUST FAIL - they are the negative controls. If any of them'
+            echo 'passes, the checkpoint is not detecting a broken seal and rows 1-6 mean nothing.'
+            echo 'Rows 1-6 must PASS; the first FAIL among them is the step that loses the signature.'
           } >> "$GITHUB_STEP_SUMMARY"
           cat "$RESULTS"
 
