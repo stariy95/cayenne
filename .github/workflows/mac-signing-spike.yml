@@ -70,15 +70,27 @@ jobs:
           echo "Project version: $V"
 
       - name: Build the mac assembly
+        # "verify", not "package": japp binds to the verify phase (cayenne-modeler/pom.xml),
+        # so "mvn package" stops one phase short and never builds CayenneModeler.app - the
+        # assembly then copies an empty target/apps/mac and the bundle has no launcher.
         # exec.skip suppresses chmod-modeler AND dmg-distro; create-dmg.sh drives Finder
         # via osascript, which does not work on a headless runner. Both are done by hand below.
-        run: mvn -B clean package -Passembly,mac -DskipTests -Dexec.skip=true
+        run: mvn -B clean verify -Passembly,mac -DskipTests -Dexec.skip=true
 
       - name: Locate the bundle and take an unsigned baseline
         run: |
           set -euo pipefail
           APP="cayenne-assembly/target/cayenne-$VERSION-macosx/CayenneModeler.app"
-          test -d "$APP" || { echo "No bundle at $APP"; ls -R cayenne-assembly/target | head -50; exit 1; }
+          # assert the launcher, not just the directory: the assembly's mcp dependencySet
+          # creates Contents/Resources/mcp even when japp never ran, so a -d test on the
+          # bundle passes while the bundle is actually empty
+          if [ ! -f "$APP/Contents/MacOS/CayenneModeler" ]; then
+            echo "No launcher at $APP/Contents/MacOS/CayenneModeler"
+            echo "Did japp run? It binds to the 'verify' phase - 'mvn package' is not enough."
+            ls -la cayenne-modeler/target/apps/mac 2>&1 || echo "cayenne-modeler/target/apps/mac missing"
+            find "$APP" 2>/dev/null | head -30
+            exit 1
+          fi
           echo "APP=$PWD/$APP" >> "$GITHUB_ENV"
           echo "::group::bundle layout"
           find "$APP" -maxdepth 3 | head -40
