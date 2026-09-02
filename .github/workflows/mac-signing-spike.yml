@@ -1,0 +1,222 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: macOS signing spike (CAY-2997 stage 3a)
+
+# Stage 3a: does an ad-hoc code signature on a bundle whose CFBundleExecutable is a
+# bash script survive the assembly copy -> dmg staging -> hdiutil pipeline?
+# No Apple certificate required. See CAY-2997.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/mac-signing-spike.yml'
+
+jobs:
+  spike:
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Set up scratch dirs and the checkpoint helper
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/spike"
+          echo "RESULTS=$RUNNER_TEMP/spike/results.tsv" >> "$GITHUB_ENV"
+          printf 'checkpoint\tverify\tstub xattrs\n' > "$RUNNER_TEMP/spike/results.tsv"
+
+          cat > "$RUNNER_TEMP/spike/checkpoint.sh" <<'HELPER'
+          #!/bin/bash
+          # usage: checkpoint.sh <label> <path to CayenneModeler.app>
+          label="$1"; app="$2"
+          stub="$app/Contents/MacOS/CayenneModeler"
+          xattrs=$(xattr "$stub" 2>/dev/null | tr '\n' ' ')
+          out=$(codesign --verify --strict --verbose=2 "$app" 2>&1) && r=PASS || r=FAIL
+          printf '%s\t%s\t%s\n' "$label" "$r" "${xattrs:-<none>}" >> "$RESULTS"
+          echo "::group::checkpoint: $label -> $r"
+          echo "$out"
+          echo "stub xattrs: ${xattrs:-<none>}"
+          codesign -dv --verbose=4 "$app" 2>&1 || true
+          echo "::endgroup::"
+          HELPER
+          chmod +x "$RUNNER_TEMP/spike/checkpoint.sh"
+
+      - name: Resolve project version
+        run: |
+          set -euo pipefail
+          V=$(mvn -q -N help:evaluate -Dexpression=project.version -DforceStdout)
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+          echo "Project version: $V"
+
+      - name: Build the mac assembly
+        # exec.skip suppresses chmod-modeler AND dmg-distro; create-dmg.sh drives Finder
+        # via osascript, which does not work on a headless runner. Both are done by hand below.
+        run: mvn -B clean package -Passembly,mac -DskipTests -Dexec.skip=true
+
+      - name: Locate the bundle and take an unsigned baseline
+        run: |
+          set -euo pipefail
+          APP="cayenne-assembly/target/cayenne-$VERSION-macosx/CayenneModeler.app"
+          test -d "$APP" || { echo "No bundle at $APP"; ls -R cayenne-assembly/target | head -50; exit 1; }
+          echo "APP=$PWD/$APP" >> "$GITHUB_ENV"
+          echo "::group::bundle layout"
+          find "$APP" -maxdepth 3 | head -40
+          echo "::endgroup::"
+          file "$APP/Contents/MacOS/CayenneModeler"
+          # the assembly copy strips the exec bit - same fix the real build applies
+          chmod 755 "$APP/Contents/MacOS/CayenneModeler"
+          "$RUNNER_TEMP/spike/checkpoint.sh" "0. unsigned baseline" "$APP"
+
+      - name: Write entitlements
+        run: |
+          cat > "$RUNNER_TEMP/spike/entitlements.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>com.apple.security.cs.allow-jit</key><true/>
+              <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+              <key>com.apple.security.cs.disable-library-validation</key><true/>
+              <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: Sign Mach-O binaries nested inside jars
+        # Expected to hit flatlaf-*.jar (libflatlaf-macos-arm64.dylib / -x86_64.dylib).
+        # Discovery by scan, not a hardcoded jar name.
+        run: |
+          set -uo pipefail
+          total=0
+          for jar in "$APP"/Contents/Java/*.jar "$APP"/Contents/Resources/mcp/*.jar; do
+            [ -f "$jar" ] || continue
+            abs=$(cd "$(dirname "$jar")" && pwd)/$(basename "$jar")
+            entries=$(jar tf "$abs" | grep -Ei '\.(dylib|jnilib|so)$' || true)
+            [ -z "$entries" ] && continue
+            tmp=$(mktemp -d); n=0
+            while IFS= read -r e; do
+              ( cd "$tmp" && jar xf "$abs" "$e" )
+              if file "$tmp/$e" | grep -q 'Mach-O'; then
+                codesign --force --timestamp=none --options runtime -s - "$tmp/$e"
+                ( cd "$tmp" && jar uf "$abs" "$e" )
+                n=$((n+1))
+              fi
+            done <<< "$entries"
+            if [ "$n" -gt 0 ]; then
+              echo "signed $n Mach-O entries in $(basename "$abs")"
+              unzip -t "$abs" > /dev/null && echo "  jar integrity OK" || echo "  !! JAR CORRUPT"
+              total=$((total+n))
+            fi
+            rm -rf "$tmp"
+          done
+          echo "total nested Mach-O signed: $total"
+          [ "$total" -gt 0 ] || echo "::warning::no nested Mach-O found - check flatlaf is present"
+
+      - name: Seal the bundle (ad-hoc)
+        # --timestamp=none: an ad-hoc signature cannot carry an Apple timestamp.
+        # The real release script uses --timestamp.
+        run: |
+          set -euo pipefail
+          codesign --force --timestamp=none --options runtime \
+                   --entitlements "$RUNNER_TEMP/spike/entitlements.plist" -s - "$APP"
+          "$RUNNER_TEMP/spike/checkpoint.sh" "1. immediately after signing" "$APP"
+          echo "::group::effective entitlements"
+          codesign -d --entitlements - "$APP" 2>&1 || true
+          echo "::endgroup::"
+
+      - name: Copy into DMG staging (what create-dmg.sh does)
+        run: |
+          set -euo pipefail
+          S="$RUNNER_TEMP/spike/staging"; mkdir -p "$S"
+          cp -rpf "$APP" "$S/"
+          echo "STAGING=$S" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/spike/checkpoint.sh" "2. after cp -rpf into staging" "$S/CayenneModeler.app"
+
+      - name: hdiutil create (read-write UDRW) and verify inside the image
+        run: |
+          set -euo pipefail
+          VOL="cayenne-$VERSION-macosx"
+          SIZE=$(( $(du -sm "$STAGING" | cut -f1) + 50 ))
+          hdiutil create -srcfolder "$STAGING" -volname "$VOL" -fs HFS+ \
+                  -format UDRW -size "${SIZE}m" "$RUNNER_TEMP/spike/tmp.dmg"
+          hdiutil attach "$RUNNER_TEMP/spike/tmp.dmg" -readwrite -noverify -nobrowse \
+                  -mountpoint "$RUNNER_TEMP/spike/mnt-rw"
+          "$RUNNER_TEMP/spike/checkpoint.sh" "3. inside UDRW image" \
+                  "$RUNNER_TEMP/spike/mnt-rw/CayenneModeler.app"
+          hdiutil detach "$RUNNER_TEMP/spike/mnt-rw"
+
+      - name: hdiutil convert (compressed UDZO) and verify inside the image
+        run: |
+          set -euo pipefail
+          hdiutil convert "$RUNNER_TEMP/spike/tmp.dmg" -format UDZO -imagekey zlib-level=9 \
+                  -o "$RUNNER_TEMP/spike/cayenne-$VERSION-macosx.dmg"
+          hdiutil attach "$RUNNER_TEMP/spike/cayenne-$VERSION-macosx.dmg" -readonly -nobrowse \
+                  -mountpoint "$RUNNER_TEMP/spike/mnt-ro"
+          "$RUNNER_TEMP/spike/checkpoint.sh" "4. inside final UDZO dmg" \
+                  "$RUNNER_TEMP/spike/mnt-ro/CayenneModeler.app"
+          hdiutil detach "$RUNNER_TEMP/spike/mnt-ro"
+
+      - name: Archive round-trips (ditto = what notarytool submission uses; zip = control)
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/spike"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" ditto.zip
+          mkdir -p out-ditto && ditto -x -k ditto.zip out-ditto
+          "$RUNNER_TEMP/spike/checkpoint.sh" "5. after ditto round-trip" \
+                  "out-ditto/CayenneModeler.app"
+          ( cd "$(dirname "$APP")" && zip -qry "$RUNNER_TEMP/spike/plain.zip" CayenneModeler.app )
+          mkdir -p out-zip && ( cd out-zip && unzip -qq ../plain.zip )
+          "$RUNNER_TEMP/spike/checkpoint.sh" "6. after plain zip round-trip (control)" \
+                  "out-zip/CayenneModeler.app"
+
+      - name: Summary
+        if: always()
+        run: |
+          # runs even when an earlier step failed, so tolerate a missing results file
+          if [ ! -f "${RESULTS:-}" ]; then
+            echo "no results recorded - the run failed before the first checkpoint" \
+                 >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo '## Stage 3a - ad-hoc signature survival'
+            echo
+            echo '| checkpoint | verify | stub xattrs |'
+            echo '|---|---|---|'
+            tail -n +2 "$RESULTS" | awk -F'\t' '{printf "| %s | %s | `%s` |\n", $1, $2, $3}'
+            echo
+            echo 'Row 0 is expected to FAIL (unsigned). Row 1 must PASS.'
+            echo 'The first FAIL after row 1 is the pipeline step that destroys the signature.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$RESULTS"
+
+      - name: Upload dmg and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-signing-spike
+          path: |
+            ${{ runner.temp }}/spike/results.tsv
+            ${{ runner.temp }}/spike/cayenne-*-macosx.dmg
+          if-no-files-found: warn
